@@ -1,0 +1,487 @@
+/* Custom Styles for Les Randonneurs Sanaryens - RandoFinder - JLD Apps 2026 */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --club-green: #2e7d32;
+  --club-yellow: #fbc02d;
+  --club-dark: #0f172a;
+}
+
+html, body {
+  height: 100% !important;
+  width: 100% !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+#map-view {
+  min-height: 280px;
+  height: 100% !important;
+  width: 100% !important;
+  background-color: #e2e8f0;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Leaflet Container & DivIcons reset */
+.leaflet-container {
+  font-family: inherit !important;
+  background-color: #e2e8f0;
+}
+
+.custom-hike-start-icon,
+.leaflet-div-icon.custom-hike-start-icon,
+.custom-origin-icon,
+.leaflet-div-icon.custom-origin-icon,
+.custom-selected-beacon,
+.leaflet-div-icon.custom-selected-beacon {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Blinking & Pulsing Animation for Normal Hikes in Storage */
+@keyframes rando-radar-ping {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes rando-pin-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.hike-pulse-ring {
+  animation: rando-radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.hike-marker-pin {
+  animation: rando-pin-bounce 3s ease-in-out infinite;
+}
+
+/* Selected Marker Highlight */
+.custom-hike-start-icon {
+  user-select: none;
+}
+
+/* Fallback base styles */
+.tab-content.hidden {
+  display: none !important;
+}
+
+/* Animated Marching Logo */
+@keyframes hikers-forward-march {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(290%);
+  }
+}
+
+@keyframes hikers-step-bob {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2.5px) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(0.5px) rotate(0.5deg);
+  }
+  75% {
+    transform: translateY(-2.5px) rotate(1.5deg);
+  }
+}
+
+.logo-march-active #logo-hikers-wrapper {
+  animation: hikers-forward-march 4.5s linear forwards !important;
+  will-change: transform;
+}
+
+.logo-march-active #logo-hikers-img {
+  animation: hikers-step-bob 0.38s ease-in-out infinite !important;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+
+/* Auth & Lock Screen UI Styles */
+.pwd-criterion {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.pwd-criterion.valid {
+  color: #059669;
+  font-weight: 600;
+}
+
+.pwd-criterion.valid .criterion-icon::before {
+  content: '✓';
+  color: #059669;
+  font-weight: 800;
+}
+
+.pwd-criterion.invalid .criterion-icon::before {
+  content: '○';
+  color: #94a3b8;
+}
+
+.pwd-eye-btn {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.pwd-eye-btn:hover {
+  transform: scale(1.1);
+}
+.pwd-eye-btn:active {
+  transform: scale(0.92);
+}
+
+/* Curseur flèche pointu (précision topographique) sur la carte au lieu de la main */
+#map-view,
+#map-view .leaflet-container,
+#map-view .leaflet-grab,
+#map-view .leaflet-interactive {
+  cursor: default !important;
+}
+
+#map-view.leaflet-dragging,
+#map-view.leaflet-dragging .leaflet-grab,
+#map-view.leaflet-dragging .leaflet-interactive,
+#map-view .leaflet-dragging,
+#map-view .leaflet-dragging .leaflet-grab,
+#map-view .leaflet-dragging .leaflet-interactive {
+  cursor: grabbing !important;
+}
+
+/* Curseur réticule pour la sélection de zone à imprimer en 2 clics */
+#map-view.area-selection-cursor,
+#map-view.area-selection-cursor .leaflet-container,
+#map-view.area-selection-cursor .leaflet-grab,
+#map-view.area-selection-cursor .leaflet-interactive,
+.area-selection-cursor,
+.area-selection-cursor .leaflet-container,
+.area-selection-cursor .leaflet-grab,
+.area-selection-cursor .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+/* Curseur réticule pour la mesure de cap entre 2 points */
+#map-view.bearing-selection-cursor,
+#map-view.bearing-selection-cursor .leaflet-container,
+#map-view.bearing-selection-cursor .leaflet-grab,
+#map-view.bearing-selection-cursor .leaflet-interactive,
+.bearing-selection-cursor,
+.bearing-selection-cursor .leaflet-container,
+.bearing-selection-cursor .leaflet-grab,
+.bearing-selection-cursor .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+/* Curseur réticule pour la mesure d'itinéraire par clics successifs */
+#map-view.measure-selection-cursor,
+#map-view.measure-selection-cursor .leaflet-container,
+#map-view.measure-selection-cursor .leaflet-grab,
+#map-view.measure-selection-cursor .leaflet-interactive,
+.measure-selection-cursor,
+.measure-selection-cursor .leaflet-container,
+.measure-selection-cursor .leaflet-grab,
+.measure-selection-cursor .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+/* Étiquette flottante sur la ligne de cap */
+.bearing-line-label,
+.leaflet-marker-icon.bearing-line-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+.bearing-line-label span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.95);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1.5px solid #10b981;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: none !important;
+  white-space: nowrap;
+}
+
+/* Marqueurs A et B de mesure de cap */
+.bearing-marker-icon {
+  background: transparent !important;
+  border: none !important;
+}
+.bearing-marker-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-weight: 900;
+  font-size: 12px;
+  color: #ffffff;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.bearing-marker-badge.marker-a {
+  background: #10b981;
+}
+.bearing-marker-badge.marker-b {
+  background: #0284c7;
+}
+
+/* Carroyage UTM & HUD Cartographique (Top 25) */
+.utm-grid-label,
+.leaflet-marker-icon.utm-grid-label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+.utm-grid-label span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #0369a1;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1.5px solid #0284c7;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  pointer-events: none !important;
+  white-space: nowrap;
+}
+
+#map-coords-hud {
+  max-width: calc(100% - 430px) !important;
+  overflow: hidden !important;
+}
+@media (max-width: 639px) {
+  #map-coords-hud {
+    max-width: calc(100% - 16px) !important;
+    bottom: 30px !important;
+  }
+}
+
+#map-coords-hud:hover {
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+}
+
+/* Boite echelle Leaflet alignee sur les boutons blancs d outils cartographiques */
+.leaflet-bottom.leaflet-left .leaflet-control-scale {
+  float: none !important;
+  margin-bottom: 44px !important;
+  margin-left: 10px !important;
+  margin-right: 0 !important;
+  margin-top: 0 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
+  height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+  pointer-events: auto !important;
+  transition: all 0.2s ease !important;
+}
+
+@media (min-width: 640px) {
+  .leaflet-bottom.leaflet-left .leaflet-control-scale {
+    margin-bottom: 48px !important;
+    margin-left: 12px !important;
+  }
+}
+
+.leaflet-bottom.leaflet-left .leaflet-control-scale:hover {
+  background: #ffffff !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border-color: #cbd5e1 !important;
+}
+
+.leaflet-control-scale-line {
+  background: transparent !important;
+  border: 2px solid #0f172a !important;
+  border-top: none !important;
+  color: #0f172a !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  line-height: 1.1 !important;
+  padding: 1px 6px 2px !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  text-shadow: none !important;
+  border-bottom-left-radius: 2px !important;
+  border-bottom-right-radius: 2px !important;
+}
+
+/* Attribution Leaflet / IGN protegee contre tout chevauchement */
+.leaflet-bottom.leaflet-right .leaflet-control-attribution {
+  margin: 0 12px 8px 0 !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  color: #334155 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  line-height: 16px !important;
+  z-index: 25 !important;
+  white-space: nowrap !important;
+}
+
+.leaflet-bottom.leaflet-right .leaflet-control-attribution a {
+  color: #0284c7 !important;
+  text-decoration: none !important;
+  font-weight: 700 !important;
+}
+
+.leaflet-bottom.leaflet-right .leaflet-control-attribution a:hover {
+  text-decoration: underline !important;
+}
+#ign-paper-date-badge {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  cursor: help;
+  text-decoration: underline dotted #94a3b8;
+  transition: all 0.2s ease;
+}
+
+#ign-paper-date-badge:hover {
+  color: #0284c7 !important;
+  text-decoration-color: #0284c7;
+}
+
+
+/* Badges marqueurs pour la mesure de trajet (clics successifs) */
+.measure-marker-icon {
+  background: transparent !important;
+  border: none !important;
+}
+.measure-marker-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  background: #6366f1;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+.measure-marker-badge.marker-start {
+  background: #10b981;
+}
+.measure-marker-badge:hover {
+  transform: scale(1.15);
+}
+
+.measure-preview-line,
+path.measure-preview-line,
+.bearing-preview-line,
+path.bearing-preview-line {
+  pointer-events: none !important;
+}
+
+/* Adaptation responsive des boutons d outils carte pour preserver l espace avec l echelle */
+@media (max-width: 1535px) {
+  #btn-map-manual-text,
+  #btn-map-area-print-text {
+    display: none !important;
+  }
+}
+
+/* Limites de la carte papier IGN TOP 25 (Bande translucide) */
+.paper-sheet-label-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.paper-sheet-badge-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1.5px solid #0284c7;
+  color: #0369a1;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paper-sheet-badge-label:hover {
+  background: #ffffff;
+  border-color: #0369a1;
+  color: #0c4a6e;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+}

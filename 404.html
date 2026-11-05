@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=/RandoFinder/">
+  <script>
+    var path = window.location.pathname.toLowerCase();
+    if (path.indexOf('randofinder') !== -1) {
+      window.location.replace('/RandoFinder/' + window.location.search + window.location.hash);
+    } else {
+      window.location.replace('/RandoFinder/');
+    }
+  </script>
+  <title>Redirection RandoFinder...</title>
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 40px; background: #0f172a; color: #f8fafc;">
+  <h2>Redirection vers RandoFinder...</h2>
+  <p><a href="/RandoFinder/" style="color: #10b981; font-weight: bold;">Cliquez ici si la redirection ne s'effectue pas automatiquement</a></p>
+</body>
+</html>
