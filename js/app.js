@@ -3427,37 +3427,56 @@ class AppController {
       infoEl.textContent = `Zone sélectionnée : ~${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km • 2 clics`;
     }
 
-    // Déterminer la randonnée active s'il y en a une
-    const activeHike = this.areaPrintHike || this.selectedHike || (window.MapManagerInstance && window.MapManagerInstance.selectedHike) || null;
+    // Déterminer la randonnée active s'il y en a une (club ou trace GPX libre chargée)
+    const activeHike = this.areaPrintHike || this.selectedHike || 
+                       (window.MapManagerInstance && window.MapManagerInstance.selectedHike) || 
+                       (window.MapManagerInstance && window.MapManagerInstance.standaloneHike) || null;
 
     // Remplir le sélecteur de tracé GPX (accessible et visible en permanence)
     const gpxSelect = document.getElementById('map-area-gpx-select');
     const titleEl = document.getElementById('map-area-title');
-    const hikesList = (this.allHikes && this.allHikes.length > 0) ? this.allHikes : (this.hikes || []);
 
     if (gpxSelect) {
       gpxSelect.innerHTML = '<option value="">🚫 Aucun tracé (fond de carte vierge)</option>';
-      const sortedHikes = [...hikesList].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-      sortedHikes.forEach(h => {
-        const opt = document.createElement('option');
-        opt.value = h.id;
-        opt.textContent = `📍 ${h.name} (${h.distanceKm ? h.distanceKm + ' km' : 'GPX'})`;
-        if (activeHike && (activeHike.id === h.id || activeHike.name === h.name)) {
-          opt.selected = true;
-        }
-        gpxSelect.appendChild(opt);
-      });
+      // Si une trace GPX libre est active
+      if (activeHike) {
+        const optActive = document.createElement('option');
+        optActive.value = String(activeHike.id);
+        optActive.textContent = `📍 ${activeHike.name} (${activeHike.distance || '?'} km)`;
+        optActive.selected = true;
+        gpxSelect.appendChild(optActive);
+      }
+
+      // En mode Randonner uniquement (protégé), lister les autres randonnées du club
+      const isRandoMode = window.location.hash.startsWith('#randonner');
+      if (isRandoMode) {
+        const hikesList = (this.allHikes && this.allHikes.length > 0) ? this.allHikes : (this.hikes || []);
+        const sortedHikes = [...hikesList].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        sortedHikes.forEach(h => {
+          if (activeHike && String(h.id) === String(activeHike.id)) return;
+          const opt = document.createElement('option');
+          opt.value = h.id;
+          opt.textContent = `📍 ${h.name} (${h.distanceKm ? h.distanceKm + ' km' : 'GPX'})`;
+          gpxSelect.appendChild(opt);
+        });
+      }
 
       // Adapter automatiquement le titre en cas de changement de sélection
       gpxSelect.onchange = () => {
         const selectedId = gpxSelect.value;
-        const chosen = hikesList.find(h => String(h.id) === String(selectedId));
         if (titleEl) {
-          if (chosen) {
-            titleEl.value = `${chosen.name} - Extrait de carte`;
+          if (activeHike && String(activeHike.id) === String(selectedId)) {
+            titleEl.value = `${activeHike.name} - Extrait de carte`;
           } else {
-            titleEl.value = `Extrait Cartographique (${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km)`;
+            const hikesList = (this.allHikes && this.allHikes.length > 0) ? this.allHikes : (this.hikes || []);
+            const chosen = hikesList.find(h => String(h.id) === String(selectedId));
+            if (chosen) {
+              titleEl.value = `${chosen.name} - Extrait de carte`;
+            } else {
+              titleEl.value = `Extrait Cartographique (${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km)`;
+            }
           }
         }
       };
@@ -3508,8 +3527,14 @@ class AppController {
     const selectedHikeId = gpxSelect ? gpxSelect.value : '';
     let hikeForTrack = null;
     if (selectedHikeId) {
-      const hikesList = (this.allHikes && this.allHikes.length > 0) ? this.allHikes : (this.hikes || []);
-      hikeForTrack = hikesList.find(h => String(h.id) === String(selectedHikeId)) || null;
+      if (this.areaPrintHike && String(this.areaPrintHike.id) === String(selectedHikeId)) {
+        hikeForTrack = this.areaPrintHike;
+      } else if (window.MapManagerInstance && window.MapManagerInstance.standaloneHike && String(window.MapManagerInstance.standaloneHike.id) === String(selectedHikeId)) {
+        hikeForTrack = window.MapManagerInstance.standaloneHike;
+      } else {
+        const hikesList = (this.allHikes && this.allHikes.length > 0) ? this.allHikes : (this.hikes || []);
+        hikeForTrack = hikesList.find(h => String(h.id) === String(selectedHikeId)) || null;
+      }
     }
 
     this.closeMapAreaModal();

@@ -2535,25 +2535,29 @@ class MapManager {
 
   /**
    * Affiche un tracé GPX en mode autonome (accès libre sans enregistrement)
+   * et propose l'impression de la carte haute définition autour du tracé.
    */
-  displayStandaloneGpxTrack(gpxData) {
-    if (!this.map || !gpxData || !gpxData.tracks) return;
+  displayStandaloneGpxTrack(gpxData, fileName) {
+    if (!this.map || !gpxData) return;
 
     if (this._standaloneGpxLayer) {
       this.map.removeLayer(this._standaloneGpxLayer);
       this._standaloneGpxLayer = null;
     }
 
-    const latlngs = [];
-    gpxData.tracks.forEach(track => {
-      track.segments.forEach(seg => {
-        seg.points.forEach(pt => {
-          latlngs.push([pt.lat, pt.lon]);
+    // Récupérer les points (soit direct de GPXParser.parse, soit tracks)
+    let pts = gpxData.points || [];
+    if (pts.length === 0 && gpxData.tracks) {
+      gpxData.tracks.forEach(track => {
+        track.segments.forEach(seg => {
+          seg.points.forEach(p => pts.push(p));
         });
       });
-    });
+    }
 
-    if (latlngs.length === 0) return;
+    if (pts.length === 0) return;
+
+    const latlngs = pts.map(p => [p.lat, p.lon]);
 
     const polyline = L.polyline(latlngs, {
       color: '#e11d48',
@@ -2584,6 +2588,86 @@ class MapManager {
     this._standaloneGpxLayer = L.featureGroup([polyline, startMarker, endMarker]);
     this.map.addLayer(this._standaloneGpxLayer);
     this.map.fitBounds(this._standaloneGpxLayer.getBounds(), { padding: [40, 40] });
+
+    const trackName = (gpxData.name || fileName || 'Trace GPX importée').replace(/\.gpx$/i, '');
+    const distVal = (gpxData.distanceKm !== undefined) ? gpxData.distanceKm : ((gpxData.distance !== undefined) ? gpxData.distance : '0');
+    const eleVal = (gpxData.elevationGain !== undefined) ? Math.round(gpxData.elevationGain) : 0;
+
+    this.standaloneHike = {
+      id: gpxData.id || ('gpx_user_' + Date.now()),
+      name: trackName,
+      distance: String(distVal),
+      elevationGain: eleVal,
+      points: pts,
+      startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
+      endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] }
+    };
+    this.selectedHike = this.standaloneHike;
+
+    // Afficher le HUD interactif avec bouton d'impression
+    this.showStandaloneGpxHud(this.standaloneHike);
+  }
+
+  showStandaloneGpxHud(hike) {
+    let hud = document.getElementById('standalone-gpx-hud');
+    if (!hud) {
+      hud = document.createElement('div');
+      hud.id = 'standalone-gpx-hud';
+      hud.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-3 text-xs text-white';
+      document.body.appendChild(hud);
+    }
+    hud.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+        <span class="font-bold text-slate-100 truncate max-w-[180px] sm:max-w-[280px]" title="${hike.name}">${hike.name}</span>
+        <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-emerald-400 whitespace-nowrap">${hike.distance} km • +${hike.elevationGain}m</span>
+      </div>
+      <div class="flex items-center gap-2 border-l border-slate-700 pl-3">
+        <button id="btn-print-standalone-gpx" type="button" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+          <span>🖨️</span> <span class="hidden sm:inline">Imprimer la carte</span><span class="sm:hidden">Imprimer</span>
+        </button>
+        <button id="btn-clear-standalone-gpx" type="button" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition cursor-pointer" title="Fermer cette trace">
+          ✕
+        </button>
+      </div>
+    `;
+    hud.classList.remove('hidden');
+
+    document.getElementById('btn-print-standalone-gpx').addEventListener('click', () => {
+      this.printAroundStandaloneGpx();
+    });
+
+    document.getElementById('btn-clear-standalone-gpx').addEventListener('click', () => {
+      this.clearStandaloneGpxTrack();
+    });
+  }
+
+  printAroundStandaloneGpx() {
+    if (!this._standaloneGpxLayer) return;
+    const bounds = this._standaloneGpxLayer.getBounds();
+    const padLat = (bounds.getNorth() - bounds.getSouth()) * 0.15;
+    const padLng = (bounds.getEast() - bounds.getWest()) * 0.15;
+    const paddedBounds = [
+      [bounds.getSouth() - padLat, bounds.getWest() - padLng],
+      [bounds.getNorth() + padLat, bounds.getEast() + padLng]
+    ];
+    if (window.App) {
+      window.App.areaPrintHike = this.standaloneHike;
+      window.App.openMapAreaModal(paddedBounds);
+    }
+  }
+
+  clearStandaloneGpxTrack() {
+    if (this._standaloneGpxLayer) {
+      this.map.removeLayer(this._standaloneGpxLayer);
+      this._standaloneGpxLayer = null;
+    }
+    this.standaloneHike = null;
+    if (this.selectedHike && String(this.selectedHike.id).startsWith('gpx_user_')) {
+      this.selectedHike = null;
+    }
+    const hud = document.getElementById('standalone-gpx-hud');
+    if (hud) hud.classList.add('hidden');
   }
 
 }
