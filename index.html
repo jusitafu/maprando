@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <title>MapRando - La cartographie au service de vos pas</title>
+  <title>Map & Rando by JLDApps - La cartographie au service de vos pas</title>
 
   
 
@@ -106,96 +106,88 @@
 
   
   <!-- ========================================================================= -->
-  <!-- PORTAL VIEW ÉPURÉE AVEC FOND D'ÉCRAN DYNAMIQUE (4 TERRITOIRES) -->
+  <!-- PORTAL VIEW : MAP & RANDO BY JLDAPPS (FRESQUE 4 CARTES & COURS D'EAU) -->
   <!-- ========================================================================= -->
-  <div id="portal-view" class="relative min-h-screen flex flex-col justify-between text-slate-100 selection:bg-emerald-500 selection:text-white">
+  <div id="portal-view" class="relative min-h-screen flex flex-col justify-between text-slate-100 selection:bg-emerald-500 selection:text-white overflow-hidden">
     
-    <!-- FOND D'ÉCRAN DYNAMIQUE PLEIN ÉCRAN (4 TERRITOIRES EN ROTATION DOUCE) -->
-    <div id="portal-bg-slideshow" class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-      <!-- Slide 0 : Sanary - Bandol (IGN TOP 25) -->
-      <div class="bg-slide absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-100" 
-           style="background-image: url('images/vignettes/wallpaper_sanary_bandol.jpg');" 
-           data-label="Sentier du Littoral Sanary - Bandol (IGN TOP 25®)"></div>
+    <!-- FRESQUE CARTOGRAPHIQUE EN FOND D'ÉCRAN AVEC SÉPARATIONS PAR COURS D'EAU -->
+    <div id="portal-bg-composite" class="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+      <!-- Image composite haute résolution des 4 territoires unis par méandres fluviaux -->
+      <div class="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-[1.01]" 
+           style="background-image: url('images/vignettes/wallpaper_composite_4maps.jpg');"></div>
       
-      <!-- Slide 1 : Bardenas Reales (Satellite HD) -->
-      <div class="bg-slide absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-0" 
-           style="background-image: url('images/vignettes/wallpaper_bardenas.jpg');" 
-           data-label="Désert des Bardenas Reales (Satellite Mondial HD)"></div>
-      
-      <!-- Slide 2 : Étang de Morimond (IGN TOP 25) -->
-      <div class="bg-slide absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-0" 
-           style="background-image: url('images/vignettes/wallpaper_morimond.jpg');" 
-           data-label="Abbaye &amp; Étang de Morimond (IGN TOP 25®)"></div>
-      
-      <!-- Slide 3 : Tongariro Alpine Crossing (OpenStreetMap) -->
-      <div class="bg-slide absolute inset-0 bg-cover bg-center transition-opacity duration-1000 opacity-0" 
-           style="background-image: url('images/vignettes/wallpaper_tongariro.jpg');" 
-           data-label="Tongariro Alpine Crossing (OpenStreetMap)"></div>
-
-      <!-- Voile sombre d'ombrage et de contraste pour lisibilité optimale -->
-      <div class="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/75 to-slate-950/90 backdrop-blur-[1.5px]"></div>
+      <!-- Voile de contraste équilibré : met parfaitement en valeur les 4 cartes et la rivière tout en sublimant les cartes de menu -->
+      <div class="absolute inset-0 bg-gradient-to-b from-slate-950/45 via-slate-950/20 to-slate-950/60 backdrop-blur-[0.5px]"></div>
     </div>
 
-    <!-- Top Navigation Épurée -->
-    <nav class="sticky top-0 z-40 w-full bg-slate-950/60 backdrop-blur-md border-b border-slate-800/60 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <!-- Navigation Supérieure Épurée -->
+    <header class="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xl">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-xl shadow-lg shadow-emerald-900/30 border border-emerald-400/30">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-2xl shadow-lg shadow-emerald-950/50 border border-emerald-400/30">
           🗺️
         </div>
-        <div>
-          <span class="text-base sm:text-lg font-black tracking-tight text-white uppercase block leading-none">MapRando</span>
-          <span class="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase block mt-0.5">La cartographie au service de vos pas</span>
+        <div class="flex flex-col">
+          <div class="flex items-baseline gap-2">
+            <span class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase leading-none">Map &amp; Rando</span>
+            <span class="text-xs sm:text-sm font-normal text-emerald-300/80 lowercase leading-none">by JLDApps</span>
+          </div>
+          <span class="text-[11px] text-slate-300 font-semibold tracking-wider uppercase leading-tight mt-0.5">La cartographie au service de vos pas</span>
         </div>
       </div>
       
-      <!-- Coin supérieur droit épuré -->
+      <!-- Bouton CGU bien visible et contrasté -->
       <div>
-        <button id="btn-open-cgu" type="button" class="text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded-xl hover:bg-slate-800/60 cursor-pointer border border-transparent hover:border-slate-700">
-          Mentions Légales &amp; CGU
+        <button id="btn-open-cgu" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs sm:text-sm border-2 border-slate-600 hover:border-emerald-400 shadow-xl transition-all cursor-pointer">
+          <span class="text-sm">⚖️</span>
+          <span>Mentions Légales &amp; CGU</span>
         </button>
       </div>
-    </nav>
+    </header>
 
-    <!-- Contenu Principal Centré & Épuré -->
-    <main class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-12 flex-grow flex flex-col justify-center">
+    <!-- Contenu Principal Centré & Dimensionné pour tout écran PC -->
+    <main class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 flex-grow flex flex-col justify-center my-auto">
       
-      <!-- Titre & Accroche Hero Épurés -->
-      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
-        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-4 leading-tight drop-shadow-md">
+      <!-- En-tête Hero avec Branding & Titre dans un cadre de verre élégant pour lisibilité absolue -->
+      <div class="text-center max-w-4xl mx-auto mb-6 sm:mb-8 p-6 sm:p-8 rounded-3xl bg-slate-950/75 backdrop-blur-xl border border-slate-700/60 shadow-2xl">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 mb-3 shadow-sm">
+          <span class="text-xs sm:text-sm font-black uppercase tracking-wider">Map &amp; Rando</span>
+          <span class="text-xs text-slate-300 font-light">by JLDApps</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white mb-3 leading-tight drop-shadow-xl">
           La cartographie au service de vos pas
         </h1>
-        <p class="text-sm sm:text-base md:text-lg text-slate-300 font-light leading-relaxed drop-shadow">
+        <p class="text-sm sm:text-base md:text-lg text-slate-200 font-normal leading-relaxed drop-shadow">
           Explorez la France au 1 : 25 000 officiel IGN, chargez vos traces GPX, imprimez vos cartes personnalisées et randonnez en toute liberté.
         </p>
       </div>
 
-      <!-- Les 3 Chemins Épurés -->
+      <!-- Les 3 Chemins : Menu Haut Contraste & Verre Foncé -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
         
         <!-- Voie 1 : Cartes & Outils (Accès Libre) -->
-        <div class="group relative rounded-3xl bg-slate-900/75 hover:bg-slate-900/95 border border-slate-700/60 hover:border-emerald-500/70 p-6 sm:p-8 backdrop-blur-md shadow-2xl transition-all duration-300 flex flex-col justify-between">
+        <div class="group relative rounded-3xl bg-slate-950/92 hover:bg-slate-950 border-2 border-slate-700 hover:border-emerald-500 p-6 sm:p-7 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition">
                 🧭
               </div>
-              <span class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+              <span class="px-3.5 py-1 rounded-full bg-emerald-500/30 border border-emerald-400/60 text-emerald-300 text-[11px] font-black uppercase tracking-wider shadow-sm">
                 Accès Libre
               </span>
             </div>
             
             <div>
-              <h2 class="text-xl sm:text-2xl font-bold text-white group-hover:text-emerald-300 transition">
+              <h2 class="text-xl sm:text-2xl font-black text-white group-hover:text-emerald-300 transition">
                 Cartes &amp; Outils
               </h2>
-              <p class="text-xs sm:text-sm text-slate-300 mt-2 font-light leading-relaxed">
+              <p class="text-xs sm:text-sm text-slate-200 mt-2 font-medium leading-relaxed">
                 Carte pleine page IGN TOP 25, étalonnage d'écran au centimètre vrai, chargement d'une trace GPX depuis votre PC et impression de la carte sur mesure.
               </p>
             </div>
           </div>
           
-          <div class="mt-8 pt-4 border-t border-slate-800/80">
-            <a href="#carte" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-950/40 transition-all cursor-pointer">
+          <div class="mt-6 pt-4 border-t border-slate-800">
+            <a href="#carte" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-sm sm:text-base shadow-xl shadow-emerald-950/50 transition-all cursor-pointer">
               <span>Ouvrir la Carte</span>
               <span class="group-hover:translate-x-1 transition-transform">→</span>
             </a>
@@ -203,29 +195,29 @@
         </div>
 
         <!-- Voie 2 : Randonner : trouver des traces gpx et les gérer (Accès Protégé) -->
-        <div class="group relative rounded-3xl bg-slate-900/75 hover:bg-slate-900/95 border border-slate-700/60 hover:border-blue-500/70 p-6 sm:p-8 backdrop-blur-md shadow-2xl transition-all duration-300 flex flex-col justify-between">
+        <div class="group relative rounded-3xl bg-slate-950/92 hover:bg-slate-950 border-2 border-slate-700 hover:border-blue-500 p-6 sm:p-7 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition">
+              <div class="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/40 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition">
                 🥾
               </div>
-              <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+              <span class="px-3.5 py-1 rounded-full bg-blue-500/30 border border-blue-400/60 text-blue-300 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
                 <span>🔒</span> <span>Accès Membre</span>
               </span>
             </div>
             
             <div>
-              <h2 class="text-xl sm:text-2xl font-bold text-white group-hover:text-blue-300 transition">
+              <h2 class="text-xl sm:text-2xl font-black text-white group-hover:text-blue-300 transition">
                 Randonner : trouver des traces GPX et les gérer
               </h2>
-              <p class="text-xs sm:text-sm text-slate-300 mt-2 font-light leading-relaxed">
+              <p class="text-xs sm:text-sm text-slate-200 mt-2 font-medium leading-relaxed">
                 Catalogue associatif complet, filtres de recherche et calcul d'effort (Index IBP officiel), gestion du fonds de randonnées et fiches PDF détaillées.
               </p>
             </div>
           </div>
           
-          <div class="mt-8 pt-4 border-t border-slate-800/80">
-            <a href="#randonner" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-950/40 transition-all cursor-pointer">
+          <div class="mt-6 pt-4 border-t border-slate-800">
+            <a href="#randonner" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm sm:text-base shadow-xl shadow-blue-950/50 transition-all cursor-pointer">
               <span>Accéder à l'Espace Rando</span>
               <span class="group-hover:translate-x-1 transition-transform">→</span>
             </a>
@@ -233,29 +225,29 @@
         </div>
 
         <!-- Voie 3 : Guides & Savoirs -->
-        <div class="group relative rounded-3xl bg-slate-900/75 hover:bg-slate-900/95 border border-slate-700/60 hover:border-amber-500/70 p-6 sm:p-8 backdrop-blur-md shadow-2xl transition-all duration-300 flex flex-col justify-between">
+        <div class="group relative rounded-3xl bg-slate-950/92 hover:bg-slate-950 border-2 border-slate-700 hover:border-amber-500 p-6 sm:p-7 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition">
+              <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-2xl shadow-inner group-hover:scale-105 transition">
                 📚
               </div>
-              <span class="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+              <span class="px-3.5 py-1 rounded-full bg-amber-500/30 border border-amber-400/60 text-amber-300 text-[11px] font-black uppercase tracking-wider shadow-sm">
                 Fiches Pratiques
               </span>
             </div>
             
             <div>
-              <h2 class="text-xl sm:text-2xl font-bold text-white group-hover:text-amber-300 transition">
+              <h2 class="text-xl sm:text-2xl font-black text-white group-hover:text-amber-300 transition">
                 Guides &amp; Savoirs
               </h2>
-              <p class="text-xs sm:text-sm text-slate-300 mt-2 font-light leading-relaxed">
+              <p class="text-xs sm:text-sm text-slate-200 mt-2 font-medium leading-relaxed">
                 Fiches techniques sur le GPS différentiel &amp; système SBAS, réglages recommandés pour montres de sport et couverture nationale LiDAR HD de l'IGN.
               </p>
             </div>
           </div>
           
-          <div class="mt-8 pt-4 border-t border-slate-800/80">
-            <a href="#guides" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm shadow-lg shadow-amber-950/40 transition-all cursor-pointer">
+          <div class="mt-6 pt-4 border-t border-slate-800">
+            <a href="#guides" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-black text-sm sm:text-base shadow-xl shadow-amber-950/50 transition-all cursor-pointer">
               <span>Consulter les Fiches</span>
               <span class="group-hover:translate-x-1 transition-transform">→</span>
             </a>
@@ -266,234 +258,554 @@
 
     </main>
 
-    <!-- Badge discret fond d'écran dynamique (en bas à gauche) -->
-    <div class="fixed bottom-3 left-4 z-30 hidden sm:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-900/85 backdrop-blur-md border border-slate-700/70 text-[11px] text-slate-300 shadow-xl">
-      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span class="text-slate-400 font-normal">Fond :</span>
-      <span id="bg-slide-label" class="font-bold text-white">Sentier du Littoral Sanary - Bandol</span>
-      <div class="flex items-center gap-1.5 ml-1 border-l border-slate-700 pl-2">
-        <button type="button" title="Sanary-Bandol" class="bg-slide-dot w-2.5 h-2.5 rounded-full bg-emerald-400 transition cursor-pointer" onclick="window.PortalRouterInstance && window.PortalRouterInstance.setBgSlide(0)"></button>
-        <button type="button" title="Bardenas Reales" class="bg-slide-dot w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition cursor-pointer" onclick="window.PortalRouterInstance && window.PortalRouterInstance.setBgSlide(1)"></button>
-        <button type="button" title="Morimond" class="bg-slide-dot w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition cursor-pointer" onclick="window.PortalRouterInstance && window.PortalRouterInstance.setBgSlide(2)"></button>
-        <button type="button" title="Tongariro" class="bg-slide-dot w-2.5 h-2.5 rounded-full bg-white/30 hover:bg-white/60 transition cursor-pointer" onclick="window.PortalRouterInstance && window.PortalRouterInstance.setBgSlide(3)"></button>
+    <!-- Pied de page avec évocation des 4 territoires réunis par cours d'eau -->
+    <footer class="w-full border-t border-slate-800/80 bg-slate-950/90 backdrop-blur-md py-3 px-4 sm:px-8 text-center text-xs text-slate-300 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-inner">
+      <div class="flex items-center gap-2 text-[11px] text-slate-400">
+        <span>🌊 4 Territoires en cours d'eau :</span>
+        <span class="text-slate-300 font-medium">🌋 Tongariro &bull; 🏜️ Bardenas &bull; 🌲 Morimond &bull; 🏖️ Sanary-Bandol</span>
       </div>
-    </div>
-
-    <!-- Footer Épuré -->
-    <footer class="w-full border-t border-slate-800/80 bg-slate-950/70 backdrop-blur-sm py-4 px-4 sm:px-8 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
       <div>
-        MapRando &bull; JLDApps 2026 &bull; Sanary-sur-Mer (Var 83)
-      </div>
-      <div class="flex items-center gap-4">
-        <a href="#cgu" onclick="event.preventDefault(); document.getElementById('modal-cgu').classList.remove('hidden');" class="hover:text-emerald-400 transition cursor-pointer">
-          Mentions Légales &amp; CGU
-        </a>
+        <span class="text-white font-bold">Map &amp; Rando</span> &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
 
   </div>
 
   <!-- ========================================================================= -->
-  <!-- GUIDES & SAVOIRS VIEW (Fiches Pratiques GPS & LiDAR HD) -->
+  <!-- GUIDES & SAVOIRS VIEW : FICHES DÉPLIABLES & SÉLECTION OUTDOOR AMAZON -->
   <!-- ========================================================================= -->
-  <div id="guides-view" class="hidden relative min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-8">
+  <div id="guides-view" class="hidden relative min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-8 selection:bg-amber-500 selection:text-white">
     
     <!-- Top Bar avec retour accueil -->
-    <div class="max-w-5xl mx-auto mb-8 flex items-center justify-between border-b border-slate-800 pb-4">
-      <a href="#accueil" class="btn-return-home inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold transition border border-slate-800 cursor-pointer">
-        <span>←</span> <span>Retour à l'Accueil MapRando</span>
+    <div class="max-w-6xl mx-auto mb-8 flex items-center justify-between border-b border-slate-800 pb-4">
+      <a href="#accueil" class="btn-return-home inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm transition border-2 border-slate-700 hover:border-emerald-400 shadow-md cursor-pointer">
+        <span>←</span> <span>Retour à l'Accueil Map &amp; Rando</span>
       </a>
-      <div class="flex items-center gap-2">
-        <span class="text-xs text-slate-400 font-mono">Fiches Pratiques &bull; JLDApps 2026</span>
+      <div class="flex items-center gap-3">
+        <span class="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wider">Guides, Savoirs &amp; Matériel</span>
+        <span class="text-xs text-slate-400 hidden sm:inline">&bull; JLDApps 2026</span>
       </div>
     </div>
 
-    <div class="max-w-5xl mx-auto space-y-12">
+    <div class="max-w-6xl mx-auto space-y-12">
       
-      <!-- FICHE 1 : GPS, SYSTÈME SBAS & RÉGLAGES DE MONTRES -->
-      <article class="bg-slate-900 rounded-3xl border border-slate-800 p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-8">
-          <div>
-            <div class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-1">GUIDE PRATIQUE &bull; GÉOLOCALISATION</div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">
-              GPS Différentiel, Système SBAS &amp; Réglages des Montres de Sport
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">EGNOS (Europe) &bull; WAAS (USA) &bull; Double fréquence L1/L5 &bull; Optimisation outdoor</p>
-          </div>
-          <a href="docs/Guide_Pratique_GPS_SBAS.pdf" target="_blank" download class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow-lg transition flex-shrink-0 cursor-pointer">
-            <span>📥</span> <span>Télécharger le PDF (207 Ko)</span>
-          </a>
+      <!-- EN-TÊTE DE LA SECTION GUIDES -->
+      <div class="text-center max-w-3xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-black uppercase tracking-wider mb-2">
+          <span>📚</span> <span>Fiches Pratiques de Cartographie &amp; Géolocalisation</span>
         </div>
+        <h1 class="text-3xl sm:text-4xl font-black text-white">
+          Comprendre, Mesurer &amp; Optimiser vos Traces
+        </h1>
+        <p class="text-sm text-slate-300 mt-2">
+          Cliquez sur une fiche pour déplier son analyse complète, ses tableaux de réglages et télécharger le guide officiel au format PDF.
+        </p>
+      </div>
 
-        <div class="prose prose-invert max-w-none text-slate-300 space-y-6 text-sm leading-relaxed">
-          <section>
-            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <span class="text-sky-400">1.</span> Pourquoi le GPS standard présente des imprécisions en randonnée
-            </h3>
-            <p>
-              Le système GPS civil standard offre une précision nominale d'environ <strong>5 à 10 mètres</strong> en conditions idéales. 
-              Toutefois, en randonnée, cette précision est fréquemment altérée par la traversée de l'ionosphère et de la troposphère, 
-              les masques végétaux (canopée dense) et les échos parasites en gorge ou falaise (effet multi-trajet).
-            </p>
-          </section>
-
-          <section>
-            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <span class="text-sky-400">2.</span> Le fonctionnement du système SBAS (EGNOS / WAAS)
-            </h3>
-            <p>
-              Le système <strong>SBAS</strong> (<em>Satellite-Based Augmentation System</em>) compense ces erreurs en temps réel. 
-              Un réseau de stations au sol mesure les écarts entre positions théoriques et mesurées, puis transmet ces corrections 
-              à des satellites géostationnaires (<strong>EGNOS</strong> en Europe, <strong>WAAS</strong> en Amérique du Nord). 
-              Votre récepteur GPS applique ces corrections pour abaisser la marge d'erreur à <strong>moins de 1,5 mètre</strong>.
-            </p>
-          </section>
-
-          <section>
-            <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
-              <span class="text-sky-400">3.</span> Tableau comparatif des réglages recommandés par marque
-            </h3>
-            <div class="overflow-x-auto rounded-2xl border border-slate-800">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="bg-slate-950 text-slate-300 border-b border-slate-800 font-bold uppercase tracking-wider">
-                  <tr>
-                    <th class="p-3">Marque</th>
-                    <th class="p-3">Modèles récents</th>
-                    <th class="p-3">Réglage Satellite conseillé</th>
-                    <th class="p-3">Option SBAS / EGNOS</th>
-                    <th class="p-3">Impact Autonomie</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/60 bg-slate-900/50">
-                  <tr class="hover:bg-slate-800/40">
-                    <td class="p-3 font-bold text-white">Garmin</td>
-                    <td class="p-3">Fenix 7/8, Forerunner 265/965, Epix</td>
-                    <td class="p-3 text-emerald-400 font-semibold">Tous les systèmes + Multi-Bandes (L1+L5)</td>
-                    <td class="p-3">Activé d'office en multi-bandes</td>
-                    <td class="p-3 text-amber-400">-15% à -25%</td>
-                  </tr>
-                  <tr class="hover:bg-slate-800/40">
-                    <td class="p-3 font-bold text-white">Suunto</td>
-                    <td class="p-3">Vertical, Race, 9 Peak Pro</td>
-                    <td class="p-3 text-emerald-400 font-semibold">Performances (Tous systèmes + Double fréq.)</td>
-                    <td class="p-3">Intégré nativement</td>
-                    <td class="p-3 text-emerald-400">Excellente (60h+)</td>
-                  </tr>
-                  <tr class="hover:bg-slate-800/40">
-                    <td class="p-3 font-bold text-white">Coros</td>
-                    <td class="p-3">Apex 2 Pro, Vertix 2/2S, Pace 3</td>
-                    <td class="p-3 text-emerald-400 font-semibold">Tous les systèmes + Double Fréquence</td>
-                    <td class="p-3">Automatique</td>
-                    <td class="p-3 text-emerald-400">Très faible impact</td>
-                  </tr>
-                  <tr class="hover:bg-slate-800/40">
-                    <td class="p-3 font-bold text-white">Apple</td>
-                    <td class="p-3">Apple Watch Ultra 1 &amp; 2</td>
-                    <td class="p-3 text-emerald-400 font-semibold">GPS double fréquence de précision L1/L5</td>
-                    <td class="p-3">Géré par watchOS</td>
-                    <td class="p-3 text-amber-400">Autonomie 17-36h</td>
-                  </tr>
-                </tbody>
-              </table>
+      <!-- LISTE DES FICHES TECHNIQUES EN MODE ACCORDÉON (TITRES SEULS AU DÉPART) -->
+      <div class="space-y-4">
+        
+        <!-- ================================================================= -->
+        <!-- FICHE 1 : GPS DIFFÉRENTIEL, SBAS & RÉGLAGES MONTRES DE SPORT -->
+        <!-- ================================================================= -->
+        <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-sky-500/70 transition-all shadow-2xl overflow-hidden">
+          <!-- Entête cliquable (Titre seul) -->
+          <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gps-content', this)" 
+                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                🛰️
+              </div>
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                  <span>GÉOLOCALISATION &amp; MONTRES</span>
+                </div>
+                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                  GPS Différentiel, Système SBAS &amp; Réglages des Montres de Sport
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                  Pourquoi le GPS décroche sous la canopée, comment le SBAS abaisse l'erreur sous 1,5&nbsp;m, et comparatif Garmin, Suunto, Coros, Apple.
+                </p>
+              </div>
             </div>
-          </section>
-        </div>
-      </article>
+            
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <span class="guide-toggle-icon text-sm px-3.5 py-2 rounded-xl bg-sky-600/30 text-sky-300 font-extrabold border border-sky-500/40">
+                Déplier ▾
+              </span>
+            </div>
+          </button>
 
-      <!-- FICHE 2 : LE PROGRAMME NATIONAL LIDAR HD DE L'IGN -->
-      <article class="bg-slate-900 rounded-3xl border border-slate-800 p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-8">
-          <div>
-            <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1">FICHE TECHNIQUE &bull; ALTIMÉTRIE &amp; 3D</div>
-            <h2 class="text-2xl sm:text-3xl font-extrabold text-white">
-              Le Programme National LiDAR HD de l'IGN
-            </h2>
-            <p class="text-xs text-slate-400 mt-1">Numérisation 3D intégrale de la France &bull; Densité 10 pts/m² &bull; MNT &amp; MNS haute résolution</p>
+          <!-- Contenu dépliable de la Fiche 1 (Initialement masqué) -->
+          <div id="fiche-gps-content" class="hidden border-t border-slate-800 p-6 sm:p-10 bg-slate-950/60 space-y-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-sky-950/30 p-4 rounded-2xl border border-sky-800/50">
+              <div class="text-xs text-sky-200">
+                📄 <strong>Fiche Technique Officielle</strong> &bull; Édition Haute Définition &bull; Document PDF imprimable
+              </div>
+              <a href="docs/Guide_Pratique_GPS_SBAS.pdf" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex-shrink-0">
+                <span>📥</span> <span>Télécharger le PDF (207 Ko)</span>
+              </a>
+            </div>
+
+            <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-sky-400">1.</span> Pourquoi le GPS standard présente des imprécisions en randonnée
+                </h3>
+                <p>
+                  Le système GPS civil standard offre une précision nominale d'environ <strong>5 à 10 mètres</strong> en conditions dégagées. 
+                  Toutefois, en randonnée, cette précision est fréquemment altérée par la traversée de l'atmosphère, 
+                  les masques végétaux (forêts à canopée dense) et les échos parasites en gorge ou falaise (effet multi-trajet).
+                </p>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-sky-400">2.</span> Le fonctionnement du système SBAS (EGNOS / WAAS)
+                </h3>
+                <p>
+                  Le système <strong>SBAS</strong> (<em>Satellite-Based Augmentation System</em>) compense ces erreurs en temps réel. 
+                  Un réseau de stations au sol mesure les écarts entre positions théoriques et mesurées, puis transmet ces corrections 
+                  à des satellites géostationnaires (<strong>EGNOS</strong> en Europe, <strong>WAAS</strong> en Amérique du Nord). 
+                  Votre récepteur GPS applique ces corrections pour abaisser la marge d'erreur à <strong>moins de 1,5 mètre</strong>.
+                </p>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-3 flex items-center gap-2">
+                  <span class="text-sky-400">3.</span> Tableau comparatif des réglages recommandés par marque
+                </h3>
+                <div class="overflow-x-auto rounded-2xl border border-slate-800">
+                  <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-900 text-slate-200 border-b border-slate-800 font-extrabold uppercase tracking-wider">
+                      <tr>
+                        <th class="p-3">Marque</th>
+                        <th class="p-3">Modèles récents</th>
+                        <th class="p-3">Réglage Satellite conseillé</th>
+                        <th class="p-3">Option SBAS / EGNOS</th>
+                        <th class="p-3">Impact Autonomie</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60 bg-slate-950/40 font-medium">
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Garmin</td>
+                        <td class="p-3 text-slate-300">Fenix 7/8, Forerunner 265/965, Epix</td>
+                        <td class="p-3 text-emerald-400 font-semibold">Tous les systèmes + Multi-Bandes (L1+L5)</td>
+                        <td class="p-3">Activé d'office en multi-bandes</td>
+                        <td class="p-3 text-amber-400">-15% à -25%</td>
+                      </tr>
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Suunto</td>
+                        <td class="p-3 text-slate-300">Vertical, Race, 9 Peak Pro</td>
+                        <td class="p-3 text-emerald-400 font-semibold">Performances (Tous systèmes + Double fréq.)</td>
+                        <td class="p-3">Intégré nativement</td>
+                        <td class="p-3 text-emerald-400 font-bold">Excellente (60h+)</td>
+                      </tr>
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Coros</td>
+                        <td class="p-3 text-slate-300">Apex 2 Pro, Vertix 2/2S, Pace 3</td>
+                        <td class="p-3 text-emerald-400 font-semibold">Tous les systèmes + Double Fréquence</td>
+                        <td class="p-3">Automatique</td>
+                        <td class="p-3 text-emerald-400">Très faible impact</td>
+                      </tr>
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Apple</td>
+                        <td class="p-3 text-slate-300">Apple Watch Ultra 1 &amp; 2</td>
+                        <td class="p-3 text-emerald-400 font-semibold">GPS double fréquence de précision L1/L5</td>
+                        <td class="p-3">Géré par watchOS</td>
+                        <td class="p-3 text-rose-400 font-semibold">Autonomie 17-36h</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            <!-- Bouton replier -->
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gps-content')" 
+                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                ▴ Replier la fiche
+              </button>
+            </div>
           </div>
-          <a href="docs/Fiche_Pratique_LiDAR_HD.pdf" target="_blank" download class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition flex-shrink-0 cursor-pointer">
-            <span>📥</span> <span>Télécharger le PDF (162 Ko)</span>
-          </a>
         </div>
 
-        <div class="prose prose-invert max-w-none text-slate-300 space-y-6 text-sm leading-relaxed">
-          <section>
-            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <span class="text-emerald-400">1.</span> Qu'est-ce que le LiDAR HD ?
-            </h3>
-            <p>
-              Le projet <strong>LiDAR HD</strong> est un grand programme public porté par l'IGN visant à cartographier le relief 
-              de l'ensemble du territoire français (métropole et outre-mer) en 3D par télédétection laser aéroportée. 
-              Les avions équipés émettent des centaines de milliers d'impulsions laser par seconde, permettant d'enregistrer 
-              en moyenne <strong>10 impulsions par mètre carré</strong>.
-            </p>
-          </section>
+        <!-- ================================================================= -->
+        <!-- FICHE 2 : LE PROGRAMME NATIONAL LIDAR HD DE L'IGN -->
+        <!-- ================================================================= -->
+        <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-emerald-500/70 transition-all shadow-2xl overflow-hidden">
+          <!-- Entête cliquable (Titre seul) -->
+          <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-lidar-content', this)" 
+                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                🌲
+              </div>
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                  <span>TOPOGRAPHIE &amp; ALTIMÉTRIE IGN</span>
+                </div>
+                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                  Le Programme National LiDAR HD de l'IGN : Révolution de la Cartographie 3D
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                  Couverture laser aéroportée de toute la France, résolution de 0,5 mètre, pénétration sous couvert végétal et génération des MNT.
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <span class="guide-toggle-icon text-sm px-3.5 py-2 rounded-xl bg-emerald-600/30 text-emerald-300 font-extrabold border border-emerald-500/40">
+                Déplier ▾
+              </span>
+            </div>
+          </button>
 
-          <section>
-            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <span class="text-emerald-400">2.</span> Pourquoi le LiDAR « traverse » la forêt
-            </h3>
-            <p>
-              Contrairement à la photographie aérienne classique qui bute sur la cime des arbres, le faisceau laser comporte plusieurs « échos ». 
-              Une partie du faisceau traverse les interstices du feuillage pour atteindre le sol véritable. L'IGN applique ensuite des 
-              algorithmes d'intelligence artificielle pour classifier chaque point : <em>sol nu, végétation basse, moyenne, haute, et bâti</em>.
-            </p>
-          </section>
+          <!-- Contenu dépliable de la Fiche 2 (Initialement masqué) -->
+          <div id="fiche-lidar-content" class="hidden border-t border-slate-800 p-6 sm:p-10 bg-slate-950/60 space-y-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-emerald-950/30 p-4 rounded-2xl border border-emerald-800/50">
+              <div class="text-xs text-emerald-200">
+                📄 <strong>Fiche Technique Officielle</strong> &bull; Édition IGN France &bull; Document PDF imprimable
+              </div>
+              <a href="docs/Fiche_Pratique_LiDAR_HD.pdf" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex-shrink-0">
+                <span>📥</span> <span>Télécharger le PDF (162 Ko)</span>
+              </a>
+            </div>
 
-          <section>
-            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-              <span class="text-emerald-400">3.</span> Applications directes pour les randonneurs et cartographes
-            </h3>
-            <ul class="list-disc pl-5 space-y-1.5 text-xs text-slate-300">
-              <li><strong>Courbes de niveau ultra-précises :</strong> Remplacement progressif des anciennes courbes à équidistance approximative par des modèles décimétriques.</li>
-              <li><strong>Détection de sentiers disparus :</strong> Révélation d'anciens chemins muletiers, murets en pierres sèches et terrasses masqués sous la végétation.</li>
-              <li><strong>Calcul exact du dénivelé cumulé (D+) :</strong> Élimination des artefacts d'élévation sur les traces GPX grâce aux MNT au pas de 1 mètre.</li>
-            </ul>
-          </section>
+            <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-emerald-400">1.</span> Qu'est-ce que le programme LiDAR HD ?
+                </h3>
+                <p>
+                  Le programme national <strong>LiDAR HD</strong> mené par l'Institut National de l'Information Géographique et Forestière (<strong>IGN</strong>) 
+                  constitue une avancée technologique majeure. Il vise à modéliser la totalité du sol et du sursol métropolitain et ultra-marin 
+                  en 3D à l'aide de capteurs laser embarqués sur aéronefs, avec une densité minimale de <strong>10 impulsions par m²</strong>.
+                </p>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-emerald-400">2.</span> Pénétration du couvert végétal et Modèles Numériques
+                </h3>
+                <p>
+                  Contrairement aux prises de vues aériennes classiques ou satellites, les impulsions laser infrarouges traversent les interstices de la canopée. 
+                  L'IGN en extrait trois modèles d'élévation complémentaires :
+                </p>
+                <ul class="list-disc list-inside space-y-1.5 pl-2 mt-2">
+                  <li><strong>MNT (Modèle Numérique de Terrain)</strong> : altitude exacte du sol nu (sans arbres ni bâtiments).</li>
+                  <li><strong>MNS (Modèle Numérique de Surface)</strong> : sommet de la végétation et du bâti.</li>
+                  <li><strong>MNH (Modèle Numérique de Hauteur)</strong> : hauteur exacte de la canopée forestière.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-emerald-400">3.</span> Bénéfices directs pour les randonneurs
+                </h3>
+                <p>
+                  Grâce au MNT LiDAR HD à 50 cm de précision, les courbes de niveau des cartes <strong>IGN TOP 25®</strong> 
+                  acquièrent une netteté inégalée : détection de sentiers historiques dissimulés sous les bois, estimation exacte des pourcentages de pente 
+                  et calculs de dénivelés cumulés (D+) d'une rigueur absolue.
+                </p>
+              </section>
+            </div>
+
+            <!-- Bouton replier -->
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-lidar-content')" 
+                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                ▴ Replier la fiche
+              </button>
+            </div>
+          </div>
         </div>
-      </article>
+
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- SECTION PUBLICITAIRE & RECOMMANDATIONS AMAZON OUTDOOR (6 BLOCS) -->
+      <!-- ================================================================= -->
+      <section id="section-amazon-showcase" class="mt-16 pt-12 border-t border-slate-800 space-y-8">
+        
+        <div class="text-center max-w-3xl mx-auto">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black uppercase tracking-wider mb-2">
+            <span>🛒</span> <span>Sélection Matériel Randonnée &amp; Aventure</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-white">
+            Équipements &amp; Matériels Recommandés
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+            Sélection indépendante d'équipements de confiance pour préparer vos sorties outdoor. En commandant via ces liens, vous soutenez Map &amp; Rando sans aucun surcoût.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+          
+          <!-- BLOC 1 : ÉQUIPEMENTS DU RANDONNEUR -->
+          <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 p-6 flex flex-col justify-between shadow-2xl transition">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🥾</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">
+                  Équipements &amp; Portance
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-white">Chaussures, Bâtons &amp; Vêtements</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Chaussures Gore-Tex</strong> tige moyenne avec semelle Vibram anti-dérapante.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Bâtons télescopiques Carbone</strong> ultra-légers avec poignée liège absorbante.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Veste Hardshell imperméable</strong> respirante 20 000 mm coupe-vent.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Gourdes isothermes inox 1L</strong> &amp; poches à eau 2L sans BPA.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <a href="https://www.amazon.fr/s?k=chaussures+randonnee+gore+tex+batons+carbone&tag=maprando-21" target="_blank" rel="noopener sponsored" 
+                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition cursor-pointer">
+                <span>Voir la sélection Équipements sur Amazon</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- BLOC 2 : ÉNERGIE & AUTONOMIE OUTDOOR -->
+          <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 p-6 flex flex-col justify-between shadow-2xl transition">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">⚡</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">
+                  Énergie &amp; Solaire
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-white">Power Banks &amp; Chargeurs Solaires</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Batteries externes 20 000+ mAh</strong> antichoc &amp; étanches IP67 pour montres/smartphones.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Chargeurs solaires pliables 28W</strong> à haut rendement SunPower double sortie USB.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Panneaux solaires ultra-compacts</strong> à fixer sur le sac à dos en marche.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Câbles renforcés nylon tressé</strong> anti-arrachement (USB-C, Lightning, Garmin).</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <a href="https://www.amazon.fr/s?k=batterie+externe+randonnee+chargeur+solaire+portable&tag=maprando-21" target="_blank" rel="noopener sponsored" 
+                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition cursor-pointer">
+                <span>Voir les Chargeurs Solaires sur Amazon</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- BLOC 3 : NAVIGATION, BOUSSOLES & GPS -->
+          <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 p-6 flex flex-col justify-between shadow-2xl transition">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🧭</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">
+                  Orientation &amp; GPS
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-white">Boussoles, Altimètres &amp; GPS Dédiés</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Boussoles de visée à miroir</strong> avec clinomètre (Silva Expedition 4 / Suunto MC-2).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Balises GPS de détresse satellite</strong> (Garmin inReach Mini 2 / SOS Iridium).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Montres Cardio-GPS Outdoor</strong> avec cartographie topographique embarquée (Garmin, Suunto).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Altimètres barométriques</strong> digitaux étanches avec historique météo.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <a href="https://www.amazon.fr/s?k=boussole+visee+suunto+silva+gps+randonnee+garmin&tag=maprando-21" target="_blank" rel="noopener sponsored" 
+                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition cursor-pointer">
+                <span>Voir Boussoles &amp; GPS sur Amazon</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- BLOC 4 : SÉCURITÉ, SURVIE & PREMIERS SECOURS -->
+          <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 p-6 flex flex-col justify-between shadow-2xl transition">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🩹</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">
+                  Sécurité &amp; Secours
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-white">Trousse Secours, Frontales &amp; Survie</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Trousse de premiers soins étanche</strong> montagne (compresses, hémostatiques, tire-tique).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Lampes frontales rechargeables</strong> 450+ lumens avec éclairage rouge nocturne (Petzl).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Sifflet de détresse 120 dB</strong> sans bille en aluminium haute fréquence.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Couvertures de survie renforcées</strong> indéchirables réutilisables.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <a href="https://www.amazon.fr/s?k=trousse+premiers+secours+randonnee+lampe+frontale+petzl&tag=maprando-21" target="_blank" rel="noopener sponsored" 
+                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition cursor-pointer">
+                <span>Voir Sécurité &amp; Secours sur Amazon</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- BLOC 5 : HYDRATATION, FILTRATION & BIVOUAC -->
+          <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 p-6 flex flex-col justify-between shadow-2xl transition">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">💧</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">
+                  Eau &amp; Bivouac
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-white">Filtres à Eau, Pastilles &amp; Réchauds</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Filtres à eau portables</strong> 0,1 micron (Sawyer Squeeze / LifeStraw Peak).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Pastilles purifiantes Micropur</strong> pour désinfection instantanée en milieu naturel.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Réchauds à gaz ultra-légers</strong> 70g type MSR PocketRocket 2.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Popotes compactes en titane / aluminium anodisé</strong> pour bivouac nomade.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <a href="https://www.amazon.fr/s?k=filtre+eau+randonnee+sawyer+lifestraw+rechaud+gaz&tag=maprando-21" target="_blank" rel="noopener sponsored" 
+                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition cursor-pointer">
+                <span>Voir Filtration &amp; Bivouac sur Amazon</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- BLOC 6 : CARTOTHÈQUE & OUTILS TERRAIN -->
+          <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 p-6 flex flex-col justify-between shadow-2xl transition">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🗺️</span>
+                <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">
+                  Cartographie &amp; Outils
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-white">Porte-Cartes, Curvimètres &amp; Loupes</h3>
+              <ul class="text-xs text-slate-300 space-y-2.5">
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Porte-cartes étanches transparents</strong> pliants avec cordon tour de cou pour IGN TOP 25.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Curvimètres de mesure cartographique</strong> avec échelles 1:25 000 et 1:50 000.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Loupes de terrain avec réglette graduée</strong> pour lecture ultra-précise des courbes.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-amber-400">✔</span>
+                  <span><strong>Housses étanches de protection IPX8</strong> pour smartphones et carnets de randonnée.</span>
+                </li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <a href="https://www.amazon.fr/s?k=porte+carte+etanche+randonnee+curvimetre+loupe&tag=maprando-21" target="_blank" rel="noopener sponsored" 
+                 class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs shadow-md transition cursor-pointer">
+                <span>Voir Outils Carto sur Amazon</span> <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
 
     </div>
+
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL CGU, SOURCES DES DONNÉES & TRANSPARENCE -->
+  <!-- MODAL : MENTIONS LÉGALES & CGU (Accessible depuis l'accueil et le footer) -->
   <!-- ========================================================================= -->
-  <div id="modal-cgu" class="hidden fixed inset-0 z-[100000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-slate-200 text-xs space-y-4">
+  <div id="modal-cgu" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <span>📜</span> <span>Mentions Légales &amp; CGU</span>
+        <h3 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+          <span>⚖️</span> <span>Conditions Générales d'Utilisation &amp; Origine des Données</span>
         </h3>
-        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg p-1">
           ✕
         </button>
       </div>
 
-      <div class="space-y-3 max-h-[60vh] overflow-y-auto pr-1 text-slate-300 leading-relaxed">
+      <div class="text-xs sm:text-sm text-slate-300 space-y-4 leading-relaxed font-light">
         <div>
-          <h4 class="font-bold text-white text-xs uppercase tracking-wide text-emerald-400 mb-1">1. Origine des Cartes &amp; Images Satellites</h4>
+          <h4 class="font-extrabold text-white text-sm mb-1">1. Origine des Cartes &amp; Imageries</h4>
           <p>
-            Les cartes topographiques officielles au 1 : 25 000 (SCAN 25®) et le Plan IGN sont mis à disposition via la plateforme 
-            <strong>Géoplateforme de l'IGN</strong> (Institut National de l'Information Géographique et Forestière). 
-            Les vues satellites mondiales sont issues des services d'imagerie haute résolution d'<strong>Esri</strong>, 
-            et les tracés mondiaux reposent sur les contributeurs bénévoles d'<strong>OpenStreetMap</strong>.
+            Les fonds cartographiques topographiques sont issus des services officiels de l'<strong>IGN France</strong> (cartes SCAN 25&reg;, TOP 25&reg;, découpage des feuilles papier) ainsi que d'<strong>OpenStreetMap France</strong> et de services satellites mondiaux haute définition.
           </p>
         </div>
 
         <div>
-          <h4 class="font-bold text-white text-xs uppercase tracking-wide text-sky-400 mb-1">2. Origine des Altitudes &amp; Profils 3D</h4>
+          <h4 class="font-extrabold text-white text-sm mb-1">2. Origine des Altitudes &amp; Reliefs</h4>
           <p>
-            Les altitudes, dénivelés cumulés et modèles de terrain proviennent de la base <strong>RGE ALTI®</strong> de l'IGN 
-            et s'appuient sur les acquisitions haute densité du <strong>Programme National LiDAR HD</strong>.
+            Les altitudes, dénivelés cumulés et profils altimétriques proviennent du Modèle Numérique de Terrain (MNT) à haute précision issu du <strong>Programme National LiDAR HD</strong> de l'IGN (résolution centimétrique à 0,5 m).
           </p>
         </div>
 
         <div>
-          <h4 class="font-bold text-white text-xs uppercase tracking-wide text-amber-400 mb-1">3. Transparence sur le Modèle &amp; Financement</h4>
+          <h4 class="font-extrabold text-white text-sm mb-1">3. Liens Partenaires &amp; Financement</h4>
           <p>
-            MapRando est mis gratuitement à disposition des passionnés d'outdoor et des associations de randonneurs. Afin de garantir la pérennité 
-            des serveurs, de financer les outils de développement avancés et de couvrir les coûts de bande passante, des encarts discrets ou contributions 
-            partenaires peuvent être intégrés en toute transparence, sans compromettre l'ergonomie ni les performances.
+            La plateforme Map &amp; Rando est libre d'accès et sans abonnement payant. Certains liens d'équipements sont affiliés partenaires Amazon : ils permettent de financer les serveurs et outils de développement sans aucun surcoût pour les utilisateurs.
           </p>
         </div>
 
@@ -503,7 +815,7 @@
       </div>
 
       <div class="pt-3 border-t border-slate-800 text-right">
-        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition cursor-pointer">
+        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer">
           J'ai compris
         </button>
       </div>
@@ -525,6 +837,20 @@
       <!-- GAUCHE : Logo officiel Les Randonneurs Sanaryens avec animation de marche -->
 
       <div class="flex-1 flex items-center justify-start min-w-0">
+
+        <!-- BRANDING MAP & RANDO (Affiché en accès libre) -->
+        <a id="header-maprando-branding" href="#accueil" class="hidden items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 hover:border-emerald-400 transition cursor-pointer" title="Map & Rando by JLDApps - Retour à l'accueil">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-xl shadow-lg border border-emerald-400/40">
+            🗺️
+          </div>
+          <div class="flex flex-col">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-lg sm:text-xl font-black tracking-tight text-white uppercase leading-none">Map &amp; Rando</span>
+              <span class="text-xs font-normal text-emerald-300/80 lowercase leading-none">by JLDApps</span>
+            </div>
+            <span class="text-[10px] text-slate-300 font-medium tracking-wide uppercase leading-tight mt-0.5">La cartographie au service de vos pas</span>
+          </div>
+        </a>
 
         <div id="logo-frame" class="relative overflow-hidden cursor-pointer select-none rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 inline-flex items-center" title="Les Randonneurs Sanaryens (Cliquez pour faire marcher les randonneurs)">
 
@@ -556,15 +882,11 @@
 
 
 
-      <!-- CENTRE : MapRando en plus grand et harmonieux -->
+      <!-- CENTRE : Rando Finder en plus grand et harmonieux -->
 
       <div class="flex-1 flex flex-col items-center justify-center text-center min-w-0 px-2 select-none">
 
-        <span class="inline-flex items-center justify-center text-sm sm:text-base md:text-lg lg:text-xl font-extrabold px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-emerald-600 text-white tracking-wider uppercase shadow-sm whitespace-nowrap hover:bg-emerald-700 transition">
-
-          MapRando
-
-        </span>
+        <span class="inline-flex items-center justify-center text-sm sm:text-base md:text-lg lg:text-xl font-extrabold px-4 sm:px-5 py-1 sm:py-1.5 rounded-full bg-emerald-600 text-white tracking-wider uppercase shadow-sm whitespace-nowrap hover:bg-emerald-700 transition"><span id="header-center-pill-text">Map &amp; Rando</span></span>
 
       </div>
 
@@ -593,11 +915,7 @@
 
           </div>
 
-          <span class="text-[10px] sm:text-[11px] text-slate-400 font-medium tracking-wide mt-0.5 hidden sm:inline-block">
-
-            Sanary-sur-Mer &bull; Var (83)
-
-          </span>
+          <span id="header-sub-location" class="text-[10px] sm:text-[11px] text-slate-400 font-medium tracking-wide mt-0.5 hidden sm:inline-block">Outils Cartographiques &bull; IGN &amp; GPX</span>
 
         </div>
 
@@ -617,16 +935,16 @@
 
       <!-- Navigation Tabs -->
 
-      <nav class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-        <!-- BOUTON RETOUR ACCUEIL MAPRANDO -->
-        <a id="btn-return-portal" href="#accueil" class="btn-return-home px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-md cursor-pointer flex-shrink-0" title="Retourner au portail d'accueil MapRando">
-          <span class="text-sm">🏠</span>
-          <span class="hidden sm:inline">Accueil MapRando</span>
+      <nav class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <!-- BOUTON RETOUR ACCUEIL MAP & RANDO (HAUTE LISIBILITÉ) -->
+        <a id="btn-return-portal" href="#accueil" class="btn-return-home px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/30 cursor-pointer flex-shrink-0 border border-emerald-400/40" title="Retourner au portail d'accueil Map & Rando">
+          <span class="text-base">🏠</span>
+          <span>Accueil Map &amp; Rando</span>
         </a>
 
-        <!-- BOUTON CHARGEMENT GPX ACCÈS LIBRE -->
-        <button id="btn-quick-gpx-viewer" type="button" class="px-3 py-1.5 sm:py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition shadow-sm cursor-pointer" title="Charger un fichier GPX depuis votre PC pour l'afficher sur le fond de carte">
-          <span>📂</span>
+        <!-- BOUTON CHARGEMENT GPX ACCÈS LIBRE (HAUTE LISIBILITÉ) -->
+        <button id="btn-quick-gpx-viewer" type="button" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs sm:text-sm flex items-center gap-2 transition shadow-lg shadow-amber-950/30 cursor-pointer border border-amber-300/40" title="Charger un fichier GPX depuis votre PC pour l'afficher sur le fond de carte">
+          <span class="text-base">📂</span>
           <span>Charger une trace GPX</span>
         </button>
         <input type="file" id="input-quick-gpx-viewer" accept=".gpx" class="hidden">
@@ -670,8 +988,7 @@
 
 
       <!-- Contrôles droits : Base, Stockage & Utilisateur -->
-
-      <div class="flex items-center gap-2 flex-wrap justify-end">
+      <div id="header-user-controls" class="flex items-center gap-2 flex-wrap justify-end">
 
         <!-- Sélecteur de Base de Données -->
 
@@ -4160,8 +4477,8 @@
         </button>
 
         <div class="pt-2">
-            <a id="btn-login-return-portal" href="#accueil" onclick="document.getElementById('login-lock-modal').classList.add('hidden')" class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-              <span>🏠</span> <span>Retour à l'accueil MapRando</span>
+            <a id="btn-login-return-portal" href="#accueil" onclick="document.getElementById('login-lock-modal').classList.add('hidden')" class="w-full py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
+              <span>🏠</span> <span>Retour à l'accueil Map &amp; Rando</span>
             </a>
           </div>
         </form>
@@ -5462,7 +5779,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/pdf-exporter.js?v=91"></script>
 
-  <script src="js/portal-router.js?v=1.1.0"></script>
+  <script src="js/portal-router.js?v=2.0.0"></script>
     <script src="js/app.js?v=91"></script>
 
 

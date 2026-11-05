@@ -443,12 +443,99 @@ path.bearing-preview-line {
   pointer-events: none !important;
 }
 
-/* Adaptation responsive des boutons d outils carte pour preserver l espace avec l echelle */
-@media (max-width: 1535px) {
-  #btn-map-manual-text,
-  #btn-map-area-print-text {
-    display: none !important;
-  }
+/* Lisibilité accrue des boutons d'outils cartographiques */
+#btn-map-manual,
+#btn-map-legend,
+#btn-map-area-print,
+#btn-map-heading,
+#btn-map-measure {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  border: 1.5px solid #94a3b8 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -2px rgba(0, 0, 0, 0.15) !important;
+  font-size: 12px !important;
+}
+
+#btn-map-manual:hover,
+#btn-map-legend:hover,
+#btn-map-area-print:hover,
+#btn-map-heading:hover,
+#btn-map-measure:hover {
+  background-color: #f8fafc !important;
+  border-color: #059669 !important;
+  color: #047857 !important;
+  transform: translateY(-1px);
+}
+
+#btn-map-manual span,
+#btn-map-legend span,
+#btn-map-area-print span,
+#btn-map-heading span,
+#btn-map-measure span {
+  font-weight: 800 !important;
+  display: inline-block !important;
+}
+
+/* Lisibilité accrue du sélecteur de couches de cartes Leaflet */
+.leaflet-control-layers-toggle {
+  width: 44px !important;
+  height: 44px !important;
+  background-size: 26px 26px !important;
+  background-color: #ffffff !important;
+  border: 2px solid #0f172a !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25) !important;
+}
+
+.leaflet-control-layers-expanded {
+  background: #ffffff !important;
+  border: 2px solid #0f172a !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  line-height: 1.6 !important;
+}
+
+.leaflet-control-layers-expanded label {
+  cursor: pointer !important;
+  padding: 4px 6px !important;
+  border-radius: 8px !important;
+  transition: background 0.15s !important;
+  font-weight: 700 !important;
+}
+
+.leaflet-control-layers-expanded label:hover {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+}
+
+.leaflet-control-layers-expanded input[type="radio"],
+.leaflet-control-layers-expanded input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: #059669 !important;
+  margin-right: 8px !important;
+}
+
+/* Lisibilité accrue de l'échelle et du centimètre vrai */
+#map-coords-hud {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 2px solid rgba(51, 65, 85, 0.9) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Boutons de navigation haut : lisibilité absolue */
+#btn-return-portal, #btn-quick-gpx-viewer {
+  font-weight: 800 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Limites de la carte papier IGN TOP 25 (Bande translucide) */

@@ -196,7 +196,37 @@
     /**
      * Isole strictement la carte libre vs l'espace membre
      */
+    toggleGuideFiche(ficheId, buttonEl) {
+      const el = document.getElementById(ficheId);
+      if (!el) return;
+      const isHidden = el.classList.contains('hidden');
+      if (isHidden) {
+        el.classList.remove('hidden');
+        if (buttonEl) {
+          const icon = buttonEl.querySelector('.guide-toggle-icon');
+          if (icon) icon.textContent = 'Replier ▴';
+        }
+      } else {
+        el.classList.add('hidden');
+        if (buttonEl) {
+          const icon = buttonEl.querySelector('.guide-toggle-icon');
+          if (icon) icon.textContent = 'Déplier ▾';
+        } else {
+          const parentCard = el.closest('.rounded-3xl');
+          if (parentCard) {
+            const icon = parentCard.querySelector('.guide-toggle-icon');
+            if (icon) icon.textContent = 'Déplier ▾';
+          }
+        }
+      }
+    }
+
+    /**
+     * Isole strictement la carte libre vs l'espace membre
+     */
     applyFreeMapMode(isFree) {
+      const logoFrame = document.getElementById('logo-frame');
+      const maprandoBranding = document.getElementById('header-maprando-branding');
       const searchFilterBar = document.getElementById('search-filter-bar');
       const searchInstructionsBar = document.getElementById('search-instructions-bar');
       const dbSelectorBox = document.getElementById('header-db-selector')?.closest('div');
@@ -206,8 +236,15 @@
       const quickGpxBtn = document.getElementById('btn-quick-gpx-viewer');
       const tableCol = document.getElementById('table-column');
       const mapCol = document.getElementById('map-column');
+      const headerSubLocation = document.getElementById('header-sub-location');
 
       if (isFree) {
+        // En mode libre : masquer Randonneurs Sanaryens et afficher Map & Rando by JLDApps
+        if (logoFrame) logoFrame.classList.add('hidden');
+        if (maprandoBranding) {
+          maprandoBranding.classList.remove('hidden');
+          maprandoBranding.classList.add('flex');
+        }
         // Masquer complètement les barres de filtres et d'instructions de randonnées
         if (searchFilterBar) searchFilterBar.classList.add('hidden');
         if (searchInstructionsBar) searchInstructionsBar.classList.add('hidden');
@@ -215,6 +252,7 @@
         if (userControls) userControls.classList.add('hidden');
         if (dbSelectorBox) dbSelectorBox.classList.add('hidden');
         if (storageBadge) storageBadge.classList.add('hidden');
+        if (headerSubLocation) headerSubLocation.innerHTML = 'Outils Cartographiques &bull; IGN &amp; GPX';
         // Masquer les onglets adhérents (Trouver, Charger, Gérer)
         tabButtons.forEach(btn => btn.classList.add('hidden'));
         // Afficher le bouton charger GPX libre
@@ -244,12 +282,19 @@
           }
         }
       } else {
+        // En mode adhérent : restaurer Randonneurs Sanaryens et masquer Map & Rando libre
+        if (logoFrame) logoFrame.classList.remove('hidden');
+        if (maprandoBranding) {
+          maprandoBranding.classList.add('hidden');
+          maprandoBranding.classList.remove('flex');
+        }
         // Restaurer l'interface club complète
         if (searchFilterBar) searchFilterBar.classList.remove('hidden');
         if (searchInstructionsBar) searchInstructionsBar.classList.remove('hidden');
         if (userControls) userControls.classList.remove('hidden');
         if (dbSelectorBox) dbSelectorBox.classList.remove('hidden');
         if (storageBadge) storageBadge.classList.remove('hidden');
+        if (headerSubLocation) headerSubLocation.innerHTML = 'Sanary-sur-Mer &bull; Var (83)';
         tabButtons.forEach(btn => btn.classList.remove('hidden'));
         if (quickGpxBtn) quickGpxBtn.classList.add('hidden');
 
