@@ -645,46 +645,101 @@
   <!-- MODAL : MENTIONS LÉGALES & CGU (Accessible depuis l'accueil et le footer) -->
   <!-- ========================================================================= -->
   <div id="modal-cgu" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-          <span>⚖️</span> <span>Conditions Générales d'Utilisation &amp; Origine des Données</span>
+          <span>📜</span> <span>Mentions Légales, Licences &amp; Origine des Données</span>
         </h3>
-        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg p-1">
+        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="text-slate-400 hover:text-white text-xl p-1 font-bold">
           ✕
         </button>
       </div>
 
       <div class="text-xs sm:text-sm text-slate-300 space-y-4 leading-relaxed font-light">
-        <div>
-          <h4 class="font-extrabold text-white text-sm mb-1">1. Origine des Cartes &amp; Imageries</h4>
-          <p>
-            Les fonds cartographiques topographiques sont issus des services officiels de l'<strong>IGN France</strong> (cartes SCAN 25&reg;, TOP 25&reg;, découpage des feuilles papier) ainsi que d'<strong>OpenStreetMap France</strong> et de services satellites mondiaux haute définition.
+        <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-200">
+          <div class="flex items-center gap-2 font-bold text-white text-sm mb-1">
+            <span>⚖️</span> Utilisation 100% Légale &amp; Conforme aux Licences Officielles
+          </div>
+          <p class="text-xs text-emerald-200/90 leading-normal font-normal">
+            L'ensemble des cartes, photographies aériennes, modèles altimétriques et données géographiques intégrés dans <strong>Map &amp; Rando</strong> sont diffusés dans le respect strict des réglementations françaises et internationales sur les données publiques ouvertes (Open Data) et des contrats de diffusion d'API de chaque producteur.
           </p>
         </div>
 
         <div>
-          <h4 class="font-extrabold text-white text-sm mb-1">2. Origine des Altitudes &amp; Reliefs</h4>
+          <h4 class="font-extrabold text-white text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-emerald-400">1.</span> IGN France (Institut National de l'Information Géographique et Forestière)
+          </h4>
+          <p class="mb-2">
+            Depuis le 1<sup>er</sup> janvier 2021, conformément à la politique nationale d'ouverture des données publiques de l'État français, les données de référence de l'IGN (cartes SCAN 25&reg;, TOP 25&reg;, BD TOPO&reg;, BD ORTHO&reg;, RGE ALTI&reg; et les relevés LiDAR HD) sont sous <strong>Licence Ouverte Etalab 2.0</strong> (équivalente à la licence internationale CC-BY).
+          </p>
+          <p class="mb-2">
+            Cette licence officielle autorise explicitement et gratuitement toute réutilisation, consultation, représentation, publication et intégration dans des applications web publiques ou commerciales, sous réserve du maintien des mentions de copyright et de paternité.
+          </p>
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <a href="https://geoservices.ign.fr/licences" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 font-bold border border-emerald-500/30 transition">
+              <span>➔</span> Consulter la Licence Ouverte sur IGN Geoservices
+            </a>
+            <a href="https://www.ign.fr" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 font-bold border border-slate-700 transition">
+              Portail Officiel IGN.fr
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-extrabold text-white text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-sky-400">2.</span> OpenStreetMap &amp; OpenTopoMap (Cartographie Mondiale)
+          </h4>
+          <p class="mb-2">
+            Les fonds cartographiques routiers, sentiers pédestres mondiaux et courbes de niveau sont issus de la base collaborative mondiale <strong>OpenStreetMap</strong> et du projet <strong>OpenTopoMap</strong>, publiés sous licence libre <strong>ODbL (Open Database License)</strong>.
+          </p>
+          <div class="flex items-center gap-2 text-xs">
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 font-bold border border-sky-500/30 transition">
+              <span>➔</span> Mentions et Droits d'auteur OpenStreetMap (ODbL)
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-extrabold text-white text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-amber-400">3.</span> Esri &amp; ArcGIS World Imagery (Satellite Mondial HD)
+          </h4>
+          <p class="mb-2">
+            L'imagerie satellite mondiale haute résolution est consultée via les services web ArcGIS Living Atlas conformément aux conditions d'utilisation publiques d'Esri pour l'affichage de fonds cartographiques interactifs.
+          </p>
+          <div class="flex items-center gap-2 text-xs">
+            <a href="https://www.esri.com/en-us/legal/terms/full-master-agreement" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 font-bold border border-amber-500/30 transition">
+              <span>➔</span> Conditions Générales Esri World Imagery
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-extrabold text-white text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-purple-400">4.</span> Programme National LiDAR HD (Altitudes &amp; Reliefs)
+          </h4>
           <p>
-            Les altitudes, dénivelés cumulés et profils altimétriques proviennent du Modèle Numérique de Terrain (MNT) à haute précision issu du <strong>Programme National LiDAR HD</strong> de l'IGN (résolution centimétrique à 0,5 m).
+            Les dénivelés cumulés (+ / -), les altitudes et profils altimétriques sont issus du Modèle Numérique de Terrain (MNT) centimétrique du <strong>Programme National LiDAR HD</strong> de l'IGN (résolution à 0,5 mètre, pénétration sous couvert végétal), assurant une exactitude topographique supérieure aux GPS grand public.
           </p>
         </div>
 
         <div>
-          <h4 class="font-extrabold text-white text-sm mb-1">3. Liens Partenaires &amp; Financement</h4>
+          <h4 class="font-extrabold text-white text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-emerald-400">5.</span> Partenariats, Affiliation &amp; Modèle Économique
+          </h4>
           <p>
-            La plateforme Map &amp; Rando est libre d'accès et sans abonnement payant. Certains liens d'équipements sont affiliés partenaires Amazon : ils permettent de financer les serveurs et outils de développement sans aucun surcoût pour les utilisateurs.
+            L'accès à Map &amp; Rando est totalement libre, gratuit et sans abonnement obligatoire. Pour pérenniser l'hébergement haute performance et le développement des outils, certains liens vers du matériel outdoor recommandé (chaussures, bâtons, sécurité, chargeurs) sont affiliés auprès d'enseignes partenaires (Amazon, Décathlon, Au Vieux Campeur). Ces commissions d'apporteur d'affaires ne génèrent <strong>aucun surcoût pour l'utilisateur</strong>.
           </p>
         </div>
 
-        <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-400">
-          Plateforme développée par <strong>JLDApps 2026</strong> &bull; Sanary-sur-Mer (Var 83).
+        <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+          <span>Édité par <strong>JLDApps 2026</strong> &bull; Sanary-sur-Mer (Var 83)</span>
+          <span class="text-emerald-400 font-semibold">Conformité RGPD &bull; Zéro cookie publicitaire intrusif</span>
         </div>
       </div>
 
       <div class="pt-3 border-t border-slate-800 text-right">
-        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer">
-          J'ai compris
+        <button type="button" onclick="document.getElementById('modal-cgu').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg">
+          J'ai compris &bull; Fermer
         </button>
       </div>
     </div>
@@ -1455,15 +1510,17 @@
           </div>
 
           <!-- Recherche exhaustive d'un lieu / adresse (Monde entier) en mode Carte & Outils -->
-          <div id="map-world-search-box" class="absolute top-3 left-14 z-[1050] flex flex-col">
-            <div class="relative flex items-center shadow-md rounded-xl">
-              <input id="map-world-search-input" type="text" 
+          <div id="map-world-search-box" class="absolute top-3 left-14 z-[1050] flex flex-col" style="display: flex !important;">
+            <div class="relative flex items-center shadow-xl rounded-xl">
+              <input id="map-world-search-input" type="search"
+                     name="geo_search_address_input_no_autofill"
+                     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
                      placeholder="🔍 Rechercher un lieu, sommet, adresse (Monde entier)..." 
-                     class="w-72 sm:w-96 pl-3 pr-7 py-2 rounded-xl bg-white/95 hover:bg-white focus:bg-white text-slate-800 placeholder-slate-400 border border-slate-300 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 text-xs font-semibold backdrop-blur-md transition-all shadow-sm"
-                     autocomplete="off">
-              <button id="btn-clear-world-search" type="button" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-700 font-bold text-xs" title="Effacer">✕</button>
+                     class="w-72 sm:w-96 pl-3.5 pr-8 py-2 rounded-xl bg-white text-slate-900 placeholder-slate-400 border-2 border-slate-300 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 text-xs font-bold shadow-md transition-all"
+                     style="background-color: #ffffff !important; opacity: 1 !important;">
+              <button id="btn-clear-world-search" type="button" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-700 font-bold text-xs cursor-pointer p-1" title="Effacer">✕</button>
             </div>
-            <div id="map-world-search-results" class="hidden mt-1 w-72 sm:w-96 max-h-64 overflow-y-auto bg-white/98 rounded-xl shadow-2xl border border-slate-200 z-50 divide-y divide-slate-100 text-xs"></div>
+            <div id="map-world-search-results" class="hidden mt-1.5 w-72 sm:w-96 max-h-72 overflow-y-auto rounded-xl shadow-2xl border-2 border-slate-300 z-[1100] divide-y divide-slate-100 text-xs" style="background-color: #ffffff !important; opacity: 1 !important; -webkit-overflow-scrolling: touch;"></div>
           </div>
 
 

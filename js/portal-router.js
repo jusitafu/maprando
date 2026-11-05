@@ -235,14 +235,18 @@
       }
 
       results.innerHTML = '';
+      results.style.backgroundColor = '#ffffff';
+      results.style.opacity = '1';
       items.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'search-item p-2.5 hover:bg-emerald-50 cursor-pointer transition flex items-start gap-2 text-slate-700 border-b border-slate-100 last:border-b-0';
+        div.className = 'search-item p-3 hover:bg-emerald-50 cursor-pointer transition flex items-start gap-2.5 border-b border-slate-200/90 last:border-b-0';
+        div.style.backgroundColor = '#ffffff';
+        div.style.opacity = '1';
         div.innerHTML = `
-          <span class="text-emerald-600 mt-0.5 text-xs">📍</span>
+          <span class="text-emerald-600 mt-0.5 text-sm flex-shrink-0">📍</span>
           <div class="flex-1 min-w-0">
-            <div class="font-bold text-slate-800 text-xs truncate">${item.title}</div>
-            <div class="text-[10px] text-slate-400 truncate">${item.subtitle}</div>
+            <div class="font-extrabold text-slate-900 text-xs truncate">${item.title}</div>
+            <div class="text-[11px] text-slate-600 truncate font-medium mt-0.5">${item.subtitle}</div>
           </div>
         `;
         div.addEventListener('click', () => {
