@@ -201,20 +201,34 @@
       const searchInstructionsBar = document.getElementById('search-instructions-bar');
       const dbSelectorBox = document.getElementById('header-db-selector')?.closest('div');
       const storageBadge = document.getElementById('storage-badge')?.closest('div');
+      const userControls = document.querySelector('header .flex.items-center.gap-2.flex-wrap.justify-end');
       const tabButtons = document.querySelectorAll('.tab-btn');
       const quickGpxBtn = document.getElementById('btn-quick-gpx-viewer');
+      const tableCol = document.getElementById('table-column');
+      const mapCol = document.getElementById('map-column');
 
       if (isFree) {
         // Masquer complètement les barres de filtres et d'instructions de randonnées
         if (searchFilterBar) searchFilterBar.classList.add('hidden');
         if (searchInstructionsBar) searchInstructionsBar.classList.add('hidden');
-        // Masquer le sélecteur de base du club / JLDApps
+        // Masquer le panneau utilisateur club droit (Base, Stockage, Compte)
+        if (userControls) userControls.classList.add('hidden');
         if (dbSelectorBox) dbSelectorBox.classList.add('hidden');
         if (storageBadge) storageBadge.classList.add('hidden');
         // Masquer les onglets adhérents (Trouver, Charger, Gérer)
         tabButtons.forEach(btn => btn.classList.add('hidden'));
         // Afficher le bouton charger GPX libre
         if (quickGpxBtn) quickGpxBtn.classList.remove('hidden');
+
+        // Forcer la carte en pleine page (100% largeur / hauteur, cacher la colonne tableau)
+        if (tableCol) tableCol.classList.add('hidden');
+        if (mapCol) {
+          mapCol.classList.remove('lg:w-1/2');
+          mapCol.classList.add('w-full', 'h-full');
+        }
+        if (window.App && typeof window.App.setViewMode === 'function') {
+          window.App.setViewMode('map');
+        }
 
         // Retirer les marqueurs du club de la carte
         if (window.MapManagerInstance) {
@@ -225,15 +239,24 @@
           if (mm.currentHikePolyline && mm.map && mm.map.hasLayer(mm.currentHikePolyline)) {
             mm.map.removeLayer(mm.currentHikePolyline);
           }
+          if (mm.map) {
+            setTimeout(() => mm.map.invalidateSize(), 100);
+          }
         }
       } else {
         // Restaurer l'interface club complète
         if (searchFilterBar) searchFilterBar.classList.remove('hidden');
         if (searchInstructionsBar) searchInstructionsBar.classList.remove('hidden');
+        if (userControls) userControls.classList.remove('hidden');
         if (dbSelectorBox) dbSelectorBox.classList.remove('hidden');
         if (storageBadge) storageBadge.classList.remove('hidden');
         tabButtons.forEach(btn => btn.classList.remove('hidden'));
         if (quickGpxBtn) quickGpxBtn.classList.add('hidden');
+
+        // Restaurer la vue (mixte par défaut pour le club)
+        if (window.App && typeof window.App.setViewMode === 'function') {
+          window.App.setViewMode(window.App.currentViewMode || 'mixte');
+        }
 
         // Restaurer les marqueurs de randonnées sur la carte
         if (window.MapManagerInstance) {
@@ -243,6 +266,9 @@
           }
           if (window.App && typeof window.App.filterHikes === 'function') {
             window.App.filterHikes();
+          }
+          if (mm.map) {
+            setTimeout(() => mm.map.invalidateSize(), 100);
           }
         }
       }
