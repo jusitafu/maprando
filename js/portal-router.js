@@ -109,6 +109,9 @@
         });
       }
 
+      // Recherche de lieu monde entier
+      this.initWorldSearch();
+
       // Visualiseur GPX libre (accès libre sans compte)
       const inputGpxViewer = document.getElementById('input-quick-gpx-viewer');
       const btnQuickGpx = document.getElementById('btn-quick-gpx-viewer');
@@ -237,6 +240,9 @@
       const tableCol = document.getElementById('table-column');
       const mapCol = document.getElementById('map-column');
       const headerSubLocation = document.getElementById('header-sub-location');
+      const ibpLegend = document.getElementById('map-ibp-legend');
+      const searchBox = document.getElementById('map-world-search-box');
+      const btnMapManual = document.getElementById('btn-map-manual');
 
       if (isFree) {
         // En mode libre : masquer Randonneurs Sanaryens et afficher Map & Rando by JLDApps
@@ -245,6 +251,11 @@
           maprandoBranding.classList.remove('hidden');
           maprandoBranding.classList.add('flex');
         }
+        // Masquer complètement l'IBP index et le Mode d'emploi RandoFinder en mode Carte & Outils
+        if (ibpLegend) ibpLegend.classList.add('hidden');
+        if (btnMapManual) btnMapManual.classList.add('hidden');
+        if (searchBox) searchBox.classList.remove('hidden');
+
         // Masquer complètement les barres de filtres et d'instructions de randonnées
         if (searchFilterBar) searchFilterBar.classList.add('hidden');
         if (searchInstructionsBar) searchInstructionsBar.classList.add('hidden');
@@ -282,6 +293,11 @@
           }
         }
       } else {
+        // En mode adhérent : restaurer Randonneurs Sanaryens, l'IBP index et le mode d'emploi
+        if (ibpLegend) ibpLegend.classList.remove('hidden');
+        if (btnMapManual) btnMapManual.classList.remove('hidden');
+        if (searchBox) searchBox.classList.add('hidden');
+
         // En mode adhérent : restaurer Randonneurs Sanaryens et masquer Map & Rando libre
         if (logoFrame) logoFrame.classList.remove('hidden');
         if (maprandoBranding) {

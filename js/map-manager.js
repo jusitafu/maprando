@@ -1,3 +1,24 @@
+// Dictionnaire des correspondances commerciales IGN TOP 25 / Série Bleue (OT / ET / SB)
+const IGN_COMMERCIAL_REFS = {
+  "087_088": "3346 OT",  // Toulon / Le Gros Cerveau / Mont Faron
+  "089_088": "3446 OT",  // Hyères / Ile de Porquerolles
+  "065_034": "3218 SB",  // Bourbonne-les-Bains
+  "085_086": "3245 ET",  // Aubagne / La Ciotat / Massif de la Sainte-Baume
+  "083_086": "3145 ET",  // Marseille / Les Calanques
+  "091_086": "3545 OT",  // Saint-Tropez / Sainte-Maxime / Massif des Maures
+  "091_084": "3544 ET",  // Fréjus / Saint-Raphaël
+  "093_082": "3643 ET",  // Cannes / Grasse
+  "095_080": "3742 OT",  // Nice / Monaco / Menton
+  "093_056": "3630 OT",  // Chamonix / Mont-Blanc
+};
+
+function getSheetCommercialLabel(num, title) {
+  if (IGN_COMMERCIAL_REFS[num]) {
+    return `${IGN_COMMERCIAL_REFS[num]} • ${title}`;
+  }
+  return `TOP 25 ${title}`;
+}
+
 /**
  * Leaflet Map Manager with IGN, OpenStreetMap, Clean GPX Polylines & Selection Halo
  * Les Randonneurs Sanaryens - RandoFinder - JLD Apps 2026
@@ -2295,10 +2316,9 @@ class MapManager {
         if (pMarker.y >= 20 && pMarker.y <= mapSize.y - 48 &&
             pMarker.x >= (labelEstimatedWidth / 2) && pMarker.x <= mapSize.x - (labelEstimatedWidth / 2)) {
           const labelHtml = `
-            <div class="paper-sheet-badge-label" title="Feuille IGN : ${s.t} (n° ${s.n})\nÉdition papier : ${s.a}\nCliquer pour recadrer toute la feuille">
+            <div class="paper-sheet-badge-label" title="Feuille IGN : ${getSheetCommercialLabel(s.n, s.t)}\nÉdition papier : ${s.a}\nCliquer pour recadrer toute la feuille">
               <span class="mr-1">📄</span>
-              <strong>TOP 25 ${s.t}</strong>
-              <span class="opacity-80 text-[10px]">(${s.n})</span>
+              <strong>${getSheetCommercialLabel(s.n, s.t)}</strong>
               <span class="ml-1 px-1 py-0.5 rounded bg-sky-100 text-sky-800 font-mono text-[9px] font-bold">Éd. ${s.a}</span>
             </div>
           `;
@@ -2328,7 +2348,7 @@ class MapManager {
       outerBand.on('click', fitSheet);
 
       // Infobulle complete toujours disponible au survol meme si le badge texte est masque
-      const tooltipText = `<b>Feuille IGN TOP 25 : ${s.t}</b> (n° ${s.n})<br>Édition papier : <b>${s.a}</b><br><i>Cliquez pour recadrer toute la feuille</i>`;
+      const tooltipText = `<b>Feuille IGN : ${getSheetCommercialLabel(s.n, s.t)}</b><br>Édition papier : <b>${s.a}</b><br><i>Cliquez pour recadrer toute la feuille</i>`;
       outerBand.bindTooltip(tooltipText, { sticky: true, opacity: 0.95 });
 
       this.paperSheetLayer.addLayer(outerBand);
@@ -2370,7 +2390,7 @@ class MapManager {
       );
       if (match) {
         annee = match.a;
-        titre = match.t ? `${match.t} (${match.n})` : match.n;
+        titre = match.t ? getSheetCommercialLabel(match.n, match.t) : match.n;
         fullTooltip = `Feuille IGN : ${titre} • Édition papier : ${annee}`;
       }
     }

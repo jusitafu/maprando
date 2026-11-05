@@ -1576,15 +1576,26 @@
             </button>
           </div>
 
-          <!-- Difficulty Legend on map -->
-
-          <div class="absolute top-3 left-14 z-20 hidden sm:flex items-center gap-2 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-xl shadow-md border border-slate-200/90 text-[11px] font-semibold text-slate-700 pointer-events-none select-none">
+          <!-- Difficulty Legend on map (Actif uniquement en mode Randonner adherent) -->
+          <div id="map-ibp-legend" class="absolute top-3 left-14 z-20 hidden items-center gap-2 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-xl shadow-md border border-slate-200/90 text-[11px] font-semibold text-slate-700 pointer-events-none select-none">
             <span class="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1"><span>📈</span> IBP Index :</span>
             <span class="inline-flex items-center gap-1" title="Niveau 1 : Facile (≤ 25)"><span class="w-4 h-4 rounded text-[9px] font-black text-white flex items-center justify-center shadow-2xs" style="background-color:#16a34a">1</span> <span class="text-[10px] font-bold text-slate-600">≤25</span></span>
             <span class="inline-flex items-center gap-1" title="Niveau 2 : Assez facile (26 - 50)"><span class="w-4 h-4 rounded text-[9px] font-black text-white flex items-center justify-center shadow-2xs" style="background-color:#2563eb">2</span> <span class="text-[10px] font-bold text-slate-600">26-50</span></span>
             <span class="inline-flex items-center gap-1" title="Niveau 3 : Peu difficile (51 - 75)"><span class="w-4 h-4 rounded text-[9px] font-black text-white flex items-center justify-center shadow-2xs" style="background-color:#ea580c">3</span> <span class="text-[10px] font-bold text-slate-600">51-75</span></span>
             <span class="inline-flex items-center gap-1" title="Niveau 4 : Assez difficile (76 - 100)"><span class="w-4 h-4 rounded text-[9px] font-black text-white flex items-center justify-center shadow-2xs" style="background-color:#dc2626">4</span> <span class="text-[10px] font-bold text-slate-600">76-100</span></span>
             <span class="inline-flex items-center gap-1" title="Niveau 5 : Difficile (> 100)"><span class="w-4 h-4 rounded text-[9px] font-black text-white flex items-center justify-center shadow-2xs" style="background-color:#0f172a">5</span> <span class="text-[10px] font-bold text-slate-600">&gt;100</span></span>
+          </div>
+
+          <!-- Recherche exhaustive d'un lieu / adresse (Monde entier) en mode Carte & Outils -->
+          <div id="map-world-search-box" class="absolute top-3 left-14 z-20 flex flex-col">
+            <div class="relative flex items-center shadow-md rounded-xl">
+              <input id="map-world-search-input" type="text" 
+                     placeholder="🔍 Rechercher un lieu, sommet, adresse (Monde entier)..." 
+                     class="w-72 sm:w-96 pl-3 pr-7 py-2 rounded-xl bg-white/95 hover:bg-white focus:bg-white text-slate-800 placeholder-slate-400 border border-slate-300 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 text-xs font-semibold backdrop-blur-md transition-all shadow-sm"
+                     autocomplete="off">
+              <button id="btn-clear-world-search" type="button" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-700 font-bold text-xs" title="Effacer">✕</button>
+            </div>
+            <div id="map-world-search-results" class="hidden mt-1 w-72 sm:w-96 max-h-64 overflow-y-auto bg-white/98 rounded-xl shadow-2xl border border-slate-200 z-50 divide-y divide-slate-100 text-xs"></div>
           </div>
 
 
@@ -5775,11 +5786,11 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=92"></script>
   <script src="js/ign-top25-sheets.js?v=92"></script>
-  <script src="js/map-manager.js?v=92"></script>
+  <script src="js/map-manager.js?v=93"></script>
 
   <script src="js/pdf-exporter.js?v=91"></script>
 
-  <script src="js/portal-router.js?v=2.0.0"></script>
+  <script src="js/portal-router.js?v=2.1.0"></script>
     <script src="js/app.js?v=91"></script>
 
 
