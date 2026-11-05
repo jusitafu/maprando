@@ -44,10 +44,15 @@
 
     initEvents() {
       window.addEventListener('hashchange', () => this.handleHashChange());
-      document.addEventListener('DOMContentLoaded', () => {
+      const onReady = () => {
         this.bindDomButtons();
         this.handleHashChange();
-      });
+      };
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onReady);
+      } else {
+        setTimeout(onReady, 50);
+      }
     }
 
     /* =========================================================================
@@ -98,6 +103,172 @@
     /* =========================================================================
      * GESTION DU DOM ET NAVIGATION
      * ========================================================================= */
+
+    /* =========================================================================
+     * RECHERCHE MONDE ENTIER (LIEUX, SOMMETS, ADRESSES)
+     * ========================================================================= */
+    initWorldSearch() {
+      const box = document.getElementById('map-world-search-box');
+      const input = document.getElementById('map-world-search-input');
+      const results = document.getElementById('map-world-search-results');
+      const clearBtn = document.getElementById('btn-clear-world-search');
+      if (!input || !results) return;
+
+      if (box && typeof L !== 'undefined' && L.DomEvent) {
+        L.DomEvent.disableClickPropagation(box);
+        L.DomEvent.disableScrollPropagation(box);
+      }
+
+      let debounceTimer = null;
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim();
+        if (clearBtn) clearBtn.classList.toggle('hidden', !q);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        if (q.length < 2) {
+          results.classList.add('hidden');
+          results.innerHTML = '';
+          return;
+        }
+        debounceTimer = setTimeout(() => this.searchWorldPlace(q), 300);
+      });
+
+      if (clearBtn) {
+        clearBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          input.value = '';
+          clearBtn.classList.add('hidden');
+          results.classList.add('hidden');
+          results.innerHTML = '';
+          input.focus();
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !results.contains(e.target)) {
+          results.classList.add('hidden');
+        }
+      });
+
+            input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const first = results.querySelector('.search-item');
+          if (first && !results.classList.contains('hidden')) {
+            first.click();
+          } else {
+            const q = input.value.trim();
+            if (q.length >= 2) {
+              if (debounceTimer) clearTimeout(debounceTimer);
+              this.searchWorldPlace(q);
+            }
+          }
+        }
+      });
+    }
+
+    async searchWorldPlace(query) {
+      const results = document.getElementById('map-world-search-results');
+      if (!results) return;
+      results.innerHTML = '<div class="p-2.5 text-center text-slate-500 text-[11px]"><span class="inline-block animate-spin mr-1">⏳</span>Recherche mondiale en cours...</div>';
+      results.classList.remove('hidden');
+
+      let items = [];
+
+      // 1. Essai Nominatim OSM
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1`;
+        const resp = await fetch(url, { headers: { 'Accept-Language': 'fr,en' } });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data) && data.length > 0) {
+            items = data.map(d => ({
+              title: (d.display_name || '').split(',')[0],
+              subtitle: d.display_name || '',
+              lat: parseFloat(d.lat),
+              lon: parseFloat(d.lon),
+              bbox: d.boundingbox ? [
+                [parseFloat(d.boundingbox[0]), parseFloat(d.boundingbox[2])],
+                [parseFloat(d.boundingbox[1]), parseFloat(d.boundingbox[3])]
+              ] : null
+            }));
+          }
+        }
+      } catch (err) {
+        console.warn('Nominatim non disponible, tentative Photon fallback...', err);
+      }
+
+      // 2. Si aucun résultat ou erreur : fallback instantané Photon (Komoot OSM)
+      if (items.length === 0) {
+        try {
+          const pUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6&lang=fr`;
+          const pResp = await fetch(pUrl);
+          if (pResp.ok) {
+            const pData = await pResp.json();
+            if (pData && Array.isArray(pData.features)) {
+              items = pData.features.map(f => {
+                const props = f.properties || {};
+                const name = props.name || props.street || query;
+                const details = [props.city, props.state, props.country].filter(Boolean).join(', ');
+                const coords = f.geometry && f.geometry.coordinates; // [lon, lat]
+                return {
+                  title: name,
+                  subtitle: details ? `${name}, ${details}` : name,
+                  lat: coords ? coords[1] : 0,
+                  lon: coords ? coords[0] : 0,
+                  bbox: f.bbox ? [
+                    [f.bbox[1], f.bbox[0]],
+                    [f.bbox[3], f.bbox[2]]
+                  ] : null
+                };
+              }).filter(it => it.lat && it.lon);
+            }
+          }
+        } catch (err2) {
+          console.warn('Photon fallback non disponible:', err2);
+        }
+      }
+
+      if (items.length === 0) {
+        results.innerHTML = '<div class="p-2.5 text-center text-slate-400 text-[11px]">Aucun lieu trouvé pour cette recherche</div>';
+        return;
+      }
+
+      results.innerHTML = '';
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'search-item p-2.5 hover:bg-emerald-50 cursor-pointer transition flex items-start gap-2 text-slate-700 border-b border-slate-100 last:border-b-0';
+        div.innerHTML = `
+          <span class="text-emerald-600 mt-0.5 text-xs">📍</span>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-slate-800 text-xs truncate">${item.title}</div>
+            <div class="text-[10px] text-slate-400 truncate">${item.subtitle}</div>
+          </div>
+        `;
+        div.addEventListener('click', () => {
+          results.classList.add('hidden');
+          const input = document.getElementById('map-world-search-input');
+          if (input) input.value = item.title;
+          if (window.MapManagerInstance && window.MapManagerInstance.map) {
+            const map = window.MapManagerInstance.map;
+            if (item.bbox) {
+              map.fitBounds(item.bbox, { maxZoom: 15, padding: [30, 30] });
+            } else {
+              map.setView([item.lat, item.lon], 14);
+            }
+            if (window._worldSearchMarker) {
+              map.removeLayer(window._worldSearchMarker);
+            }
+            window._worldSearchMarker = L.marker([item.lat, item.lon])
+              .addTo(map)
+              .bindPopup(`<b>${item.title}</b><br><span style="font-size:11px;color:#64748b;">${item.subtitle}</span>`)
+              .openPopup();
+          }
+        });
+        results.appendChild(div);
+      });
+    }
+
     bindDomButtons() {
       // Modale CGU
       const btnOpenCgu = document.getElementById('btn-open-cgu');
@@ -252,9 +423,19 @@
           maprandoBranding.classList.add('flex');
         }
         // Masquer complètement l'IBP index et le Mode d'emploi RandoFinder en mode Carte & Outils
-        if (ibpLegend) ibpLegend.classList.add('hidden');
-        if (btnMapManual) btnMapManual.classList.add('hidden');
-        if (searchBox) searchBox.classList.remove('hidden');
+        // Masquer complètement l'IBP index et le Mode d'emploi RandoFinder en mode Carte & Outils
+        if (ibpLegend) {
+          ibpLegend.classList.add('hidden');
+          ibpLegend.style.setProperty('display', 'none', 'important');
+        }
+        if (btnMapManual) {
+          btnMapManual.classList.add('hidden');
+          btnMapManual.style.setProperty('display', 'none', 'important');
+        }
+        if (searchBox) {
+          searchBox.classList.remove('hidden');
+          searchBox.style.setProperty('display', 'flex', 'important');
+        }
 
         // Masquer complètement les barres de filtres et d'instructions de randonnées
         if (searchFilterBar) searchFilterBar.classList.add('hidden');
@@ -294,9 +475,18 @@
         }
       } else {
         // En mode adhérent : restaurer Randonneurs Sanaryens, l'IBP index et le mode d'emploi
-        if (ibpLegend) ibpLegend.classList.remove('hidden');
-        if (btnMapManual) btnMapManual.classList.remove('hidden');
-        if (searchBox) searchBox.classList.add('hidden');
+        if (ibpLegend) {
+          ibpLegend.classList.remove('hidden');
+          ibpLegend.style.display = '';
+        }
+        if (btnMapManual) {
+          btnMapManual.classList.remove('hidden');
+          btnMapManual.style.display = '';
+        }
+        if (searchBox) {
+          searchBox.classList.add('hidden');
+          searchBox.style.setProperty('display', 'none', 'important');
+        }
 
         // En mode adhérent : restaurer Randonneurs Sanaryens et masquer Map & Rando libre
         if (logoFrame) logoFrame.classList.remove('hidden');
