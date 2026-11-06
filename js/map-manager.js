@@ -1,16 +1,28 @@
 // Dictionnaire des correspondances commerciales IGN TOP 25 / Série Bleue (OT / ET / SB)
-const IGN_COMMERCIAL_REFS = {
+window.IGN_COMMERCIAL_REFS = {
+  "085_086": "3245 ET",  // Aubagne / Massif de la Sainte-Baume
+  "085_088": "3245 ET",  // Aubagne / La Ciotat
   "087_088": "3346 OT",  // Toulon / Le Gros Cerveau / Mont Faron
   "089_088": "3446 OT",  // Hyères / Ile de Porquerolles
+  "091_088": "3446 OT",  // La Londe-les-Maures / Bormes-les-Mimosas
   "065_034": "3218 SB",  // Bourbonne-les-Bains
-  "085_086": "3245 ET",  // Aubagne / La Ciotat / Massif de la Sainte-Baume
   "083_086": "3145 ET",  // Marseille / Les Calanques
   "091_086": "3545 OT",  // Saint-Tropez / Sainte-Maxime / Massif des Maures
   "091_084": "3544 ET",  // Fréjus / Saint-Raphaël
   "093_082": "3643 ET",  // Cannes / Grasse
   "095_080": "3742 OT",  // Nice / Monaco / Menton
   "093_056": "3630 OT",  // Chamonix / Mont-Blanc
+  "087_086": "3345 OT",  // Signes / Tourves / Brignoles
+  "089_086": "3445 OT",  // Le Luc / Cuers
+  "083_084": "3144 OT",  // Aix-en-Provence / Sainte-Victoire
+  "085_084": "3244 ET",  // Sainte-Victoire
+  "089_082": "3442 OT",  // Gorges du Verdon / Moustiers-Sainte-Marie
+  "091_082": "3542 ET",  // Castellane / Lac de Castillon
+  "095_078": "3841 OT",  // Vallée de la Roya / Vallée de la Bévéra
+  "093_078": "3741 OT",  // Vallée de la Vésubie / Mercantour
+  "065_032": "3218 SB"   // Bourbonne-les-Bains / Fresnes-sur-Apance
 };
+const IGN_COMMERCIAL_REFS = window.IGN_COMMERCIAL_REFS;
 
 function getSheetCommercialLabel(num, title) {
   if (IGN_COMMERCIAL_REFS[num]) {

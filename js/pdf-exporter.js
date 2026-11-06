@@ -6,6 +6,73 @@
 
 class PDFExporter {
   /**
+   * Identifie la (ou les) feuille(s) IGN TOP 25 / Série Bleue couvrant l'emprise géographique
+   * Retourne la référence commerciale (ex: 3346 OT), le titre officiel, l'année d'édition papier
+   * et le libellé à apposer sur le côté droit de la carte imprimée.
+   */
+  static getIgnSheetInfoForBounds(bounds) {
+    if (!bounds || !bounds[0] || !bounds[1] || typeof window === 'undefined' || !window.IGN_TOP25_SHEETS) {
+      return null;
+    }
+    const minLat = bounds[0][0];
+    const minLon = bounds[0][1];
+    const maxLat = bounds[1][0];
+    const maxLon = bounds[1][1];
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLon = (minLon + maxLon) / 2;
+
+    const sheets = window.IGN_TOP25_SHEETS;
+    const commRefs = window.IGN_COMMERCIAL_REFS || {};
+    const matches = [];
+
+    for (let i = 0; i < sheets.length; i++) {
+      const s = sheets[i];
+      const b = s.b;
+      if (!(b[2] < minLat || b[0] > maxLat || b[3] < minLon || b[1] > maxLon)) {
+        const interLat = Math.min(maxLat, b[2]) - Math.max(minLat, b[0]);
+        const interLon = Math.min(maxLon, b[3]) - Math.max(minLon, b[1]);
+        const area = interLat * interLon;
+        const containsCenter = (b[0] <= centerLat && centerLat <= b[2] && b[1] <= centerLon && centerLon <= b[3]);
+        
+        const commRef = commRefs[s.n] || null;
+        const label = commRef ? `${commRef} « ${s.t} »` : `TOP 25 « ${s.t} » (${s.n})`;
+        matches.push({
+          num: s.n,
+          title: s.t,
+          annee: s.a,
+          commercialRef: commRef,
+          label: label,
+          area: area,
+          containsCenter: containsCenter
+        });
+      }
+    }
+
+    if (matches.length === 0) return null;
+
+    matches.sort((a, b) => {
+      if (a.containsCenter && !b.containsCenter) return -1;
+      if (!a.containsCenter && b.containsCenter) return 1;
+      return b.area - a.area;
+    });
+
+    const primary = matches[0];
+    let verticalText = '';
+    if (matches.length === 1) {
+      verticalText = `CARTE IGN TOP 25 n° ${primary.label} — Édition papier : ${primary.annee}`;
+    } else {
+      const parts = matches.slice(0, 3).map(m => `${m.label} (Éd. ${m.annee})`);
+      verticalText = `FEUILLES IGN TOP 25 : ${parts.join(' • ')}`;
+    }
+
+    return {
+      primary: primary,
+      allMatches: matches,
+      verticalText: verticalText
+    };
+  }
+
+  /**
    * Generate and download the Fiche Randonnée PDF
    * Supports Format (A4, A3) and Orientation (Portrait, Landscape)
    * @param {Object} hike - Hike data
@@ -163,6 +230,18 @@ class PDFExporter {
             doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH);
             doc.setDrawColor(203, 213, 225);
             doc.rect(mapX, actualMapY, mapW, actualMapH);
+
+            // Mention verticale IGN TOP 25 sur le bord droit de la carte
+            if (mapLayer === 'igntop25' && (hike.bounds || (hike.points && hike.points.length > 0))) {
+              const b = hike.bounds || [[hike.points[0].lat, hike.points[0].lon], [hike.points[hike.points.length-1].lat, hike.points[hike.points.length-1].lon]];
+              const sheetInfo = this.getIgnSheetInfoForBounds(b);
+              if (sheetInfo && sheetInfo.verticalText) {
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(isA3 ? 6.2 : 4.8);
+                doc.setTextColor(100, 116, 139);
+                doc.text(sheetInfo.verticalText, mapX + mapW + 3.2, actualMapY + (actualMapH / 2), { angle: 270, align: 'center' });
+              }
+            }
           }
         } catch (err) {
           console.warn("Erreur image carte panoramique :", err);
@@ -564,8 +643,8 @@ class PDFExporter {
     const pageHeight = doc.internal.pageSize.getHeight();
     const isA3 = format === 'a3';
 
-    // Marges physiques en millimètres (15 mm sur les côtés pour loger les coordonnées UTM dans la marge)
-    const marginX = isA3 ? 18 : 15;
+    // Marges physiques en millimètres (17 mm sur les côtés pour loger coordonnées UTM et référence verticale IGN TOP 25)
+    const marginX = isA3 ? 19 : 17;
     const marginTop = isA3 ? 14 : 12;
     const marginBottom = isA3 ? 14 : 12;
     const contentWidth = pageWidth - (marginX * 2);
@@ -668,6 +747,12 @@ class PDFExporter {
     doc.text(areaSubtitle, marginX, subY);
 
     const actualBounds = [[minLat, minLon], [maxLat, maxLon]];
+
+    // Détection de la (ou des) feuille(s) IGN TOP 25
+    let ignSheetInfo = null;
+    if (mapLayer === 'igntop25') {
+      ignSheetInfo = this.getIgnSheetInfoForBounds(actualBounds);
+    }
 
     // Tracé GPX optionnel
     const pseudoHike = {
@@ -852,6 +937,18 @@ class PDFExporter {
       }
     }
 
+    // 6.C MENTION VERTICALE DE LA FEUILLE IGN TOP 25 SUR LE CÔTÉ DROIT DE LA CARTE IMPRIMÉE
+    if (ignSheetInfo && ignSheetInfo.verticalText) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(isA3 ? 7.2 : 5.8);
+      doc.setTextColor(30, 41, 59); // Slate 800 - Typographie officielle de marge cartographique
+      
+      const x_ign = mapX + mapW + (isA3 ? 12.5 : 11.2);
+      const y_ign = mapY + (mapH / 2);
+      // Rotation 270° : écriture orientée verticalement du bas vers le haut le long de la bordure droite
+      doc.text(ignSheetInfo.verticalText, x_ign, y_ign, { angle: 270, align: 'center' });
+    }
+
     // 7. Cadre principal de la carte
     doc.setDrawColor(15, 23, 42); // Slate 900
     doc.setLineWidth(0.5);
@@ -941,7 +1038,7 @@ class PDFExporter {
     doc.setTextColor(71, 85, 105);
     doc.text(finalLabel, barX + (cmSegments * 10), barY - 1, { align: 'center' });
 
-    // 9.C Descriptif d'échelle vraie
+    // 9.C Descriptif d'échelle vraie & Feuille IGN
     const infoX = barX + (cmSegments * 10) + 7;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(isA3 ? 8.5 : 7.2);
@@ -951,7 +1048,8 @@ class PDFExporter {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(isA3 ? 6.5 : 5.5);
     doc.setTextColor(71, 85, 105);
-    doc.text('1 cm mesuré sur le papier = ' + metersPerCm + ' m terrain • Format ' + format.toUpperCase() + ' (' + pageWidth + ' × ' + pageHeight + ' mm)', infoX, calibY + 3.2);
+    const ignCartouche = (ignSheetInfo && ignSheetInfo.primary) ? (' • Feuille IGN : ' + ignSheetInfo.primary.label + ' (' + ignSheetInfo.primary.annee + ')') : '';
+    doc.text('1 cm mesuré sur le papier = ' + metersPerCm + ' m terrain • Format ' + format.toUpperCase() + ' (' + pageWidth + ' × ' + pageHeight + ' mm)' + ignCartouche, infoX, calibY + 3.2);
 
     // 9.D Mention UTM et fuseau
     if (showUtm) {
@@ -966,12 +1064,12 @@ class PDFExporter {
     }
 
     // 10. Téléchargement immédiat
-    const safeTitle = (title || 'carte_extrait').replace(/[\/:*?"<>|]/g, '_').substring(0, 40);
+    const safeTitle = (title || 'carte_extrait').replace(/[\\/:*?"<>|]/g, '_').substring(0, 40);
     const filename = safeTitle + '_1-' + finalScale + '_' + format + '.pdf';
     doc.save(filename);
   }
 
-    static async renderStaticMap(hike, imgWidth = 720, imgHeight = 420, mapLayer = 'igntop25', customPadding = null, trackColor = null, options = {}) {
+  static async renderStaticMap(hike, imgWidth = 720, imgHeight = 420, mapLayer = 'igntop25', customPadding = null, trackColor = null, options = {}) {
     const canvas = document.createElement('canvas');
     canvas.width = imgWidth;
     canvas.height = imgHeight;
