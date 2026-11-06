@@ -544,103 +544,134 @@ class PDFExporter {
    */
   static async exportMapAreaPDF(bounds, options = {}) {
     const { jsPDF } = window.jspdf;
-    const format = (options.format || 'a4').toLowerCase(); // 'a4' or 'a3'
-    const orientation = (options.orientation || 'landscape').toLowerCase(); // 'landscape' or 'portrait'
+    const format = options.format || 'a4';
+    const orientation = options.orientation || 'landscape';
     const mapLayer = options.mapLayer || 'igntop25';
-    const title = options.title && options.title.trim() ? options.title.trim() : 'EXTRAIT DE CARTE TOPOGRAPHIQUE';
+    const title = options.title || 'Extrait de Carte';
     const showCoords = options.showCoords !== false;
+    const showUtm = options.showUtmGrid !== false;
+    const scaleMode = options.scaleMode || 'custom';
+    const userScaleDenom = parseInt(options.scaleDenom, 10) || 25000;
 
     const doc = new jsPDF({
       orientation: orientation,
       unit: 'mm',
-      format: format
+      format: format,
+      compress: true
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const isA3 = format === 'a3';
-    const isLandscape = orientation === 'landscape';
-    const margin = isA3 ? 16 : 12;
-    const contentWidth = pageWidth - (margin * 2);
 
-    let currentY = margin;
+    // Marges physiques en millimètres (15 mm sur les côtés pour loger les coordonnées UTM dans la marge)
+    const marginX = isA3 ? 18 : 15;
+    const marginTop = isA3 ? 14 : 12;
+    const marginBottom = isA3 ? 14 : 12;
+    const contentWidth = pageWidth - (marginX * 2);
 
-    // Détection si la zone est en France métropolitaine / Corse
-    const minLat = bounds[0][0];
-    const minLon = bounds[0][1];
-    const maxLat = bounds[1][0];
-    const maxLon = bounds[1][1];
-    const centerLat = (minLat + maxLat) / 2;
-    const centerLon = (minLon + maxLon) / 2;
+    let currentY = marginTop;
 
-    const isInsideFrance = (centerLat >= 41.0 && centerLat <= 51.5 && centerLon >= -5.5 && centerLon <= 10.0);
+    let minLat = bounds[0][0];
+    let minLon = bounds[0][1];
+    let maxLat = bounds[1][0];
+    let maxLon = bounds[1][1];
+    const origCenterLat = (minLat + maxLat) / 2;
+    const origCenterLon = (minLon + maxLon) / 2;
+
     const layerLabels = {
-      'igntop25': isInsideFrance ? "FOND OFFICIEL IGN TOP 25 (CARTE PAPIER)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
-      'ign': isInsideFrance ? "FOND OFFICIEL IGN TOP 25 (CARTE PAPIER)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
-      'ignplan': isInsideFrance ? "FOND OFFICIEL PLAN IGN (NUMÉRIQUE V2)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
-      'opentopo': "FOND OPENTOPOMAP (RELIEF MONDIAL)",
-      'osmfr': "FOND OPENSTREETMAP FRANCE (SENTIERS)",
+      'igntop25': "CARTE IGN TOP 25 OFFICIELLE (FLUX SCAN 25)",
+      'ignplan': "PLAN IGN MULTI-ÉCHELLES (IGN EXPRESS)",
+      'opentopo': "OPENTOPO MAP (RELIEF ET COURBES DE NIVEAU)",
+      'osm': "OPENSTREETMAP MONDE",
       'satellite': "FOND SATELLITE HAUTE DÉFINITION (IGN / ESRI)"
     };
     const layerLabel = layerLabels[mapLayer] || "FOND TOPOGRAPHIQUE";
 
     // 1. Bandeau supérieur (Header Banner)
-    const bannerH = isA3 ? 18 : 14;
+    const bannerH = isA3 ? 17 : 13;
     doc.setFillColor(15, 23, 42); // Slate 900
-    doc.rect(margin, currentY, contentWidth, bannerH, 'F');
+    doc.rect(marginX, currentY, contentWidth, bannerH, 'F');
 
-    // Club Logo
+    // Logo
     try {
       const logoImg = document.getElementById('app-logo-white') || document.getElementById('app-logo');
       if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
         const logoAspect = logoImg.naturalWidth / logoImg.naturalHeight;
-        const logoH = bannerH - 4;
+        const logoH = bannerH - 3.5;
         const logoW = logoH * logoAspect;
-        doc.addImage(logoImg, 'PNG', margin + 3, currentY + 2, Math.min(logoW, 55), logoH);
+        doc.addImage(logoImg, 'PNG', marginX + 3, currentY + 1.75, Math.min(logoW, 55), logoH);
       }
     } catch (e) {}
 
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(isA3 ? 13 : 10.5);
-    doc.text("EXTRAIT DE CARTE TOPOGRAPHIQUE", pageWidth - margin - 5, currentY + (bannerH * 0.44), { align: 'right' });
+    doc.setFontSize(isA3 ? 12 : 9.5);
+    doc.text("EXTRAIT DE CARTE TOPOGRAPHIQUE", pageWidth - marginX - 5, currentY + (bannerH * 0.44), { align: 'right' });
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(isA3 ? 8.5 : 7);
-    doc.setTextColor(203, 213, 225);
-    doc.text("RandoFinder - JLDApps 2026", pageWidth - margin - 5, currentY + (bannerH * 0.80), { align: 'right' });
-
-    currentY += bannerH + 3.5;
-
-    // 2. Titre personnalisé & Sous-titre
-    const dKmWidth = GPXParser.haversineDistance(minLat, minLon, minLat, maxLon);
-    const dKmHeight = GPXParser.haversineDistance(minLat, minLon, maxLat, minLon);
-
-    doc.setTextColor(15, 23, 42);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(isA3 ? 15 : 12);
-    const titleLines = doc.splitTextToSize(title, contentWidth);
-    doc.text(titleLines, margin, currentY + 3.5);
-
-    const subY = currentY + 4 + (titleLines.length * 4.5);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(isA3 ? 8 : 6.8);
+    doc.setTextColor(203, 213, 225);
+    doc.text("Map & Rando by JLDApps 2026", pageWidth - marginX - 5, currentY + (bannerH * 0.80), { align: 'right' });
+
+    currentY += bannerH + 3;
+
+    // 2. Titre personnalisé & Sous-titre
+    doc.setTextColor(15, 23, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isA3 ? 14 : 11);
+    const titleLines = doc.splitTextToSize(title, contentWidth);
+    doc.text(titleLines, marginX, currentY + 3.2);
+
+    const subY = currentY + 3.8 + (titleLines.length * 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(isA3 ? 7.5 : 6.5);
     doc.setTextColor(100, 116, 139);
-    const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const areaSubtitle = `Zone sélectionnée : ${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km • Centre : Lat ${centerLat.toFixed(4)}°, Lon ${centerLon.toFixed(4)}° • ${layerLabel} • Édité le ${today}`;
-    doc.text(areaSubtitle, margin, subY);
 
-    currentY = subY + 4.5;
+    currentY = subY + 3.5;
 
-    // 3. Carte Haute Définition
-    const mapX = margin;
+    // 3. Cadre de la carte : dimensions physiques précises sur le papier
+    const mapX = marginX;
     const mapY = currentY;
     const mapW = contentWidth;
-    const mapH = pageHeight - margin - 4 - currentY;
+    const footerH = isA3 ? 14 : 11.5; // Espace réservé pour la règle en cm, l'échelle et les mentions UTM
+    const mapH = pageHeight - marginBottom - footerH - mapY;
 
-    // Cadrage = zone sélectionnée ; tracé GPX optionnel de la randonnée affichée
+    // 4. Calcul de l'Échelle Vraie Physique
+    let finalScale = userScaleDenom;
+    if (scaleMode === 'custom' && userScaleDenom > 0) {
+      finalScale = userScaleDenom;
+      // Dimensions terrain couvertes par la carte papier au millimètre près
+      const groundW_m = (mapW / 1000) * finalScale;
+      const groundH_m = (mapH / 1000) * finalScale;
+
+      const metersPerLat = 111139;
+      const metersPerLon = 111139 * Math.cos((origCenterLat * Math.PI) / 180);
+
+      const deltaLat = groundH_m / metersPerLat;
+      const deltaLon = groundW_m / metersPerLon;
+
+      minLat = origCenterLat - deltaLat / 2;
+      maxLat = origCenterLat + deltaLat / 2;
+      minLon = origCenterLon - deltaLon / 2;
+      maxLon = origCenterLon + deltaLon / 2;
+    } else {
+      // Mode Auto : calcul de l'échelle résultante
+      const dLatMeters = Math.abs(maxLat - minLat) * 111139;
+      finalScale = Math.round((dLatMeters / (mapH / 1000)) / 100) * 100;
+    }
+
+    const dKmWidth = ((mapW / 1000) * finalScale) / 1000;
+    const dKmHeight = ((mapH / 1000) * finalScale) / 1000;
+    const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const areaSubtitle = 'Zone couverte : ' + dKmWidth.toFixed(1) + ' km × ' + dKmHeight.toFixed(1) + ' km • Centre : Lat ' + origCenterLat.toFixed(4) + '°, Lon ' + origCenterLon.toFixed(4) + '° • ' + layerLabel + ' • Édité le ' + today;
+    doc.text(areaSubtitle, marginX, subY);
+
+    const actualBounds = [[minLat, minLon], [maxLat, maxLon]];
+
+    // Tracé GPX optionnel
     const pseudoHike = {
-      bounds: bounds,
+      bounds: actualBounds,
       points: []
     };
 
@@ -661,69 +692,286 @@ class PDFExporter {
       }
     }
 
+    // 5. Génération du fond de carte haute résolution
     try {
       const pxW = Math.round(mapW * 4.5);
       const pxH = Math.round(mapH * 4.5);
-      const mapResult = await this.renderStaticMap(pseudoHike, pxW, pxH, mapLayer, 0.96, options.trackColor, options);
+      const renderOpts = Object.assign({}, options, { showUtmGrid: false });
+      const mapResult = await this.renderStaticMap(pseudoHike, pxW, pxH, mapLayer, 1.0, options.trackColor, renderOpts);
       const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
 
       if (mapImgData) {
         doc.addImage(mapImgData, 'JPEG', mapX, mapY, mapW, mapH);
-        doc.setDrawColor(203, 213, 225);
-        doc.rect(mapX, mapY, mapW, mapH);
       }
     } catch (err) {
       console.warn("Erreur export carte zone :", err);
     }
 
-    // 4. Coordonnées GPS aux quatre coins (Optionnel)
-    if (showCoords) {
+    // 6. Tracé vectoriel du Carroyage UTM et Coordonnées sur les Bords Latéraux
+    const centerUtm = (typeof MapManager !== 'undefined') ? MapManager.latLonToUtm(origCenterLat, origCenterLon) : { zone: 31, band: 'T' };
+    const zone = centerUtm.zone;
+    const band = centerUtm.band;
+
+    if (showUtm && typeof MapManager !== 'undefined') {
+      const utmSW = MapManager.latLonToUtm(minLat, minLon);
+      const utmNE = MapManager.latLonToUtm(maxLat, maxLon);
+      const utmNW = MapManager.latLonToUtm(maxLat, minLon);
+      const utmSE = MapManager.latLonToUtm(minLat, maxLon);
+
+      const minE = Math.min(utmSW.easting, utmNE.easting, utmNW.easting, utmSE.easting);
+      const maxE = Math.max(utmSW.easting, utmNE.easting, utmNW.easting, utmSE.easting);
+      const minN = Math.min(utmSW.northing, utmNE.northing, utmNW.northing, utmSE.northing);
+      const maxN = Math.max(utmSW.northing, utmNE.northing, utmNW.northing, utmSE.northing);
+
+      const utmStep = 1000; // Carroyage 1 km x 1 km officiel TOP 25
+      const startE = Math.floor(minE / utmStep) * utmStep;
+      const endE = Math.ceil(maxE / utmStep) * utmStep;
+      const startN = Math.floor(minN / utmStep) * utmStep;
+      const endN = Math.ceil(maxN / utmStep) * utmStep;
+
+      const lon2tileNorm = (lon) => (lon + 180) / 360;
+      const lat2tileNorm = (lat) => (1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2;
+
+      const minTx = lon2tileNorm(minLon);
+      const maxTx = lon2tileNorm(maxLon);
+      const minTy = lat2tileNorm(maxLat);
+      const maxTy = lat2tileNorm(minLat);
+
+      const latLonToPdfMm = (lat, lon) => {
+        const tx = lon2tileNorm(lon);
+        const ty = lat2tileNorm(lat);
+        const xFrac = (tx - minTx) / (maxTx - minTx);
+        const yFrac = (ty - minTy) / (maxTy - minTy);
+        return {
+          x: mapX + xFrac * mapW,
+          y: mapY + yFrac * mapH
+        };
+      };
+
+      // 6.A LIGNES HORIZONTALES (Northing N) ET VALEURS SUR LES BORDS LATÉRAUX (Gauche & Droite)
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(isA3 ? 6.5 : 5.5);
+      doc.setFontSize(isA3 ? 7.5 : 6.2);
 
-      // Coin Haut-Gauche
-      const tlText = `Lat ${maxLat.toFixed(4)}° • Lon ${minLon.toFixed(4)}°`;
-      const tlW = doc.getTextWidth(tlText) + 4;
-      doc.setFillColor(15, 23, 42);
-      doc.roundedRect(mapX + 2, mapY + 2, tlW, 4.5, 1, 1, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.text(tlText, mapX + 4, mapY + 5.2);
+      for (let n = startN; n <= endN; n += utmStep) {
+        const nSteps = 10;
+        const pts = [];
+        for (let s = 0; s <= nSteps; s++) {
+          const currE = minE + (s / nSteps) * (maxE - minE);
+          const ll = MapManager.utmToLatLon(currE, n, zone, origCenterLat >= 0);
+          pts.push(latLonToPdfMm(ll.lat, ll.lon));
+        }
 
-      // Coin Haut-Droit
-      const trText = `Lat ${maxLat.toFixed(4)}° • Lon ${maxLon.toFixed(4)}°`;
-      const trW = doc.getTextWidth(trText) + 4;
-      doc.setFillColor(15, 23, 42);
-      doc.roundedRect(mapX + mapW - trW - 2, mapY + 2, trW, 4.5, 1, 1, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.text(trText, mapX + mapW - trW, mapY + 5.2);
+        // 1. Tracé de la ligne de carroyage bleue
+        doc.setDrawColor(2, 132, 199); // Bleu Cyan TOP 25
+        doc.setLineWidth(0.18);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const x1 = Math.max(mapX, Math.min(mapX + mapW, p1.x));
+          const y1 = Math.max(mapY, Math.min(mapY + mapH, p1.y));
+          const x2 = Math.max(mapX, Math.min(mapX + mapW, p2.x));
+          const y2 = Math.max(mapY, Math.min(mapY + mapH, p2.y));
+          doc.line(x1, y1, x2, y2);
+        }
 
-      // Coin Bas-Gauche
-      const blText = `Lat ${minLat.toFixed(4)}° • Lon ${minLon.toFixed(4)}°`;
-      const blW = doc.getTextWidth(blText) + 4;
-      doc.setFillColor(15, 23, 42);
-      doc.roundedRect(mapX + 2, mapY + mapH - 6.5, blW, 4.5, 1, 1, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.text(blText, mapX + 4, mapY + mapH - 3.3);
+        // 2. Graduations et Valeurs sur les BORDS LATÉRAUX (Gauche et Droite)
+        const kmN = Math.round(n / 1000);
+        const leftLl = MapManager.utmToLatLon(minE, n, zone, origCenterLat >= 0);
+        const leftPt = latLonToPdfMm(leftLl.lat, leftLl.lon);
+        const rightLl = MapManager.utmToLatLon(maxE, n, zone, origCenterLat >= 0);
+        const rightPt = latLonToPdfMm(rightLl.lat, rightLl.lon);
 
-      // Coin Bas-Droit
-      const brText = `Lat ${minLat.toFixed(4)}° • Lon ${maxLon.toFixed(4)}°`;
-      const brW = doc.getTextWidth(brText) + 4;
-      doc.setFillColor(15, 23, 42);
-      doc.roundedRect(mapX + mapW - brW - 2, mapY + mapH - 6.5, brW, 4.5, 1, 1, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.text(brText, mapX + mapW - brW, mapY + mapH - 3.3);
+        // Bord latéral gauche
+        if (leftPt.y >= mapY + 2 && leftPt.y <= mapY + mapH - 2) {
+          doc.setDrawColor(2, 132, 199);
+          doc.setLineWidth(0.4);
+          doc.line(mapX - 2.5, leftPt.y, mapX, leftPt.y); // Tick vers l'extérieur
+
+          doc.setTextColor(2, 132, 199);
+          doc.text(String(kmN), mapX - 3.2, leftPt.y + 0.8, { align: 'right' });
+        }
+
+        // Bord latéral droit
+        if (rightPt.y >= mapY + 2 && rightPt.y <= mapY + mapH - 2) {
+          doc.setDrawColor(2, 132, 199);
+          doc.setLineWidth(0.4);
+          doc.line(mapX + mapW, rightPt.y, mapX + mapW + 2.5, rightPt.y); // Tick vers l'extérieur
+
+          doc.setTextColor(2, 132, 199);
+          doc.text(String(kmN), mapX + mapW + 3.2, rightPt.y + 0.8, { align: 'left' });
+        }
+      }
+
+      // 6.B LIGNES VERTICALES (Easting E) ET VALEURS SUR LES BORDS HAUT ET BAS
+      for (let e = startE; e <= endE; e += utmStep) {
+        const nSteps = 10;
+        const pts = [];
+        for (let s = 0; s <= nSteps; s++) {
+          const currN = minN + (s / nSteps) * (maxN - minN);
+          const ll = MapManager.utmToLatLon(e, currN, zone, origCenterLat >= 0);
+          pts.push(latLonToPdfMm(ll.lat, ll.lon));
+        }
+
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(0.18);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const p1 = pts[i];
+          const p2 = pts[i + 1];
+          const x1 = Math.max(mapX, Math.min(mapX + mapW, p1.x));
+          const y1 = Math.max(mapY, Math.min(mapY + mapH, p1.y));
+          const x2 = Math.max(mapX, Math.min(mapX + mapW, p2.x));
+          const y2 = Math.max(mapY, Math.min(mapY + mapH, p2.y));
+          doc.line(x1, y1, x2, y2);
+        }
+
+        const kmE = Math.round(e / 1000);
+        const topLl = MapManager.utmToLatLon(e, maxN, zone, origCenterLat >= 0);
+        const topPt = latLonToPdfMm(topLl.lat, topLl.lon);
+        const botLl = MapManager.utmToLatLon(e, minN, zone, origCenterLat >= 0);
+        const botPt = latLonToPdfMm(botLl.lat, botLl.lon);
+
+        // Bord supérieur
+        if (topPt.x >= mapX + 3 && topPt.x <= mapX + mapW - 3) {
+          doc.setDrawColor(2, 132, 199);
+          doc.setLineWidth(0.4);
+          doc.line(topPt.x, mapY - 2.5, topPt.x, mapY);
+
+          doc.setTextColor(2, 132, 199);
+          doc.text(String(kmE), topPt.x, mapY - 3, { align: 'center' });
+        }
+
+        // Bord inférieur
+        if (botPt.x >= mapX + 3 && botPt.x <= mapX + mapW - 3) {
+          doc.setDrawColor(2, 132, 199);
+          doc.setLineWidth(0.4);
+          doc.line(botPt.x, mapY + mapH, botPt.x, mapY + mapH + 2.5);
+
+          doc.setTextColor(2, 132, 199);
+          doc.text(String(kmE), botPt.x, mapY + mapH + 4.8, { align: 'center' });
+        }
+      }
     }
 
-    // 5. Téléchargement immédiat
-    const safeTitle = (title || 'carte_extrait').replace(/[\\/:*?"<>|]/g, '_').substring(0, 40);
-    const filename = `${safeTitle}_${format.toUpperCase()}_${orientation === 'landscape' ? 'Paysage' : 'Portrait'}.pdf`;
+    // 7. Cadre principal de la carte
+    doc.setDrawColor(15, 23, 42); // Slate 900
+    doc.setLineWidth(0.5);
+    doc.rect(mapX, mapY, mapW, mapH);
+
+    // 8. Coordonnées GPS (Lat/Lon) aux quatre coins
+    if (showCoords) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(isA3 ? 6.5 : 5.2);
+
+      const tlText = 'Lat ' + maxLat.toFixed(4) + '° • Lon ' + minLon.toFixed(4) + '°';
+      const tlW = doc.getTextWidth(tlText) + 3;
+      doc.setFillColor(15, 23, 42);
+      doc.roundedRect(mapX + 1.5, mapY + 1.5, tlW, 4.2, 0.8, 0.8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(tlText, mapX + 3, mapY + 4.5);
+
+      const trText = 'Lat ' + maxLat.toFixed(4) + '° • Lon ' + maxLon.toFixed(4) + '°';
+      const trW = doc.getTextWidth(trText) + 3;
+      doc.setFillColor(15, 23, 42);
+      doc.roundedRect(mapX + mapW - trW - 1.5, mapY + 1.5, trW, 4.2, 0.8, 0.8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(trText, mapX + mapW - trW, mapY + 4.5);
+
+      const blText = 'Lat ' + minLat.toFixed(4) + '° • Lon ' + minLon.toFixed(4) + '°';
+      const blW = doc.getTextWidth(blText) + 3;
+      doc.setFillColor(15, 23, 42);
+      doc.roundedRect(mapX + 1.5, mapY + mapH - 5.7, blW, 4.2, 0.8, 0.8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(blText, mapX + 3, mapY + mapH - 2.7);
+
+      const brText = 'Lat ' + minLat.toFixed(4) + '° • Lon ' + maxLon.toFixed(4) + '°';
+      const brW = doc.getTextWidth(brText) + 3;
+      doc.setFillColor(15, 23, 42);
+      doc.roundedRect(mapX + mapW - brW - 1.5, mapY + mapH - 5.7, brW, 4.2, 0.8, 0.8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.text(brText, mapX + mapW - brW, mapY + mapH - 2.7);
+    }
+
+    // 9. CARTOUCHE BAS : ÉCHELLE VRAIE AVEC LE CENTIMÈTRE, RÈGLE GRADUÉE ET MENTION UTM
+    const calibY = mapY + mapH + 6.5;
+
+    // 9.A Segment d'étalonnage physique : EXACTEMENT 1 CM SUR LE PAPIER (10 mm)
+    const calibX = mapX;
+    doc.setDrawColor(15, 23, 42);
+    doc.setLineWidth(0.7);
+    doc.line(calibX, calibY, calibX + 10, calibY); // 10 mm = 1.0 cm strict
+    doc.line(calibX, calibY - 2.5, calibX, calibY + 2.5);
+    doc.line(calibX + 10, calibY - 2.5, calibX + 10, calibY + 2.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isA3 ? 7.5 : 6.5);
+    doc.setTextColor(15, 23, 42);
+    doc.text("1 cm", calibX + 5, calibY - 3, { align: 'center' });
+
+    const metersPerCm = finalScale / 100;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isA3 ? 7 : 6);
+    doc.setTextColor(5, 150, 105); // Émeraude foncé
+    const cmInMetersText = '= ' + (metersPerCm >= 1000 ? (metersPerCm / 1000) + ' km' : metersPerCm + ' m');
+    doc.text(cmInMetersText, calibX + 5, calibY + 4.2, { align: 'center' });
+
+    // 9.B Règle graduée multi-centimètres (4 cm = 40 mm)
+    const barX = calibX + 22;
+    const barY = calibY - 1.5;
+    const barH = 2.8;
+    const cmSegments = 4;
+    for (let c = 0; c < cmSegments; c++) {
+      const segX = barX + (c * 10);
+      doc.setFillColor(c % 2 === 0 ? 15 : 255, c % 2 === 0 ? 23 : 255, c % 2 === 0 ? 42 : 255);
+      doc.rect(segX, barY, 10, barH, 'F');
+      doc.setDrawColor(15, 23, 42);
+      doc.setLineWidth(0.2);
+      doc.rect(segX, barY, 10, barH, 'S');
+
+      const distM = c * metersPerCm;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(5);
+      doc.setTextColor(71, 85, 105);
+      const label = distM === 0 ? '0' : (distM >= 1000 ? (distM / 1000) + 'km' : distM + 'm');
+      doc.text(label, segX, barY - 1, { align: 'center' });
+    }
+    const totalDistM = cmSegments * metersPerCm;
+    const finalLabel = totalDistM >= 1000 ? (totalDistM / 1000) + ' km' : totalDistM + ' m';
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(5);
+    doc.setTextColor(71, 85, 105);
+    doc.text(finalLabel, barX + (cmSegments * 10), barY - 1, { align: 'center' });
+
+    // 9.C Descriptif d'échelle vraie
+    const infoX = barX + (cmSegments * 10) + 7;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isA3 ? 8.5 : 7.2);
+    doc.setTextColor(15, 23, 42);
+    doc.text('ÉCHELLE VRAIE 1 : ' + finalScale.toLocaleString('fr-FR'), infoX, calibY - 0.5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(isA3 ? 6.5 : 5.5);
+    doc.setTextColor(71, 85, 105);
+    doc.text('1 cm mesuré sur le papier = ' + metersPerCm + ' m terrain • Format ' + format.toUpperCase() + ' (' + pageWidth + ' × ' + pageHeight + ' mm)', infoX, calibY + 3.2);
+
+    // 9.D Mention UTM et fuseau
+    if (showUtm) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(isA3 ? 7 : 6);
+      doc.setTextColor(2, 132, 199);
+      doc.text('🌐 Carroyage UTM WGS84 • Fuseau ' + zone + band + ' (1 km × 1 km)', mapX + mapW, calibY + 0.5, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(isA3 ? 6 : 5);
+      doc.setTextColor(100, 116, 139);
+      doc.text('Valeurs kilométriques indiquées sur les bords latéraux', mapX + mapW, calibY + 3.5, { align: 'right' });
+    }
+
+    // 10. Téléchargement immédiat
+    const safeTitle = (title || 'carte_extrait').replace(/[\/:*?"<>|]/g, '_').substring(0, 40);
+    const filename = safeTitle + '_1-' + finalScale + '_' + format + '.pdf';
     doc.save(filename);
   }
 
-  /**
-   * Render a static raster map with IGN Top 25 / OpenTopoMap / OSM tiles and GPX track vector
-   */
-  static async renderStaticMap(hike, imgWidth = 720, imgHeight = 420, mapLayer = 'igntop25', customPadding = null, trackColor = null, options = {}) {
+    static async renderStaticMap(hike, imgWidth = 720, imgHeight = 420, mapLayer = 'igntop25', customPadding = null, trackColor = null, options = {}) {
     const canvas = document.createElement('canvas');
     canvas.width = imgWidth;
     canvas.height = imgHeight;

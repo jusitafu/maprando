@@ -1016,6 +1016,24 @@ class AppController {
         valB = (typeof b.ibp === 'number') ? b.ibp : ((typeof GPXParser !== 'undefined') ? GPXParser.calculateIBP(b) : 0);
       }
 
+      if (this.sortColumn === 'lastHikeDate') {
+        const parseDate = (d) => {
+          if (!d || typeof d !== 'string') return 0;
+          const parts = d.trim().split(/[\/\-\.]/);
+          if (parts.length === 3) {
+            let day = parseInt(parts[0], 10);
+            let month = parseInt(parts[1], 10);
+            let year = parseInt(parts[2], 10);
+            if (year < 100) year += 2000;
+            const t = new Date(year, month - 1, day).getTime();
+            return isNaN(t) ? 0 : t;
+          }
+          return 0;
+        };
+        valA = parseDate(a.lastHikeDate);
+        valB = parseDate(b.lastHikeDate);
+      }
+
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
 
@@ -1045,7 +1063,7 @@ class AppController {
     if (this.filteredHikes.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" class="p-8 text-center text-slate-400">
+          <td colspan="8" class="p-8 text-center text-slate-400">
             <div class="text-3xl mb-2">🔍</div>
             <div class="font-medium text-slate-700">Aucune randonnée dans ce rayon (${window.MapManagerInstance ? window.MapManagerInstance.searchRadiusKm : 50} km)</div>
             <div class="text-xs text-slate-500 mt-1">👉 <strong>Augmentez le curseur de rayon</strong> (ex: 200 km) ou tapez une autre ville de départ pour les voir.</div>
@@ -1093,6 +1111,9 @@ class AppController {
             <span class="w-4 h-4 rounded text-[10px] font-black text-white flex items-center justify-center" style="background-color: ${ibpInfo.color}">${ibpInfo.level}</span>
             <span>IBP ${ibpVal}</span>
           </div>
+        </td>
+        <td class="p-3 whitespace-nowrap text-xs font-semibold text-slate-700">
+          ${hike.lastHikeDate ? `<span class="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md border border-slate-200">${hike.lastHikeDate}</span>` : '<span class="text-slate-300 italic">-</span>'}
         </td>
         <td class="p-3 text-slate-600 whitespace-nowrap text-xs">
           ${hike.minElevation}m - ${hike.maxElevation}m
@@ -1329,6 +1350,10 @@ class AppController {
 
     document.getElementById('edit-hike-name').value = hike.name || '';
     document.getElementById('edit-hike-notes').value = hike.notes || '';
+    const lastDateInput = document.getElementById('edit-hike-last-date');
+    if (lastDateInput) {
+      lastDateInput.value = hike.lastHikeDate || '';
+    }
     
     const ibpInput = document.getElementById('edit-hike-ibp');
     const ibpVal = (typeof hike.ibp === 'number') ? hike.ibp : ((typeof GPXParser !== 'undefined') ? GPXParser.calculateIBP(hike) : 50);
@@ -1387,6 +1412,10 @@ class AppController {
 
     this.hikeToEdit.name = newName;
     this.hikeToEdit.notes = newNotes;
+    const lastDateInput = document.getElementById('edit-hike-last-date');
+    if (lastDateInput) {
+      this.hikeToEdit.lastHikeDate = lastDateInput.value.trim();
+    }
 
     const ibpInputEl = document.getElementById('edit-hike-ibp');
     if (ibpInputEl) {
@@ -3194,6 +3223,22 @@ class AppController {
         hike.name = proposedName;
         hike.proposedName = proposedName;
         hike.ajoutee_par = (typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : 'admin';
+        
+        // Extraction de la date de derniere rando depuis le GPX si presente
+        if (!hike.lastHikeDate && hike.points && hike.points.length > 0) {
+          const ptWithTime = hike.points.find(p => p.time);
+          if (ptWithTime && ptWithTime.time) {
+            try {
+              const d = new Date(ptWithTime.time);
+              if (!isNaN(d.getTime())) {
+                const dd = String(d.getDate()).padStart(2, '0');
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const yy = String(d.getFullYear()).slice(-2);
+                hike.lastHikeDate = `${dd}/${mm}/${yy}`;
+              }
+            } catch (e) {}
+          }
+        }
 
         // Détection de randonnée ayant les mêmes caractéristiques
         const duplicateMatch = this.findSimilarHike(hike);
@@ -3495,6 +3540,74 @@ class AppController {
       layerSelect.value = window.MapManagerInstance.getCurrentBaseLayerKey();
     }
 
+    // Gestion de l'echelle vraie physique (1/XXXXXX)
+    const formatEl = document.getElementById('map-area-format');
+    const orientEl = document.getElementById('map-area-orientation');
+    const scaleModeEl = document.getElementById('map-area-scale-mode');
+    const scaleDenomEl = document.getElementById('map-area-scale-denom');
+    const scalePreviewEl = document.getElementById('map-area-scale-preview');
+    const scaleInputBox = document.getElementById('box-map-area-scale-input');
+    const scalePresetsBox = document.getElementById('map-area-scale-presets');
+
+    const updateScalePreview = () => {
+      const fmt = (formatEl ? formatEl.value : 'a4').toLowerCase();
+      const ori = (orientEl ? orientEl.value : 'landscape').toLowerCase();
+      const mode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const denom = parseInt(scaleDenomEl ? scaleDenomEl.value : '25000', 10) || 25000;
+
+      if (mode === 'auto') {
+        if (scaleInputBox) scaleInputBox.classList.add('opacity-40', 'pointer-events-none');
+        if (scalePresetsBox) scalePresetsBox.classList.add('opacity-40', 'pointer-events-none');
+        if (scalePreviewEl) {
+          scalePreviewEl.innerHTML = `<strong>Mode Automatique :</strong> L'echelle s'adaptera exactement a la zone selectionnee (~${dKmWidth.toFixed(1)} x ${dKmHeight.toFixed(1)} km).`;
+        }
+        return;
+      }
+
+      if (scaleInputBox) scaleInputBox.classList.remove('opacity-40', 'pointer-events-none');
+      if (scalePresetsBox) scalePresetsBox.classList.remove('opacity-40', 'pointer-events-none');
+
+      const isA3 = fmt === 'a3';
+      const isLand = ori === 'landscape';
+      const pageW_mm = isA3 ? (isLand ? 420 : 297) : (isLand ? 297 : 210);
+      const pageH_mm = isA3 ? (isLand ? 297 : 420) : (isLand ? 210 : 297);
+      const margin_mm = isA3 ? 18 : 15;
+      const mapW_mm = pageW_mm - (margin_mm * 2);
+      const mapH_mm = pageH_mm - (margin_mm * 2) - 40;
+
+      const groundW_km = (mapW_mm / 1000) * (denom / 1000);
+      const groundH_km = (mapH_mm / 1000) * (denom / 1000);
+      const metersPerCm = denom / 100;
+
+      if (scalePreviewEl) {
+        scalePreviewEl.innerHTML = `<strong>📏 1 cm sur papier = ${metersPerCm >= 1000 ? (metersPerCm/1000).toFixed(1) + ' km' : metersPerCm + ' m'} terrain</strong> • Emprise sur ${fmt.toUpperCase()} ${isLand ? 'Paysage' : 'Portrait'} : <strong>${groundW_km.toFixed(1)} km × ${groundH_km.toFixed(1)} km</strong> (centre)`;
+      }
+    };
+
+    if (formatEl) formatEl.onchange = updateScalePreview;
+    if (orientEl) orientEl.onchange = updateScalePreview;
+    if (scaleModeEl) scaleModeEl.onchange = updateScalePreview;
+    if (scaleDenomEl) scaleDenomEl.oninput = updateScalePreview;
+
+    const presetBtns = document.querySelectorAll('.btn-scale-preset');
+    presetBtns.forEach(btn => {
+      btn.onclick = () => {
+        const sc = btn.dataset.scale;
+        if (scaleDenomEl && sc) {
+          scaleDenomEl.value = sc;
+          presetBtns.forEach(b => {
+            b.classList.remove('bg-emerald-600', 'text-white');
+            b.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+          });
+          btn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+          btn.classList.add('bg-emerald-600', 'text-white');
+          updateScalePreview();
+        }
+      };
+    });
+
+    updateScalePreview();
+
     modal.classList.remove('hidden');
   }
 
@@ -3546,6 +3659,11 @@ class AppController {
         try { await StorageManager.ensureHikeTrackLoaded(hikeForTrack); } catch (e) {}
       }
       const showUtm = document.getElementById('map-area-opt-utm') ? document.getElementById('map-area-opt-utm').checked : true;
+      const scaleModeEl = document.getElementById('map-area-scale-mode');
+      const scaleMode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const scaleDenomEl = document.getElementById('map-area-scale-denom');
+      const scaleDenom = scaleDenomEl ? (parseInt(scaleDenomEl.value, 10) || 25000) : 25000;
+
       await PDFExporter.exportMapAreaPDF(this.selectedAreaBounds, {
         title: title,
         format: format,
@@ -3553,6 +3671,8 @@ class AppController {
         mapLayer: mapLayer,
         showCoords: showCoords,
         showUtmGrid: showUtm,
+        scaleMode: scaleMode,
+        scaleDenom: scaleDenom,
         trackColor: trackColor,
         hike: hikeForTrack
       });

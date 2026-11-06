@@ -129,7 +129,7 @@
         <div class="flex flex-col">
           <div class="flex items-baseline gap-2">
             <span class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase leading-none">Map &amp; Rando</span>
-            <span class="text-xs sm:text-sm font-normal text-emerald-300/80 lowercase leading-none">by JLDApps</span>
+            <span class="text-xs sm:text-sm font-normal text-emerald-300/80 font-medium leading-none">by JLDApps</span>
           </div>
           <span class="text-[11px] text-slate-300 font-semibold tracking-wider uppercase leading-tight mt-0.5">La cartographie au service de vos pas</span>
         </div>
@@ -769,7 +769,7 @@
           <div class="flex flex-col">
             <div class="flex items-baseline gap-1.5">
               <span class="text-lg sm:text-xl font-black tracking-tight text-white uppercase leading-none">Map &amp; Rando</span>
-              <span class="text-xs font-normal text-emerald-300/80 lowercase leading-none">by JLDApps</span>
+              <span class="text-xs font-normal text-emerald-300/80 font-medium leading-none">by JLDApps</span>
             </div>
             <span class="text-[10px] text-slate-300 font-medium tracking-wide uppercase leading-tight mt-0.5">La cartographie au service de vos pas</span>
           </div>
@@ -1715,6 +1715,12 @@
 
                   </th>
 
+                  <th onclick="App.setSort('lastHikeDate')" class="p-3 cursor-pointer hover:text-emerald-700 whitespace-nowrap" title="Trier par date de la dernière sortie (format JJ/MM/AA)">
+
+                    Dernière rando ↕
+
+                  </th>
+
                   <th class="p-3 whitespace-nowrap">
 
                     Altitudes
@@ -2464,6 +2470,19 @@
 
         <div>
 
+          <label for="edit-hike-last-date" class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+            <span>📅 Date de la dernière rando :</span>
+            <span class="text-[10px] text-slate-400 font-normal">Format dd/mm/yy</span>
+          </label>
+          <div class="relative">
+            <input type="text" id="edit-hike-last-date" placeholder="dd/mm/yy" maxlength="10" class="w-full text-sm font-semibold text-slate-800 bg-slate-50 border border-slate-300 rounded-xl p-3 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none placeholder:text-slate-400 placeholder:italic">
+          </div>
+          <p class="text-[10px] text-slate-500 mt-1">Exemple : <code>18/05/24</code> ou <code>05/11/26</code>. Permet le tri chronologique dans le catalogue.</p>
+
+        </div>
+
+        <div>
+
           <label class="block text-xs font-bold text-slate-700 mb-1">Notes libres & informations pratiques :</label>
 
           <textarea id="edit-hike-notes" rows="4" class="w-full text-xs text-slate-700 bg-slate-50 border border-slate-300 rounded-xl p-3 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Ajoutez vos remarques sur le balisage, passages délicats, paysages, points d'eau..."></textarea>
@@ -2815,6 +2834,48 @@
         </div>
 
 
+
+        <!-- Choix de l'chelle d'impression vraie (1/XXXXXX) -->
+        <div class="bg-emerald-50/80 p-3.5 rounded-2xl border border-emerald-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+              <span>📏</span> <span>Échelle d'impression vraie :</span>
+            </label>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-200 text-emerald-800">Échelle vraie papier</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label for="map-area-scale-mode" class="block text-[11px] font-semibold text-slate-700 mb-1">Mode d'échelle :</label>
+              <select id="map-area-scale-mode" class="w-full bg-white border border-emerald-300 text-slate-800 text-xs rounded-lg px-2.5 py-1.5 font-semibold focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs">
+                <option value="custom" selected>🎯 Échelle vraie (1 / XXXXXX)</option>
+                <option value="auto">📐 Adapter à la sélection (Auto)</option>
+              </select>
+            </div>
+
+            <div id="box-map-area-scale-input">
+              <label for="map-area-scale-denom" class="block text-[11px] font-semibold text-slate-700 mb-1">Dénominateur (1 / XXXXXX) :</label>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-slate-600">1 /</span>
+                <input type="number" id="map-area-scale-denom" value="25000" min="1000" max="1000000" step="1000" class="w-full bg-white border border-emerald-300 text-slate-900 text-xs font-bold rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-emerald-500 shadow-2xs">
+              </div>
+            </div>
+          </div>
+
+          <!-- Boutons de présélections d'échelle -->
+          <div id="map-area-scale-presets" class="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <span class="text-[10px] font-semibold text-slate-500 mr-1">Raccourcis :</span>
+            <button type="button" class="btn-scale-preset px-2.5 py-1 text-[10px] font-bold rounded-md bg-emerald-600 text-white shadow-2xs hover:bg-emerald-700 cursor-pointer transition-all" data-scale="25000">1/25 000 (TOP 25)</button>
+            <button type="button" class="btn-scale-preset px-2.5 py-1 text-[10px] font-bold rounded-md bg-white text-slate-700 border border-slate-300 shadow-2xs hover:bg-slate-100 cursor-pointer transition-all" data-scale="50000">1/50 000</button>
+            <button type="button" class="btn-scale-preset px-2.5 py-1 text-[10px] font-bold rounded-md bg-white text-slate-700 border border-slate-300 shadow-2xs hover:bg-slate-100 cursor-pointer transition-all" data-scale="15000">1/15 000</button>
+            <button type="button" class="btn-scale-preset px-2.5 py-1 text-[10px] font-bold rounded-md bg-white text-slate-700 border border-slate-300 shadow-2xs hover:bg-slate-100 cursor-pointer transition-all" data-scale="10000">1/10 000</button>
+          </div>
+
+          <!-- Indicateur dynamique temps réel -->
+          <div id="map-area-scale-preview" class="text-[11px] font-semibold text-emerald-950 bg-white/90 p-2.5 rounded-xl border border-emerald-300 leading-relaxed shadow-2xs">
+            1 cm sur papier = 250 m sur le terrain • Emprise couverte : ~6,8 km × ~3,8 km
+          </div>
+        </div>
 
         <!-- Format et Orientation -->
 
