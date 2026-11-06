@@ -202,17 +202,35 @@ class MapManager {
 
     this.updateSearchRadiusVisuals(false);
 
-    // Track active base layer
+    // Track active base layer & quadrillage IGN TOP 25
     this.map.on('baselayerchange', (e) => {
       const name = (e.name || '').toLowerCase();
       if (name.includes('top 25') || name.includes('top25')) {
         this.currentBaseLayer = 'igntop25';
         this.scheduleIgnPaperDateUpdate();
+        // Si activé, ré-afficher le quadrillage des feuilles IGN TOP 25
+        const showPaperLimits = localStorage.getItem('rf_show_paper_sheet_bounds') !== 'false';
+        if (showPaperLimits && !this.map.hasLayer(this.paperSheetLayer)) {
+          this.paperSheetLayer.addTo(this.map);
+        }
+        if (this.map.hasLayer(this.paperSheetLayer)) {
+          this.renderPaperSheetBounds();
+        }
+      } else {
+        if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
+        else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
+        else if (name.includes('france') || name.includes('openstreetmap')) this.currentBaseLayer = 'osmfr';
+        else if (name.includes('satellite')) this.currentBaseLayer = 'satellite';
+        else this.currentBaseLayer = 'other';
+
+        // Le quadrillage carte IGN ne doit apparaître que lorsqu'on est en affichage IGN TOP 25
+        if (this.paperSheetLayer) {
+          this.paperSheetLayer.clearLayers();
+        }
+        if (this.utmGridLayer) {
+          this.utmGridLayer.clearLayers();
+        }
       }
-      else if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
-      else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
-      else if (name.includes('france') || name.includes('openstreetmap')) this.currentBaseLayer = 'osmfr';
-      else if (name.includes('satellite')) this.currentBaseLayer = 'satellite';
 
       if (typeof this.onBaseLayerChangeCallback === 'function') {
         this.onBaseLayerChangeCallback(this.currentBaseLayer);
@@ -566,6 +584,21 @@ class MapManager {
       this.currentBaseLayer = targetKey;
       if (targetKey === 'igntop25') {
         this.scheduleIgnPaperDateUpdate();
+        const showPaperLimits = localStorage.getItem('rf_show_paper_sheet_bounds') !== 'false';
+        if (showPaperLimits && !this.map.hasLayer(this.paperSheetLayer)) {
+          this.paperSheetLayer.addTo(this.map);
+        }
+        if (this.map.hasLayer(this.paperSheetLayer)) {
+          this.renderPaperSheetBounds();
+        }
+      } else {
+        // Le quadrillage carte IGN ne doit apparaître que lorsqu'on est en affichage IGN TOP 25
+        if (this.paperSheetLayer) {
+          this.paperSheetLayer.clearLayers();
+        }
+        if (this.utmGridLayer) {
+          this.utmGridLayer.clearLayers();
+        }
       }
       if (typeof this.onBaseLayerChangeCallback === 'function') {
         this.onBaseLayerChangeCallback(this.currentBaseLayer);
@@ -1045,6 +1078,9 @@ class MapManager {
   renderUtmGrid() {
     if (!this.map || !this.utmGridLayer || !this.map.hasLayer(this.utmGridLayer)) return;
     this.utmGridLayer.clearLayers();
+
+    // Le carroyage/quadrillage ne doit apparaître que lorsqu'on est en affichage IGN TOP 25
+    if (this.currentBaseLayer !== 'igntop25') return;
 
     const zoom = this.map.getZoom();
     // Le carroyage kilométrique officiel TOP 25 (1 km x 1 km) est actif aux échelles de randonnée
@@ -2211,7 +2247,7 @@ class MapManager {
    * Planifie la mise a jour des limites des feuilles papier
    */
   schedulePaperSheetBoundsUpdate() {
-    if (!this.map || !this.map.hasLayer(this.paperSheetLayer)) return;
+    if (!this.map || !this.map.hasLayer(this.paperSheetLayer) || this.currentBaseLayer !== 'igntop25') return;
     if (this._sheetsTimeout) {
       clearTimeout(this._sheetsTimeout);
     }
@@ -2228,6 +2264,11 @@ class MapManager {
    */
   renderPaperSheetBounds() {
     if (!this.map || !this.paperSheetLayer) return;
+    // Le quadrillage carte IGN ne doit apparaître que lorsqu'on est en affichage IGN TOP 25
+    if (this.currentBaseLayer !== 'igntop25') {
+      this.paperSheetLayer.clearLayers();
+      return;
+    }
     if (!this.map.hasLayer(this.paperSheetLayer)) return;
 
     const allSheets = window.IGN_TOP25_SHEETS;

@@ -797,7 +797,7 @@ class PDFExporter {
     const zone = centerUtm.zone;
     const band = centerUtm.band;
 
-    if (showUtm && typeof MapManager !== 'undefined') {
+    if (mapLayer === 'igntop25' && showUtm && typeof MapManager !== 'undefined') {
       const utmSW = MapManager.latLonToUtm(minLat, minLon);
       const utmNE = MapManager.latLonToUtm(maxLat, maxLon);
       const utmNW = MapManager.latLonToUtm(maxLat, minLon);
@@ -1052,7 +1052,7 @@ class PDFExporter {
     doc.text('1 cm mesuré sur le papier = ' + metersPerCm + ' m terrain • Format ' + format.toUpperCase() + ' (' + pageWidth + ' × ' + pageHeight + ' mm)' + ignCartouche, infoX, calibY + 3.2);
 
     // 9.D Mention UTM et fuseau
-    if (showUtm) {
+    if (mapLayer === 'igntop25' && showUtm) {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(isA3 ? 7 : 6);
       doc.setTextColor(2, 132, 199);
