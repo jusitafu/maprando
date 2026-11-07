@@ -956,3 +956,37 @@ path.bearing-preview-line {
 .leaflet-top.leaflet-right {
   z-index: 1080 !important;
 }
+
+/* Mention rouge clignotante "le module club de rando" dans le Mode d'emploi */
+@keyframes clubRandoRedBlink {
+  0%, 100% {
+    opacity: 1;
+    color: #ffffff;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.9), 0 2px 8px rgba(0, 0, 0, 0.5);
+    transform: scale(1.03);
+  }
+  50% {
+    opacity: 0.22;
+    color: #fecaca;
+    background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+    transform: scale(0.98);
+  }
+}
+
+.me-club-rando-blink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: 2px solid #fca5a5;
+  animation: clubRandoRedBlink 1.1s ease-in-out infinite;
+}
