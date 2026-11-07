@@ -256,6 +256,51 @@
 
       </div>
 
+      <!-- BANDEAU ÉQUIPEMENTS OUTDOOR SUR LA PAGE D'ACCUEIL (SYSTÉMATIQUEMENT VISIBLE) -->
+      <div id="outdoor-gear-home-bar" class="mt-6 rounded-3xl bg-slate-950/92 border-2 border-amber-500/40 p-4 sm:p-5 backdrop-blur-2xl shadow-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-500/25 border border-amber-400/50 text-amber-300 text-[10px] font-black uppercase tracking-wider">
+              🛒 Équipements Rando Recommandés
+            </span>
+            <span class="text-xs sm:text-sm font-extrabold text-white">Préparez vos sorties avec notre sélection matériel sur Amazon</span>
+          </div>
+          <span class="text-[11px] text-slate-400">Soutenez Map &amp; Rando sans surcoût</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <a href="https://www.amazon.fr/s?k=chaussures+randonnee+gore+tex+batons+carbone&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group p-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition flex items-center gap-2 shadow-md">
+            <span class="text-xl group-hover:scale-110 transition-transform">🥾</span>
+            <span class="text-[11px] font-extrabold text-white group-hover:text-amber-300 leading-tight">Chaussures &amp; Bâtons</span>
+          </a>
+          <a href="https://www.amazon.fr/s?k=batterie+externe+randonnee+chargeur+solaire+portable&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group p-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition flex items-center gap-2 shadow-md">
+            <span class="text-xl group-hover:scale-110 transition-transform">⚡</span>
+            <span class="text-[11px] font-extrabold text-white group-hover:text-amber-300 leading-tight">Power Banks &amp; Solaire</span>
+          </a>
+          <a href="https://www.amazon.fr/s?k=boussole+visee+suunto+silva+gps+randonnee+garmin&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group p-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition flex items-center gap-2 shadow-md">
+            <span class="text-xl group-hover:scale-110 transition-transform">🧭</span>
+            <span class="text-[11px] font-extrabold text-white group-hover:text-amber-300 leading-tight">Boussoles &amp; GPS</span>
+          </a>
+          <a href="https://www.amazon.fr/s?k=trousse+premiers+secours+randonnee+lampe+frontale+petzl&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group p-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition flex items-center gap-2 shadow-md">
+            <span class="text-xl group-hover:scale-110 transition-transform">🩹</span>
+            <span class="text-[11px] font-extrabold text-white group-hover:text-amber-300 leading-tight">Trousse Secours &amp; Frontales</span>
+          </a>
+          <a href="https://www.amazon.fr/s?k=filtre+eau+randonnee+sawyer+lifestraw+rechaud+gaz&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group p-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition flex items-center gap-2 shadow-md">
+            <span class="text-xl group-hover:scale-110 transition-transform">💧</span>
+            <span class="text-[11px] font-extrabold text-white group-hover:text-amber-300 leading-tight">Filtres Eau &amp; Bivouac</span>
+          </a>
+          <a href="https://www.amazon.fr/s?k=porte+carte+etanche+randonnee+curvimetre+loupe&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group p-2.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 hover:border-amber-400 transition flex items-center gap-2 shadow-md">
+            <span class="text-xl group-hover:scale-110 transition-transform">🗺️</span>
+            <span class="text-[11px] font-extrabold text-white group-hover:text-amber-300 leading-tight">Porte-Cartes &amp; Outils</span>
+          </a>
+        </div>
+      </div>
+
     </main>
 
     <!-- Pied de page avec évocation des 4 territoires réunis par cours d'eau -->
@@ -274,7 +319,7 @@
   <!-- ========================================================================= -->
   <!-- GUIDES & SAVOIRS VIEW : FICHES DÉPLIABLES & SÉLECTION OUTDOOR AMAZON -->
   <!-- ========================================================================= -->
-  <div id="guides-view" class="hidden relative min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-8 selection:bg-amber-500 selection:text-white">
+  <div id="guides-view" class="hidden relative min-h-screen bg-slate-950 text-slate-100 py-4 px-4 sm:px-8 selection:bg-amber-500 selection:text-white">
     
     <!-- Top Bar avec retour accueil -->
     <div class="w-full px-4 sm:px-8 lg:px-12 mb-8 flex items-center justify-between border-b border-slate-800 pb-4">
@@ -287,7 +332,7 @@
       </div>
     </div>
 
-    <div class="w-full px-4 sm:px-8 lg:px-12 space-y-12">
+    <div class="w-full px-4 sm:px-8 lg:px-12 space-y-6">
       
       <!-- EN-TÊTE DE LA SECTION GUIDES -->
       <div class="text-center max-w-3xl mx-auto">
@@ -302,8 +347,9 @@
         </p>
       </div>
 
-      <!-- LISTE DES FICHES TECHNIQUES EN MODE ACCORDÉON (TITRES SEULS AU DÉPART) -->
-      <div class="space-y-4">
+      <!-- DISPOSITION 2 COLONNES : FICHES À GAUCHE + ÉQUIPEMENTS RECOMMANDÉS TOUJOURS VISIBLES À DROITE -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div class="lg:col-span-7 space-y-4">
         
         <!-- ================================================================= -->
         <!-- FICHE 1 : GPS DIFFÉRENTIEL, SBAS & RÉGLAGES MONTRES DE SPORT -->
@@ -686,27 +732,27 @@
       </div>
 
       <!-- ================================================================= -->
-      <!-- SECTION PUBLICITAIRE & RECOMMANDATIONS AMAZON OUTDOOR (6 BLOCS) -->
+      <!-- COLONNE DROITE STICKY : ÉQUIPEMENTS AMAZON TOUJOURS VISIBLES      -->
       <!-- ================================================================= -->
-      <section id="section-amazon-showcase" class="mt-16 pt-12 border-t border-slate-800 space-y-8">
+      <aside id="outdoor-gear-panel" class="lg:col-span-5 lg:sticky lg:top-4 rounded-3xl bg-slate-900/95 border-2 border-amber-500/50 p-5 sm:p-6 shadow-2xl space-y-4">
         
-        <div class="text-center max-w-3xl mx-auto">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-black uppercase tracking-wider mb-2">
+        <div class="border-b border-slate-800 pb-3">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider mb-1">
             <span>🛒</span> <span>Sélection Matériel Randonnée &amp; Aventure</span>
           </div>
-          <h2 class="text-2xl sm:text-3xl font-black text-white">
+          <h2 class="text-lg sm:text-xl font-black text-white">
             Équipements &amp; Matériels Recommandés
           </h2>
-          <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
-            Sélection indépendante d'équipements de confiance pour préparer vos sorties outdoor. En commandant via ces liens, vous soutenez Map &amp; Rando sans aucun surcoût.
+          <p class="text-xs text-slate-300 mt-0.5 font-light">
+            Sélection d'équipements de confiance sur Amazon. En commandant via ces liens, vous soutenez Map &amp; Rando sans surcoût.
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
           
           <!-- BLOC 1 : ÉQUIPEMENTS & PORTANCE -->
-          <a href="https://www.amazon.fr/s?k=chaussures+randonnee+gore+tex+batons+carbone&tag=maprando-21" target="_blank" rel="noopener sponsored"
-             class="group block p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-800/90 border-2 border-slate-800 hover:border-amber-500 transition-all duration-200 shadow-xl hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+          <a href="https://www.amazon.fr/s?k=chaussures+randonnee+gore+tex+batons+carbone&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
             <div class="flex items-center justify-between mb-4">
               <span class="text-3xl group-hover:scale-110 transition-transform">🥾</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -720,8 +766,8 @@
           </a>
 
           <!-- BLOC 2 : ÉNERGIE & SOLAIRE -->
-          <a href="https://www.amazon.fr/s?k=batterie+externe+randonnee+chargeur+solaire+portable&tag=maprando-21" target="_blank" rel="noopener sponsored"
-             class="group block p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-800/90 border-2 border-slate-800 hover:border-amber-500 transition-all duration-200 shadow-xl hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+          <a href="https://www.amazon.fr/s?k=batterie+externe+randonnee+chargeur+solaire+portable&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
             <div class="flex items-center justify-between mb-4">
               <span class="text-3xl group-hover:scale-110 transition-transform">⚡</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -735,8 +781,8 @@
           </a>
 
           <!-- BLOC 3 : ORIENTATION & GPS -->
-          <a href="https://www.amazon.fr/s?k=boussole+visee+suunto+silva+gps+randonnee+garmin&tag=maprando-21" target="_blank" rel="noopener sponsored"
-             class="group block p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-800/90 border-2 border-slate-800 hover:border-amber-500 transition-all duration-200 shadow-xl hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+          <a href="https://www.amazon.fr/s?k=boussole+visee+suunto+silva+gps+randonnee+garmin&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
             <div class="flex items-center justify-between mb-4">
               <span class="text-3xl group-hover:scale-110 transition-transform">🧭</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -750,8 +796,8 @@
           </a>
 
           <!-- BLOC 4 : SÉCURITÉ & SECOURS -->
-          <a href="https://www.amazon.fr/s?k=trousse+premiers+secours+randonnee+lampe+frontale+petzl&tag=maprando-21" target="_blank" rel="noopener sponsored"
-             class="group block p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-800/90 border-2 border-slate-800 hover:border-amber-500 transition-all duration-200 shadow-xl hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+          <a href="https://www.amazon.fr/s?k=trousse+premiers+secours+randonnee+lampe+frontale+petzl&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
             <div class="flex items-center justify-between mb-4">
               <span class="text-3xl group-hover:scale-110 transition-transform">🩹</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -765,8 +811,8 @@
           </a>
 
           <!-- BLOC 5 : EAU & BIVOUAC -->
-          <a href="https://www.amazon.fr/s?k=filtre+eau+randonnee+sawyer+lifestraw+rechaud+gaz&tag=maprando-21" target="_blank" rel="noopener sponsored"
-             class="group block p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-800/90 border-2 border-slate-800 hover:border-amber-500 transition-all duration-200 shadow-xl hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+          <a href="https://www.amazon.fr/s?k=filtre+eau+randonnee+sawyer+lifestraw+rechaud+gaz&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
             <div class="flex items-center justify-between mb-4">
               <span class="text-3xl group-hover:scale-110 transition-transform">💧</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -780,8 +826,8 @@
           </a>
 
           <!-- BLOC 6 : CARTOGRAPHIE & OUTILS -->
-          <a href="https://www.amazon.fr/s?k=porte+carte+etanche+randonnee+curvimetre+loupe&tag=maprando-21" target="_blank" rel="noopener sponsored"
-             class="group block p-6 rounded-3xl bg-slate-900/90 hover:bg-slate-800/90 border-2 border-slate-800 hover:border-amber-500 transition-all duration-200 shadow-xl hover:-translate-y-1 hover:shadow-2xl cursor-pointer">
+          <a href="https://www.amazon.fr/s?k=porte+carte+etanche+randonnee+curvimetre+loupe&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
             <div class="flex items-center justify-between mb-4">
               <span class="text-3xl group-hover:scale-110 transition-transform">🗺️</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -796,7 +842,8 @@
 
         </div>
 
-      </section>
+      </aside>
+      </div>
 
     </div>
 
@@ -1196,6 +1243,41 @@
 
     </div>
 
+  
+    <!-- BANDEAU PERMANENT ÉQUIPEMENTS & MATÉRIELS RECOMMANDÉS (SYSTÉMATIQUEMENT VISIBLE) -->
+    <div id="outdoor-gear-header-bar" class="w-full bg-slate-950/95 border-t border-amber-500/30 px-3 sm:px-6 py-1.5 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+          <span>🛒</span> <span>Sélection Rando</span>
+        </span>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-nowrap">
+        <a href="https://www.amazon.fr/s?k=chaussures+randonnee+gore+tex+batons+carbone&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-200 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap shadow-xs">
+          <span>🥾</span> <span>Chaussures &amp; Bâtons</span>
+        </a>
+        <a href="https://www.amazon.fr/s?k=batterie+externe+randonnee+chargeur+solaire+portable&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-200 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap shadow-xs">
+          <span>⚡</span> <span>Power Banks &amp; Solaire</span>
+        </a>
+        <a href="https://www.amazon.fr/s?k=boussole+visee+suunto+silva+gps+randonnee+garmin&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-200 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap shadow-xs">
+          <span>🧭</span> <span>Boussoles &amp; GPS</span>
+        </a>
+        <a href="https://www.amazon.fr/s?k=trousse+premiers+secours+randonnee+lampe+frontale+petzl&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-200 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap shadow-xs">
+          <span>🩹</span> <span>Secours &amp; Frontales</span>
+        </a>
+        <a href="https://www.amazon.fr/s?k=filtre+eau+randonnee+sawyer+lifestraw+rechaud+gaz&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-200 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap shadow-xs">
+          <span>💧</span> <span>Filtres Eau &amp; Bivouac</span>
+        </a>
+        <a href="https://www.amazon.fr/s?k=porte+carte+etanche+randonnee+curvimetre+loupe&tag=maprando-21" target="_blank" rel="noopener noreferrer"
+           class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-400 text-slate-200 hover:text-amber-200 text-[11px] font-bold transition flex items-center gap-1 whitespace-nowrap shadow-xs">
+          <span>🗺️</span> <span>Porte-Cartes &amp; Outils</span>
+        </a>
+      </div>
+    </div>
   </header>
 
 
