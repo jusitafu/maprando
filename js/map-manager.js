@@ -602,15 +602,29 @@ class MapManager {
   }
 
   isInsideFrance(lat, lon) {
-    if (typeof lat !== 'number' || typeof lon !== 'number') return true;
-    // Métropole + Corse
-    if (lat >= 41.3 && lat <= 51.2 && lon >= -5.2 && lon <= 9.6) return true;
-    // DOM-TOM
-    if (lat >= 14.3 && lat <= 16.6 && lon >= -61.9 && lon <= -60.7) return true; // Antilles
-    if (lat >= -21.4 && lat <= -20.8 && lon >= 55.1 && lon <= 55.9) return true; // Réunion
-    if (lat >= 2.1 && lat <= 5.8 && lon >= -54.7 && lon <= -51.6) return true; // Guyane
-    if (lat >= -13.0 && lat <= -12.6 && lon >= 45.0 && lon <= 45.3) return true; // Mayotte
-    return false;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return false;
+    if (typeof GrManager !== 'undefined' && typeof GrManager._inFrance === 'function') {
+      return GrManager._inFrance(lat, lon);
+    }
+    // Corse & DOM-TOM
+    const boxes = [
+      [41.3, 43.05, 8.5, 9.6], [-21.5, -20.8, 55.1, 55.9], [15.8, 16.6, -61.9, -60.9],
+      [14.3, 14.95, -61.3, -60.7], [2.0, 6.0, -54.7, -51.5], [-13.1, -12.5, 44.9, 45.4]
+    ];
+    if (boxes.some(b => lat >= b[0] && lat <= b[1] && lon >= b[2] && lon <= b[3])) return true;
+    // Polygone précis France métropolitaine (exclut Royaume-Uni, Belgique, Suisse, Italie, Espagne, Allemagne)
+    const poly = [
+      [-4.8, 48.4], [-3.0, 48.9], [-1.6, 49.75], [1.4, 50.2], [1.6, 50.95], [2.6, 51.1], [3.3, 50.6], [4.2, 50.3],
+      [4.85, 49.95], [5.8, 49.5], [6.4, 49.45], [8.25, 49.0], [7.6, 47.55], [6.9, 47.35], [6.1, 46.3], [7.05, 45.9],
+      [7.1, 44.1], [7.7, 43.8], [6.0, 43.0], [3.1, 42.45], [1.45, 42.45], [0.7, 42.85], [-0.7, 42.8], [-1.78, 43.35],
+      [-1.4, 44.6], [-1.2, 46.0], [-2.2, 47.1], [-4.8, 48.4]
+    ];
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
   }
 
   setBaseLayer(key) {
@@ -1331,9 +1345,20 @@ class MapManager {
    */
   updateCursorCoords(latlng) {
     this._pendingCursorLatLng = latlng;
+    const now = performance.now();
+    if (!latlng || !this._lastCursorRenderTs || (now - this._lastCursorRenderTs) >= 16) {
+      this._lastCursorRenderTs = now;
+      if (this._cursorRafId) {
+        cancelAnimationFrame(this._cursorRafId);
+        this._cursorRafId = null;
+      }
+      this._renderCursorCoords(latlng);
+      return;
+    }
     if (this._cursorRafId) return;
     this._cursorRafId = requestAnimationFrame(() => {
       this._cursorRafId = null;
+      this._lastCursorRenderTs = performance.now();
       this._renderCursorCoords(this._pendingCursorLatLng);
     });
   }
@@ -1365,7 +1390,21 @@ class MapManager {
 
     // Actualisation altimétrique temporisée (IGN RGE Alti®)
     this.scheduleElevationFetch(lat, lon);
-    this.scheduleCityFetch(lat, lon);
+
+    // N'afficher la commune française que lorsque le curseur (ou la zone) est en France
+    if (!this.isInsideFrance(lat, lon)) {
+      if (this._cityTimeout) {
+        clearTimeout(this._cityTimeout);
+        this._cityTimeout = null;
+      }
+      if (this._cityAbortCtrl) {
+        this._cityAbortCtrl.abort();
+        this._cityAbortCtrl = null;
+      }
+      this._applyCityResult('');
+    } else {
+      this.scheduleCityFetch(lat, lon);
+    }
   }
 
   /**
@@ -2591,10 +2630,17 @@ class MapManager {
   scheduleCityFetch(lat, lon) {
     if (this._cityTimeout) {
       clearTimeout(this._cityTimeout);
+      this._cityTimeout = null;
+    }
+    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    if (this._cityCache && this._cityCache.has(key)) {
+      this._applyCityResult(this._cityCache.get(key));
+      return;
     }
     this._cityTimeout = setTimeout(() => {
+      this._cityTimeout = null;
       this.fetchCity(lat, lon);
-    }, 250);
+    }, 220);
   }
 
   /**
@@ -2652,13 +2698,17 @@ class MapManager {
     const valEl = document.getElementById('map-hud-city-val');
     if (!cityEl || !valEl) return;
 
+    cityEl.classList.remove('sm:flex');
     if (cityStr) {
       valEl.textContent = cityStr;
       cityEl.classList.remove('hidden');
       cityEl.classList.add('flex');
+      cityEl.style.display = '';
     } else {
+      valEl.textContent = '';
       cityEl.classList.add('hidden');
       cityEl.classList.remove('flex');
+      cityEl.style.display = 'none';
     }
   }
 

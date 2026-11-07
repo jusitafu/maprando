@@ -4971,7 +4971,7 @@ class ScrollElevatorManager {
       if (banner && banner.parentNode) {
         banner.remove();
       }
-    }, 2900);
+    }, 6600);
   }
 
   /**

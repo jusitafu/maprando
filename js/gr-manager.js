@@ -678,7 +678,9 @@ class GrManager {
       let s = 0;
       if (mm && !mm[3]) s += 50;
       if (mm && !mm[1]) s += 40;
-      if (r.group === 'NAT') s += 20;
+      if (r.group === 'NAT') s += 65;
+      else if (r.group === 'INT') s += 50;
+      else if (r.group === 'LOC') s -= 45;
       if (r.itinerary && r.itinerary.length) s += 10;
       if (/variante|variant|alternat|liaison|acc[eè]s|sec\.|stage|etappe/i.test(r.name || '')) s -= 15;
       if (/etapa|tramo|ramal|derivaci|sender|sendeiro|cam[ií]\b|belgie|vlaanderen|nederland/i.test(r.name || '')) s -= 85;
@@ -699,13 +701,31 @@ class GrManager {
       }
       return { r, det };
     }));
-    const kept = [];
+    const keptWithDet = [];
     detailed.forEach(x => {
-      if (x.status === 'fulfilled' && this._isFrench(x.value.det)) kept.push(x.value.r);
+      if (x.status === 'fulfilled' && this._isFrench(x.value.det)) keptWithDet.push(x.value);
     });
-    list = kept.slice(0, 10);
+    // Privilégier la France métropolitaine + Corse pour les GR nationaux standards (évite qu'un homonyme local outre-mer passe devant le GR 1 Île-de-France)
+    keptWithDet.sort((a, b) => {
+      let sa = score(a.r);
+      let sb = score(b.r);
+      if (typed !== 'R') {
+        const ca = this._getDetCenter(a.det);
+        const cb = this._getDetCenter(b.det);
+        if (ca && ca[0] >= 41 && ca[0] <= 51.5 && ca[1] >= -5.5 && ca[1] <= 10) sa += 120;
+        if (cb && cb[0] >= 41 && cb[0] <= 51.5 && cb[1] >= -5.5 && cb[1] <= 10) sb += 120;
+      }
+      return sb - sa;
+    });
+    list = keptWithDet.map(x => x.r).slice(0, 10);
     this._remoteCache.set(key, list);
     return list;
+  }
+
+  static _getDetCenter(det) {
+    const b = det && det.bbox;
+    if (!Array.isArray(b) || b.length < 4) return null;
+    return this._merc2ll((b[0] + b[2]) / 2, (b[1] + b[3]) / 2);
   }
 
   static _FR_POLY = [
@@ -997,10 +1017,25 @@ class GrManager {
         const allSegs = [];
         let totalLengthMeters = 0;
         let primaryDet = null;
+        let primaryRel = null;
+        let primaryCenter = null;
 
-        loaded.forEach(({ det }) => {
+        loaded.forEach(({ rel, det }) => {
           if (!det || !det.route) return;
-          if (!primaryDet) primaryDet = det;
+          if (!primaryDet) {
+            primaryDet = det;
+            primaryRel = rel;
+            primaryCenter = this._getDetCenter(det);
+          } else {
+            // Ne jamais fusionner un homonyme lointain (ex: GR 1 Tour de Mayotte avec GR 1 Tour d'Île-de-France)
+            const c = this._getDetCenter(det);
+            if (primaryCenter && c && (Math.abs(c[0] - primaryCenter[0]) > 6 || Math.abs(c[1] - primaryCenter[1]) > 6)) {
+              return;
+            }
+            if (primaryRel && (primaryRel.group === 'NAT' || primaryRel.group === 'INT') && rel && rel.group === 'LOC') {
+              return;
+            }
+          }
           const s = this._extractSegments(det.route);
           if (s.length) {
             allSegs.push(...s);
@@ -1106,9 +1141,19 @@ class GrManager {
             }
             return sdet;
           }));
-          extraDets.forEach(ed => {
+          const primaryCenter = this._getDetCenter(det);
+          extraDets.forEach((ed, idx) => {
             if (ed.status === 'fulfilled' && ed.value && ed.value.route) {
-              const extraSegs = this._extractSegments(ed.value.route);
+              const sdet = ed.value;
+              const sr = extraRels[idx];
+              const c = this._getDetCenter(sdet);
+              if (primaryCenter && c && (Math.abs(c[0] - primaryCenter[0]) > 6 || Math.abs(c[1] - primaryCenter[1]) > 6)) {
+                return;
+              }
+              if ((item.group === 'NAT' || item.group === 'INT' || det.group === 'NAT') && sr && sr.group === 'LOC') {
+                return;
+              }
+              const extraSegs = this._extractSegments(sdet.route);
               if (extraSegs.length) segs.push(...extraSegs);
             }
           });
