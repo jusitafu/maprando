@@ -304,12 +304,9 @@ class AppController {
         }
 
         // 2. Pré-suggestions instantanées sur les sentiers GR ou communes locales (0 ms)
-        let grMatches = [];
-        if (typeof GrManager !== 'undefined') {
-          grMatches = GrManager.search(query);
-        }
-        const localMatches = this.getLocalPlaceMatches(query);
-        if (grMatches.length > 0 || localMatches.length > 0) {
+        const isGr = (typeof GrManager !== 'undefined') && GrManager.isGrQuery(query);
+        const localMatches = isGr ? [] : this.getLocalPlaceMatches(query);
+        if (isGr || localMatches.length > 0) {
           this.renderPlacesResults(localMatches, query);
         }
 
@@ -2559,45 +2556,16 @@ class AppController {
 
     resultsContainer.innerHTML = '';
 
-    // Détection et affichage prioritaire des Sentiers de Grande Randonnée (GR)
-    let grMatches = [];
-    if (typeof GrManager !== 'undefined') {
-      grMatches = GrManager.search(query);
-    }
-
-    if (grMatches.length > 0) {
-      resultsContainer.classList.remove('hidden');
-      grMatches.forEach(gr => {
-        const item = document.createElement('div');
-        item.className = 'search-item px-3.5 py-2.5 bg-rose-50/80 hover:bg-rose-100 cursor-pointer transition border-b border-rose-200/90 flex items-center gap-3 text-left group';
-        item.innerHTML = `
-          <span class="bg-rose-600 text-white font-black text-[11px] px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex-shrink-0 flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
-            ${gr.ref}
-          </span>
-          <div class="flex-1 min-w-0">
-            <div class="font-extrabold text-slate-900 text-xs truncate group-hover:text-rose-800">${this.escapeHtml(gr.name)}</div>
-            <div class="text-[10px] text-rose-700 font-semibold truncate mt-0.5">${gr.distKm} km • D+ ${gr.dplus.toLocaleString('fr-FR')} m • ${this.escapeHtml(gr.region)}</div>
-          </div>
-          <span class="text-xs text-rose-600 font-bold flex-shrink-0">Afficher ➔</span>
-        `;
-        item.addEventListener('click', () => {
-          const locationInput = document.getElementById('location-input');
-          if (locationInput) locationInput.value = `${gr.ref} - ${gr.name}`;
-          resultsContainer.classList.add('hidden');
-          if (typeof GrManager !== 'undefined') {
-            GrManager.displayGr(gr, window.MapManagerInstance ? window.MapManagerInstance.map : null);
-          }
-        });
-        resultsContainer.appendChild(item);
+    // Recherche GR : tous les GR via OpenStreetMap (tracé réel)
+    if (typeof GrManager !== 'undefined' && GrManager.isGrQuery(query)) {
+      GrManager.renderResults(resultsContainer, query, (it) => {
+        const locationInput = document.getElementById('location-input');
+        if (locationInput) locationInput.value = `${it.ref}${it.name && it.name !== it.ref ? ' - ' + it.name : ''}`;
       });
-
-      if (/^\s*GR\s*([0-9]+[A-Z0-9_-]*)\s*$/i.test(query)) {
-        return;
-      }
+      return;
     }
 
-    if ((!places || places.length === 0) && grMatches.length === 0) {
+    if (!places || places.length === 0) {
       resultsContainer.innerHTML = `
         <div class="p-3.5 text-xs text-slate-500 text-center flex items-center justify-center gap-2">
           <span>🌍</span> Aucun lieu trouvé dans le monde pour "<b>${this.escapeHtml(query)}</b>"
