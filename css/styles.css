@@ -604,3 +604,8 @@ path.bearing-preview-line {
 .animate-bounce-short {
   animation: bounceShort 0.8s ease-in-out 2;
 }
+
+/* Fond de carte épuré pour la Carte des GR */
+.leaflet-layer-epure {
+  filter: grayscale(80%) brightness(1.08) contrast(0.85) !important;
+}

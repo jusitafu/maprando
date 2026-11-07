@@ -1232,11 +1232,11 @@ class PDFExporter {
         attributionText = '© OpenTopoMap / OpenStreetMap';
       }
     } else if (mapLayer === 'grmap') {
-      primaryUrlFn = cartoLightUrl;
+      primaryUrlFn = isInsideFrance ? ignPlanUrl : osmFrUrl;
       fallbackUrlFn1 = osmFrUrl;
       fallbackUrlFn2 = osmStdUrl;
       overlayUrlFn = waymarkedHikingUrl;
-      attributionText = '© OpenStreetMap / CARTO • Tracé GR® : Waymarked Trails';
+      attributionText = '© IGN France (Fond épuré) • Réseau GR® : Waymarked Trails';
     } else if (mapLayer === 'opentopo') {
       primaryUrlFn = openTopoUrl;
       fallbackUrlFn1 = isInsideFrance ? ignTop25Url : osmFrUrl;
@@ -1296,8 +1296,18 @@ class PDFExporter {
       const px = centerPixelX + (tileX - centerTileX) * 256;
       const py = centerPixelY + (tileY - centerTileY) * 256;
 
-      const draw = (img) => {
-        try { ctx.drawImage(img, px, py, 256, 256); } catch (e) {}
+      const draw = (img, isBaseForGr = false) => {
+        try {
+          ctx.save();
+          if (isBaseForGr) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(px, py, 256, 256);
+            ctx.filter = 'grayscale(82%) brightness(108%) contrast(85%)';
+            ctx.globalAlpha = 0.58;
+          }
+          ctx.drawImage(img, px, py, 256, 256);
+          ctx.restore();
+        } catch (e) {}
       };
 
       let baseDrawn = false;
@@ -1306,7 +1316,7 @@ class PDFExporter {
       for (const delay of retryDelays) {
         if (delay) await sleep(delay);
         const img = await fetchTileImage(primaryUrlFn(tileX, tileY, zoom));
-        if (img) { draw(img); baseDrawn = true; break; }
+        if (img) { draw(img, mapLayer === 'grmap'); baseDrawn = true; break; }
       }
 
       // 2. Secours uniquement si le principal reste indisponible (ex: mer hors couverture IGN)
@@ -1314,7 +1324,7 @@ class PDFExporter {
         for (const fn of [fallbackUrlFn1, fallbackUrlFn2]) {
           if (!fn) continue;
           const img = await fetchTileImage(fn(tileX, tileY, zoom));
-          if (img) { draw(img); baseDrawn = true; break; }
+          if (img) { draw(img, mapLayer === 'grmap'); baseDrawn = true; break; }
         }
       }
 

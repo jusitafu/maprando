@@ -157,19 +157,25 @@ class MapManager {
       attribution: '&copy; IGN France (Orthophoto HD)'
     });
 
-    // Carte des GR sur fond épuré (CartoDB Positron + Waymarked Trails Hiking)
-    const cartoPositron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    // Carte des GR sur fond épuré (IGN Plan v2 atténué monochrome + Esri Light Gray + Waymarked Trails Hiking)
+    const esriLightGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; OpenStreetMap &copy; CARTO (Fond épuré)'
+      maxNativeZoom: 16,
+      attribution: '&copy; Esri, HERE, Garmin'
+    });
+    const ignPlanEpure = L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng', {
+      maxZoom: 19,
+      opacity: 0.58,
+      className: 'leaflet-layer-epure',
+      attribution: '&copy; IGN France (Fond Plan épuré)'
     });
     const waymarkedGrOverlay = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
       maxZoom: 19,
       maxNativeZoom: 18,
-      opacity: 0.95,
+      opacity: 1.0,
       attribution: '&copy; Waymarked Trails (Réseau GR® & Sentiers balisés)'
     });
-    const grMapLayer = L.layerGroup([cartoPositron, waymarkedGrOverlay]);
+    const grMapLayer = L.layerGroup([esriLightGray, ignPlanEpure, waymarkedGrOverlay]);
 
     this.baseLayers = {
       "IGN TOP 25 (Carte papier officielle)": ignTop25,
