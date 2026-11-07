@@ -572,3 +572,35 @@ path.bearing-preview-line {
   transform: translateY(-1px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
 }
+
+
+/* Tracé GR officiel haute visibilité et clignotement animé */
+@keyframes grPulseBlink {
+  0%, 100% {
+    opacity: 1;
+    stroke-width: 6.5px;
+    filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.95));
+  }
+  50% {
+    opacity: 0.25;
+    stroke-width: 8.5px;
+    filter: drop-shadow(0 0 14px rgba(225, 29, 72, 1));
+  }
+}
+
+.leaflet-gr-blinking-path {
+  animation: grPulseBlink 1.25s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.leaflet-gr-blinking-dash {
+  animation: grPulseBlink 1.25s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+@keyframes bounceShort {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -6px); }
+}
+
+.animate-bounce-short {
+  animation: bounceShort 0.8s ease-in-out 2;
+}

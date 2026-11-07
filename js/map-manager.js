@@ -223,12 +223,16 @@ class MapManager {
         else if (name.includes('satellite')) this.currentBaseLayer = 'satellite';
         else this.currentBaseLayer = 'other';
 
-        // Le quadrillage carte IGN ne doit apparaître que lorsqu'on est en affichage IGN TOP 25
+        // Les limites des feuilles papier IGN sont spécifiques à IGN TOP 25
         if (this.paperSheetLayer) {
           this.paperSheetLayer.clearLayers();
         }
-        if (this.utmGridLayer) {
-          this.utmGridLayer.clearLayers();
+        // Le carroyage UTM kilométrique est universel (WGS84 mondial) et s'affiche sur tous les fonds de carte
+        if (this.map.hasLayer(this.utmGridLayer)) {
+          this.renderUtmGrid();
+        }
+        if (this.currentBaseLayer === 'satellite') {
+          this.scheduleSatelliteDateUpdate();
         }
       }
 
@@ -243,14 +247,19 @@ class MapManager {
         L.DomEvent.stop(e);
         this.finishMeasurePath();
       }
+      if (this.bearingMeasurementActive) {
+        L.DomEvent.stop(e);
+      }
     });
 
     this.map.on('click', (e) => {
       if (this.measurePathActive) {
+        L.DomEvent.stop(e);
         this.handleMeasureClick(e.latlng);
         return;
       }
       if (this.bearingMeasurementActive) {
+        L.DomEvent.stop(e);
         this.handleBearingClick(e.latlng);
         return;
       }
@@ -280,6 +289,9 @@ class MapManager {
       this.updateCursorCoords(null);
       if (this.currentBaseLayer === 'igntop25') {
         this.scheduleIgnPaperDateUpdate();
+      }
+      if (this.currentBaseLayer === 'satellite') {
+        this.scheduleSatelliteDateUpdate();
       }
     });
 
@@ -1079,8 +1091,7 @@ class MapManager {
     if (!this.map || !this.utmGridLayer || !this.map.hasLayer(this.utmGridLayer)) return;
     this.utmGridLayer.clearLayers();
 
-    // Le carroyage/quadrillage ne doit apparaître que lorsqu'on est en affichage IGN TOP 25
-    if (this.currentBaseLayer !== 'igntop25') return;
+    // Le carroyage UTM kilométrique est universel (WGS84 mondial) et actif sur tous les calques
 
     const zoom = this.map.getZoom();
     // Le carroyage kilométrique officiel TOP 25 (1 km x 1 km) est actif aux échelles de randonnée
@@ -1436,6 +1447,13 @@ class MapManager {
     this.bearingPointA = null;
     this.bearingPointB = null;
 
+    // Désactiver le zoom au double-clic et les interactions parasites
+    if (this.map.doubleClickZoom) {
+      this.map.doubleClickZoom.disable();
+    }
+    if (this.map.getPane('markerPane')) this.map.getPane('markerPane').style.pointerEvents = 'none';
+    if (this.map.getPane('overlayPane')) this.map.getPane('overlayPane').style.pointerEvents = 'none';
+
     // Curseur réticule
     L.DomUtil.addClass(this.map.getContainer(), 'bearing-selection-cursor');
 
@@ -1519,6 +1537,11 @@ class MapManager {
     this.bearingPointB = null;
 
     if (this.map) {
+      if (this.map.doubleClickZoom) {
+        this.map.doubleClickZoom.enable();
+      }
+      if (this.map.getPane('markerPane')) this.map.getPane('markerPane').style.pointerEvents = '';
+      if (this.map.getPane('overlayPane')) this.map.getPane('overlayPane').style.pointerEvents = '';
       L.DomUtil.removeClass(this.map.getContainer(), 'bearing-selection-cursor');
       if (this._onBearingMouseMove) {
         this.map.off('mousemove', this._onBearingMouseMove);
@@ -2322,7 +2345,7 @@ class MapManager {
 
       const sheetBounds = [[sb[0], sb[1]], [sb[2], sb[3]]];
 
-      // A. Bande translucide adaptee
+      // A. Bande translucide adaptee (interactive: false pour ne jamais bloquer les clics sur la carte)
       const outerBand = L.rectangle(sheetBounds, {
         color: '#0284c7',
         weight: outerWeight,
@@ -2330,7 +2353,7 @@ class MapManager {
         fill: true,
         fillColor: '#0284c7',
         fillOpacity: zoom >= 10 ? 0.025 : 0.001,
-        interactive: true
+        interactive: false
       });
 
       // B. Trait interieur en pointilles (si zoom suffisant)
@@ -2394,11 +2417,11 @@ class MapManager {
         }
       }
 
-      // Clic sur la feuille pour recadrer
+      // Recadrage uniquement via le badge central si non en mode mesure
       const fitSheet = () => {
+        if (this.bearingMeasurementActive || this.measurePathActive || this.areaSelectionActive) return;
         this.map.fitBounds(sheetBounds, { padding: [30, 30], maxZoom: 14 });
       };
-      outerBand.on('click', fitSheet);
 
       // Infobulle complete toujours disponible au survol meme si le badge texte est masque
       const tooltipText = `<b>Feuille IGN : ${getSheetCommercialLabel(s.n, s.t)}</b><br>Édition papier : <b>${s.a}</b><br><i>Cliquez pour recadrer toute la feuille</i>`;
@@ -2741,6 +2764,97 @@ class MapManager {
     }
     const hud = document.getElementById('standalone-gpx-hud');
     if (hud) hud.classList.add('hidden');
+  }
+
+  /**
+   * Planifie la mise à jour de la date de prise de vue de l'imagerie satellite
+   */
+  scheduleSatelliteDateUpdate() {
+    if (!this.map) return;
+    if (this._satDateTimeout) clearTimeout(this._satDateTimeout);
+    this._satDateTimeout = setTimeout(() => {
+      this.updateSatelliteDate();
+    }, 400);
+  }
+
+  /**
+   * Récupère et affiche la date exacte de prise de vue satellite (IGN Ortho HR en France ou Esri World)
+   */
+  async updateSatelliteDate() {
+    if (!this.map) return;
+    const center = this.map.getCenter();
+    if (!center) return;
+
+    const lat = center.lat;
+    const lon = center.lng;
+    let dateStr = '';
+    let provider = '';
+
+    try {
+      if (this.isInsideFrance(lat, lon)) {
+        // Flux officiel IGN WFS Ortho
+        const delta = 0.01;
+        const url = `https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=ORTHOIMAGERY.ORTHOPHOTOS.GRAPHE-MOSAIQUAGE:graphe_bdortho&BBOX=${lat-delta},${lon-delta},${lat+delta},${lon+delta},urn:ogc:def:crs:EPSG::4326&OUTPUTFORMAT=application/json`;
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.features && data.features.length > 0) {
+            const p = data.features[0].properties;
+            if (p.date_vol) {
+              const dParts = String(p.date_vol).replace('Z', '').split('-');
+              if (dParts.length >= 3) {
+                dateStr = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+              } else {
+                dateStr = String(p.date_vol);
+              }
+              provider = 'IGN BD ORTHO® (20 cm)';
+            } else if (p.pva) {
+              dateStr = String(p.pva);
+              provider = 'IGN BD ORTHO®';
+            }
+          }
+        }
+      }
+
+      if (!dateStr) {
+        // Esri World Imagery Identify
+        const esriUrl = `https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/identify?geometry=${lon},${lat}&geometryType=esriGeometryPoint&sr=4326&layers=top&tolerance=2&mapExtent=${lon-0.05},${lat-0.05},${lon+0.05},${lat+0.05}&imageDisplay=800,600,96&returnGeometry=false&f=json`;
+        const eResp = await fetch(esriUrl);
+        if (eResp.ok) {
+          const eData = await eResp.json();
+          if (eData && eData.results && eData.results.length > 0) {
+            const attr = eData.results[0].attributes || {};
+            const dVal = attr['DATE (YYYYMMDD)'] || attr['SRC_DATE2'];
+            if (dVal) {
+              if (String(dVal).length === 8) {
+                const y = String(dVal).substring(0, 4);
+                const m = String(dVal).substring(4, 6);
+                const d = String(dVal).substring(6, 8);
+                dateStr = `${d}/${m}/${y}`;
+              } else {
+                dateStr = String(dVal);
+              }
+              provider = attr['SOURCE'] ? `Satellite ${attr['SOURCE']}` : 'Satellite Haute Résolution';
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Erreur lecture date satellite:', e);
+    }
+
+    if (dateStr) {
+      this.currentSatelliteDateStr = `Prise de vue : ${dateStr} (${provider})`;
+      // Mettre à jour l'attribution Leaflet
+      const satLayer = this.baseLayers && (this.baseLayers["Satellite France (IGN Ortho)"] || this.baseLayers["Satellite Mondial (Esri 🌍)"]);
+      if (satLayer) {
+        const satAttr = `&copy; Satellite (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
+        satLayer.options.attribution = satAttr;
+        if (this.map.attributionControl) {
+          this.map.attributionControl.addAttribution(satAttr);
+        }
+      }
+    }
   }
 
 }

@@ -239,7 +239,10 @@ class PDFExporter {
                 doc.setFont('helvetica', 'bold');
                 doc.setFontSize(isA3 ? 6.2 : 4.8);
                 doc.setTextColor(100, 116, 139);
-                doc.text(sheetInfo.verticalText, mapX + mapW + 3.2, actualMapY + (actualMapH / 2), { angle: 270, align: 'center' });
+                const vTextW = doc.getTextWidth(sheetInfo.verticalText);
+                const x_fiche = pageWidth - (isA3 ? 6.5 : 5.0);
+                const y_fiche_start = (actualMapY + (actualMapH / 2)) + (vTextW / 2);
+                doc.text(sheetInfo.verticalText, x_fiche, y_fiche_start, { angle: 270 });
               }
             }
           }
@@ -643,8 +646,8 @@ class PDFExporter {
     const pageHeight = doc.internal.pageSize.getHeight();
     const isA3 = format === 'a3';
 
-    // Marges physiques en millimètres (17 mm sur les côtés pour loger coordonnées UTM et référence verticale IGN TOP 25)
-    const marginX = isA3 ? 19 : 17;
+    // Marges physiques en millimètres (24 mm sur A3 et 20 mm sur A4 pour garantir 0 chevauchement entre UTM et référence verticale)
+    const marginX = isA3 ? 24 : 20;
     const marginTop = isA3 ? 14 : 12;
     const marginBottom = isA3 ? 14 : 12;
     const contentWidth = pageWidth - (marginX * 2);
@@ -792,12 +795,12 @@ class PDFExporter {
       console.warn("Erreur export carte zone :", err);
     }
 
-    // 6. Tracé vectoriel du Carroyage UTM et Coordonnées sur les Bords Latéraux
+    // 6. Tracé vectoriel du Carroyage UTM et Coordonnées sur les Bords Latéraux (universel WGS84 mondial)
     const centerUtm = (typeof MapManager !== 'undefined') ? MapManager.latLonToUtm(origCenterLat, origCenterLon) : { zone: 31, band: 'T' };
     const zone = centerUtm.zone;
     const band = centerUtm.band;
 
-    if (mapLayer === 'igntop25' && showUtm && typeof MapManager !== 'undefined') {
+    if (showUtm && typeof MapManager !== 'undefined') {
       const utmSW = MapManager.latLonToUtm(minLat, minLon);
       const utmNE = MapManager.latLonToUtm(maxLat, maxLon);
       const utmNW = MapManager.latLonToUtm(maxLat, minLon);
@@ -943,10 +946,12 @@ class PDFExporter {
       doc.setFontSize(isA3 ? 7.2 : 5.8);
       doc.setTextColor(30, 41, 59); // Slate 800 - Typographie officielle de marge cartographique
       
-      const x_ign = mapX + mapW + (isA3 ? 12.5 : 11.2);
-      const y_ign = mapY + (mapH / 2);
-      // Rotation 270° : écriture orientée verticalement du bas vers le haut le long de la bordure droite
-      doc.text(ignSheetInfo.verticalText, x_ign, y_ign, { angle: 270, align: 'center' });
+      // Positionnée dans la marge droite (à 7.5 mm du bord physique de la feuille)
+      // En rotation 270°, pour centrer verticalement sans que align:'center' ne décale le X horizontalement dans la carte :
+      const vTextWidth = doc.getTextWidth(ignSheetInfo.verticalText);
+      const x_ign = pageWidth - (isA3 ? 7.5 : 6.2);
+      const y_start = (mapY + (mapH / 2)) + (vTextWidth / 2);
+      doc.text(ignSheetInfo.verticalText, x_ign, y_start, { angle: 270 });
     }
 
     // 7. Cadre principal de la carte
@@ -1040,27 +1045,50 @@ class PDFExporter {
 
     // 9.C Descriptif d'échelle vraie & Feuille IGN
     const infoX = barX + (cmSegments * 10) + 7;
+    const paperW = Math.round(pageWidth);
+    const paperH = Math.round(pageHeight);
+
+    // Espace horizontal maximal disponible avant le bloc UTM de droite
+    const utmBlockW = (showUtm && typeof MapManager !== 'undefined') ? (isA3 ? 72 : 58) : 0;
+    const maxInfoW = (mapX + mapW - utmBlockW - 5) - infoX;
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(isA3 ? 8.5 : 7.2);
     doc.setTextColor(15, 23, 42);
-    doc.text('ÉCHELLE VRAIE 1 : ' + finalScale.toLocaleString('fr-FR'), infoX, calibY - 0.5);
+    doc.text('ÉCHELLE VRAIE 1 : ' + finalScale.toLocaleString('fr-FR'), infoX, calibY - 0.8);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(isA3 ? 6.5 : 5.5);
+    doc.setFontSize(isA3 ? 6.2 : 5.2);
     doc.setTextColor(71, 85, 105);
-    const ignCartouche = (ignSheetInfo && ignSheetInfo.primary) ? (' • Feuille IGN : ' + ignSheetInfo.primary.label + ' (' + ignSheetInfo.primary.annee + ')') : '';
-    doc.text('1 cm mesuré sur le papier = ' + metersPerCm + ' m terrain • Format ' + format.toUpperCase() + ' (' + pageWidth + ' × ' + pageHeight + ' mm)' + ignCartouche, infoX, calibY + 3.2);
+    const scaleLine = '1 cm papier = ' + (metersPerCm >= 1000 ? (metersPerCm / 1000) + ' km' : metersPerCm + ' m') + ' terrain • Format ' + format.toUpperCase() + ' (' + paperW + ' × ' + paperH + ' mm)';
+    doc.text(scaleLine, infoX, calibY + 2.2);
+
+    // Ligne complémentaire : Référence officielle IGN TOP 25 ou Satellite
+    if (ignSheetInfo && ignSheetInfo.primary) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(isA3 ? 6 : 5);
+      doc.setTextColor(30, 41, 59);
+      const ignRefText = 'Réf. commerciale : TOP 25 n° ' + ignSheetInfo.primary.label + ' (Éd. ' + ignSheetInfo.primary.annee + ')';
+      const truncatedRef = doc.getTextWidth(ignRefText) > maxInfoW ? (ignRefText.substring(0, 45) + '...') : ignRefText;
+      doc.text(truncatedRef, infoX, calibY + 5.0);
+    } else if (mapLayer === 'satellite') {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(isA3 ? 6 : 5);
+      doc.setTextColor(14, 116, 144);
+      const satText = '🛰️ ' + (window.MapManagerInstance && window.MapManagerInstance.currentSatelliteDateStr ? window.MapManagerInstance.currentSatelliteDateStr : 'Imagerie Satellite Haute Définition');
+      doc.text(satText, infoX, calibY + 5.0);
+    }
 
     // 9.D Mention UTM et fuseau
-    if (mapLayer === 'igntop25' && showUtm) {
+    if (showUtm && typeof MapManager !== 'undefined') {
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(isA3 ? 7 : 6);
       doc.setTextColor(2, 132, 199);
-      doc.text('🌐 Carroyage UTM WGS84 • Fuseau ' + zone + band + ' (1 km × 1 km)', mapX + mapW, calibY + 0.5, { align: 'right' });
+      doc.text('🌐 Carroyage UTM WGS84 • Fuseau ' + zone + band + ' (1 km × 1 km)', mapX + mapW, calibY - 0.5, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(isA3 ? 6 : 5);
       doc.setTextColor(100, 116, 139);
-      doc.text('Valeurs kilométriques indiquées sur les bords latéraux', mapX + mapW, calibY + 3.5, { align: 'right' });
+      doc.text('Valeurs kilométriques indiquées sur les bords latéraux', mapX + mapW, calibY + 3.0, { align: 'right' });
     }
 
     // 10. Téléchargement immédiat

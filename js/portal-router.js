@@ -170,6 +170,46 @@
     async searchWorldPlace(query) {
       const results = document.getElementById('map-world-search-results');
       if (!results) return;
+
+      // 0. Recherche prioritaire instantanée de GR officiel (ex: "GR 20", "GR 51", "GR 98", "GR 5"...)
+      let grMatches = [];
+      const isPureGrQuery = /^\s*GR\s*([0-9]+[A-Z0-9_-]*)\s*$/i.test(query) || /^\s*GR\s*$/i.test(query);
+      if (typeof GrManager !== 'undefined') {
+        grMatches = GrManager.search(query);
+      }
+
+      if (isPureGrQuery && grMatches.length > 0) {
+        results.innerHTML = '';
+        results.style.backgroundColor = '#ffffff';
+        results.style.opacity = '1';
+        results.classList.remove('hidden');
+
+        grMatches.forEach(gr => {
+          const div = document.createElement('div');
+          div.className = 'search-item p-2.5 bg-rose-50/80 hover:bg-rose-100 cursor-pointer transition flex items-center gap-2.5 border-b border-rose-200/90';
+          div.style.backgroundColor = '#fff1f2';
+          div.innerHTML = `
+            <span class="bg-rose-600 text-white font-black text-[11px] px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex-shrink-0 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+              ${gr.ref}
+            </span>
+            <div class="flex-1 min-w-0">
+              <div class="font-extrabold text-slate-900 text-xs truncate">${gr.name}</div>
+              <div class="text-[10px] text-rose-700 font-semibold truncate mt-0.5">${gr.distKm} km • D+ ${gr.dplus.toLocaleString('fr-FR')} m • ${gr.region}</div>
+            </div>
+            <span class="text-xs text-rose-600 font-bold flex-shrink-0">Afficher ➔</span>
+          `;
+          div.addEventListener('click', () => {
+            results.classList.add('hidden');
+            const input = document.getElementById('map-world-search-input');
+            if (input) input.value = `${gr.ref} - ${gr.name}`;
+            GrManager.displayGr(gr, window.MapManagerInstance ? window.MapManagerInstance.map : null);
+          });
+          results.appendChild(div);
+        });
+        return;
+      }
+
       results.innerHTML = '<div class="p-2.5 text-center text-slate-500 text-[11px]"><span class="inline-block animate-spin mr-1">⏳</span>Recherche mondiale en cours...</div>';
       results.classList.remove('hidden');
 
