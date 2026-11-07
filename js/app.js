@@ -873,6 +873,23 @@ class AppController {
         }
       }, 100);
       this.applyFiltersAndRender();
+    } else if (tabName === 'upload') {
+      const authorInput = document.getElementById('upload-author-name');
+      if (authorInput) {
+        const loggedUser = (typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : '';
+        const savedAuthor = localStorage.getItem('rf_uploader_display_name') || '';
+        if (!authorInput.value || authorInput.value === 'admin') {
+          authorInput.value = savedAuthor || loggedUser || 'admin';
+        }
+        if (!authorInput._boundSave) {
+          authorInput._boundSave = true;
+          authorInput.addEventListener('change', () => {
+            if (authorInput.value.trim()) {
+              localStorage.setItem('rf_uploader_display_name', authorInput.value.trim());
+            }
+          });
+        }
+      }
     } else if (tabName === 'manage') {
       this.renderManagementList();
     }
@@ -1012,6 +1029,11 @@ class AppController {
       let valA = a[this.sortColumn];
       let valB = b[this.sortColumn];
 
+      if (this.sortColumn === 'ajoutee_par') {
+        valA = (a.ajoutee_par || 'admin').toString().toLowerCase();
+        valB = (b.ajoutee_par || 'admin').toString().toLowerCase();
+      }
+
       if (this.sortColumn === 'ibp') {
         valA = (typeof a.ibp === 'number') ? a.ibp : ((typeof GPXParser !== 'undefined') ? GPXParser.calculateIBP(a) : 0);
         valB = (typeof b.ibp === 'number') ? b.ibp : ((typeof GPXParser !== 'undefined') ? GPXParser.calculateIBP(b) : 0);
@@ -1064,7 +1086,7 @@ class AppController {
     if (this.filteredHikes.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="8" class="p-8 text-center text-slate-400">
+          <td colspan="9" class="p-8 text-center text-slate-400">
             <div class="text-3xl mb-2">🔍</div>
             <div class="font-medium text-slate-700">Aucune randonnée dans ce rayon (${window.MapManagerInstance ? window.MapManagerInstance.searchRadiusKm : 50} km)</div>
             <div class="text-xs text-slate-500 mt-1">👉 <strong>Augmentez le curseur de rayon</strong> (ex: 200 km) ou tapez une autre ville de départ pour les voir.</div>
@@ -1115,6 +1137,12 @@ class AppController {
         </td>
         <td class="p-3 whitespace-nowrap text-xs font-semibold text-slate-700">
           ${hike.lastHikeDate ? `<span class="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md border border-slate-200">${hike.lastHikeDate}</span>` : '<span class="text-slate-300 italic">-</span>'}
+        </td>
+        <td class="p-3 whitespace-nowrap text-xs">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded-md border border-emerald-200 font-bold" title="Trace GPX chargée par ${this.escapeHtml(hike.ajoutee_par || 'admin')}">
+            <span>👤</span>
+            <span>${this.escapeHtml(hike.ajoutee_par || 'admin')}</span>
+          </span>
         </td>
         <td class="p-3 text-slate-600 whitespace-nowrap text-xs">
           ${hike.minElevation}m - ${hike.maxElevation}m
@@ -1355,6 +1383,10 @@ class AppController {
     if (lastDateInput) {
       lastDateInput.value = hike.lastHikeDate || '';
     }
+    const authorEditInput = document.getElementById('edit-hike-author');
+    if (authorEditInput) {
+      authorEditInput.value = hike.ajoutee_par || ((typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : 'admin');
+    }
     
     const ibpInput = document.getElementById('edit-hike-ibp');
     const ibpVal = (typeof hike.ibp === 'number') ? hike.ibp : ((typeof GPXParser !== 'undefined') ? GPXParser.calculateIBP(hike) : 50);
@@ -1416,6 +1448,10 @@ class AppController {
     const lastDateInput = document.getElementById('edit-hike-last-date');
     if (lastDateInput) {
       this.hikeToEdit.lastHikeDate = lastDateInput.value.trim();
+    }
+    const authorEditInput = document.getElementById('edit-hike-author');
+    if (authorEditInput && authorEditInput.value.trim()) {
+      this.hikeToEdit.ajoutee_par = authorEditInput.value.trim();
     }
 
     const ibpInputEl = document.getElementById('edit-hike-ibp');
@@ -3259,7 +3295,10 @@ class AppController {
         const proposedName = await GPXParser.generateProposedName(hike);
         hike.name = proposedName;
         hike.proposedName = proposedName;
-        hike.ajoutee_par = (typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : 'admin';
+        const authorEl = document.getElementById('upload-author-name');
+        const customAuthor = authorEl && authorEl.value ? authorEl.value.trim() : '';
+        if (customAuthor) localStorage.setItem('rf_uploader_display_name', customAuthor);
+        hike.ajoutee_par = customAuthor || localStorage.getItem('rf_uploader_display_name') || ((typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : 'admin');
         
         // Extraction de la date de derniere rando depuis le GPX si presente
         if (!hike.lastHikeDate && hike.points && hike.points.length > 0) {
@@ -3412,7 +3451,10 @@ class AppController {
         hike.proposedName = proposedName;
       }
 
-      hike.ajoutee_par = (typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : 'admin';
+      const authorEl = document.getElementById('upload-author-name');
+      const customAuthor = authorEl && authorEl.value ? authorEl.value.trim() : '';
+      if (customAuthor) localStorage.setItem('rf_uploader_display_name', customAuthor);
+      hike.ajoutee_par = customAuthor || localStorage.getItem('rf_uploader_display_name') || ((typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser()) ? AuthManager.getCurrentUser().username : 'admin');
 
       // Détection de randonnée ayant les mêmes caractéristiques
       const duplicateMatch = this.findSimilarHike(hike);

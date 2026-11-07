@@ -819,12 +819,19 @@ class GrManager {
 
   static _extractSegments(route) {
     const ways = [];
+    const visitedObjs = new Set();
     const walk = (o) => {
-      if (Array.isArray(o)) { o.forEach(walk); return; }
       if (!o || typeof o !== 'object') return;
+      if (visitedObjs.has(o)) return;
+      visitedObjs.add(o);
+      if (Array.isArray(o)) { o.forEach(walk); return; }
       if (Array.isArray(o.ways)) o.ways.forEach(w => ways.push(w));
       if (o.main) walk(o.main);
       if (o.appendices) walk(o.appendices);
+      if (o.subrelations) walk(o.subrelations);
+      if (o.superroutes) walk(o.superroutes);
+      if (o.routes) walk(o.routes);
+      if (o.sections) walk(o.sections);
     };
     walk(route);
     const seenIds = new Set();
@@ -843,6 +850,218 @@ class GrManager {
       if (pts.length > 1) segs.push(pts);
     });
     return segs;
+  }
+
+  /**
+   * Répertoire complet des GR® Français classés par ordre numérique strict
+   */
+  static FRENCH_GR_DIRECTORY = [
+    { ref: 'GR 1', name: 'Tour d’Île-de-France (Ceinture verte de Paris)' },
+    { ref: 'GR 2', name: 'Au fil de la Seine (Sources de la Seine ➔ Le Havre)' },
+    { ref: 'GR 3', name: 'La Loire Sauvage (Mont Gerbier-de-Jonc ➔ La Baule)' },
+    { ref: 'GR 4', name: 'De l’Atlantique à la Provence (Royan ➔ Grasse)' },
+    { ref: 'GR 5', name: 'Grande Traversée Vosges • Jura • Alpes (Lac Léman ➔ Nice)' },
+    { ref: 'GR 6', name: 'De l’Aquitaine aux Alpes (Arcachon ➔ Saint-Paul-sur-Ubaye)' },
+    { ref: 'GR 7', name: 'La Ligne de Partage des Eaux (Ballon d’Alsace ➔ Pyrénées)' },
+    { ref: 'GR 9', name: 'Du Jura à la Méditerranée (Saint-Amour ➔ Saint-Tropez)' },
+    { ref: 'GR 10', name: 'La Grande Traversée des Pyrénées (Hendaye ➔ Banyuls-sur-Mer)' },
+    { ref: 'GR 11', name: 'Grand Tour d’Île-de-France (Pays d’Othe, Brie, Vexin)' },
+    { ref: 'GR 12', name: 'De la Flandre à l’Île-de-France (Ardennes, Oise, Paris)' },
+    { ref: 'GR 13', name: 'Traversée du Morvan et du Gâtinais (Fontainebleau ➔ Bourbon-Lancy)' },
+    { ref: 'GR 14', name: 'Sentier des Ardennes et de l’Argonne (Paris ➔ Malmedy)' },
+    { ref: 'GR 20', name: 'Traversée de la Corse • Fra li Monti (Calenzana ➔ Conca)' },
+    { ref: 'GR 21', name: 'Les Falaises de la Côte d’Albâtre (Le Havre ➔ Le Tréport)' },
+    { ref: 'GR 22', name: 'De Paris au Mont-Saint-Michel' },
+    { ref: 'GR 23', name: 'De la Vallée de la Seine à la Côte d’Albâtre (Normandie)' },
+    { ref: 'GR 26', name: 'De Paris à la Côte Fleurie (Poissy ➔ Deauville / Villers-sur-Mer)' },
+    { ref: 'GR 30', name: 'Tour des Volcans et Lacs d’Auvergne (Puy-de-Dôme)' },
+    { ref: 'GR 31', name: 'Traversée de la Sologne (Bléneau ➔ Souvigny)' },
+    { ref: 'GR 32', name: 'De la Brie au Val de Loire (Forêt d’Orléans)' },
+    { ref: 'GR 34', name: 'Le Sentier des Douaniers • Tour de Bretagne (Mont-Saint-Michel ➔ Saint-Nazaire)' },
+    { ref: 'GR 35', name: 'Vallée du Loir (Voves ➔ Rochefort-sur-Loire)' },
+    { ref: 'GR 36', name: 'De la Manche aux Pyrénées (Ouistreham ➔ Bourg-Madame)' },
+    { ref: 'GR 37', name: 'Cœur de Bretagne (Mont-Saint-Michel ➔ Presqu’île de Crozon)' },
+    { ref: 'GR 38', name: 'De la Mayenne à l’Océan (Douarnenez)' },
+    { ref: 'GR 39', name: 'Du Mont-Saint-Michel à l’Estuaire de la Vilaine (Guérande)' },
+    { ref: 'GR 40', name: 'Tour des Volcans du Velay (Haute-Loire)' },
+    { ref: 'GR 41', name: 'Vallée du Cher (Tours ➔ Mont-Dore)' },
+    { ref: 'GR 42', name: 'Les Balcons du Rhône (Saint-Étienne ➔ Le Grau-du-Roi)' },
+    { ref: 'GR 43', name: 'Du Col des Faïsses à Sainte-Eulalie (Lozère / Margeride)' },
+    { ref: 'GR 44', name: 'Des Vans à Champerboux (Ardèche, Gorges du Chassezac, Lozère)' },
+    { ref: 'GR 46', name: 'De Tours à Toulouse (Vallées de l’Indre, Creuse, Lot)' },
+    { ref: 'GR 48', name: 'De Chinon à La Rochefoucauld (Vienne & Limousin)' },
+    { ref: 'GR 49', name: 'De Saint-Raphaël aux Gorges du Verdon (Estérel & Haut-Var)' },
+    { ref: 'GR 50', name: 'Tour du Parc National des Écrins (Balcons du Dauphiné)' },
+    { ref: 'GR 51', name: 'Les Balcons de la Méditerranée (Menton ➔ Marseille)' },
+    { ref: 'GR 52', name: 'Grande Traversée du Mercantour et Vallée des Merveilles (Menton)' },
+    { ref: 'GR 53', name: 'La Crête des Vosges du Nord (Wissembourg ➔ Masevaux)' },
+    { ref: 'GR 54', name: 'Tour de l’Oisans et des Écrins (Bourg-d’Oisans)' },
+    { ref: 'GR 55', name: 'La Vanoise (Tignes ➔ Pralognan ➔ Modane)' },
+    { ref: 'GR 56', name: 'Tour de l’Ubaye (Alpes-de-Haute-Provence)' },
+    { ref: 'GR 57', name: 'Tour du Mont-Thabor (Clarée & Maurienne)' },
+    { ref: 'GR 58', name: 'Tour du Queyras (Hautes-Alpes)' },
+    { ref: 'GR 59', name: 'Des Vosges au Bugey par le Revermont et le Jura' },
+    { ref: 'GR 60', name: 'Traversée de l’Aubrac (Signal de Mailhebiau ➔ Saint-Chély-d’Apcher)' },
+    { ref: 'GR 62', name: 'Des Grands Causses à Conques (Meyrueis ➔ Rodez ➔ Conques)' },
+    { ref: 'GR 65', name: 'Chemin de Saint-Jacques • Via Podiensis (Le Puy-en-Velay ➔ Saint-Jean-Pied-de-Port)' },
+    { ref: 'GR 66', name: 'Tour du Mont Aigoual (Cévennes)' },
+    { ref: 'GR 67', name: 'Tour en Pays Cévenol (Anduze, Florac, Alès)' },
+    { ref: 'GR 68', name: 'Tour du Mont Lozère' },
+    { ref: 'GR 69', name: 'La Routo • Sur les pas de la Transhumance (Arles ➔ Vallée de la Stura)' },
+    { ref: 'GR 70', name: 'Le Chemin de Stevenson (Le Puy-en-Velay ➔ Alès)' },
+    { ref: 'GR 71', name: 'Tour du Larzac (Aveyron & Hérault)' },
+    { ref: 'GR 72', name: 'Du Col du Bez à Barre-des-Cévennes (Tanargue & Lozère)' },
+    { ref: 'GR 73', name: 'Cévennes et Monts d’Ardèche' },
+    { ref: 'GR 74', name: 'De Saint-Maurice-Navacelles à Pézenas (Hérault)' },
+    { ref: 'GR 78', name: 'Chemin du Piémont Pyrénéen (Carcassonne ➔ Saint-Jean-Pied-de-Port)' },
+    { ref: 'GR 86', name: 'De Toulouse à Bagnères-de-Luchon (Haute-Garonne)' },
+    { ref: 'GR 89', name: 'Chemin de Montaigne (Lyon ➔ Thiers ➔ Bordeaux)' },
+    { ref: 'GR 90', name: 'Traversée du Massif des Maures (Notre-Dame-des-Anges ➔ Saint-Tropez)' },
+    { ref: 'GR 91', name: 'Traversée des Hauts-Plateaux du Vercors (Grenoble ➔ Brantes)' },
+    { ref: 'GR 93', name: 'Du Vercors au Dévoluy et à la Durance' },
+    { ref: 'GR 95', name: 'De Saillans à Vaunières (Drôme & Diois)' },
+    { ref: 'GR 96', name: 'Préalpes de Haute-Savoie (Samoëns ➔ Lac d’Annecy)' },
+    { ref: 'GR 97', name: 'Tour du Grand Luberon (Vaucluse)' },
+    { ref: 'GR 98', name: 'Sentier des Calanques de Marseille à La Ciotat' },
+    { ref: 'GR 99', name: 'Des Gorges du Verdon à la Mer Méditerranée (Toulon / Revest)' },
+    { ref: 'GR 100', name: 'Sur les pas des Maîtres Sonneurs (Berry & Bourbonnais)' },
+    { ref: 'GR 101', name: 'Chemin de Saint-Jacques des Pyrénées (Nogaro ➔ Col de Saucède)' },
+    { ref: 'GR 105', name: 'Route d’Artagnan / Vallée d’Aure' },
+    { ref: 'GR 107', name: 'Le Chemin des Bonshommes • Sentier Cathare (Foix ➔ Berga)' },
+    { ref: 'GR 111', name: 'Traversée de l’Essonne' },
+    { ref: 'GR 120', name: 'Sentier du Littoral des Hauts-de-France (Dunkerque ➔ Baie de Somme)' },
+    { ref: 'GR 145', name: 'Via Francigena en France (Calais ➔ Reims ➔ Besançon ➔ Pontarlier)' },
+    { ref: 'GR 210', name: 'Sur les traces du Chasse-Marée (Dieppe ➔ Rouen)' },
+    { ref: 'GR 222', name: 'Tour de Normandie Centrale (Pont-de-l’Arche ➔ Verneuil-sur-Avre)' },
+    { ref: 'GR 223', name: 'Sentier du Littoral du Cotentin (Honfleur ➔ Mont-Saint-Michel)' },
+    { ref: 'GR 300', name: 'Chemin de Saint-Jacques en Bourbonnais (Sancoins ➔ Clermont-Ferrand)' },
+    { ref: 'GR 340', name: 'Tour de Belle-Île-en-Mer (Morbihan)' },
+    { ref: 'GR 360', name: 'Tour de la Saintonge (Charente-Maritime)' },
+    { ref: 'GR 380', name: 'Tour des Monts d’Arrée (Finistère)' },
+    { ref: 'GR 400', name: 'Tour du Volcan Cantalien • Puy Mary (Cantal)' },
+    { ref: 'GR 440', name: 'Tour de la Montagne Limousine (Plateau de Millevaches)' },
+    { ref: 'GR 441', name: 'Tour de la Chaîne des Puys (Puy de Dôme)' },
+    { ref: 'GR 470', name: 'Sources et Gorges de l’Allier (Brioude ➔ La Bastide-Puylaurent)' },
+    { ref: 'GR 509', name: 'Grande Traversée du Jura • GTJ (Mandeure ➔ Culoz)' },
+    { ref: 'GR 651', name: 'Variante de la Vallée du Célé (Saint-Jacques dans le Lot)' },
+    { ref: 'GR 652', name: 'Voie de Rocamadour (Lhospitalet ➔ La Romieu)' },
+    { ref: 'GR 653', name: 'Voie d’Arles • Via Tolosana (Arles ➔ Montpellier ➔ Toulouse ➔ Col du Somport)' },
+    { ref: 'GR 654', name: 'Voie de Vézelay (Namur ➔ Reims ➔ Vézelay ➔ Périgueux ➔ Montréal-du-Gers)' },
+    { ref: 'GR 655', name: 'Via Turonensis • Voie de Tours (Paris ➔ Tours ➔ Poitiers ➔ Bordeaux ➔ Saint-Jean-Pied-de-Port)' },
+    { ref: 'GR 736', name: 'Gorges et Vallée du Tarn (Mont Lozère ➔ Albi)' },
+    { ref: 'GR 800', name: 'Au fil de la Somme (Saint-Quentin ➔ Amiens ➔ Saint-Valery-sur-Somme)' },
+    { ref: 'GR 2013', name: 'Sentier Métropolitain d’Aix-Marseille Provence' },
+    { ref: 'GR R1', name: 'Tour du Piton des Neiges (La Réunion : Cilaos • Mafate • Salazie)' },
+    { ref: 'GR R2', name: 'Grande Traversée de l’Île de La Réunion (Saint-Denis ➔ Saint-Philippe)' },
+    { ref: 'GR R3', name: 'Tour du Cirque de Mafate (La Réunion)' }
+  ];
+
+  /**
+   * Affiche l'intégralité d'un GR français (tous tronçons / sections assemblés) à partir de son code "GR XX"
+   */
+  static async displayFrenchGrByRef(refCode, map) {
+    if (!refCode) return;
+    if (!map) {
+      if (window.MapManagerInstance && window.MapManagerInstance.map) map = window.MapManagerInstance.map;
+      else return;
+    }
+    const dirEntry = this.FRENCH_GR_DIRECTORY.find(d => d.ref.toUpperCase() === refCode.trim().toUpperCase());
+    const labelName = dirEntry ? dirEntry.name : refCode;
+
+    this.clearGr(map);
+    this.showLoadingBanner({ ref: refCode, name: labelName });
+
+    try {
+      const results = await this.searchRemote(refCode);
+      if (results && results.length > 0) {
+        const cleanRefUpper = refCode.toUpperCase().replace(/[\s\u00a0]+/g, '');
+        const trunkSections = results.filter(r => {
+          const rRef = (r.ref || '').toUpperCase().replace(/[\s\u00a0]+/g, '');
+          return rRef === cleanRefUpper;
+        });
+        const toLoad = (trunkSections.length > 0 ? trunkSections : [results[0]]).slice(0, 10);
+
+        const detailPromises = toLoad.map(async (rel) => {
+          let det = this._detailCache.get(rel.id);
+          if (!det) {
+            const resp = await fetch(`${this.WMT}/details/relation/${rel.id}`);
+            if (resp.ok) {
+              det = await resp.json();
+              this._detailCache.set(rel.id, det);
+            }
+          }
+          return { rel, det };
+        });
+
+        const loaded = await Promise.all(detailPromises);
+        const allSegs = [];
+        let totalLengthMeters = 0;
+        let primaryDet = null;
+
+        loaded.forEach(({ det }) => {
+          if (!det || !det.route) return;
+          if (!primaryDet) primaryDet = det;
+          const s = this._extractSegments(det.route);
+          if (s.length) {
+            allSegs.push(...s);
+            if (det.route.length) totalLengthMeters += det.route.length;
+          }
+        });
+
+        if (allSegs.length > 0) {
+          this.setOverlayDimmed(true);
+          this.currentGrLayer = L.layerGroup();
+          this.currentGrLayer.addLayer(L.polyline(allSegs, { color: '#ffffff', weight: 9, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }));
+          this.currentGrLayer.addLayer(L.polyline(allSegs, { color: '#e11d48', weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, className: 'leaflet-gr-blinking-path' }));
+          this.currentGrLayer.addLayer(L.polyline(allSegs, { color: '#ffffff', weight: 2.5, dashArray: '12, 10', opacity: 0.95, interactive: false, className: 'leaflet-gr-blinking-dash' }));
+
+          const finalName = dirEntry ? dirEntry.name : (primaryDet && primaryDet.name ? primaryDet.name : refCode);
+          this._addRouteNameLabels(allSegs, refCode, finalName, this.currentGrLayer);
+          this.currentGrLayer.addTo(map);
+
+          const container = map.getContainer();
+          if (container) container.classList.add('leaflet-gr-blinking');
+
+          const bounds = L.latLngBounds(allSegs.flat());
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+
+          const itin = (primaryDet && primaryDet.itinerary && primaryDet.itinerary.length) ? primaryDet.itinerary.filter(Boolean) : [];
+          this.showGrBanner({
+            id: toLoad[0].id,
+            ref: refCode,
+            name: finalName,
+            group: 'NAT',
+            distKm: totalLengthMeters > 0 ? Math.round(totalLengthMeters / 1000) : null,
+            dplus: null,
+            start: itin[0] || (primaryDet && primaryDet.tags && primaryDet.tags.from) || '',
+            finish: itin[itin.length - 1] || (primaryDet && primaryDet.tags && primaryDet.tags.to) || ''
+          }, map, {
+            bounds,
+            candidates: (() => {
+              const seenRefs = new Set([cleanRefUpper]);
+              const variants = results.filter(r => {
+                const rr = (r.ref || '').toUpperCase().replace(/[\s\u00a0]+/g, '');
+                if (!rr || seenRefs.has(rr)) return false;
+                seenRefs.add(rr);
+                return true;
+              });
+              return variants.length > 0 ? [toLoad[0], ...variants.slice(0, 5)] : null;
+            })()
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('Assemblée multi-tronçons GR indisponible, fallback catalogue:', e);
+    }
+
+    const catMatch = this.catalog.find(g => g.ref.toUpperCase() === refCode.trim().toUpperCase());
+    if (catMatch) {
+      this.displayGr(catMatch, map);
+    } else {
+      this.removeGrBanner();
+      alert('Impossible de charger le tracé complet de ' + refCode + '.');
+    }
   }
 
   /** Charge la géométrie OSM réelle d'un GR / sentier réputé et l'affiche en surbrillance clignotante avec son nom sur le tracé */
@@ -866,7 +1085,37 @@ class GrManager {
       alert('Impossible de charger le tracé de ' + (item.ref || item.name) + ' (service indisponible).');
       return;
     }
-    const segs = this._extractSegments(det.route);
+    let segs = this._extractSegments(det.route);
+
+    // Si c'est un GR français découpé en plusieurs tronçons sur OSM, assembler automatiquement tous ses tronçons français
+    const cleanRef = (det.ref || item.ref || '').trim().toUpperCase();
+    if (!opts.candidates && /^GR\s*(R?\d+)$/.test(cleanRef) && this._isFrench(det)) {
+      try {
+        const siblings = await this.searchRemote(cleanRef);
+        const targetNorm = cleanRef.replace(/\s+/g, '');
+        const extraRels = (siblings || []).filter(s => s.id !== item.id && (s.ref || '').toUpperCase().replace(/\s+/g, '') === targetNorm).slice(0, 8);
+        if (extraRels.length > 0) {
+          const extraDets = await Promise.allSettled(extraRels.map(async (sr) => {
+            let sdet = this._detailCache.get(sr.id);
+            if (!sdet) {
+              const r = await fetch(`${this.WMT}/details/relation/${sr.id}`);
+              if (r.ok) {
+                sdet = await r.json();
+                this._detailCache.set(sr.id, sdet);
+              }
+            }
+            return sdet;
+          }));
+          extraDets.forEach(ed => {
+            if (ed.status === 'fulfilled' && ed.value && ed.value.route) {
+              const extraSegs = this._extractSegments(ed.value.route);
+              if (extraSegs.length) segs.push(...extraSegs);
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
     if (!segs.length) {
       this.removeGrBanner();
       alert('Aucune géométrie disponible pour ' + (item.ref || item.name) + '.');
@@ -1167,18 +1416,47 @@ class GrManager {
     const host = (map && map.getContainer()) ? map.getContainer() : document.body;
     panel = document.createElement('div');
     panel.id = 'gr-color-filter-panel';
-    panel.className = 'hidden absolute top-14 right-2.5 z-[1000] bg-white/95 backdrop-blur-md border-2 border-slate-300 rounded-2xl shadow-xl p-2.5 w-64 text-slate-800 select-none transition-all';
+    panel.className = 'hidden absolute top-14 right-2.5 z-[1000] bg-white/95 backdrop-blur-md border-2 border-slate-300 rounded-2xl shadow-xl p-2.5 w-72 text-slate-800 select-none transition-all';
+
+    const frenchGrOptions = this.FRENCH_GR_DIRECTORY.map(item =>
+      `<option value="${this._esc(item.ref)}">${this._esc(item.ref)} — ${this._esc(item.name)}</option>`
+    ).join('');
+
+    const famousOptions = this.FAMOUS_TRAILS.map(ft =>
+      `<option value="FAMOUS:${ft.id}">${this._esc(ft.ref)} — ${this._esc(ft.name)}</option>`
+    ).join('');
+
     panel.innerHTML = `
       <div class="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-slate-200">
         <div class="flex items-center gap-1.5">
           <span class="text-sm">🥾</span>
-          <span class="font-black text-[11px] uppercase tracking-wider text-slate-900">Sentiers par Couleur</span>
+          <span class="font-black text-[11px] uppercase tracking-wider text-slate-900">Carte des GR® &amp; Filtres</span>
         </div>
         <button type="button" id="btn-toggle-gr-filter-body" class="text-[11px] font-bold text-slate-500 hover:text-slate-900 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 cursor-pointer" title="Réduire / Agrandir">▾</button>
       </div>
       <div id="gr-color-filter-body" class="space-y-1.5">
+        <!-- Module Choix du GR Français par liste déroulante numérique -->
+        <div class="bg-rose-50/90 border border-rose-200 rounded-xl p-2 space-y-1.5">
+          <label for="gr-french-dropdown" class="block text-[10px] font-black uppercase tracking-wider text-rose-800 flex items-center gap-1">
+            <span>🇫🇷</span> Choix d'un GR® Français (ordre numérique)
+          </label>
+          <div class="flex items-center gap-1">
+            <select id="gr-french-dropdown" class="flex-1 min-w-0 text-[11px] font-bold text-slate-900 bg-white border border-rose-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
+              <option value="">— Sélectionner un GR® Français (${this.FRENCH_GR_DIRECTORY.length} GR) —</option>
+              <optgroup label="🇫🇷 GR® Français ( par ordre numérique )">
+                ${frenchGrOptions}
+              </optgroup>
+              <optgroup label="🌍 Grands Itinéraires Réputés (Europe &amp; Monde)">
+                ${famousOptions}
+              </optgroup>
+            </select>
+            <button type="button" id="btn-gr-dropdown-go" class="bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] px-2.5 py-1.5 rounded-lg shadow cursor-pointer transition flex-shrink-0" title="Afficher et zoomer sur ce GR">
+              Afficher
+            </button>
+          </div>
+        </div>
         <div class="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 font-semibold leading-tight">
-          💡 <b>Cliquez sur un chemin</b> sur la carte pour afficher son nom et le faire ressortir !
+          💡 <b>Cliquez aussi sur un chemin</b> sur la carte pour afficher son nom et le faire ressortir !
         </div>
         <label class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer transition">
           <input type="checkbox" data-gr-color="blue" checked class="w-3.5 h-3.5 accent-blue-600 rounded cursor-pointer" />
@@ -1237,6 +1515,27 @@ class GrManager {
         this.setAllColorFilters(btn.getAttribute('data-gr-preset'));
       });
     });
+
+    const grSelect = panel.querySelector('#gr-french-dropdown');
+    const grGoBtn = panel.querySelector('#btn-gr-dropdown-go');
+    const triggerDropdownGr = () => {
+      if (!grSelect || !grSelect.value) return;
+      const val = grSelect.value;
+      const targetMap = map || (window.MapManagerInstance ? window.MapManagerInstance.map : null);
+      if (val.startsWith('FAMOUS:')) {
+        const relId = parseInt(val.replace('FAMOUS:', ''), 10);
+        const ft = this.FAMOUS_TRAILS.find(f => f.id === relId);
+        if (ft) this.displayRemote(ft, targetMap);
+      } else {
+        this.displayFrenchGrByRef(val, targetMap);
+      }
+    };
+    if (grSelect) {
+      grSelect.addEventListener('change', triggerDropdownGr);
+    }
+    if (grGoBtn) {
+      grGoBtn.addEventListener('click', triggerDropdownGr);
+    }
 
     const toggleBtn = panel.querySelector('#btn-toggle-gr-filter-body');
     const bodyEl = panel.querySelector('#gr-color-filter-body');

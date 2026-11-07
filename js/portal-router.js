@@ -309,6 +309,22 @@
         });
       }
 
+      // Modale Mode d'emploi détaillé (à gauche de CGU)
+      const btnOpenModeEmploi = document.getElementById('btn-open-mode-emploi');
+      const modalModeEmploi = document.getElementById('modal-mode-emploi');
+      if (btnOpenModeEmploi && modalModeEmploi) {
+        btnOpenModeEmploi.addEventListener('click', (e) => {
+          e.preventDefault();
+          modalModeEmploi.classList.remove('hidden');
+        });
+      }
+      document.querySelectorAll('[data-open-mode-emploi]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (modalModeEmploi) modalModeEmploi.classList.remove('hidden');
+        });
+      });
+
       // Recherche de lieu monde entier
       this.initWorldSearch();
 
@@ -349,12 +365,14 @@
         if (viewPortal) viewPortal.classList.remove('hidden');
         if (lockModal) lockModal.classList.add('hidden');
         this.hideStandaloneGpxHud();
+        if (typeof GrManager !== 'undefined') GrManager.removeGrBanner();
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
       } else if (viewName === 'guides') {
         if (viewGuides) viewGuides.classList.remove('hidden');
         if (lockModal) lockModal.classList.add('hidden');
         this.hideStandaloneGpxHud();
+        if (typeof GrManager !== 'undefined') GrManager.removeGrBanner();
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
       } else if (viewName === 'carte') {
@@ -443,8 +461,14 @@
       const ibpLegend = document.getElementById('map-ibp-legend');
       const searchBox = document.getElementById('map-world-search-box');
       const btnMapManual = document.getElementById('btn-map-manual');
+      const outdoorGearBar = document.getElementById('outdoor-gear-header-bar');
 
       if (isFree) {
+        // Supprimer la boîte "Sélection Rando" dans le module Cartes & Outils
+        if (outdoorGearBar) {
+          outdoorGearBar.classList.add('hidden');
+          outdoorGearBar.style.setProperty('display', 'none', 'important');
+        }
         // En mode libre : masquer Randonneurs Sanaryens et afficher Map & Rando by JLDApps
         if (logoFrame) logoFrame.classList.add('hidden');
         if (maprandoBranding) {
@@ -509,7 +533,11 @@
           }
         }
       } else {
-        // En mode adhérent : restaurer Randonneurs Sanaryens, l'IBP index et le mode d'emploi
+        // En mode Randonner : restaurer la barre Sélection Rando, Randonneurs Sanaryens, l'IBP index et le mode d'emploi
+        if (outdoorGearBar) {
+          outdoorGearBar.classList.remove('hidden');
+          outdoorGearBar.style.display = '';
+        }
         if (ibpLegend) {
           ibpLegend.classList.remove('hidden');
           ibpLegend.style.display = '';
@@ -541,7 +569,7 @@
 
         // Restaurer la vue (mixte par défaut pour le club)
         if (window.App && typeof window.App.setViewMode === 'function') {
-          window.App.setViewMode(window.App.currentViewMode || 'mixte');
+          window.App.setViewMode('split');
         }
 
         // Restaurer les marqueurs de randonnées sur la carte
