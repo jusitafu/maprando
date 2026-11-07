@@ -303,9 +303,13 @@ class AppController {
           return;
         }
 
-        // 2. Pré-suggestions instantanées sur les communes & massifs locaux (0 ms)
+        // 2. Pré-suggestions instantanées sur les sentiers GR ou communes locales (0 ms)
+        let grMatches = [];
+        if (typeof GrManager !== 'undefined') {
+          grMatches = GrManager.search(query);
+        }
         const localMatches = this.getLocalPlaceMatches(query);
-        if (localMatches.length > 0) {
+        if (grMatches.length > 0 || localMatches.length > 0) {
           this.renderPlacesResults(localMatches, query);
         }
 
@@ -2565,7 +2569,7 @@ class AppController {
       resultsContainer.classList.remove('hidden');
       grMatches.forEach(gr => {
         const item = document.createElement('div');
-        item.className = 'px-3.5 py-2.5 bg-rose-50/80 hover:bg-rose-100 cursor-pointer transition border-b border-rose-200/90 flex items-center gap-3 text-left group';
+        item.className = 'search-item px-3.5 py-2.5 bg-rose-50/80 hover:bg-rose-100 cursor-pointer transition border-b border-rose-200/90 flex items-center gap-3 text-left group';
         item.innerHTML = `
           <span class="bg-rose-600 text-white font-black text-[11px] px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex-shrink-0 flex items-center gap-1">
             <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
