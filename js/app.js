@@ -4871,7 +4871,16 @@ class ScrollElevatorManager {
     this.dragStartY = 0;
     this.dragStartScrollTop = 0;
     this.activeTarget = null;
+    this._rafPending = false;
+    this._isUpdating = false;
     this.init();
+  }
+
+  toggleClassSafe(el, cls, force) {
+    if (!el) return;
+    const has = el.classList.contains(cls);
+    if (force && !has) el.classList.add(cls);
+    else if (!force && has) el.classList.remove(cls);
   }
 
   init() {
@@ -4925,7 +4934,6 @@ class ScrollElevatorManager {
     this.checkAndShowMobileWarning();
   }
 
-
   /**
    * Détecte si l'application est lancée sur un téléphone (iPhone ou Android)
    * et affiche un warning rouge clignotant 2 fois puis disparaissant :
@@ -4970,7 +4978,6 @@ class ScrollElevatorManager {
    * Détermine le conteneur de défilement actif (modale ouverte, onglet Randonner, ou page entière)
    */
   getScrollContext() {
-    // 1. Modales ouvertes en priorité
     const modalSelectors = [
       '#modal-mode-emploi:not(.hidden) > div',
       '#modal-cgu:not(.hidden) > div',
@@ -4994,14 +5001,12 @@ class ScrollElevatorManager {
       }
     }
 
-    // 2. Si on est dans le conteneur Carte / Randonner
     const mapApp = document.getElementById('main-map-app-container');
     if (mapApp && !mapApp.classList.contains('hidden')) {
       const hash = (window.location.hash || '').replace('#', '').split('?')[0];
       if (hash === 'carte') {
-        return null; // En mode carte plein écran libre, pas d'ascenseur de texte
+        return null;
       }
-      // Vérifier les onglets déroulants dans Randonner / RandoFinder
       const tabIds = ['tab-content-upload', 'tab-content-manage', 'tab-content-settings'];
       for (const id of tabIds) {
         const tabEl = document.getElementById(id);
@@ -5036,7 +5041,6 @@ class ScrollElevatorManager {
       }
     }
 
-    // 3. Page principale (#accueil ou #guides)
     const docEl = document.scrollingElement || document.documentElement;
     return {
       type: 'window',
@@ -5052,61 +5056,62 @@ class ScrollElevatorManager {
 
   /**
    * Ajuste automatiquement chaque page de menu (#accueil et #guides replié)
-   * pour qu'elle s'affiche en pleine page (100% visible) sans débordement initial.
+   * pour qu'elle s'affiche en pleine page (100% visible) sans débordement initial,
+   * et aligne le cadre des pubs en haut et en bas avec les cadres de gauche.
    */
   fitMenuToFullPage() {
-    const portalView = document.getElementById('portal-view');
-    const guidesView = document.getElementById('guides-view');
-    const vh = window.innerHeight || document.documentElement.clientHeight;
+    if (this._isUpdating) return;
+    this._isUpdating = true;
+    try {
+      const portalView = document.getElementById('portal-view');
+      const guidesView = document.getElementById('guides-view');
+      const vh = window.innerHeight || document.documentElement.clientHeight;
 
-    // 1. Page d'accueil (#portal-view)
-    if (portalView && !portalView.classList.contains('hidden')) {
-      const mainEl = portalView.querySelector('main');
-      if (mainEl) {
-        mainEl.style.zoom = '1';
-        const totalH = portalView.scrollHeight;
-        if (totalH > vh + 2 && vh >= 500) {
-          const scale = Math.max(0.72, Math.min(1, (vh - 8) / totalH));
-          mainEl.style.zoom = scale.toFixed(3);
-        }
-      }
-    }
-
-    // 2. Page Guides & Savoirs (#guides-view) lorsque toutes les fiches sont repliées
-    if (guidesView && !guidesView.classList.contains('hidden')) {
-      const ficheIds = ['fiche-gps-content', 'fiche-lidar-content', 'fiche-ibp-content', 'fiche-checklist-content'];
-      const anyExpanded = ficheIds.some(id => {
-        const el = document.getElementById(id);
-        return el && !el.classList.contains('hidden');
-      });
-
-      const mainGrid = document.getElementById('guides-main-grid');
-      const gearPanel = document.getElementById('outdoor-gear-panel');
-      if (mainGrid && gearPanel) {
-        if (anyExpanded) {
-          mainGrid.classList.remove('items-stretch');
-          mainGrid.classList.add('items-start');
-          gearPanel.classList.remove('h-full');
-          gearPanel.classList.add('lg:sticky', 'lg:top-4');
-        } else {
-          mainGrid.classList.remove('items-start');
-          mainGrid.classList.add('items-stretch');
-          gearPanel.classList.remove('lg:sticky', 'lg:top-4');
-          gearPanel.classList.add('h-full');
-        }
-      }
-
-      const contentWrap = guidesView.children[1]; // Le conteneur sous la top-bar
-      if (contentWrap) {
-        contentWrap.style.zoom = '1';
-        if (!anyExpanded) {
-          const totalH = guidesView.scrollHeight;
+      // 1. Page d'accueil (#portal-view)
+      if (portalView && !portalView.classList.contains('hidden')) {
+        const mainEl = portalView.querySelector('main');
+        if (mainEl) {
+          mainEl.style.zoom = '1';
+          const totalH = portalView.scrollHeight;
           if (totalH > vh + 2 && vh >= 500) {
-            const scale = Math.max(0.72, Math.min(1, (vh - 10) / totalH));
-            contentWrap.style.zoom = scale.toFixed(3);
+            const scale = Math.max(0.72, Math.min(1, (vh - 8) / totalH));
+            mainEl.style.zoom = scale.toFixed(3);
           }
         }
       }
+
+      // 2. Page Guides & Savoirs (#guides-view) lorsque toutes les fiches sont repliées
+      if (guidesView && !guidesView.classList.contains('hidden')) {
+        const ficheIds = ['fiche-gps-content', 'fiche-lidar-content', 'fiche-ibp-content', 'fiche-checklist-content'];
+        const anyExpanded = ficheIds.some(id => {
+          const el = document.getElementById(id);
+          return el && !el.classList.contains('hidden');
+        });
+
+        const mainGrid = document.getElementById('guides-main-grid');
+        const gearPanel = document.getElementById('outdoor-gear-panel');
+        if (mainGrid && gearPanel) {
+          this.toggleClassSafe(mainGrid, 'items-stretch', !anyExpanded);
+          this.toggleClassSafe(mainGrid, 'items-start', anyExpanded);
+          this.toggleClassSafe(gearPanel, 'h-full', !anyExpanded);
+          this.toggleClassSafe(gearPanel, 'lg:sticky', anyExpanded);
+          this.toggleClassSafe(gearPanel, 'lg:top-4', anyExpanded);
+        }
+
+        const contentWrap = guidesView.children[1];
+        if (contentWrap) {
+          contentWrap.style.zoom = '1';
+          if (!anyExpanded) {
+            const totalH = guidesView.scrollHeight;
+            if (totalH > vh + 2 && vh >= 500) {
+              const scale = Math.max(0.72, Math.min(1, (vh - 10) / totalH));
+              contentWrap.style.zoom = scale.toFixed(3);
+            }
+          }
+        }
+      }
+    } finally {
+      this._isUpdating = false;
     }
   }
 
@@ -5114,74 +5119,67 @@ class ScrollElevatorManager {
    * Met à jour la visibilité et la position du curseur de l'ascenseur + flèches clignotantes
    */
   refresh() {
-    if (!this.elevatorEl || !this.trackEl || !this.thumbEl) return;
+    if (!this.elevatorEl || !this.trackEl || !this.thumbEl || this._isUpdating) return;
+    this._isUpdating = true;
+    try {
+      const ctx = this.getScrollContext();
+      this.activeTarget = ctx;
 
-    const ctx = this.getScrollContext();
-    this.activeTarget = ctx;
+      if (!ctx) {
+        this.toggleClassSafe(this.elevatorEl, 'elevator-hidden', true);
+        this.toggleClassSafe(this.arrowDownEl, 'arrow-hidden', true);
+        this.toggleClassSafe(this.arrowUpEl, 'arrow-hidden', true);
+        return;
+      }
 
-    if (!ctx) {
-      this.elevatorEl.classList.add('elevator-hidden');
-      this.arrowDownEl.classList.add('arrow-hidden');
-      this.arrowUpEl.classList.add('arrow-hidden');
-      return;
-    }
+      const scrollHeight = ctx.getScrollHeight();
+      const clientHeight = ctx.getClientHeight();
+      const scrollTop = ctx.getScrollTop();
+      const maxScroll = scrollHeight - clientHeight;
 
-    const scrollHeight = ctx.getScrollHeight();
-    const clientHeight = ctx.getClientHeight();
-    const scrollTop = ctx.getScrollTop();
-    const maxScroll = scrollHeight - clientHeight;
+      if (maxScroll <= 10) {
+        this.toggleClassSafe(this.elevatorEl, 'elevator-hidden', true);
+        this.toggleClassSafe(this.arrowDownEl, 'arrow-hidden', true);
+        this.toggleClassSafe(this.arrowUpEl, 'arrow-hidden', true);
+        return;
+      }
 
-    // Si tout tient dans la page (pas de débordement)
-    if (maxScroll <= 10) {
-      this.elevatorEl.classList.add('elevator-hidden');
-      this.arrowDownEl.classList.add('arrow-hidden');
-      this.arrowUpEl.classList.add('arrow-hidden');
-      return;
-    }
+      this.toggleClassSafe(this.elevatorEl, 'elevator-hidden', false);
 
-    // Il y a débordement : afficher l'ascenseur à droite
-    this.elevatorEl.classList.remove('elevator-hidden');
+      const trackHeight = this.trackEl.clientHeight || (window.innerHeight - 130);
+      const ratioVisible = Math.min(1, Math.max(0.08, clientHeight / scrollHeight));
+      const thumbHeight = Math.max(42, Math.round(trackHeight * ratioVisible));
+      const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
+      const scrollRatio = Math.min(1, Math.max(0, scrollTop / maxScroll));
+      const thumbTop = Math.round(scrollRatio * maxThumbTop);
 
-    const trackHeight = this.trackEl.clientHeight || (window.innerHeight - 130);
-    const ratioVisible = Math.min(1, Math.max(0.08, clientHeight / scrollHeight));
-    const thumbHeight = Math.max(42, Math.round(trackHeight * ratioVisible));
-    const maxThumbTop = Math.max(0, trackHeight - thumbHeight);
-    const scrollRatio = Math.min(1, Math.max(0, scrollTop / maxScroll));
-    const thumbTop = Math.round(scrollRatio * maxThumbTop);
+      this.thumbEl.style.height = `${thumbHeight}px`;
+      this.thumbEl.style.top = `${thumbTop}px`;
 
-    this.thumbEl.style.height = `${thumbHeight}px`;
-    this.thumbEl.style.top = `${thumbTop}px`;
-
-    // Flèche clignotante vers le bas si du texte déborde en bas
-    if (scrollTop < maxScroll - 12) {
-      this.arrowDownEl.classList.remove('arrow-hidden');
-    } else {
-      this.arrowDownEl.classList.add('arrow-hidden');
-    }
-
-    // Flèche clignotante vers le haut si du texte déborde en haut
-    if (scrollTop > 20) {
-      this.arrowUpEl.classList.remove('arrow-hidden');
-    } else {
-      this.arrowUpEl.classList.add('arrow-hidden');
+      this.toggleClassSafe(this.arrowDownEl, 'arrow-hidden', !(scrollTop < maxScroll - 12));
+      this.toggleClassSafe(this.arrowUpEl, 'arrow-hidden', !(scrollTop > 20));
+    } finally {
+      this._isUpdating = false;
     }
   }
 
-  bindEvents() {
-    // Écoute du scroll global (capture=true capte aussi le scroll des div internes et modales)
-    window.addEventListener('scroll', () => this.refresh(), { passive: true, capture: true });
-    window.addEventListener('resize', () => {
+  scheduleUpdate() {
+    if (this._rafPending) return;
+    this._rafPending = true;
+    requestAnimationFrame(() => {
+      this._rafPending = false;
       this.fitMenuToFullPage();
       this.refresh();
     });
+  }
+
+  bindEvents() {
+    window.addEventListener('scroll', () => this.refresh(), { passive: true, capture: true });
+    window.addEventListener('resize', () => this.scheduleUpdate());
     window.addEventListener('hashchange', () => {
-      setTimeout(() => {
-        this.fitMenuToFullPage();
-        this.refresh();
-      }, 60);
+      setTimeout(() => this.scheduleUpdate(), 60);
     });
 
-    // Boutons ▲ et ▼ de l'ascenseur
     const btnUp = this.elevatorEl.querySelector('#elevator-btn-up');
     const btnDown = this.elevatorEl.querySelector('#elevator-btn-down');
 
@@ -5200,7 +5198,6 @@ class ScrollElevatorManager {
       });
     }
 
-    // Clic sur le rail de l'ascenseur (saut d'une demi-page)
     this.trackEl.addEventListener('mousedown', (e) => {
       if (e.target === this.thumbEl || this.thumbEl.contains(e.target)) return;
       const ctx = this.getScrollContext();
@@ -5216,7 +5213,6 @@ class ScrollElevatorManager {
       }
     });
 
-    // Glisser-déposer (Drag) du curseur de l'ascenseur comme dans Word
     this.thumbEl.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -5249,7 +5245,6 @@ class ScrollElevatorManager {
       }
     });
 
-    // Clic sur les flèches clignotantes de débordement
     this.arrowDownEl.addEventListener('click', () => {
       const ctx = this.getScrollContext();
       if (!ctx) return;
@@ -5265,15 +5260,8 @@ class ScrollElevatorManager {
       ctx.setScrollTop(target < 80 ? 0 : target, true);
     });
 
-    // Observer les changements DOM (dépliage de fiche, ouverture de modale, filtrage tableau)
-    const observer = new MutationObserver(() => {
-      this.fitMenuToFullPage();
-      this.refresh();
-    });
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['class'],
-      subtree: true
+    document.addEventListener('click', () => {
+      setTimeout(() => this.scheduleUpdate(), 40);
     });
   }
 }
