@@ -538,26 +538,51 @@ class GrManager {
   /**
    * Affiche un bandeau flottant élégant en haut de l'écran avec informations du GR et bouton de fermeture
    */
-  static showGrBanner(gr, map) {
+  static showGrBanner(gr, map, opts = {}) {
     this.removeGrBanner();
 
     const banner = document.createElement('div');
     banner.id = 'gr-floating-banner';
-    banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 flex items-center gap-3.5 max-w-[92vw] sm:max-w-xl transition-all duration-300 animate-bounce-short select-none';
+    banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 flex flex-col gap-1.5 max-w-[94vw] sm:max-w-2xl transition-all duration-300 animate-bounce-short select-none';
+
+    const badgeColor = gr.group === 'INT' ? 'bg-blue-600' : (gr.group === 'REG' ? 'bg-amber-600' : 'bg-rose-600');
+    const candidates = Array.isArray(opts.candidates) ? opts.candidates : [];
+
+    let candidatesHtml = '';
+    if (candidates.length > 1) {
+      const pills = candidates.map((c, idx) => {
+        const isCurrent = String(c.id) === String(gr.id);
+        const cLabel = c.ref || (c.name ? c.name.slice(0, 18) : `Sentier ${idx + 1}`);
+        return `<button type="button" data-candidate-idx="${idx}" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold transition cursor-pointer ${isCurrent ? 'bg-rose-600 text-white ring-2 ring-white' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600'}">${this._esc(cLabel)}</button>`;
+      }).join('');
+      candidatesHtml = `
+        <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-700/80 text-[10px]">
+          <span class="text-slate-400 font-semibold">Sentiers à cet endroit :</span>
+          ${pills}
+        </div>
+      `;
+    }
+
     banner.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="bg-rose-600 text-white font-black text-xs px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex items-center gap-1">
-          <span class="inline-block w-2 h-2 rounded-full bg-white animate-ping"></span>
-          ${gr.ref}
-        </span>
-        <div class="flex flex-col text-left">
-          <span class="font-extrabold text-xs text-white truncate max-w-[220px] sm:max-w-xs">${gr.name}</span>
-          <span class="text-[10px] text-slate-300 font-semibold">${[gr.distKm ? gr.distKm + ' km' : '', gr.dplus ? 'D+ ' + gr.dplus.toLocaleString('fr-FR') + ' m' : '', (gr.start || gr.finish) ? (gr.start + ' ➔ ' + gr.finish) : ''].filter(Boolean).join(' • ')}</span>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="${badgeColor} text-white font-black text-xs px-2.5 py-0.5 rounded-md shadow uppercase tracking-wide flex items-center gap-1.5 flex-shrink-0">
+            <span class="inline-block w-2 h-2 rounded-full bg-white animate-ping"></span>
+            ${this._esc(gr.ref || 'Sentier')}
+          </span>
+          <div class="flex flex-col text-left min-w-0">
+            <span class="font-extrabold text-xs text-white truncate max-w-[200px] sm:max-w-md">${this._esc(gr.name || gr.ref)}</span>
+            <span class="text-[10px] text-slate-300 font-semibold truncate">${this._esc([gr.distKm ? gr.distKm + ' km' : '', gr.dplus ? 'D+ ' + gr.dplus.toLocaleString('fr-FR') + ' m' : '', (gr.start || gr.finish) ? (gr.start + ' ➔ ' + gr.finish) : ''].filter(Boolean).join(' • ') || 'Tracé OpenStreetMap officiel')}</span>
+          </div>
+        </div>
+        <div class="ml-auto flex items-center gap-1.5 flex-shrink-0">
+          ${opts.bounds ? `<button id="btn-fit-gr-bounds" type="button" class="text-[10px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg transition cursor-pointer shadow" title="Zoomer sur l'intégralité du sentier">🔍 Voir tout</button>` : ''}
+          <button id="btn-close-gr-banner" type="button" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-1.5 rounded-xl transition cursor-pointer text-xs font-bold" title="Masquer le tracé du sentier">
+            ✕
+          </button>
         </div>
       </div>
-      <button id="btn-close-gr-banner" type="button" class="ml-auto text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 p-1.5 rounded-xl transition cursor-pointer text-xs font-bold" title="Masquer le tracé du GR">
-        ✕
-      </button>
+      ${candidatesHtml}
     `;
 
     document.body.appendChild(banner);
@@ -569,11 +594,28 @@ class GrManager {
         this.clearGr(map);
       });
     }
+
+    const fitBtn = banner.querySelector('#btn-fit-gr-bounds');
+    if (fitBtn && opts.bounds && map) {
+      fitBtn.addEventListener('click', () => {
+        map.fitBounds(opts.bounds, { padding: [50, 50], maxZoom: 14 });
+      });
+    }
+
+    if (candidates.length > 1) {
+      banner.querySelectorAll('button[data-candidate-idx]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-candidate-idx'), 10);
+          if (candidates[idx]) {
+            this.displayRemote(candidates[idx], map, { fitBounds: false, candidates });
+          }
+        });
+      });
+    }
   }
 
-
   // ====================================================================
-  // RECHERCHE ET TRACÉ RÉELS DES GR (tous les GR, géométrie OpenStreetMap)
+  // RECHERCHE ET TRACÉ RÉELS DES GR & SENTIERS RÉPUTÉS (OpenStreetMap)
   // via l'API Waymarked Trails (relations OSM de sentiers de randonnée)
   // ====================================================================
   static WMT = 'https://hiking.waymarkedtrails.org/api/v1';
@@ -595,7 +637,7 @@ class GrManager {
     return [lat, lon];
   }
 
-  /** Recherche tous les GR correspondant à "GR XX" (variantes GR 20A, GRP/GR Pays, GRT, GR R...) */
+  /** Recherche tous les GR français correspondant à "GR XX" (variantes GR 20A, GRP/GR Pays, GRT, GR R...) */
   static async searchRemote(query) {
     const m = (query || '').trim().match(/^GR\s*(PAYS|P|T|R)?\s*(\d+)\s*([A-Za-z]{0,2})/i);
     if (!m) return [];
@@ -611,7 +653,7 @@ class GrManager {
       return (await resp.json()).results || [];
     };
     const qs = ['GR ' + num + suffix];
-    if (!suffix) qs.push(num); // permet de retrouver "GR Pays 2013", "GRP 2013"...
+    if (!suffix) qs.push(num);
     const settled = await Promise.allSettled(qs.map(fetchList));
     if (settled.every(r => r.status === 'rejected')) throw new Error('search failed');
     const raw = [];
@@ -634,11 +676,13 @@ class GrManager {
     const score = r => {
       const mm = parse(r);
       let s = 0;
-      if (mm && !mm[3]) s += 50;               // référence exacte (sans lettre)
-      if (mm && !mm[1]) s += 40;               // GR classique avant GRP/GRT
+      if (mm && !mm[3]) s += 50;
+      if (mm && !mm[1]) s += 40;
       if (r.group === 'NAT') s += 20;
       if (r.itinerary && r.itinerary.length) s += 10;
-      if (/variante|variant|alternat|liaison|acc[eè]s/i.test(r.name || '')) s -= 15;
+      if (/variante|variant|alternat|liaison|acc[eè]s|sec\.|stage|etappe/i.test(r.name || '')) s -= 15;
+      if (/etapa|tramo|ramal|derivaci|sender|sendeiro|cam[ií]\b|belgie|vlaanderen|nederland/i.test(r.name || '')) s -= 85;
+      if (/travers[ée]e|sentier|chemin|tour\s+d|france|pyr[ée]n[ée]es|alpes|bretagne|corse|c[ée]vennes|jura|loire|seine|m[ée]diterran[ée]e/i.test(r.name || '')) s += 55;
       return s;
     };
     list.sort((a, b) => score(b) - score(a));
@@ -670,7 +714,7 @@ class GrManager {
     [7.1, 44.1], [7.7, 43.8], [6.0, 43.0], [3.1, 42.45], [1.45, 42.45], [0.7, 42.85], [-0.7, 42.8], [-1.78, 43.35],
     [-1.4, 44.6], [-1.2, 46.0], [-2.2, 47.1], [-4.8, 48.4]
   ];
-  static _FR_BOXES = [ // [latMin, latMax, lonMin, lonMax] : Corse et outre-mer
+  static _FR_BOXES = [
     [41.3, 43.05, 8.5, 9.6], [-21.5, -20.8, 55.1, 55.9], [15.8, 16.6, -61.9, -60.9],
     [14.3, 14.95, -61.3, -60.7], [2.0, 6.0, -54.7, -51.5], [-13.1, -12.5, 44.9, 45.4]
   ];
@@ -696,7 +740,7 @@ class GrManager {
     return this._inFrance((sw[0] + ne[0]) / 2, (sw[1] + ne[1]) / 2);
   }
 
-  /** Remplit le conteneur de résultats avec les GR trouvés (asynchrone, anti-scintillement) */
+  /** Remplit le conteneur de résultats avec les GR ou sentiers réputés trouvés */
   static async renderResults(container, query, onPick) {
     if (!container) return;
     const token = ++this._renderToken;
@@ -705,17 +749,17 @@ class GrManager {
     container.style.opacity = '1';
 
     if (/^\s*GR\s*$/i.test(query)) {
-      container.innerHTML = '<div class="p-3 text-xs text-slate-600 text-center">🚩 Tapez le numéro du GR (ex : <b>GR 20</b>, <b>GR 653</b>, <b>GR 2013</b>…)</div>';
+      container.innerHTML = '<div class="p-3 text-xs text-slate-600 text-center">🚩 Tapez le numéro du GR (ex : <b>GR 20</b>, <b>GR 34</b>, <b>GR 65</b>) ou le nom d’un grand sentier (<b>Francigena</b>, <b>West Highland Way</b>, <b>Stevenson</b>…)</div>';
       return;
     }
     container.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center"><span class="inline-block animate-spin mr-1">⏳</span> Recherche du sentier ' + this._esc(query.trim()) + '…</div>';
 
     let items = [];
+    const isGrCode = this.isGrQuery(query);
     try {
-      items = await this.searchRemote(query);
+      items = isGrCode ? await this.searchRemote(query) : await this.searchNamedTrails(query);
     } catch (e) {
       if (token !== this._renderToken) return;
-      // Repli hors-ligne : catalogue intégré (tracés schématiques)
       const fb = this.search(query);
       if (fb.length) {
         container.innerHTML = '';
@@ -728,18 +772,24 @@ class GrManager {
     if (token !== this._renderToken) return;
 
     if (!items.length) {
-      container.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Aucun GR français « ' + this._esc(query.trim()) + ' » trouvé.</div>';
+      container.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Aucun sentier « ' + this._esc(query.trim()) + ' » trouvé.</div>';
       return;
     }
     container.innerHTML = '';
+    this.appendTrailItemsToContainer(container, items, onPick);
+  }
+
+  static appendTrailItemsToContainer(container, items, onPick) {
+    if (!container || !Array.isArray(items)) return;
     items.forEach(it => {
       const div = document.createElement('div');
       div.className = 'search-item px-3 py-2 cursor-pointer transition flex items-center gap-2.5 border-b border-rose-200/90 hover:bg-rose-100 text-left';
       div.style.backgroundColor = '#fff1f2';
       const itin = (it.itinerary && it.itinerary.length) ? it.itinerary.filter(Boolean) : [];
-      const sub = itin.length ? (itin[0] + ' ➔ ' + itin[itin.length - 1]) : (it.operator || '');
+      const sub = itin.length ? (itin[0] + ' ➔ ' + itin[itin.length - 1]) : (it.operator || 'Sentier de Grande Randonnée / Itinéraire balisé');
+      const badgeBg = it.group === 'INT' ? 'bg-blue-600' : (it.group === 'REG' ? 'bg-amber-600' : 'bg-rose-600');
       div.innerHTML = `
-        <span class="bg-rose-600 text-white font-black text-[11px] px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex-shrink-0">${this._esc(it.ref)}</span>
+        <span class="${badgeBg} text-white font-black text-[11px] px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex-shrink-0">🥾 ${this._esc(it.ref || 'GR')}</span>
         <div class="flex-1 min-w-0">
           <div class="font-extrabold text-slate-900 text-xs truncate">${this._esc(it.name || it.ref)}</div>
           <div class="text-[10px] text-rose-700 font-semibold truncate mt-0.5">${this._esc(sub)}</div>
@@ -786,7 +836,6 @@ class GrManager {
       const pts = [];
       const coords = w.geometry.coordinates;
       coords.forEach((c, idx) => {
-        // décimation légère (~15 m) pour garder un affichage fluide sur les longs GR
         if (prev && idx !== coords.length - 1 && Math.abs(c[0] - prev[0]) + Math.abs(c[1] - prev[1]) < 15) return;
         prev = c;
         pts.push(this._merc2ll(c[0], c[1]));
@@ -796,8 +845,8 @@ class GrManager {
     return segs;
   }
 
-  /** Charge la géométrie OSM réelle d'un GR et l'affiche en rouge clignotant */
-  static async displayRemote(item, map) {
+  /** Charge la géométrie OSM réelle d'un GR / sentier réputé et l'affiche en surbrillance clignotante avec son nom sur le tracé */
+  static async displayRemote(item, map, opts = {}) {
     if (!map) {
       if (window.MapManagerInstance && window.MapManagerInstance.map) map = window.MapManagerInstance.map;
       else return;
@@ -814,20 +863,30 @@ class GrManager {
       }
     } catch (e) {
       this.removeGrBanner();
-      alert('Impossible de charger le tracé de ' + item.ref + ' (service indisponible).');
+      alert('Impossible de charger le tracé de ' + (item.ref || item.name) + ' (service indisponible).');
       return;
     }
     const segs = this._extractSegments(det.route);
     if (!segs.length) {
       this.removeGrBanner();
-      alert('Aucune géométrie disponible pour ' + item.ref + '.');
+      alert('Aucune géométrie disponible pour ' + (item.ref || item.name) + '.');
       return;
     }
 
+    // Estomper le réseau secondaire en arrière-plan pour faire ressortir le sentier sélectionné
+    this.setOverlayDimmed(true);
+
+    const refLabel = det.ref || item.ref || (det.name ? det.name.slice(0, 12) : 'Sentier');
+    const nameLabel = det.name || item.name || refLabel;
+
     this.currentGrLayer = L.layerGroup();
-    this.currentGrLayer.addLayer(L.polyline(segs, { color: '#ffffff', weight: 8, opacity: 0.9, lineCap: 'round', lineJoin: 'round', interactive: false }));
-    this.currentGrLayer.addLayer(L.polyline(segs, { color: '#e11d48', weight: 5.5, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, className: 'leaflet-gr-blinking-path' }));
+    this.currentGrLayer.addLayer(L.polyline(segs, { color: '#ffffff', weight: 9, opacity: 0.95, lineCap: 'round', lineJoin: 'round', interactive: false }));
+    this.currentGrLayer.addLayer(L.polyline(segs, { color: '#e11d48', weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round', interactive: false, className: 'leaflet-gr-blinking-path' }));
     this.currentGrLayer.addLayer(L.polyline(segs, { color: '#ffffff', weight: 2.5, dashArray: '12, 10', opacity: 0.95, interactive: false, className: 'leaflet-gr-blinking-dash' }));
+
+    // Ajouter les badges de nom explicites directement sur le tracé
+    this._addRouteNameLabels(segs, refLabel, nameLabel, this.currentGrLayer);
+
     this.currentGrLayer.addTo(map);
 
     const container = map.getContainer();
@@ -841,17 +900,32 @@ class GrManager {
     } else {
       bounds = L.latLngBounds(segs.flat());
     }
-    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+
+    if (opts.fitBounds !== false) {
+      // Si le sentier est hors de France et qu'on est sur un fond IGN France, basculer automatiquement sur Carte des GR ou OpenTopoMap
+      if (window.MapManagerInstance && !this._isFrench(det)) {
+        const curBase = window.MapManagerInstance.currentBaseLayer;
+        if (curBase === 'igntop25' || curBase === 'ignplan') {
+          window.MapManagerInstance.setBaseLayer('grmap');
+        }
+      }
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    }
 
     const itin = (det.itinerary && det.itinerary.length) ? det.itinerary.filter(Boolean) : [];
     this.showGrBanner({
-      ref: det.ref || item.ref,
-      name: det.name || item.name || item.ref,
+      id: item.id,
+      ref: refLabel,
+      name: nameLabel,
+      group: item.group || det.group || 'NAT',
       distKm: det.route && det.route.length ? Math.round(det.route.length / 1000) : null,
       dplus: null,
       start: itin[0] || (det.tags && det.tags.from) || '',
       finish: itin[itin.length - 1] || (det.tags && det.tags.to) || ''
-    }, map);
+    }, map, {
+      bounds,
+      candidates: opts.candidates || null
+    });
   }
 
   static showLoadingBanner(item) {
@@ -859,7 +933,7 @@ class GrManager {
     const banner = document.createElement('div');
     banner.id = 'gr-floating-banner';
     banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 text-xs font-bold';
-    banner.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Chargement du tracé ' + this._esc(item.ref) + '…';
+    banner.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Chargement du tracé ' + this._esc(item.ref || item.name || '') + '…';
     document.body.appendChild(banner);
     this.currentGrBanner = banner;
   }
@@ -874,19 +948,527 @@ class GrManager {
   }
 
   /**
-   * Efface le tracé du GR et son bandeau
+   * Efface le tracé du GR, restaure l'opacité normale du réseau et masque le bandeau
    */
   static clearGr(map) {
     if (this.currentGrLayer && map) {
       map.removeLayer(this.currentGrLayer);
       this.currentGrLayer = null;
     }
+    this.setOverlayDimmed(false);
     const container = map ? map.getContainer() : null;
     if (container) {
       container.classList.remove('leaflet-gr-blinking');
     }
     this.removeGrBanner();
   }
+
+  // ====================================================================
+  // 1. FILTRAGE PAR COULEUR DES SENTIERS (CASES À COCHER SUR CARTE DES GR)
+  // ====================================================================
+  static colorFilters = {
+    blue: true,   // INT : Grands itinéraires Européens / Internationaux (Bleu)
+    red: true,    // NAT : GR® Nationaux (Rouge)
+    orange: true, // REG : GR® de Pays & Régionaux (Orange)
+    purple: true  // LOC : Sentiers locaux & PR (Violet / Autres)
+  };
+  static _activeGridLayer = null;
+  static _overlayDimmed = false;
+
+  static createFilteredGrTileLayer() {
+    const self = this;
+    const FilteredLayer = L.GridLayer.extend({
+      createTile: function (coords, done) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        canvas.className = 'leaflet-tile';
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+          canvas._img = img;
+          self._drawFilteredTile(canvas);
+          done(null, canvas);
+        };
+        img.onerror = function (err) {
+          done(err, canvas);
+        };
+        img.src = `https://tile.waymarkedtrails.org/hiking/${coords.z}/${coords.x}/${coords.y}.png`;
+        return canvas;
+      }
+    });
+
+    const layer = new FilteredLayer({
+      tileSize: 256,
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      opacity: 0.92,
+      attribution: '&copy; Waymarked Trails (Réseau GR® & Sentiers balisés)'
+    });
+    this._activeGridLayer = layer;
+    return layer;
+  }
+
+  static _ensureTileCategoryMap(canvas) {
+    if (canvas._catMap && canvas._rawBytes) return;
+    const img = canvas._img;
+    if (!img) return;
+
+    const off = document.createElement('canvas');
+    off.width = 256;
+    off.height = 256;
+    const octx = off.getContext('2d', { willReadFrequently: true });
+    octx.drawImage(img, 0, 0);
+    let imgData;
+    try {
+      imgData = octx.getImageData(0, 0, 256, 256);
+    } catch (e) {
+      return;
+    }
+    const data = imgData.data;
+    canvas._rawBytes = new Uint8ClampedArray(data);
+    const catMap = new Uint8Array(65536);
+
+    // Passe 1 : classification chromatique directe (1=Bleu, 2=Rouge, 3=Orange, 4=Violet/Local)
+    for (let idx = 0; idx < 65536; idx++) {
+      const p = idx * 4;
+      const a = data[p + 3];
+      if (a <= 12) continue;
+      const r = data[p], g = data[p + 1], b = data[p + 2];
+      const maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+      const minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+      const sat = maxC - minC;
+      if (sat < 26) continue; // pixel neutre (cartouche blanc/noir) -> résolu en passe 2
+
+      if (b > 85 && b > r * 1.25 && b >= g * 1.08) {
+        catMap[idx] = 1; // Bleu (INT)
+      } else if (r > 95 && r > b * 1.35 && g < r * 0.42) {
+        catMap[idx] = 2; // Rouge (NAT)
+      } else if (r > 105 && g >= r * 0.42 && b < r * 0.65) {
+        catMap[idx] = 3; // Orange (REG)
+      } else {
+        catMap[idx] = 4; // Violet / Autres (LOC)
+      }
+    }
+
+    // Passe 2 : rattacher les pixels neutres (fond/texte des cartouches) à la couleur de leur bordure voisine
+    const offsets = [-2, 2, -512, 512, -4, 4, -1024, 1024, -771, 771, -765, 765, -1536, 1536, -6, 6];
+    for (let idx = 0; idx < 65536; idx++) {
+      if (catMap[idx] !== 0) continue;
+      if (data[idx * 4 + 3] <= 12) continue;
+      for (let k = 0; k < offsets.length; k++) {
+        const nIdx = idx + offsets[k];
+        if (nIdx >= 0 && nIdx < 65536) {
+          const c = catMap[nIdx];
+          if (c !== 0) {
+            catMap[idx] = c;
+            break;
+          }
+        }
+      }
+      if (catMap[idx] === 0) catMap[idx] = 2; // par défaut rattacher aux GR nationaux
+    }
+
+    canvas._catMap = catMap;
+  }
+
+  static _drawFilteredTile(canvas) {
+    const img = canvas._img;
+    if (!img) return;
+    const ctx = canvas.getContext('2d');
+    const f = this.colorFilters;
+
+    // Si toutes les couleurs sont cochées : dessin natif ultra-rapide
+    if (f.blue && f.red && f.orange && f.purple) {
+      ctx.clearRect(0, 0, 256, 256);
+      ctx.drawImage(img, 0, 0);
+      return;
+    }
+
+    // Si aucune couleur n'est cochée : tuile vide
+    if (!f.blue && !f.red && !f.orange && !f.purple) {
+      ctx.clearRect(0, 0, 256, 256);
+      return;
+    }
+
+    this._ensureTileCategoryMap(canvas);
+    if (!canvas._rawBytes || !canvas._catMap) {
+      ctx.clearRect(0, 0, 256, 256);
+      ctx.drawImage(img, 0, 0);
+      return;
+    }
+
+    const allow = [0, f.blue ? 1 : 0, f.red ? 1 : 0, f.orange ? 1 : 0, f.purple ? 1 : 0];
+    const outImg = ctx.createImageData(256, 256);
+    const out = outImg.data;
+    const raw = canvas._rawBytes;
+    const catMap = canvas._catMap;
+
+    for (let idx = 0; idx < 65536; idx++) {
+      const cat = catMap[idx];
+      if (cat !== 0 && allow[cat]) {
+        const p = idx * 4;
+        out[p] = raw[p];
+        out[p + 1] = raw[p + 1];
+        out[p + 2] = raw[p + 2];
+        out[p + 3] = raw[p + 3];
+      }
+    }
+    ctx.putImageData(outImg, 0, 0);
+  }
+
+  static refreshFilteredTiles() {
+    if (!this._activeGridLayer || !this._activeGridLayer._tiles) return;
+    Object.values(this._activeGridLayer._tiles).forEach(t => {
+      if (t && t.el) this._drawFilteredTile(t.el);
+    });
+  }
+
+  static setColorFilter(colorKey, enabled) {
+    if (!(colorKey in this.colorFilters)) return;
+    this.colorFilters[colorKey] = !!enabled;
+    this._syncFilterCheckboxesUI();
+    this.refreshFilteredTiles();
+  }
+
+  static setAllColorFilters(preset) {
+    if (preset === 'all') {
+      this.colorFilters = { blue: true, red: true, orange: true, purple: true };
+    } else if (preset === 'red') {
+      this.colorFilters = { blue: false, red: true, orange: false, purple: false };
+    } else if (preset === 'major') {
+      this.colorFilters = { blue: true, red: true, orange: false, purple: false };
+    }
+    this._syncFilterCheckboxesUI();
+    this.refreshFilteredTiles();
+  }
+
+  static _syncFilterCheckboxesUI() {
+    const panel = document.getElementById('gr-color-filter-panel');
+    if (!panel) return;
+    ['blue', 'red', 'orange', 'purple'].forEach(k => {
+      const cb = panel.querySelector(`input[data-gr-color="${k}"]`);
+      if (cb) cb.checked = !!this.colorFilters[k];
+    });
+  }
+
+  static setOverlayDimmed(dimmed) {
+    this._overlayDimmed = !!dimmed;
+    if (this._activeGridLayer && typeof this._activeGridLayer.setOpacity === 'function') {
+      this._activeGridLayer.setOpacity(dimmed ? 0.28 : 0.92);
+    }
+  }
+
+  static ensureColorFilterPanel(map) {
+    let panel = document.getElementById('gr-color-filter-panel');
+    if (panel) return panel;
+
+    const host = (map && map.getContainer()) ? map.getContainer() : document.body;
+    panel = document.createElement('div');
+    panel.id = 'gr-color-filter-panel';
+    panel.className = 'hidden absolute top-14 right-2.5 z-[1000] bg-white/95 backdrop-blur-md border-2 border-slate-300 rounded-2xl shadow-xl p-2.5 w-64 text-slate-800 select-none transition-all';
+    panel.innerHTML = `
+      <div class="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-slate-200">
+        <div class="flex items-center gap-1.5">
+          <span class="text-sm">🥾</span>
+          <span class="font-black text-[11px] uppercase tracking-wider text-slate-900">Sentiers par Couleur</span>
+        </div>
+        <button type="button" id="btn-toggle-gr-filter-body" class="text-[11px] font-bold text-slate-500 hover:text-slate-900 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 cursor-pointer" title="Réduire / Agrandir">▾</button>
+      </div>
+      <div id="gr-color-filter-body" class="space-y-1.5">
+        <div class="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1 font-semibold leading-tight">
+          💡 <b>Cliquez sur un chemin</b> sur la carte pour afficher son nom et le faire ressortir !
+        </div>
+        <label class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer transition">
+          <input type="checkbox" data-gr-color="blue" checked class="w-3.5 h-3.5 accent-blue-600 rounded cursor-pointer" />
+          <span class="w-4 h-1.5 rounded-full flex-shrink-0" style="background:#1028e0;"></span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-[11px] font-extrabold text-slate-900 leading-tight">Chemins Bleus (Europe)</span>
+            <span class="block text-[9.5px] text-slate-500 truncate">E1–E12, Compostelle, Francigena, GR 5</span>
+          </span>
+        </label>
+        <label class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer transition">
+          <input type="checkbox" data-gr-color="red" checked class="w-3.5 h-3.5 accent-rose-600 rounded cursor-pointer" />
+          <span class="w-4 h-1.5 rounded-full flex-shrink-0" style="background:#b00000;"></span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-[11px] font-extrabold text-slate-900 leading-tight">Chemins Rouges (GR®)</span>
+            <span class="block text-[9.5px] text-slate-500 truncate">GR Nationaux (GR 20, GR 10, GR 34…)</span>
+          </span>
+        </label>
+        <label class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer transition">
+          <input type="checkbox" data-gr-color="orange" checked class="w-3.5 h-3.5 accent-amber-600 rounded cursor-pointer" />
+          <span class="w-4 h-1.5 rounded-full flex-shrink-0" style="background:#d97706;"></span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-[11px] font-extrabold text-slate-900 leading-tight">Chemins Oranges (GRP)</span>
+            <span class="block text-[9.5px] text-slate-500 truncate">GR de Pays & Régionaux (TMB…)</span>
+          </span>
+        </label>
+        <label class="flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer transition">
+          <input type="checkbox" data-gr-color="purple" checked class="w-3.5 h-3.5 accent-purple-600 rounded cursor-pointer" />
+          <span class="w-4 h-1.5 rounded-full flex-shrink-0" style="background:#8b3dff;"></span>
+          <span class="flex-1 min-w-0">
+            <span class="block text-[11px] font-extrabold text-slate-900 leading-tight">Chemins Violets (PR)</span>
+            <span class="block text-[9.5px] text-slate-500 truncate">Sentiers locaux & Promenades</span>
+          </span>
+        </label>
+        <div class="pt-1 border-t border-slate-200 flex items-center justify-between gap-1">
+          <button type="button" data-gr-preset="all" class="flex-1 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 py-1 rounded-md cursor-pointer transition">Tout cocher</button>
+          <button type="button" data-gr-preset="red" class="flex-1 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 py-1 rounded-md cursor-pointer transition">GR Rouges</button>
+          <button type="button" data-gr-preset="major" class="flex-1 text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 py-1 rounded-md cursor-pointer transition">Bleus+Rouges</button>
+        </div>
+      </div>
+    `;
+
+    if (typeof L !== 'undefined' && L.DomEvent) {
+      L.DomEvent.disableClickPropagation(panel);
+      L.DomEvent.disableScrollPropagation(panel);
+    }
+
+    panel.querySelectorAll('input[data-gr-color]').forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const key = e.target.getAttribute('data-gr-color');
+        this.setColorFilter(key, e.target.checked);
+      });
+    });
+
+    panel.querySelectorAll('button[data-gr-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.setAllColorFilters(btn.getAttribute('data-gr-preset'));
+      });
+    });
+
+    const toggleBtn = panel.querySelector('#btn-toggle-gr-filter-body');
+    const bodyEl = panel.querySelector('#gr-color-filter-body');
+    if (toggleBtn && bodyEl) {
+      toggleBtn.addEventListener('click', () => {
+        const isHidden = bodyEl.classList.toggle('hidden');
+        toggleBtn.textContent = isHidden ? '▸' : '▾';
+      });
+    }
+
+    host.appendChild(panel);
+    return panel;
+  }
+
+  static setColorFilterPanelVisible(visible, map) {
+    const panel = this.ensureColorFilterPanel(map);
+    if (!panel) return;
+    if (visible) {
+      panel.classList.remove('hidden');
+      this._syncFilterCheckboxesUI();
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+
+  // ====================================================================
+  // 2. CLIC DIRECT SUR UN CHEMIN SUR LA CARTE POUR L'IDENTIFIER
+  // ====================================================================
+  static _ll2merc(lat, lon) {
+    const x = lon * 20037508.34 / 180;
+    const y = Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180);
+    return [x, y * 20037508.34 / 180];
+  }
+
+  static _groupToColorKey(group) {
+    const g = (group || '').toUpperCase();
+    if (g === 'INT') return 'blue';
+    if (g === 'NAT') return 'red';
+    if (g === 'REG') return 'orange';
+    return 'purple';
+  }
+
+  static async handleMapClickForGr(latlng, map) {
+    if (!latlng || !map) return false;
+    const [mx, my] = this._ll2merc(latlng.lat, latlng.lng);
+    const zoom = map.getZoom ? map.getZoom() : 10;
+    // Rayon de tolérance équivalent à ~11 pixels à l'écran
+    const metersPerPixel = 40075016.686 / (256 * Math.pow(2, zoom));
+    const tol = Math.min(35000, Math.max(100, Math.round(metersPerPixel * 11)));
+    const bbox = `${(mx - tol).toFixed(1)},${(my - tol).toFixed(1)},${(mx + tol).toFixed(1)},${(my + tol).toFixed(1)}`;
+
+    try {
+      const resp = await fetch(`${this.WMT}/list/by_area?bbox=${bbox}&limit=18`);
+      if (!resp.ok) return false;
+      const data = await resp.json();
+      let results = (data && Array.isArray(data.results)) ? data.results : [];
+      if (!results.length) return false;
+
+      // Ne retenir que les catégories de couleurs actuellement cochées par l'utilisateur
+      results = results.filter(r => {
+        const cKey = this._groupToColorKey(r.group);
+        return !!this.colorFilters[cKey];
+      });
+      if (!results.length) return false;
+
+      // Prioriser les GR Nationaux (NAT) et Internationaux (INT) puis Régionaux (REG)
+      const rank = (r) => {
+        const g = (r.group || '').toUpperCase();
+        let s = 0;
+        if (g === 'NAT') s += 40;
+        else if (g === 'INT') s += 38;
+        else if (g === 'REG') s += 25;
+        if (r.ref && /^GR/i.test(r.ref)) s += 20;
+        if (r.name) s += 5;
+        return s;
+      };
+      results.sort((a, b) => rank(b) - rank(a));
+
+      await this.displayRemote(results[0], map, {
+        fitBounds: false,
+        candidates: results.slice(0, 6)
+      });
+      return true;
+    } catch (e) {
+      console.warn('Identification sentier au clic non disponible:', e);
+      return false;
+    }
+  }
+
+  // ====================================================================
+  // 3. NOMS EXPLICITES SUR LE CHEMIN (BADGES LE LONG DU TRACÉ)
+  // ====================================================================
+  static _addRouteNameLabels(segs, refText, nameText, layerGroup) {
+    if (!segs || !segs.length || !layerGroup) return;
+    const flatPts = [];
+    segs.forEach(s => {
+      if (Array.isArray(s)) s.forEach(pt => flatPts.push(pt));
+    });
+    if (flatPts.length < 4) return;
+
+    const cleanRef = (refText || '').trim();
+    const cleanName = (nameText || '').trim();
+    let badgeLabel = cleanRef || cleanName;
+    if (cleanRef && cleanName && cleanName.toUpperCase() !== cleanRef.toUpperCase()) {
+      const shortName = cleanName.length > 30 ? cleanName.slice(0, 28) + '…' : cleanName;
+      badgeLabel = `${cleanRef} • ${shortName}`;
+    }
+    if (!badgeLabel) return;
+
+    // Placer 1 à 3 étiquettes bien espacées le long du sentier (22%, 50%, 78%)
+    const fractions = flatPts.length > 80 ? [0.22, 0.50, 0.78] : [0.50];
+    const usedPts = [];
+
+    fractions.forEach(f => {
+      const idx = Math.min(flatPts.length - 1, Math.max(0, Math.floor(flatPts.length * f)));
+      const pt = flatPts[idx];
+      if (!pt) return;
+      // Éviter que deux étiquettes soient trop proches
+      const tooClose = usedPts.some(u => Math.abs(u[0] - pt[0]) + Math.abs(u[1] - pt[1]) < 0.04);
+      if (tooClose) return;
+      usedPts.push(pt);
+
+      const labelIcon = L.divIcon({
+        className: 'gr-route-inline-label',
+        html: `<div class="inline-flex items-center gap-1 bg-white/95 text-rose-700 font-black text-[10px] px-2 py-0.5 rounded-full shadow-md border-2 border-rose-600 whitespace-nowrap select-none pointer-events-none -translate-x-1/2 -translate-y-1/2"><span>🥾</span><span>${this._esc(badgeLabel)}</span></div>`,
+        iconSize: [0, 0]
+      });
+      layerGroup.addLayer(L.marker(pt, { icon: labelIcon, interactive: false, zIndexOffset: 900 }));
+    });
+
+    // Marqueurs Départ & Arrivée aux extrémités du tracé réel
+    const startPt = flatPts[0];
+    const endPt = flatPts[flatPts.length - 1];
+    if (startPt && endPt && (Math.abs(startPt[0] - endPt[0]) + Math.abs(startPt[1] - endPt[1]) > 0.01)) {
+      const startIcon = L.divIcon({
+        className: 'gr-marker-pin',
+        html: `<div class="bg-emerald-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border-2 border-white flex items-center gap-1 whitespace-nowrap select-none -translate-x-1/2 -translate-y-full"><span>🚩</span><span>${this._esc(cleanRef || 'Départ')}</span></div>`,
+        iconSize: [0, 0]
+      });
+      const endIcon = L.divIcon({
+        className: 'gr-marker-pin',
+        html: `<div class="bg-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border-2 border-white flex items-center gap-1 whitespace-nowrap select-none -translate-x-1/2 -translate-y-full"><span>🏁</span><span>${this._esc(cleanRef || 'Arrivée')}</span></div>`,
+        iconSize: [0, 0]
+      });
+      layerGroup.addLayer(L.marker(startPt, { icon: startIcon, interactive: false, zIndexOffset: 950 }));
+      layerGroup.addLayer(L.marker(endPt, { icon: endIcon, interactive: false, zIndexOffset: 950 }));
+    }
+  }
+
+  // ====================================================================
+  // 4. RECHERCHE DES CHEMINS RÉPUTÉS PAR LEUR NOM (FRANCE, EUROPE & MONDE)
+  // ====================================================================
+  static FAMOUS_TRAILS = [
+    { keywords: ['francigena', 'via francigena'], id: 11860709, ref: 'VF', name: 'Via Francigena (Canterbury ➔ Rome)', group: 'INT', query: 'Via Francigena' },
+    { keywords: ['west highland', 'highland way', 'whw'], id: 16287, ref: 'WHW', name: 'West Highland Way (Écosse)', group: 'NAT', query: 'West Highland Way' },
+    { keywords: ['mont-blanc', 'mont blanc', 'tmb', 'tour du mont'], id: 124456, ref: 'TMB', name: 'Tour du Mont-Blanc (France • Italie • Suisse)', group: 'REG', query: 'Tour du Mont Blanc' },
+    { keywords: ['stevenson', 'chemin de stevenson'], id: 223039, ref: 'GR 70', name: 'Chemin de Stevenson (Cévennes)', group: 'NAT', query: 'Stevenson' },
+    { keywords: ['douaniers', 'sentier des douaniers', 'tour de bretagne'], id: 7790332, ref: 'GR 34', name: 'Sentier des Douaniers (Tour de Bretagne)', group: 'NAT', query: 'GR 34' },
+    { keywords: ['compostelle', 'saint-jacques', 'saint jacques', 'via podiensis', 'chemin du puy'], id: 11959152, ref: 'GR 65', name: 'Chemin de Saint-Jacques (Via Podiensis • Le Puy)', group: 'NAT', query: 'GR 65' },
+    { keywords: ['camino frances', 'camino francés', 'camino de santiago'], id: 2163569, ref: 'Camino', name: 'Camino Francés de Santiago (Espagne)', group: 'INT', query: 'Camino Frances' },
+    { keywords: ['alta via', 'dolomiti', 'dolomites'], id: 177743, ref: 'AV1', name: 'Alta Via n. 1 delle Dolomiti (Italie)', group: 'REG', query: 'Alta Via 1' },
+    { keywords: ['kungsleden', 'voie royale'], id: 1657661, ref: 'KL', name: 'Kungsleden • La Voie Royale (Suède)', group: 'NAT', query: 'Kungsleden' },
+    { keywords: ['pennine way', 'pennine'], id: 4086931, ref: 'PW', name: 'Pennine Way (Angleterre / Écosse)', group: 'NAT', query: 'Pennine Way' },
+    { keywords: ['via alpina'], id: 20014200, ref: 'VA', name: 'Via Alpina (Traversée de l’Arc Alpin)', group: 'INT', query: 'Via Alpina' },
+    { keywords: ['rota vicentina', 'vicentina'], id: 7592697, ref: 'GR 11', name: 'Rota Vicentina • Caminho Histórico (Portugal)', group: 'NAT', query: 'Rota Vicentina' },
+    { keywords: ['laugavegur'], id: 1225037, ref: 'Laugav.', name: 'Laugavegur (Islande : Landmannalaugar ➔ Þórsmörk)', group: 'REG', query: 'Laugavegur' },
+    { keywords: ['oisans', 'ecrins', 'écrins', 'tour des ecrins', 'tour des écrins'], id: 2909096, ref: 'GR 54', name: 'Tour de l’Oisans et des Écrins', group: 'NAT', query: 'GR 54' },
+    { keywords: ['queyras', 'tour du queyras'], id: 9711201, ref: 'GR 58', name: 'Tour du Queyras (Hautes-Alpes)', group: 'NAT', query: 'GR 58' },
+    { keywords: ['jura', 'gtj', 'traversee du jura', 'traversée du jura'], id: 1750445, ref: 'GR 509', name: 'Grande Traversée du Jura (GTJ)', group: 'NAT', query: 'Grande Traversee du Jura' },
+    { keywords: ['gta', 'traversee des alpes', 'traversée des alpes'], id: 18308154, ref: 'GR 5', name: 'Grande Traversée des Alpes (GR 5 France)', group: 'INT', query: 'GR 5' },
+    { keywords: ['traversee des pyrenees', 'traversée des pyrénées', 'hendaye banyuls'], id: 7411272, ref: 'GR 10', name: 'La Grande Traversée des Pyrénées (GR 10)', group: 'NAT', query: 'GR 10' },
+    { keywords: ['fra li monti', 'traversee de la corse', 'traversée de la corse'], id: 101692, ref: 'GR 20', name: 'GR 20 • Traversée de la Corse (Fra li Monti)', group: 'NAT', query: 'GR 20' }
+  ];
+
+  static isNamedTrailQuery(query) {
+    if (!query || query.trim().length < 3) return false;
+    if (this.isGrQuery(query)) return false;
+    const q = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (/^(sentier|chemin|tour d|via |camino |alta via|traversee |gr |grp )/i.test(q)) return true;
+    return this.FAMOUS_TRAILS.some(ft =>
+      ft.keywords.some(kw => {
+        const cleanKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return (q.length >= 3 && cleanKw.includes(q)) || q.includes(cleanKw);
+      })
+    );
+  }
+
+  static async searchNamedTrails(query) {
+    if (!query || query.trim().length < 3) return [];
+    const qNorm = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    // 1. Correspondances directes parmi les grands itinéraires réputés (France, Europe, Monde)
+    const directMatches = this.FAMOUS_TRAILS.filter(ft =>
+      ft.keywords.some(kw => {
+        const cleanKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        return cleanKw.includes(qNorm) || qNorm.includes(cleanKw);
+      })
+    ).map(ft => ({
+      id: ft.id,
+      ref: ft.ref,
+      name: ft.name,
+      group: ft.group
+    }));
+
+    // 2. Recherche complémentaire temps réel sur l'API Waymarked Trails
+    let apiResults = [];
+    try {
+      const resp = await fetch(`${this.WMT}/list/search?limit=15&query=${encodeURIComponent(query.trim())}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        apiResults = (data && Array.isArray(data.results)) ? data.results : [];
+      }
+    } catch (e) {}
+
+    const seen = new Set();
+    const combined = [];
+    [...directMatches, ...apiResults].forEach(it => {
+      if (!it || !it.id || seen.has(it.id)) return;
+      seen.add(it.id);
+      combined.push({
+        id: it.id,
+        ref: it.ref || (it.name ? it.name.slice(0, 10) : 'Sentier'),
+        name: it.name || it.ref || 'Sentier balisé',
+        group: it.group || 'NAT',
+        itinerary: it.itinerary || null,
+        operator: it.operator || ''
+      });
+    });
+
+    return combined.slice(0, 8);
+  }
+
 }
 
 if (typeof window !== 'undefined') {

@@ -183,6 +183,12 @@
       results.innerHTML = '<div class="p-2.5 text-center text-slate-500 text-[11px]"><span class="inline-block animate-spin mr-1">⏳</span>Recherche mondiale en cours...</div>';
       results.classList.remove('hidden');
 
+      // Recherche parallèle des sentiers réputés par nom (ex: Via Francigena, West Highland Way, Stevenson, TMB...)
+      let namedTrailsPromise = Promise.resolve([]);
+      if (typeof GrManager !== 'undefined' && GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query)) {
+        namedTrailsPromise = GrManager.searchNamedTrails(query).catch(() => []);
+      }
+
       let items = [];
 
       // 1. Essai Nominatim OSM
@@ -239,14 +245,23 @@
         }
       }
 
-      if (items.length === 0) {
-        results.innerHTML = '<div class="p-2.5 text-center text-slate-400 text-[11px]">Aucun lieu trouvé pour cette recherche</div>';
+      const namedTrails = await namedTrailsPromise;
+
+      if (items.length === 0 && (!namedTrails || namedTrails.length === 0)) {
+        results.innerHTML = '<div class="p-2.5 text-center text-slate-400 text-[11px]">Aucun lieu ou sentier trouvé pour cette recherche</div>';
         return;
       }
 
       results.innerHTML = '';
       results.style.backgroundColor = '#ffffff';
       results.style.opacity = '1';
+
+      if (namedTrails && namedTrails.length > 0 && typeof GrManager !== 'undefined') {
+        GrManager.appendTrailItemsToContainer(results, namedTrails, (it) => {
+          const input = document.getElementById('map-world-search-input');
+          if (input) input.value = `${it.ref ? it.ref + ' - ' : ''}${it.name || ''}`;
+        });
+      }
       items.forEach(item => {
         const div = document.createElement('div');
         div.className = 'search-item p-3 hover:bg-emerald-50 cursor-pointer transition flex items-start gap-2.5 border-b border-slate-200/90 last:border-b-0';
@@ -480,6 +495,12 @@
           if (mm.markersLayer && mm.map && mm.map.hasLayer(mm.markersLayer)) {
             mm.map.removeLayer(mm.markersLayer);
           }
+          if (mm.searchCircle && mm.map && mm.map.hasLayer(mm.searchCircle)) {
+            mm.map.removeLayer(mm.searchCircle);
+          }
+          if (mm.searchOriginMarker && mm.map && mm.map.hasLayer(mm.searchOriginMarker)) {
+            mm.map.removeLayer(mm.searchOriginMarker);
+          }
           if (mm.currentHikePolyline && mm.map && mm.map.hasLayer(mm.currentHikePolyline)) {
             mm.map.removeLayer(mm.currentHikePolyline);
           }
@@ -529,6 +550,7 @@
           if (mm.markersLayer && mm.map && !mm.map.hasLayer(mm.markersLayer)) {
             mm.map.addLayer(mm.markersLayer);
           }
+          mm.updateSearchRadiusVisuals(false);
           if (window.App && typeof window.App.filterHikes === 'function') {
             window.App.filterHikes();
           }

@@ -2565,7 +2565,11 @@ class AppController {
       return;
     }
 
-    if (!places || places.length === 0) {
+    const namedTrails = (typeof GrManager !== 'undefined' && GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query) && Array.isArray(this._lastNamedTrails))
+      ? this._lastNamedTrails
+      : [];
+
+    if ((!places || places.length === 0) && namedTrails.length === 0) {
       resultsContainer.innerHTML = `
         <div class="p-3.5 text-xs text-slate-500 text-center flex items-center justify-center gap-2">
           <span>🌍</span> Aucun lieu trouvé dans le monde pour "<b>${this.escapeHtml(query)}</b>"
@@ -2575,7 +2579,13 @@ class AppController {
     }
 
     resultsContainer.classList.remove('hidden');
-    places.forEach(place => {
+    if (namedTrails.length > 0 && typeof GrManager !== 'undefined') {
+      GrManager.appendTrailItemsToContainer(resultsContainer, namedTrails, (it) => {
+        const locationInput = document.getElementById('location-input');
+        if (locationInput) locationInput.value = `${it.ref ? it.ref + ' - ' : ''}${it.name || ''}`;
+      });
+    }
+    (places || []).forEach(place => {
       const item = document.createElement('div');
       item.className = 'px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition border-b border-slate-100 last:border-b-0 flex items-start gap-3 text-left group';
       
@@ -2628,8 +2638,15 @@ class AppController {
         this.renderPlacesResults(localMatches, query);
       }
 
-      // 2. Recherche mondiale (Open-Meteo + BAN + Photon)
-      const places = await this.fetchPlacesList(query, signal);
+      // 2. Recherche mondiale (Open-Meteo + BAN + Photon) + Sentiers réputés (Francigena, WHW, Stevenson...)
+      const namedPromise = (typeof GrManager !== 'undefined' && GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query))
+        ? GrManager.searchNamedTrails(query).catch(() => [])
+        : Promise.resolve([]);
+      const [places, namedTrails] = await Promise.all([
+        this.fetchPlacesList(query, signal),
+        namedPromise
+      ]);
+      this._lastNamedTrails = namedTrails || [];
       
       // Fusionner avec les suggestions locales si pertinentes
       const combined = [...places];
@@ -2679,6 +2696,15 @@ class AppController {
     const iconEl = document.getElementById('location-search-icon');
     if (iconEl) iconEl.innerHTML = '<span class="animate-spin inline-block">⏳</span>';
     try {
+      if (typeof GrManager !== 'undefined' && (GrManager.isGrQuery(query) || (GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query)))) {
+        const trails = GrManager.isGrQuery(query) ? await GrManager.searchRemote(query) : await GrManager.searchNamedTrails(query);
+        if (trails && trails.length > 0) {
+          const resultsContainer = document.getElementById('location-autocomplete-results');
+          if (resultsContainer) resultsContainer.classList.add('hidden');
+          await GrManager.displayRemote(trails[0], window.MapManagerInstance ? window.MapManagerInstance.map : null);
+          return;
+        }
+      }
       const places = await this.fetchPlacesList(query);
       if (places && places.length > 0) {
         const p = places[0];

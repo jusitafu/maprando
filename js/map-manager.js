@@ -169,12 +169,15 @@ class MapManager {
       className: 'leaflet-layer-epure',
       attribution: '&copy; IGN France (Fond Plan épuré)'
     });
-    const waymarkedGrOverlay = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      maxNativeZoom: 18,
-      opacity: 1.0,
-      attribution: '&copy; Waymarked Trails (Réseau GR® & Sentiers balisés)'
-    });
+    const waymarkedGrOverlay = (typeof GrManager !== 'undefined' && GrManager.createFilteredGrTileLayer)
+      ? GrManager.createFilteredGrTileLayer()
+      : L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          maxNativeZoom: 18,
+          opacity: 0.92,
+          attribution: '&copy; Waymarked Trails (Réseau GR® & Sentiers balisés)'
+        });
+    this.waymarkedGrOverlay = waymarkedGrOverlay;
     const grMapLayer = L.layerGroup([esriLightGray, ignPlanEpure, waymarkedGrOverlay]);
 
     this.baseLayers = {
@@ -258,6 +261,9 @@ class MapManager {
         }
       }
 
+      if (typeof GrManager !== 'undefined' && GrManager.setColorFilterPanelVisible) {
+        GrManager.setColorFilterPanelVisible(this.currentBaseLayer === 'grmap', this.map);
+      }
       if (typeof this.onBaseLayerChangeCallback === 'function') {
         this.onBaseLayerChangeCallback(this.currentBaseLayer);
       }
@@ -293,6 +299,9 @@ class MapManager {
         this.setSearchOrigin(e.latlng.lat, e.latlng.lng, 'Point choisi sur carte');
         this.setClickMode(false);
       } else {
+        if (this.currentBaseLayer === 'grmap' && typeof GrManager !== 'undefined' && GrManager.handleMapClickForGr) {
+          GrManager.handleMapClickForGr(e.latlng, this.map);
+        }
         if (this.onMapBackgroundClickCallback) {
           this.onMapBackgroundClickCallback();
         }
@@ -635,6 +644,9 @@ class MapManager {
           this.utmGridLayer.clearLayers();
         }
       }
+      if (typeof GrManager !== 'undefined' && GrManager.setColorFilterPanelVisible) {
+        GrManager.setColorFilterPanelVisible(this.currentBaseLayer === 'grmap', this.map);
+      }
       if (typeof this.onBaseLayerChangeCallback === 'function') {
         this.onBaseLayerChangeCallback(this.currentBaseLayer);
       }
@@ -685,6 +697,11 @@ class MapManager {
 
   updateSearchRadiusVisuals(autoZoom = false) {
     if (!this.map) return;
+    if (window.PortalRouterInstance && window.PortalRouterInstance.currentView === 'carte') {
+      if (this.searchOriginMarker) { this.searchOriginMarker.remove(); this.searchOriginMarker = null; }
+      if (this.searchCircle) { this.searchCircle.remove(); this.searchCircle = null; }
+      return;
+    }
 
     if (this.searchOriginMarker) {
       this.searchOriginMarker.remove();

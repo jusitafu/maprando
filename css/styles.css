@@ -578,13 +578,15 @@ path.bearing-preview-line {
 @keyframes grPulseBlink {
   0%, 100% {
     opacity: 1;
-    stroke-width: 6.5px;
-    filter: drop-shadow(0 0 6px rgba(225, 29, 72, 0.95));
+    stroke: #e11d48;
+    stroke-width: 6px;
+    filter: drop-shadow(0 0 3px rgba(225, 29, 72, 0.85));
   }
   50% {
-    opacity: 0.25;
-    stroke-width: 8.5px;
-    filter: drop-shadow(0 0 14px rgba(225, 29, 72, 1));
+    opacity: 0.88;
+    stroke: #ff2a00;
+    stroke-width: 8px;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.95));
   }
 }
 
