@@ -952,3 +952,7 @@ path.bearing-preview-line {
 .gr-viewport-shield.shield-purple .shield-code {
   background: #7c3aed;
 }
+
+.leaflet-top.leaflet-right {
+  z-index: 1080 !important;
+}

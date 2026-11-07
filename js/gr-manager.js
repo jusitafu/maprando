@@ -1476,7 +1476,29 @@ class GrManager {
     const host = (map && map.getContainer()) ? map.getContainer() : document.body;
     panel = document.createElement('div');
     panel.id = 'gr-color-filter-panel';
-    panel.className = 'hidden absolute top-14 right-2.5 z-[1000] bg-white/95 backdrop-blur-md border-2 border-slate-300 rounded-2xl shadow-xl p-2.5 w-72 text-slate-800 select-none transition-all';
+    panel.className = 'hidden absolute top-14 right-2.5 z-[990] bg-white/95 backdrop-blur-md border-2 border-slate-300 rounded-2xl shadow-xl p-2.5 w-72 text-slate-800 select-none transition-all';
+
+    // Bouton compact pour rouvrir les filtres GR si l'utilisateur a fermé la boîte avec ✕ tout en restant sur Carte des GR
+    let reopenBtn = document.getElementById('btn-reopen-gr-filter-panel');
+    if (!reopenBtn) {
+      reopenBtn = document.createElement('button');
+      reopenBtn.type = 'button';
+      reopenBtn.id = 'btn-reopen-gr-filter-panel';
+      reopenBtn.className = 'hidden absolute top-3 right-14 z-[990] bg-white/95 hover:bg-rose-50 text-slate-800 hover:text-rose-700 border-2 border-rose-300 rounded-xl shadow-lg px-2.5 py-1.5 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer transition';
+      reopenBtn.title = 'Afficher le panneau Carte des GR® & Filtres';
+      reopenBtn.innerHTML = '<span>🥾</span><span>Filtres GR®</span>';
+      if (typeof L !== 'undefined' && L.DomEvent) {
+        L.DomEvent.disableClickPropagation(reopenBtn);
+      }
+      reopenBtn.addEventListener('click', () => {
+        reopenBtn.classList.add('hidden');
+        panel.classList.remove('hidden');
+        if (window.MapManagerInstance && window.MapManagerInstance.layerControl && typeof window.MapManagerInstance.layerControl.collapse === 'function') {
+          window.MapManagerInstance.layerControl.collapse();
+        }
+      });
+      host.appendChild(reopenBtn);
+    }
 
     const frenchGrOptions = this.FRENCH_GR_DIRECTORY.map(item =>
       `<option value="${this._esc(item.ref)}">${this._esc(item.ref)} — ${this._esc(item.name)}</option>`
@@ -1488,11 +1510,14 @@ class GrManager {
 
     panel.innerHTML = `
       <div class="flex items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-slate-200">
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 min-w-0">
           <span class="text-sm">🥾</span>
-          <span class="font-black text-[11px] uppercase tracking-wider text-slate-900">Carte des GR® &amp; Filtres</span>
+          <span class="font-black text-[11px] uppercase tracking-wider text-slate-900 truncate">Carte des GR® &amp; Filtres</span>
         </div>
-        <button type="button" id="btn-toggle-gr-filter-body" class="text-[11px] font-bold text-slate-500 hover:text-slate-900 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 cursor-pointer" title="Réduire / Agrandir">▾</button>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <button type="button" id="btn-toggle-gr-filter-body" class="text-[11px] font-bold text-slate-600 hover:text-slate-900 px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 cursor-pointer transition" title="Réduire / Agrandir">▾</button>
+          <button type="button" id="btn-close-gr-filter-panel" class="text-[11px] font-black text-white bg-rose-600 hover:bg-rose-700 px-2 py-0.5 rounded-md shadow-xs cursor-pointer transition flex items-center justify-center" title="Fermer et revenir au sélecteur de cartes (IGN TOP 25, OpenTopoMap, Satellite…)">✕</button>
+        </div>
       </div>
       <div id="gr-color-filter-body" class="space-y-1.5">
         <!-- Module Choix du GR Français par liste déroulante numérique -->
@@ -1606,19 +1631,35 @@ class GrManager {
       });
     }
 
+    const closeBtn = panel.querySelector('#btn-close-gr-filter-panel');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        panel.classList.add('hidden');
+        const reopen = document.getElementById('btn-reopen-gr-filter-panel');
+        if (reopen) reopen.classList.remove('hidden');
+        // Ouvrir immédiatement le sélecteur de cartes (couches IGN, OpenTopoMap, Satellite…)
+        if (window.MapManagerInstance && window.MapManagerInstance.layerControl && typeof window.MapManagerInstance.layerControl.expand === 'function') {
+          window.MapManagerInstance.layerControl.expand();
+        }
+      });
+    }
+
     host.appendChild(panel);
     return panel;
   }
 
   static setColorFilterPanelVisible(visible, map) {
     const panel = this.ensureColorFilterPanel(map);
+    const reopen = document.getElementById('btn-reopen-gr-filter-panel');
     if (!panel) return;
     if (visible) {
       panel.classList.remove('hidden');
+      if (reopen) reopen.classList.add('hidden');
       this._syncFilterCheckboxesUI();
       this.scheduleViewportShieldsUpdate(map || (window.MapManagerInstance && window.MapManagerInstance.map));
     } else {
       panel.classList.add('hidden');
+      if (reopen) reopen.classList.add('hidden');
       this.clearViewportShields(map || (window.MapManagerInstance && window.MapManagerInstance.map));
     }
   }
