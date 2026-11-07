@@ -1199,7 +1199,18 @@ class GrManager {
   /**
    * Efface le tracé du GR, restaure l'opacité normale du réseau et masque le bandeau
    */
+  static _activeTrailData = null;
+  static _activeViewportLabelsLayer = null;
+  static _viewportShieldsLayer = null;
+  static _viewportShieldsTimer = null;
+  static _viewportShieldsToken = 0;
+
   static clearGr(map) {
+    this._activeTrailData = null;
+    if (this._activeViewportLabelsLayer && map) {
+      map.removeLayer(this._activeViewportLabelsLayer);
+      this._activeViewportLabelsLayer = null;
+    }
     if (this.currentGrLayer && map) {
       map.removeLayer(this.currentGrLayer);
       this.currentGrLayer = null;
@@ -1368,10 +1379,14 @@ class GrManager {
   }
 
   static refreshFilteredTiles() {
-    if (!this._activeGridLayer || !this._activeGridLayer._tiles) return;
-    Object.values(this._activeGridLayer._tiles).forEach(t => {
-      if (t && t.el) this._drawFilteredTile(t.el);
-    });
+    if (this._activeGridLayer && this._activeGridLayer._tiles) {
+      Object.values(this._activeGridLayer._tiles).forEach(t => {
+        if (t && t.el) this._drawFilteredTile(t.el);
+      });
+    }
+    if (window.MapManagerInstance && window.MapManagerInstance.map) {
+      this.scheduleViewportShieldsUpdate(window.MapManagerInstance.map);
+    }
   }
 
   static setColorFilter(colorKey, enabled) {
@@ -1556,8 +1571,10 @@ class GrManager {
     if (visible) {
       panel.classList.remove('hidden');
       this._syncFilterCheckboxesUI();
+      this.scheduleViewportShieldsUpdate(map || (window.MapManagerInstance && window.MapManagerInstance.map));
     } else {
       panel.classList.add('hidden');
+      this.clearViewportShields(map || (window.MapManagerInstance && window.MapManagerInstance.map));
     }
   }
 
@@ -1626,7 +1643,7 @@ class GrManager {
   }
 
   // ====================================================================
-  // 3. NOMS EXPLICITES SUR LE CHEMIN (BADGES LE LONG DU TRACÉ)
+  // 3. CARTOUCHES HAUTE LISIBILITÉ DYNAMIQUES (Y COMPRIS ZOOM MAX)
   // ====================================================================
   static _addRouteNameLabels(segs, refText, nameText, layerGroup) {
     if (!segs || !segs.length || !layerGroup) return;
@@ -1634,87 +1651,400 @@ class GrManager {
     segs.forEach(s => {
       if (Array.isArray(s)) s.forEach(pt => flatPts.push(pt));
     });
-    if (flatPts.length < 4) return;
+    if (flatPts.length < 2) return;
 
     const cleanRef = (refText || '').trim();
     const cleanName = (nameText || '').trim();
-    let badgeLabel = cleanRef || cleanName;
-    if (cleanRef && cleanName && cleanName.toUpperCase() !== cleanRef.toUpperCase()) {
-      const shortName = cleanName.length > 30 ? cleanName.slice(0, 28) + '…' : cleanName;
-      badgeLabel = `${cleanRef} • ${shortName}`;
-    }
-    if (!badgeLabel) return;
 
-    // Placer 1 à 3 étiquettes bien espacées le long du sentier (22%, 50%, 78%)
-    const fractions = flatPts.length > 80 ? [0.22, 0.50, 0.78] : [0.50];
-    const usedPts = [];
-
-    fractions.forEach(f => {
-      const idx = Math.min(flatPts.length - 1, Math.max(0, Math.floor(flatPts.length * f)));
-      const pt = flatPts[idx];
-      if (!pt) return;
-      // Éviter que deux étiquettes soient trop proches
-      const tooClose = usedPts.some(u => Math.abs(u[0] - pt[0]) + Math.abs(u[1] - pt[1]) < 0.04);
-      if (tooClose) return;
-      usedPts.push(pt);
-
-      const labelIcon = L.divIcon({
-        className: 'gr-route-inline-label',
-        html: `<div class="inline-flex items-center gap-1 bg-white/95 text-rose-700 font-black text-[10px] px-2 py-0.5 rounded-full shadow-md border-2 border-rose-600 whitespace-nowrap select-none pointer-events-none -translate-x-1/2 -translate-y-1/2"><span>🥾</span><span>${this._esc(badgeLabel)}</span></div>`,
-        iconSize: [0, 0]
-      });
-      layerGroup.addLayer(L.marker(pt, { icon: labelIcon, interactive: false, zIndexOffset: 900 }));
-    });
+    // Sauvegarder le tracé actif pour recalculer dynamiquement les cartouches dans la fenêtre visible à chaque zoom / déplacement
+    this._activeTrailData = {
+      segs,
+      flatPts,
+      refLabel: cleanRef,
+      nameLabel: cleanName
+    };
 
     // Marqueurs Départ & Arrivée aux extrémités du tracé réel
     const startPt = flatPts[0];
     const endPt = flatPts[flatPts.length - 1];
-    if (startPt && endPt && (Math.abs(startPt[0] - endPt[0]) + Math.abs(startPt[1] - endPt[1]) > 0.01)) {
+    if (startPt && endPt && (Math.abs(startPt[0] - endPt[0]) + Math.abs(startPt[1] - endPt[1]) > 0.005)) {
       const startIcon = L.divIcon({
         className: 'gr-marker-pin',
-        html: `<div class="bg-emerald-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border-2 border-white flex items-center gap-1 whitespace-nowrap select-none -translate-x-1/2 -translate-y-full"><span>🚩</span><span>${this._esc(cleanRef || 'Départ')}</span></div>`,
+        html: `<div class="bg-emerald-600 text-white font-black text-xs px-3 py-1 rounded-full shadow-xl border-2 border-white flex items-center gap-1.5 whitespace-nowrap select-none -translate-x-1/2 -translate-y-full"><span>🚩</span><span>Départ ${this._esc(cleanRef || cleanName.slice(0, 18))}</span></div>`,
         iconSize: [0, 0]
       });
       const endIcon = L.divIcon({
         className: 'gr-marker-pin',
-        html: `<div class="bg-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-lg border-2 border-white flex items-center gap-1 whitespace-nowrap select-none -translate-x-1/2 -translate-y-full"><span>🏁</span><span>${this._esc(cleanRef || 'Arrivée')}</span></div>`,
+        html: `<div class="bg-rose-600 text-white font-black text-xs px-3 py-1 rounded-full shadow-xl border-2 border-white flex items-center gap-1.5 whitespace-nowrap select-none -translate-x-1/2 -translate-y-full"><span>🏁</span><span>Arrivée ${this._esc(cleanRef || cleanName.slice(0, 18))}</span></div>`,
         iconSize: [0, 0]
       });
-      layerGroup.addLayer(L.marker(startPt, { icon: startIcon, interactive: false, zIndexOffset: 950 }));
-      layerGroup.addLayer(L.marker(endPt, { icon: endIcon, interactive: false, zIndexOffset: 950 }));
+      layerGroup.addLayer(L.marker(startPt, { icon: startIcon, interactive: false, zIndexOffset: 1100 }));
+      layerGroup.addLayer(L.marker(endPt, { icon: endIcon, interactive: false, zIndexOffset: 1100 }));
+    }
+
+    const map = window.MapManagerInstance ? window.MapManagerInstance.map : null;
+    if (map) {
+      setTimeout(() => this.updateActiveTrailViewportLabels(map), 80);
+    }
+  }
+
+  /**
+   * Place dynamiquement 2 à 5 grands cartouches ultra-lisibles (13px-14px) sur la portion du sentier
+   * actuellement visible à l'écran, quel que soit le niveau de zoom (même au zoom maximum 19 !).
+   */
+  static updateActiveTrailViewportLabels(map) {
+    if (!map || !this._activeTrailData || !this.currentGrLayer) return;
+    if (!this._activeViewportLabelsLayer) {
+      this._activeViewportLabelsLayer = L.layerGroup().addTo(map);
+    } else {
+      this._activeViewportLabelsLayer.clearLayers();
+      if (!map.hasLayer(this._activeViewportLabelsLayer)) {
+        this._activeViewportLabelsLayer.addTo(map);
+      }
+    }
+
+    const { flatPts, refLabel, nameLabel } = this._activeTrailData;
+    if (!flatPts || flatPts.length === 0) return;
+
+    const cleanRef = (refLabel || '').trim();
+    const cleanName = (nameLabel || '').trim();
+    let badgeLabel = cleanRef || cleanName;
+    if (cleanRef && cleanName && cleanName.toUpperCase() !== cleanRef.toUpperCase()) {
+      const shortName = cleanName.length > 34 ? cleanName.slice(0, 32) + '…' : cleanName;
+      badgeLabel = `${cleanRef} • ${shortName}`;
+    }
+    if (!badgeLabel) return;
+
+    const bounds = map.getBounds().pad(-0.08);
+    const visiblePts = flatPts.filter(pt => bounds.contains(pt));
+    const sourcePts = visiblePts.length >= 2 ? visiblePts : flatPts;
+
+    const fractions = sourcePts.length > 30 ? [0.18, 0.50, 0.82] : (sourcePts.length > 8 ? [0.30, 0.70] : [0.50]);
+    const placedScreenPts = [];
+
+    fractions.forEach(f => {
+      const idx = Math.min(sourcePts.length - 1, Math.max(0, Math.floor(sourcePts.length * f)));
+      const pt = sourcePts[idx];
+      if (!pt) return;
+      const px = map.latLngToContainerPoint(pt);
+      if (placedScreenPts.some(p => Math.hypot(p.x - px.x, p.y - px.y) < 130)) return;
+      placedScreenPts.push(px);
+
+      const labelIcon = L.divIcon({
+        className: 'gr-route-inline-label',
+        html: `
+          <div class="gr-highvis-cartouche -translate-x-1/2 -translate-y-1/2">
+            <span class="gr-highvis-ref">${this._esc(cleanRef || '🥾')}</span>
+            <span class="gr-highvis-name">${this._esc(cleanName && cleanName.toUpperCase() !== cleanRef.toUpperCase() ? (cleanName.length > 32 ? cleanName.slice(0, 30) + '…' : cleanName) : badgeLabel)}</span>
+          </div>
+        `,
+        iconSize: [0, 0]
+      });
+      this._activeViewportLabelsLayer.addLayer(L.marker(pt, { icon: labelIcon, interactive: false, zIndexOffset: 1200 }));
+    });
+  }
+
+  /**
+   * Affiche automatiquement sur la "Carte des GR (Fond épuré)" des cartouches vectoriels
+   * grands et parfaitement lisibles (numéro GR / nom du chemin) sur tous les sentiers visibles à l'écran,
+   * du zoom régional jusqu'au zoom maximum (zoom 19).
+   */
+  static clearViewportShields(map) {
+    if (this._viewportShieldsTimer) {
+      clearTimeout(this._viewportShieldsTimer);
+      this._viewportShieldsTimer = null;
+    }
+    if (this._viewportShieldsLayer && map) {
+      map.removeLayer(this._viewportShieldsLayer);
+      this._viewportShieldsLayer = null;
+    }
+  }
+
+  static scheduleViewportShieldsUpdate(map) {
+    if (!map) return;
+    // Toujours mettre à jour immédiatement les étiquettes du sentier sélectionné s'il y en a un
+    if (this._activeTrailData) {
+      this.updateActiveTrailViewportLabels(map);
+    }
+    const mm = window.MapManagerInstance;
+    if (!mm || mm.currentBaseLayer !== 'grmap') {
+      this.clearViewportShields(map);
+      return;
+    }
+    if (this._viewportShieldsTimer) clearTimeout(this._viewportShieldsTimer);
+    this._viewportShieldsTimer = setTimeout(() => {
+      this.updateViewportTrailShields(map);
+    }, 220);
+  }
+
+  static async updateViewportTrailShields(map) {
+    if (!map) return;
+    const mm = window.MapManagerInstance;
+    if (!mm || mm.currentBaseLayer !== 'grmap') return;
+
+    const token = ++this._viewportShieldsToken;
+    if (!this._viewportShieldsLayer) {
+      this._viewportShieldsLayer = L.layerGroup().addTo(map);
+    } else if (!map.hasLayer(this._viewportShieldsLayer)) {
+      this._viewportShieldsLayer.addTo(map);
+    }
+
+    const zoom = map.getZoom();
+    const bounds = map.getBounds();
+    const innerBounds = bounds.pad(-0.06);
+    const placedScreenPts = [];
+
+    const addShieldMarker = (pt, refText, nameText, group, onClickFn) => {
+      const px = map.latLngToContainerPoint(pt);
+      const minDist = zoom >= 14 ? 95 : 78;
+      if (placedScreenPts.some(p => Math.hypot(p.x - px.x, p.y - px.y) < minDist)) return false;
+      placedScreenPts.push(px);
+
+      const g = (group || 'NAT').toUpperCase();
+      const colorClass = g === 'INT' ? 'shield-blue' : (g === 'REG' ? 'shield-orange' : (g === 'LOC' ? 'shield-purple' : 'shield-red'));
+      const cleanRef = (refText || '').trim();
+      const cleanName = (nameText || '').trim();
+      const showFullName = zoom >= 12 && cleanName && cleanName.toUpperCase() !== cleanRef.toUpperCase();
+      const shortName = cleanName.length > 26 ? cleanName.slice(0, 24) + '…' : cleanName;
+
+      let html = '';
+      if (cleanRef && showFullName) {
+        html = `<div class="gr-viewport-shield ${colorClass} -translate-x-1/2 -translate-y-1/2" title="Cliquez pour afficher tout le tracé de ${this._esc(cleanRef + ' - ' + cleanName)}"><span class="shield-code">${this._esc(cleanRef)}</span><span class="shield-title">${this._esc(shortName)}</span></div>`;
+      } else {
+        const label = cleanRef || shortName || 'Sentier';
+        html = `<div class="gr-viewport-shield ${colorClass} -translate-x-1/2 -translate-y-1/2" title="Cliquez pour afficher tout le tracé de ${this._esc(cleanName || cleanRef)}"><span class="shield-code">${this._esc(label)}</span></div>`;
+      }
+
+      const icon = L.divIcon({
+        className: 'gr-viewport-shield-container',
+        html,
+        iconSize: [0, 0]
+      });
+      const marker = L.marker(pt, { icon, interactive: true, zIndexOffset: 850 });
+      if (typeof onClickFn === 'function') {
+        marker.on('click', (e) => {
+          if (L.DomEvent) L.DomEvent.stopPropagation(e);
+          onClickFn();
+        });
+      }
+      this._viewportShieldsLayer.addLayer(marker);
+      return true;
+    };
+
+    // Aux zooms larges (zoom <= 9), afficher les cartouches des grands GR du catalogue visibles
+    if (zoom <= 9) {
+      this._viewportShieldsLayer.clearLayers();
+      if (this.colorFilters.red) {
+        this.catalog.forEach(gr => {
+          const vis = (gr.track || []).filter(pt => innerBounds.contains(pt));
+          if (vis.length > 0) {
+            const midPt = vis[Math.floor(vis.length / 2)];
+            addShieldMarker(midPt, gr.ref, gr.name, 'NAT', () => {
+              this.displayFrenchGrByRef(gr.ref, map);
+            });
+          }
+        });
+      }
+      return;
+    }
+
+    // Aux zooms intermédiaires à maximum (zoom 10 à 19) : interroger les sentiers réels dans l'emprise
+    const swMerc = this._ll2merc(bounds.getSouth(), bounds.getWest());
+    const neMerc = this._ll2merc(bounds.getNorth(), bounds.getEast());
+    const bbox = `${swMerc[0].toFixed(0)},${swMerc[1].toFixed(0)},${neMerc[0].toFixed(0)},${neMerc[1].toFixed(0)}`;
+
+    try {
+      const resp = await fetch(`${this.WMT}/list/by_area?bbox=${bbox}&limit=24`);
+      if (!resp.ok || token !== this._viewportShieldsToken) return;
+      const data = await resp.json();
+      let results = (data && Array.isArray(data.results)) ? data.results : [];
+
+      results = results.filter(r => {
+        const cKey = this._groupToColorKey(r.group);
+        return !!this.colorFilters[cKey];
+      });
+
+      const rank = (r) => {
+        const g = (r.group || '').toUpperCase();
+        let s = 0;
+        if (g === 'NAT') s += 45;
+        else if (g === 'INT') s += 42;
+        else if (g === 'REG') s += 28;
+        if (r.ref) s += 20;
+        return s;
+      };
+      results.sort((a, b) => rank(b) - rank(a));
+      const topRels = results.slice(0, 14);
+
+      const details = await Promise.allSettled(topRels.map(async (rel) => {
+        let det = this._detailCache.get(rel.id);
+        if (!det) {
+          const r = await fetch(`${this.WMT}/details/relation/${rel.id}`);
+          if (r.ok) {
+            det = await r.json();
+            this._detailCache.set(rel.id, det);
+          }
+        }
+        return { rel, det };
+      }));
+
+      if (token !== this._viewportShieldsToken) return;
+      this._viewportShieldsLayer.clearLayers();
+
+      details.forEach(item => {
+        if (item.status !== 'fulfilled' || !item.value || !item.value.det) return;
+        const { rel, det } = item.value;
+        const segs = this._extractSegments(det.route);
+        if (!segs.length) return;
+        const visPts = [];
+        segs.forEach(s => {
+          s.forEach(pt => {
+            if (innerBounds.contains(pt)) visPts.push(pt);
+          });
+        });
+        if (!visPts.length) return;
+
+        const refStr = det.ref || rel.ref || '';
+        const nameStr = det.name || rel.name || refStr;
+        const groupStr = rel.group || det.group || 'NAT';
+
+        // À fort zoom (zoom >= 14), placer jusqu'à 2 cartouches par sentier dans l'écran
+        const fracs = (zoom >= 14 && visPts.length > 16) ? [0.28, 0.72] : [0.50];
+        fracs.forEach(f => {
+          const pt = visPts[Math.min(visPts.length - 1, Math.floor(visPts.length * f))];
+          if (pt) {
+            addShieldMarker(pt, refStr, nameStr, groupStr, () => {
+              this.displayRemote(rel, map, { fitBounds: false });
+            });
+          }
+        });
+      });
+    } catch (e) {
+      // Silencieux en cas d'erreur réseau temporaire
     }
   }
 
   // ====================================================================
-  // 4. RECHERCHE DES CHEMINS RÉPUTÉS PAR LEUR NOM (FRANCE, EUROPE & MONDE)
+  // 4. RÉPERTOIRE ÉTENDU DES GRANDS CHEMINS CONNUS (FRANCE, ROYAUME-UNI, ÉCOSSE, IRLANDE, EUROPE & MONDE)
   // ====================================================================
   static FAMOUS_TRAILS = [
-    { keywords: ['francigena', 'via francigena'], id: 11860709, ref: 'VF', name: 'Via Francigena (Canterbury ➔ Rome)', group: 'INT', query: 'Via Francigena' },
-    { keywords: ['west highland', 'highland way', 'whw'], id: 16287, ref: 'WHW', name: 'West Highland Way (Écosse)', group: 'NAT', query: 'West Highland Way' },
-    { keywords: ['mont-blanc', 'mont blanc', 'tmb', 'tour du mont'], id: 124456, ref: 'TMB', name: 'Tour du Mont-Blanc (France • Italie • Suisse)', group: 'REG', query: 'Tour du Mont Blanc' },
-    { keywords: ['stevenson', 'chemin de stevenson'], id: 223039, ref: 'GR 70', name: 'Chemin de Stevenson (Cévennes)', group: 'NAT', query: 'Stevenson' },
-    { keywords: ['douaniers', 'sentier des douaniers', 'tour de bretagne'], id: 7790332, ref: 'GR 34', name: 'Sentier des Douaniers (Tour de Bretagne)', group: 'NAT', query: 'GR 34' },
-    { keywords: ['compostelle', 'saint-jacques', 'saint jacques', 'via podiensis', 'chemin du puy'], id: 11959152, ref: 'GR 65', name: 'Chemin de Saint-Jacques (Via Podiensis • Le Puy)', group: 'NAT', query: 'GR 65' },
-    { keywords: ['camino frances', 'camino francés', 'camino de santiago'], id: 2163569, ref: 'Camino', name: 'Camino Francés de Santiago (Espagne)', group: 'INT', query: 'Camino Frances' },
-    { keywords: ['alta via', 'dolomiti', 'dolomites'], id: 177743, ref: 'AV1', name: 'Alta Via n. 1 delle Dolomiti (Italie)', group: 'REG', query: 'Alta Via 1' },
-    { keywords: ['kungsleden', 'voie royale'], id: 1657661, ref: 'KL', name: 'Kungsleden • La Voie Royale (Suède)', group: 'NAT', query: 'Kungsleden' },
+    // --- Écosse (Scotland's Great Trails) ---
+    { keywords: ['speyside', 'speyside way'], id: 1026251, ref: 'SW', name: 'Speyside Way (Écosse : Buckie ➔ Aviemore)', group: 'NAT', query: 'Speyside Way' },
+    { keywords: ['west highland', 'highland way', 'whw'], id: 16287, ref: 'WHW', name: 'West Highland Way (Écosse : Milngavie ➔ Fort William)', group: 'NAT', query: 'West Highland Way' },
+    { keywords: ['great glen', 'great glen way', 'ggw'], id: 126572, ref: 'GGW', name: 'Great Glen Way (Écosse : Fort William ➔ Inverness)', group: 'NAT', query: 'Great Glen Way' },
+    { keywords: ['rob roy', 'rob roy way'], id: 189465, ref: 'RRW', name: 'Rob Roy Way (Écosse : Drymen ➔ Pitlochry)', group: 'NAT', query: 'Rob Roy Way' },
+    { keywords: ['skye trail', 'ile de skye', 'île de skye'], id: 14421894, ref: 'Skye', name: 'The Skye Trail (Écosse : Rubha Hunish ➔ Broadford)', group: 'REG', query: 'Skye Trail' },
+    { keywords: ['cape wrath', 'cape wrath trail'], id: 9327615, ref: 'CWT', name: 'Cape Wrath Trail (Écosse : Fort William ➔ Cape Wrath)', group: 'NAT', query: 'Cape Wrath Trail' },
+    { keywords: ['southern upland', 'southern upland way'], id: 4736666, ref: 'SUW', name: 'Southern Upland Way (Écosse : Portpatrick ➔ Cockburnspath)', group: 'NAT', query: 'Southern Upland Way' },
+    { keywords: ['fife coastal', 'fife coastal path'], id: 10841122, ref: 'FCP', name: 'Fife Coastal Path (Écosse)', group: 'NAT', query: 'Fife Coastal Path' },
+    { keywords: ['arran coastal', 'arran coastal way'], id: 4640636, ref: 'ACW', name: 'Arran Coastal Way (Écosse : Île d’Arran)', group: 'NAT', query: 'Arran Coastal Way' },
+    { keywords: ['kintyre way', 'kintyre'], id: 1756629, ref: 'KW', name: 'Kintyre Way (Écosse)', group: 'NAT', query: 'Kintyre Way' },
+    { keywords: ['john muir way'], id: 49215, ref: 'JMW', name: 'John Muir Way (Écosse : Helensburgh ➔ Dunbar)', group: 'NAT', query: 'John Muir Way' },
+    { keywords: ['affric kintail', 'affric kintail way'], id: 12812573, ref: 'AKW', name: 'Affric Kintail Way (Écosse : Drumnadrochit ➔ Morvich)', group: 'REG', query: 'Affric Kintail Way' },
+    { keywords: ['cowal way', 'loch lomond and cowal'], id: 3548216, ref: 'LCW', name: 'Loch Lomond and Cowal Way (Écosse)', group: 'NAT', query: 'Cowal Way' },
+    { keywords: ['three lochs way'], id: 1756632, ref: '3LW', name: 'Three Lochs Way (Écosse)', group: 'NAT', query: 'Three Lochs Way' },
+    { keywords: ['st cuthbert', 'saint cuthbert'], id: 4515009, ref: 'SCW', name: "St Cuthbert's Way (Écosse / Angleterre)", group: 'REG', query: "Saint Cuthbert's Way" },
+
+    // --- Angleterre & Pays de Galles (National Trails UK) ---
     { keywords: ['pennine way', 'pennine'], id: 4086931, ref: 'PW', name: 'Pennine Way (Angleterre / Écosse)', group: 'NAT', query: 'Pennine Way' },
-    { keywords: ['via alpina'], id: 20014200, ref: 'VA', name: 'Via Alpina (Traversée de l’Arc Alpin)', group: 'INT', query: 'Via Alpina' },
-    { keywords: ['rota vicentina', 'vicentina'], id: 7592697, ref: 'GR 11', name: 'Rota Vicentina • Caminho Histórico (Portugal)', group: 'NAT', query: 'Rota Vicentina' },
-    { keywords: ['laugavegur'], id: 1225037, ref: 'Laugav.', name: 'Laugavegur (Islande : Landmannalaugar ➔ Þórsmörk)', group: 'REG', query: 'Laugavegur' },
-    { keywords: ['oisans', 'ecrins', 'écrins', 'tour des ecrins', 'tour des écrins'], id: 2909096, ref: 'GR 54', name: 'Tour de l’Oisans et des Écrins', group: 'NAT', query: 'GR 54' },
-    { keywords: ['queyras', 'tour du queyras'], id: 9711201, ref: 'GR 58', name: 'Tour du Queyras (Hautes-Alpes)', group: 'NAT', query: 'GR 58' },
-    { keywords: ['jura', 'gtj', 'traversee du jura', 'traversée du jura'], id: 1750445, ref: 'GR 509', name: 'Grande Traversée du Jura (GTJ)', group: 'NAT', query: 'Grande Traversee du Jura' },
+    { keywords: ['coast to coast', 'wainwright'], id: 16755331, ref: 'C2C', name: 'Coast to Coast Walk (Angleterre : St Bees ➔ Robin Hood’s Bay)', group: 'NAT', query: 'Coast to Coast' },
+    { keywords: ['south west coast', 'south west coast path', 'swcp'], id: 2376086, ref: 'SWCP', name: 'South West Coast Path (Angleterre : Somerset, Cornwall, Dorset)', group: 'NAT', query: 'South West Coast Path' },
+    { keywords: ['cotswold way', 'cotswolds'], id: 65239, ref: 'CW', name: 'Cotswold Way (Angleterre : Chipping Campden ➔ Bath)', group: 'NAT', query: 'Cotswold Way' },
+    { keywords: ['hadrian', 'hadrians wall', "hadrian's wall", 'mur d hadrien'], id: 38791, ref: 'HWP', name: "Hadrian's Wall Path • Mur d'Hadrien (Angleterre)", group: 'NAT', query: "Hadrian's Wall Path" },
+    { keywords: ['south downs', 'south downs way'], id: 77976, ref: 'SDW', name: 'South Downs Way (Angleterre : Winchester ➔ Eastbourne)', group: 'NAT', query: 'South Downs Way' },
+    { keywords: ['north downs', 'north downs way'], id: 1957071, ref: 'NDW', name: 'North Downs Way (Angleterre : Farnham ➔ Dover)', group: 'NAT', query: 'North Downs Way' },
+    { keywords: ['thames path', 'tamise'], id: 20469, ref: 'TP', name: 'Thames Path • Sentier de la Tamise (Angleterre)', group: 'NAT', query: 'Thames Path' },
+    { keywords: ['ridgeway', 'the ridgeway'], id: 8879, ref: 'RW', name: 'The Ridgeway (Angleterre)', group: 'NAT', query: 'The Ridgeway' },
+    { keywords: ['offa', "offa's dyke", 'offas dyke'], id: 9649, ref: 'ODP', name: "Offa's Dyke Path (Pays de Galles / Angleterre)", group: 'NAT', query: "Offa's Dyke Path" },
+    { keywords: ['pembrokeshire', 'pembrokeshire coast'], id: 77964, ref: 'PCP', name: 'Pembrokeshire Coast Path (Pays de Galles)', group: 'NAT', query: 'Pembrokeshire Coast Path' },
+    { keywords: ['cleveland way'], id: 31112, ref: 'ClW', name: 'Cleveland Way (Angleterre : North York Moors)', group: 'NAT', query: 'Cleveland Way' },
+    { keywords: ['yorkshire wolds', 'wolds way'], id: 16327216, ref: 'YWW', name: 'Yorkshire Wolds Way (Angleterre)', group: 'NAT', query: 'Yorkshire Wolds Way' },
+    { keywords: ['dales way'], id: 29302, ref: 'DW', name: 'Dales Way (Angleterre : Yorkshire Dales ➔ Lake District)', group: 'REG', query: 'Dales Way' },
+    { keywords: ['cumbria way', 'lake district'], id: 946178, ref: 'CuW', name: 'Cumbria Way • Traversée du Lake District (Angleterre)', group: 'REG', query: 'Cumbria Way' },
+    { keywords: ['peddars way', 'norfolk coast'], id: 77958, ref: 'PdW', name: 'Peddars Way & Norfolk Coast Path (Angleterre)', group: 'NAT', query: 'Peddars Way' },
+
+    // --- Irlande ---
+    { keywords: ['wicklow way', 'wicklow'], id: 2740, ref: 'WW', name: 'Wicklow Way (Irlande : Dublin ➔ Clonegal)', group: 'NAT', query: 'Wicklow Way' },
+    { keywords: ['kerry way', 'ring of kerry'], id: 183744, ref: 'KeW', name: 'The Kerry Way (Irlande : Killarney)', group: 'NAT', query: 'The Kerry Way' },
+    { keywords: ['dingle way', 'dingle'], id: 21664, ref: 'DiW', name: 'The Dingle Way (Irlande : Péninsule de Dingle)', group: 'NAT', query: 'The Dingle Way' },
+    { keywords: ['beara way', 'beara'], id: 2989585, ref: 'BW', name: 'Beara Way (Irlande : Péninsule de Beara)', group: 'NAT', query: 'Beara Way' },
+    { keywords: ['western way', 'connemara'], id: 14702338, ref: 'WeW', name: 'Western Way • Connemara & Mayo (Irlande)', group: 'NAT', query: 'Western Way' },
+
+    // --- France & Arc Alpin ---
+    { keywords: ['mont-blanc', 'mont blanc', 'tmb', 'tour du mont'], id: 124456, ref: 'TMB', name: 'Tour du Mont-Blanc (France • Italie • Suisse)', group: 'REG', query: 'Tour du Mont Blanc' },
+    { keywords: ['stevenson', 'chemin de stevenson'], id: 223039, ref: 'GR 70', name: 'Chemin de Stevenson (Cévennes • GR 70)', group: 'NAT', query: 'Stevenson' },
+    { keywords: ['douaniers', 'sentier des douaniers', 'tour de bretagne'], id: 7790332, ref: 'GR 34', name: 'Sentier des Douaniers • Tour de Bretagne (GR 34)', group: 'NAT', query: 'GR 34' },
+    { keywords: ['compostelle', 'saint-jacques', 'saint jacques', 'via podiensis', 'chemin du puy'], id: 11959152, ref: 'GR 65', name: 'Chemin de Saint-Jacques • Via Podiensis (GR 65)', group: 'NAT', query: 'GR 65' },
+    { keywords: ['oisans', 'ecrins', 'écrins', 'tour des ecrins', 'tour des écrins'], id: 2909096, ref: 'GR 54', name: 'Tour de l’Oisans et des Écrins (GR 54)', group: 'NAT', query: 'GR 54' },
+    { keywords: ['queyras', 'tour du queyras'], id: 9711201, ref: 'GR 58', name: 'Tour du Queyras (GR 58 • Hautes-Alpes)', group: 'NAT', query: 'GR 58' },
+    { keywords: ['jura', 'gtj', 'traversee du jura', 'traversée du jura'], id: 1750445, ref: 'GR 509', name: 'Grande Traversée du Jura (GTJ • GR 509)', group: 'NAT', query: 'Grande Traversee du Jura' },
     { keywords: ['gta', 'traversee des alpes', 'traversée des alpes'], id: 18308154, ref: 'GR 5', name: 'Grande Traversée des Alpes (GR 5 France)', group: 'INT', query: 'GR 5' },
     { keywords: ['traversee des pyrenees', 'traversée des pyrénées', 'hendaye banyuls'], id: 7411272, ref: 'GR 10', name: 'La Grande Traversée des Pyrénées (GR 10)', group: 'NAT', query: 'GR 10' },
-    { keywords: ['fra li monti', 'traversee de la corse', 'traversée de la corse'], id: 101692, ref: 'GR 20', name: 'GR 20 • Traversée de la Corse (Fra li Monti)', group: 'NAT', query: 'GR 20' }
+    { keywords: ['fra li monti', 'traversee de la corse', 'traversée de la corse', 'corse gr20'], id: 101692, ref: 'GR 20', name: 'GR 20 • Traversée de la Corse (Fra li Monti)', group: 'NAT', query: 'GR 20' },
+    { keywords: ['beaufortain', 'tour du beaufortain'], id: 2598922, ref: 'GRP', name: 'Tour du Beaufortain (Savoie)', group: 'REG', query: 'Tour du Beaufortain' },
+    { keywords: ['mont thabor', 'tour du mont thabor', 'thabor'], id: 11376368, ref: 'GR 57', name: 'Tour du Mont Thabor (Clarée & Maurienne)', group: 'REG', query: 'Tour du Mont Thabor' },
+    { keywords: ['vanoise', 'tour de la vanoise', 'tarentaise'], id: 17877713, ref: 'GTT', name: 'Traversée de la Vanoise & Grand Tour de Tarentaise', group: 'REG', query: 'Tour de la Vanoise' },
+    { keywords: ['cervin', 'tour du cervin', 'matterhorn'], id: 1176308, ref: 'TC', name: 'Tour du Cervin • Matterhorn (Suisse / Italie)', group: 'REG', query: 'Tour du Cervin' },
+    { keywords: ['haute route', 'chamonix zermatt', "walker's haute route"], id: 3020521, ref: 'WHR', name: "Walker's Haute Route (Chamonix ➔ Zermatt)", group: 'REG', query: "Walker's Haute Route" },
+    { keywords: ['cathare', 'sentier cathare', 'bonshommes'], id: 3394595, ref: 'GR 367', name: 'Le Sentier Cathare (Pyrénées Audoises & Ariégeoises)', group: 'NAT', query: 'Sentier Cathare' },
+    { keywords: ['blanc-martel', 'blanc martel', 'gorges du verdon'], id: 5810021, ref: 'Verdon', name: 'Sentier Blanc-Martel (Grand Canyon du Verdon)', group: 'LOC', query: 'Sentier Blanc-Martel' },
+    { keywords: ['tro breizh'], id: 6544951, ref: 'TB', name: 'Tro Breizh (Tour de Bretagne des Sept Saints)', group: 'REG', query: 'Tro Breizh' },
+    { keywords: ['nantes a brest', 'nantes à brest', 'canal de nantes'], id: 6882348, ref: 'CNB', name: 'Canal de Nantes à Brest (Chemin de Halage)', group: 'REG', query: 'Canal de Nantes à Brest' },
+
+    // --- Italie, Espagne & Portugal ---
+    { keywords: ['francigena', 'via francigena'], id: 11860709, ref: 'VF', name: 'Via Francigena (Canterbury ➔ France ➔ Rome)', group: 'INT', query: 'Via Francigena' },
+    { keywords: ['camino frances', 'camino francés', 'camino de santiago'], id: 2163569, ref: 'Camino', name: 'Camino Francés de Santiago (Espagne)', group: 'INT', query: 'Camino Frances' },
+    { keywords: ['camino del norte', 'chemin du nord'], id: 19001007, ref: 'CdN', name: 'Camino del Norte (Espagne : Côte Cantabrique)', group: 'INT', query: 'Camino del Norte' },
+    { keywords: ['camino primitivo'], id: 19298101, ref: 'Prim.', name: 'Camino Primitivo (Espagne : Oviedo ➔ Santiago)', group: 'NAT', query: 'Camino Primitivo' },
+    { keywords: ['via de la plata', 'vía de la plata'], id: 5375658, ref: 'GR 100', name: 'Vía de la Plata (Espagne : Séville ➔ Santiago)', group: 'NAT', query: 'Via de la Plata' },
+    { keywords: ['camino ingles', 'camino inglés'], id: 14638771, ref: 'Inglés', name: 'Camino Inglés to Santiago (Espagne)', group: 'REG', query: 'Camino Ingles' },
+    { keywords: ['rota vicentina', 'vicentina', 'fisherman'], id: 7592697, ref: 'GR 11', name: 'Rota Vicentina • Caminho Histórico (Portugal)', group: 'NAT', query: 'Rota Vicentina' },
+    { keywords: ['cavalls del vent', 'cadi moixero'], id: 1416072, ref: 'CdV', name: 'Cavalls del Vent (Pyrénées Catalanes : Cadí-Moixeró)', group: 'REG', query: 'Cavalls del Vent' },
+    { keywords: ['carros de foc', 'aiguestortes'], id: 546940, ref: 'CF', name: 'Carros de Foc (Pyrénées : Parc National Aigüestortes)', group: 'REG', query: 'Carros de Foc' },
+    { keywords: ['cami de cavalls', 'camí de cavalls', 'minorque', 'menorca'], id: 1501400, ref: 'GR 223', name: 'Camí de Cavalls • Tour de Minorque (GR 223 Baléares)', group: 'NAT', query: 'Cami de Cavalls' },
+    { keywords: ['alta via 1', 'alta via', 'dolomiti', 'dolomites'], id: 177743, ref: 'AV1', name: 'Alta Via n. 1 delle Dolomiti (Italie)', group: 'REG', query: 'Alta Via 1' },
+    { keywords: ['alta via 2'], id: 404914, ref: 'AV2', name: 'Alta Via n. 2 delle Dolomiti (Italie : Bressanone ➔ Feltre)', group: 'REG', query: 'Alta Via 2' },
+    { keywords: ['sentiero italia'], id: 1021025, ref: 'SI', name: 'Sentiero Italia (Grande Traversée de l’Italie)', group: 'NAT', query: 'Sentiero Italia' },
+    { keywords: ['grande traversata delle alpi', 'gta italie'], id: 3159979, ref: 'GTA', name: 'Grande Traversata delle Alpi (Piémont Italien)', group: 'NAT', query: 'Grande Traversata delle Alpi' },
+    { keywords: ['selvaggio blu', 'sardaigne'], id: 9791036, ref: 'SB', name: 'Selvaggio Blu (Sardaigne : Baunei ➔ Cala Sisine)', group: 'LOC', query: 'Selvaggio Blu' },
+    { keywords: ['sentiero degli dei', 'chemin des dieux', 'amalfi'], id: 4757514, ref: '327', name: 'Sentiero degli Dei • Chemin des Dieux (Côte Amalfitaine)', group: 'LOC', query: 'Sentiero degli Dei' },
+    { keywords: ['via degli dei', 'bologne florence'], id: 222322, ref: 'VD', name: 'Via degli Dei (Italie : Bologne ➔ Florence)', group: 'REG', query: 'Via degli Dei' },
+    { keywords: ['via vandelli'], id: 7744660, ref: 'VV', name: 'Via Vandelli (Italie : Modène ➔ Massa)', group: 'REG', query: 'Via Vandelli' },
+    { keywords: ['san benedetto', 'cammino di san benedetto'], id: 11109163, ref: 'CSB', name: 'Cammino di San Benedetto (Italie : Norcia ➔ Montecassino)', group: 'NAT', query: 'Cammino di San Benedetto' },
+
+    // --- Allemagne, Autriche, Suisse & Europe Centrale ---
+    { keywords: ['via alpina'], id: 20014200, ref: 'VA', name: 'Via Alpina (Traversée intégrale de l’Arc Alpin)', group: 'INT', query: 'Via Alpina' },
+    { keywords: ['alpe adria', 'alpe adria trail'], id: 3176522, ref: 'AAT', name: 'Alpe Adria Trail (Autriche • Slovénie • Italie)', group: 'INT', query: 'Alpe Adria Trail' },
+    { keywords: ['adlerweg', 'voie de l aigle', 'tyrol'], id: 3305327, ref: 'Adler', name: 'Adlerweg • Voie de l’Aigle (Tyrol, Autriche)', group: 'REG', query: 'Adlerweg' },
+    { keywords: ['rennsteig'], id: 398874, ref: 'R', name: 'Rennsteig (Allemagne : Forêt de Thuringe)', group: 'REG', query: 'Rennsteig' },
+    { keywords: ['malerweg', 'suisse saxonne'], id: 114289, ref: 'MW', name: 'Malerweg • Chemin des Peintres (Suisse Saxonne, Allemagne)', group: 'REG', query: 'Malerweg' },
+    { keywords: ['westweg', 'foret noire', 'forêt noire'], id: 62900, ref: 'WW', name: 'Westweg • Traversée de la Forêt-Noire (Pforzheim ➔ Bâle)', group: 'NAT', query: 'Westweg' },
+    { keywords: ['rothaarsteig'], id: 18397581, ref: 'RHS', name: 'Rothaarsteig (Allemagne)', group: 'REG', query: 'Rothaarsteig' },
+    { keywords: ['hermannsweg'], id: 2935913, ref: 'H', name: 'Hermannsweg (Allemagne : Forêt de Teutoburg)', group: 'NAT', query: 'Hermannsweg' },
+    { keywords: ['heidschnuckenweg'], id: 2127742, ref: 'HSW', name: 'Heidschnuckenweg (Allemagne : Lande de Lunebourg)', group: 'NAT', query: 'Heidschnuckenweg' },
+    { keywords: ['sentier europeen e4', 'sentier européen e4', 'path e4'], id: 371740, ref: 'E4', name: 'Sentier Européen E4 (Espagne ➔ France ➔ Alpes ➔ Grèce)', group: 'INT', query: 'European long distance path E4' },
+
+    // --- Scandinavie, Islande, Méditerranée & Grands Treks Mondiaux ---
+    { keywords: ['kungsleden', 'voie royale'], id: 1657661, ref: 'KL', name: 'Kungsleden • La Voie Royale (Laponie Suédoise)', group: 'NAT', query: 'Kungsleden' },
+    { keywords: ['padjelantaleden', 'padjelanta'], id: 897726, ref: 'PL', name: 'Padjelantaleden (Laponie Suédoise)', group: 'NAT', query: 'Padjelantaleden' },
+    { keywords: ['skaneleden', 'skåneleden'], id: 408995, ref: 'SL', name: 'Skåneleden (Suède du Sud)', group: 'NAT', query: 'Skaneleden' },
+    { keywords: ['laugavegur', 'landmannalaugar'], id: 1225037, ref: 'Laugav.', name: 'Laugavegur (Islande : Landmannalaugar ➔ Þórsmörk)', group: 'REG', query: 'Laugavegur' },
+    { keywords: ['lycian way', 'voie lycienne', 'likya yolu'], id: 51855, ref: 'LY', name: 'Voie Lycienne • Likya Yolu (Turquie : Fethiye ➔ Antalya)', group: 'NAT', query: 'Likya Yolu' },
+    { keywords: ['appalachian', 'appalachian trail', 'sentier des appalaches'], id: 18330829, ref: 'AT', name: 'Appalachian Trail • Sentier des Appalaches (États-Unis)', group: 'NAT', query: 'Appalachian Trail' },
+    { keywords: ['pacific crest', 'pacific crest trail', 'pct'], id: 1225378, ref: 'PCT', name: 'Pacific Crest Trail (États-Unis : Mexique ➔ Canada)', group: 'NAT', query: 'Pacific Crest Trail' },
+    { keywords: ['john muir trail', 'jmt', 'yosemite whitney'], id: 1244828, ref: 'JMT', name: 'John Muir Trail (Californie : Yosemite ➔ Mount Whitney)', group: 'REG', query: 'John Muir Trail' },
+    { keywords: ['te araroa', 'nouvelle zelande', 'nouvelle-zélande'], id: 8518626, ref: 'TA', name: 'Te Araroa Trail (Traversée de la Nouvelle-Zélande)', group: 'NAT', query: 'Te Araroa' },
+    { keywords: ['tongariro', 'tongariro alpine crossing'], id: 104369, ref: 'TAC', name: 'Tongariro Alpine Crossing (Nouvelle-Zélande)', group: 'REG', query: 'Tongariro Alpine Crossing' },
+    { keywords: ['overland track', 'tasmanie'], id: 1673569, ref: 'OT', name: 'Overland Track (Australie : Tasmanie)', group: 'NAT', query: 'Overland Track' }
   ];
 
   static isNamedTrailQuery(query) {
     if (!query || query.trim().length < 3) return false;
     if (this.isGrQuery(query)) return false;
     const q = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (/^(sentier|chemin|tour d|via |camino |alta via|traversee |gr |grp )/i.test(q)) return true;
+    if (/\b(way|trail|path|track|walk|trek|sentier|chemin|tour|traversee|via|camino|alta|steig|weg|leden|pfad|ronda|gr|grp|pr|hrp|gtj|gta|tmb|whw)\b/i.test(q)) {
+      return true;
+    }
     return this.FAMOUS_TRAILS.some(ft =>
       ft.keywords.some(kw => {
         const cleanKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1726,13 +2056,14 @@ class GrManager {
   static async searchNamedTrails(query) {
     if (!query || query.trim().length < 3) return [];
     const qNorm = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const isExplicitTrailQuery = this.isNamedTrailQuery(query);
 
-    // 1. Correspondances directes parmi les grands itinéraires réputés (France, Europe, Monde)
+    // 1. Correspondances directes parmi notre encyclopédie de grands itinéraires réputés
     const directMatches = this.FAMOUS_TRAILS.filter(ft =>
       ft.keywords.some(kw => {
         const cleanKw = kw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
         return cleanKw.includes(qNorm) || qNorm.includes(cleanKw);
-      })
+      }) || ft.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(qNorm)
     ).map(ft => ({
       id: ft.id,
       ref: ft.ref,
@@ -1740,13 +2071,18 @@ class GrManager {
       group: ft.group
     }));
 
-    // 2. Recherche complémentaire temps réel sur l'API Waymarked Trails
+    // 2. Recherche temps réel sur l'API mondiale Waymarked Trails (OpenStreetMap)
     let apiResults = [];
     try {
       const resp = await fetch(`${this.WMT}/list/search?limit=15&query=${encodeURIComponent(query.trim())}`);
       if (resp.ok) {
         const data = await resp.json();
-        apiResults = (data && Array.isArray(data.results)) ? data.results : [];
+        const raw = (data && Array.isArray(data.results)) ? data.results : [];
+        // Si la requête n'avait pas de mot-clé explicite ("way", "trail", etc.), ne retenir que les sentiers dont le nom correspond vraiment
+        apiResults = isExplicitTrailQuery ? raw : raw.filter(r => {
+          const rName = ((r.name || '') + ' ' + (r.ref || '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return rName.includes(qNorm) && (r.group === 'NAT' || r.group === 'INT' || r.group === 'REG' || (r.name && r.name.length >= 4));
+        });
       }
     } catch (e) {}
 
@@ -1757,7 +2093,7 @@ class GrManager {
       seen.add(it.id);
       combined.push({
         id: it.id,
-        ref: it.ref || (it.name ? it.name.slice(0, 10) : 'Sentier'),
+        ref: it.ref || (it.name ? it.name.slice(0, 12) : 'Sentier'),
         name: it.name || it.ref || 'Sentier balisé',
         group: it.group || 'NAT',
         itinerary: it.itinerary || null,
@@ -1765,7 +2101,7 @@ class GrManager {
       });
     });
 
-    return combined.slice(0, 8);
+    return combined.slice(0, 10);
   }
 
 }

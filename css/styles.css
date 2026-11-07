@@ -839,3 +839,111 @@ path.bearing-preview-line {
   animation: redWarningBlinkTwice 2.8s ease-in-out forwards;
   pointer-events: none;
 }
+
+
+/* =========================================================================
+ * CARTOUCHES DE NUMÉROS ET NOMS DE CHEMINS HAUTE LISIBILITÉ (Y COMPRIS ZOOM MAX)
+ * ========================================================================= */
+.gr-route-inline-label,
+.gr-viewport-shield-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.gr-highvis-cartouche {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2.5px solid #e11d48;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 2px rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+
+.gr-highvis-cartouche .gr-highvis-ref {
+  background: #e11d48;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1.1;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
+}
+
+.gr-highvis-cartouche .gr-highvis-name {
+  color: #0f172a;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1.1;
+}
+
+.gr-viewport-shield {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.38), 0 0 0 1.5px rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gr-viewport-shield:hover {
+  transform: translate(-50%, -50%) scale(1.1) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+}
+
+.gr-viewport-shield .shield-code {
+  font-weight: 900;
+  font-size: 12.5px;
+  line-height: 1.15;
+  padding: 1.5px 6px;
+  border-radius: 9999px;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+}
+
+.gr-viewport-shield .shield-title {
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.gr-viewport-shield.shield-red {
+  border: 2.5px solid #dc2626;
+}
+.gr-viewport-shield.shield-red .shield-code {
+  background: #dc2626;
+}
+
+.gr-viewport-shield.shield-blue {
+  border: 2.5px solid #1d4ed8;
+}
+.gr-viewport-shield.shield-blue .shield-code {
+  background: #1d4ed8;
+}
+
+.gr-viewport-shield.shield-orange {
+  border: 2.5px solid #d97706;
+}
+.gr-viewport-shield.shield-orange .shield-code {
+  background: #d97706;
+}
+
+.gr-viewport-shield.shield-purple {
+  border: 2.5px solid #7c3aed;
+}
+.gr-viewport-shield.shield-purple .shield-code {
+  background: #7c3aed;
+}

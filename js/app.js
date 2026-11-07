@@ -2601,7 +2601,7 @@ class AppController {
       return;
     }
 
-    const namedTrails = (typeof GrManager !== 'undefined' && GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query) && Array.isArray(this._lastNamedTrails))
+    const namedTrails = (typeof GrManager !== 'undefined' && Array.isArray(this._lastNamedTrails))
       ? this._lastNamedTrails
       : [];
 
@@ -2675,7 +2675,7 @@ class AppController {
       }
 
       // 2. Recherche mondiale (Open-Meteo + BAN + Photon) + Sentiers réputés (Francigena, WHW, Stevenson...)
-      const namedPromise = (typeof GrManager !== 'undefined' && GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query))
+      const namedPromise = (typeof GrManager !== 'undefined' && GrManager.searchNamedTrails && query.trim().length >= 3)
         ? GrManager.searchNamedTrails(query).catch(() => [])
         : Promise.resolve([]);
       const [places, namedTrails] = await Promise.all([

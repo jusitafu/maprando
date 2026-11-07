@@ -318,6 +318,9 @@ class MapManager {
       }
       this.updateMapHud();
       this.updateCursorCoords(null);
+      if (typeof GrManager !== 'undefined' && GrManager.scheduleViewportShieldsUpdate) {
+        GrManager.scheduleViewportShieldsUpdate(this.map);
+      }
       if (this.currentBaseLayer === 'igntop25') {
         this.scheduleIgnPaperDateUpdate();
       }
@@ -336,6 +339,9 @@ class MapManager {
       }
       this.updateMapHud();
       this.updateCursorCoords(null);
+      if (typeof GrManager !== 'undefined' && GrManager.scheduleViewportShieldsUpdate) {
+        GrManager.scheduleViewportShieldsUpdate(this.map);
+      }
 
       // Si le zoom a été déclenché par le curseur ou la sélection d'une rando, ne pas reboucler
       if (this._isProgrammaticZoom) {

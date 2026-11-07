@@ -185,7 +185,7 @@
 
       // Recherche parallèle des sentiers réputés par nom (ex: Via Francigena, West Highland Way, Stevenson, TMB...)
       let namedTrailsPromise = Promise.resolve([]);
-      if (typeof GrManager !== 'undefined' && GrManager.isNamedTrailQuery && GrManager.isNamedTrailQuery(query)) {
+      if (typeof GrManager !== 'undefined' && GrManager.searchNamedTrails && query.trim().length >= 3) {
         namedTrailsPromise = GrManager.searchNamedTrails(query).catch(() => []);
       }
 
