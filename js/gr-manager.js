@@ -642,9 +642,58 @@ class GrManager {
       return s;
     };
     list.sort((a, b) => score(b) - score(a));
-    list = list.slice(0, 10);
+    list = list.slice(0, 14);
+
+    // Ne conserver que les GR français (emprise du tracé située en France)
+    const detailed = await Promise.allSettled(list.map(async (r) => {
+      let det = this._detailCache.get(r.id);
+      if (!det) {
+        const resp = await fetch(`${this.WMT}/details/relation/${r.id}`);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        det = await resp.json();
+        this._detailCache.set(r.id, det);
+      }
+      return { r, det };
+    }));
+    const kept = [];
+    detailed.forEach(x => {
+      if (x.status === 'fulfilled' && this._isFrench(x.value.det)) kept.push(x.value.r);
+    });
+    list = kept.slice(0, 10);
     this._remoteCache.set(key, list);
     return list;
+  }
+
+  static _FR_POLY = [
+    [-4.8, 48.4], [-3.0, 48.9], [-1.6, 49.75], [1.4, 50.2], [1.6, 50.95], [2.6, 51.1], [3.3, 50.6], [4.2, 50.3],
+    [4.85, 49.95], [5.8, 49.5], [6.4, 49.45], [8.25, 49.0], [7.6, 47.55], [6.9, 47.35], [6.1, 46.3], [7.05, 45.9],
+    [7.1, 44.1], [7.7, 43.8], [6.0, 43.0], [3.1, 42.45], [1.45, 42.45], [0.7, 42.85], [-0.7, 42.8], [-1.78, 43.35],
+    [-1.4, 44.6], [-1.2, 46.0], [-2.2, 47.1], [-4.8, 48.4]
+  ];
+  static _FR_BOXES = [ // [latMin, latMax, lonMin, lonMax] : Corse et outre-mer
+    [41.3, 43.05, 8.5, 9.6], [-21.5, -20.8, 55.1, 55.9], [15.8, 16.6, -61.9, -60.9],
+    [14.3, 14.95, -61.3, -60.7], [2.0, 6.0, -54.7, -51.5], [-13.1, -12.5, 44.9, 45.4]
+  ];
+
+  static _inFrance(lat, lon) {
+    if (this._FR_BOXES.some(b => lat >= b[0] && lat <= b[1] && lon >= b[2] && lon <= b[3])) return true;
+    const poly = this._FR_POLY;
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+
+  static _isFrench(det) {
+    if (!det) return false;
+    const op = (det.operator || '').toString();
+    if (/FFRP|F[ée]d[ée]ration fran[cç]aise|Club Vosgien/i.test(op)) return true;
+    if (!Array.isArray(det.bbox) || det.bbox.length !== 4) return false;
+    const sw = this._merc2ll(det.bbox[0], det.bbox[1]);
+    const ne = this._merc2ll(det.bbox[2], det.bbox[3]);
+    return this._inFrance((sw[0] + ne[0]) / 2, (sw[1] + ne[1]) / 2);
   }
 
   /** Remplit le conteneur de résultats avec les GR trouvés (asynchrone, anti-scintillement) */
@@ -679,7 +728,7 @@ class GrManager {
     if (token !== this._renderToken) return;
 
     if (!items.length) {
-      container.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Aucun sentier « ' + this._esc(query.trim()) + ' » trouvé dans OpenStreetMap.</div>';
+      container.innerHTML = '<div class="p-3 text-xs text-slate-500 text-center">Aucun GR français « ' + this._esc(query.trim()) + ' » trouvé.</div>';
       return;
     }
     container.innerHTML = '';
