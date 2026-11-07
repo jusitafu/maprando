@@ -363,6 +363,7 @@
 
       if (viewName === 'accueil') {
         if (viewPortal) viewPortal.classList.remove('hidden');
+        if (window.ScrollElevatorInstance) window.ScrollElevatorInstance.checkAndShowMobileWarning();
         if (lockModal) lockModal.classList.add('hidden');
         this.hideStandaloneGpxHud();
         if (typeof GrManager !== 'undefined') GrManager.removeGrBanner();
@@ -439,6 +440,10 @@
             if (icon) icon.textContent = 'Déplier ▾';
           }
         }
+      }
+      if (window.ScrollElevatorInstance) {
+        window.ScrollElevatorInstance.fitMenuToFullPage();
+        window.ScrollElevatorInstance.refresh();
       }
     }
 

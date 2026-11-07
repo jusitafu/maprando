@@ -8,11 +8,13 @@
 }
 
 html, body {
-  height: 100% !important;
-  width: 100% !important;
+  min-height: 100%;
+  width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
@@ -23,20 +25,22 @@ html, body {
   background-color: #e2e8f0;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar (Style Application / Word) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 14px;
+  height: 14px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #0f172a;
+  border-left: 1px solid #334155;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  border-radius: 7px;
+  border: 2px solid #0f172a;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
 }
 
 /* Leaflet Container & DivIcons reset */
@@ -610,4 +614,228 @@ path.bearing-preview-line {
 /* Fond de carte épuré pour la Carte des GR */
 .leaflet-layer-epure {
   filter: grayscale(80%) brightness(1.08) contrast(0.85) !important;
+}
+
+
+/* =========================================================================
+ * ASCENSEUR LATÉRAL DROIT (STYLE WORD) & FLÈCHES CLIGNOTANTES DE DÉBORDEMENT
+ * ========================================================================= */
+@keyframes overflowArrowBlink {
+  0%, 100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7), 0 8px 20px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateY(4px) scale(1.06);
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0), 0 12px 24px rgba(245, 158, 11, 0.45);
+  }
+}
+
+@keyframes overflowArrowBlinkUp {
+  0%, 100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7), 0 8px 20px rgba(0, 0, 0, 0.6);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0), 0 12px 24px rgba(16, 185, 129, 0.45);
+  }
+}
+
+#page-scroll-elevator {
+  position: fixed;
+  top: 64px;
+  bottom: 18px;
+  right: 4px;
+  width: 22px;
+  z-index: 10050;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1.5px solid rgba(148, 163, 184, 0.45);
+  border-radius: 11px;
+  box-shadow: -2px 0 14px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  user-select: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#page-scroll-elevator.elevator-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(12px);
+}
+
+.elevator-step-btn {
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.95);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.elevator-step-btn:first-child {
+  border-radius: 9px 9px 0 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.elevator-step-btn:last-child {
+  border-radius: 0 0 9px 9px;
+  border-top: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.elevator-step-btn:hover {
+  background: #10b981;
+  color: #022c22;
+}
+
+#page-scroll-track {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  cursor: pointer;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(30, 41, 59, 0.5) 0px,
+    rgba(30, 41, 59, 0.5) 6px,
+    rgba(15, 23, 42, 0.5) 6px,
+    rgba(15, 23, 42, 0.5) 12px
+  );
+}
+
+#page-scroll-thumb {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 0;
+  min-height: 40px;
+  background: linear-gradient(180deg, #f59e0b 0%, #10b981 100%);
+  border: 1.5px solid #ffffff;
+  border-radius: 8px;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  transition: background 0.15s;
+}
+
+#page-scroll-thumb:hover,
+#page-scroll-thumb.dragging {
+  cursor: grabbing;
+  background: linear-gradient(180deg, #fbbf24 0%, #34d399 100%);
+}
+
+#page-scroll-thumb .thumb-grip-line {
+  width: 10px;
+  height: 1.5px;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 1px;
+}
+
+.scroll-overflow-arrow {
+  position: fixed;
+  right: 34px;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.scroll-overflow-arrow.arrow-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+#scroll-overflow-arrow-down {
+  bottom: 20px;
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+  color: #ffffff;
+  border: 2px solid #fde68a;
+  animation: overflowArrowBlink 1.15s ease-in-out infinite;
+}
+
+#scroll-overflow-arrow-up {
+  top: 70px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: 2px solid #a7f3d0;
+  animation: overflowArrowBlinkUp 1.15s ease-in-out infinite;
+}
+
+
+/* =========================================================================
+ * WARNING ROUGE CLIGNOTANT 2 FOIS SUR MOBILE (IPHONE / ANDROID)
+ * ========================================================================= */
+@keyframes redWarningBlinkTwice {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -12px) scale(0.95);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.03);
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.95), 0 12px 30px rgba(0, 0, 0, 0.7);
+  }
+  38% {
+    opacity: 0.12;
+    transform: translate(-50%, 0) scale(0.98);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+  }
+  64% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.03);
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.95), 0 12px 30px rgba(0, 0, 0, 0.7);
+  }
+  84% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.95);
+    pointer-events: none;
+  }
+}
+
+#mobile-pc-mac-warning {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10099;
+  width: max-content;
+  max-width: 92vw;
+  padding: 14px 22px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  border: 2.5px solid #fecaca;
+  color: #ffffff;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(220, 38, 38, 0.85), 0 10px 25px rgba(0, 0, 0, 0.65);
+  animation: redWarningBlinkTwice 2.8s ease-in-out forwards;
+  pointer-events: none;
 }

@@ -90,7 +90,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=97">
+  <link rel="stylesheet" href="css/styles.css?v=99">
 
 </head>
 
@@ -152,7 +152,7 @@
     <main class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-2 sm:py-3 flex-grow flex flex-col justify-center my-auto">
       
       <!-- En-tête Hero avec Branding & Titre dans un cadre de verre élégant pour lisibilité absolue -->
-      <div class="text-center max-w-4xl mx-auto mb-3 sm:mb-4 p-4 sm:p-5 rounded-3xl bg-slate-950/75 backdrop-blur-xl border border-slate-700/60 shadow-2xl">
+      <div class="text-center max-w-4xl mx-auto mb-2.5 sm:mb-3 p-3.5 sm:p-4 rounded-3xl bg-slate-950/75 backdrop-blur-xl border border-slate-700/60 shadow-2xl">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 mb-3 shadow-sm">
           <span class="text-xs sm:text-sm font-black uppercase tracking-wider">Map &amp; Rando</span>
           <span class="text-xs text-slate-300 font-light">by JLDApps</span>
@@ -261,7 +261,7 @@
       </div>
 
       <!-- BANDEAU ÉQUIPEMENTS OUTDOOR SUR LA PAGE D'ACCUEIL (SYSTÉMATIQUEMENT VISIBLE) -->
-      <div id="outdoor-gear-home-bar" class="mt-4 rounded-3xl bg-slate-950/92 border-2 border-amber-500/40 p-4 sm:p-5 backdrop-blur-2xl shadow-2xl">
+      <div id="outdoor-gear-home-bar" class="mt-2.5 rounded-3xl bg-slate-950/92 border-2 border-amber-500/40 p-3 sm:p-4 backdrop-blur-2xl shadow-2xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div class="flex items-center gap-2">
             <span class="px-2.5 py-0.5 rounded-full bg-amber-500/25 border border-amber-400/50 text-amber-300 text-[10px] font-black uppercase tracking-wider">
@@ -323,10 +323,10 @@
   <!-- ========================================================================= -->
   <!-- GUIDES & SAVOIRS VIEW : FICHES DÉPLIABLES & SÉLECTION OUTDOOR AMAZON -->
   <!-- ========================================================================= -->
-  <div id="guides-view" class="hidden relative min-h-screen bg-slate-950 text-slate-100 py-4 px-4 sm:px-8 selection:bg-amber-500 selection:text-white">
+  <div id="guides-view" class="hidden relative min-h-screen bg-slate-950 text-slate-100 py-2.5 px-4 sm:px-8 selection:bg-amber-500 selection:text-white flex flex-col justify-between">
     
     <!-- Top Bar avec retour accueil -->
-    <div class="w-full px-4 sm:px-8 lg:px-12 mb-8 flex items-center justify-between border-b border-slate-800 pb-4">
+    <div class="w-full px-4 sm:px-8 lg:px-12 mb-2.5 flex items-center justify-between border-b border-slate-800 pb-2">
       <a href="#accueil" class="btn-return-home inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs sm:text-sm transition border-2 border-slate-700 hover:border-emerald-400 shadow-md cursor-pointer">
         <span>←</span> <span>Retour à l'Accueil Map &amp; Rando</span>
       </a>
@@ -336,24 +336,24 @@
       </div>
     </div>
 
-    <div class="w-full px-4 sm:px-8 lg:px-12 space-y-6">
+    <div class="w-full px-4 sm:px-8 lg:px-12 space-y-3 my-auto">
       
-      <!-- EN-TÊTE DE LA SECTION GUIDES -->
-      <div class="text-center max-w-3xl mx-auto">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-black uppercase tracking-wider mb-2">
-          <span>📚</span> <span>Fiches Pratiques de Cartographie &amp; Géolocalisation</span>
+      <!-- EN-TÊTE DE LA SECTION GUIDES (COMPACT PLEINE PAGE) -->
+      <div class="text-center max-w-4xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-black uppercase tracking-wider mb-1">
+          <span>📚</span> <span>Fiches Pratiques de Cartographie, Géolocalisation &amp; Préparation</span>
         </div>
-        <h1 class="text-3xl sm:text-4xl font-black text-white">
+        <h1 class="text-2xl sm:text-3xl font-black text-white leading-tight">
           Comprendre, Mesurer &amp; Optimiser vos Traces
         </h1>
-        <p class="text-sm text-slate-300 mt-2">
+        <p class="text-xs sm:text-sm text-slate-300 mt-1">
           Cliquez sur une fiche pour déplier son analyse complète, ses tableaux de réglages et télécharger le guide officiel au format PDF.
         </p>
       </div>
 
-      <!-- DISPOSITION 2 COLONNES : FICHES À GAUCHE + ÉQUIPEMENTS RECOMMANDÉS TOUJOURS VISIBLES À DROITE -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-        <div class="lg:col-span-7 space-y-4">
+      <!-- DISPOSITION 2 COLONNES : FICHES À GAUCHE + CADRE PUBS ALIGNÉ EN HAUT ET EN BAS À DROITE -->
+      <div id="guides-main-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch">
+        <div id="guides-fiches-col" class="lg:col-span-7 flex flex-col justify-between gap-2.5">
         
         <!-- ================================================================= -->
         <!-- FICHE 1 : GPS DIFFÉRENTIEL, SBAS & RÉGLAGES MONTRES DE SPORT -->
@@ -361,19 +361,19 @@
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-sky-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
           <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gps-content', this)" 
-                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
-            <div class="flex items-start sm:items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-sky-500/20 text-sky-400 border border-sky-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
                 🛰️
               </div>
               <div>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
                   <span>GÉOLOCALISATION &amp; MONTRES</span>
                 </div>
-                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
                   GPS Différentiel, Système SBAS &amp; Réglages des Montres de Sport
                 </h2>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
                   Pourquoi le GPS décroche sous la canopée, comment le SBAS abaisse l'erreur sous 1,5&nbsp;m, et comparatif Garmin, Suunto, Coros, Apple.
                 </p>
               </div>
@@ -487,19 +487,19 @@
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-emerald-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
           <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-lidar-content', this)" 
-                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
-            <div class="flex items-start sm:items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
                 🌲
               </div>
               <div>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
                   <span>TOPOGRAPHIE &amp; ALTIMÉTRIE IGN</span>
                 </div>
-                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
                   Le Programme National LiDAR HD de l'IGN : Révolution de la Cartographie 3D
                 </h2>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
                   Couverture laser aéroportée de toute la France, résolution de 0,5 mètre, pénétration sous couvert végétal et génération des MNT.
                 </p>
               </div>
@@ -578,19 +578,19 @@
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-indigo-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
           <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-ibp-content', this)" 
-                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
-            <div class="flex items-start sm:items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
                 📊
               </div>
               <div>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
                   <span>TECHNIQUE OUTDOOR &bull; ANALYSE NUMÉRIQUE &amp; PERFORMANCE</span>
                 </div>
-                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
                   IBP Index : L'Évaluation Objective de la Difficulté Physique en Randonnée
                 </h2>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
                   Mécanisme algorithmique, étalonnage de l'effort, matrice de condition physique et interprétation des traces GPX.
                 </p>
               </div>
@@ -738,19 +738,19 @@
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
           <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-checklist-content', this)" 
-                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
-            <div class="flex items-start sm:items-center gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
                 ✅
               </div>
               <div>
-                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
                   <span>FICHE PRATIQUE &bull; PRÉPARATION, SÉCURITÉ &amp; AUTONOMIE EN MONTAGNE</span>
                 </div>
-                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
                   Check-list Essentielle Avant de Partir en Randonnée (De J-1 à H-0)
                 </h2>
-                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
                   Mémo complet de vérification (Cartographie, Énergie, Sécurité, 3 Couches, Eau &amp; Départ) avec accès direct à chaque équipement recommandé.
                 </p>
               </div>
@@ -1039,13 +1039,13 @@
       <!-- ================================================================= -->
       <!-- COLONNE DROITE STICKY : ÉQUIPEMENTS AMAZON TOUJOURS VISIBLES      -->
       <!-- ================================================================= -->
-      <aside id="outdoor-gear-panel" class="lg:col-span-5 lg:sticky lg:top-4 rounded-3xl bg-slate-900/95 border-2 border-amber-500/50 p-5 sm:p-6 shadow-2xl space-y-4">
+      <aside id="outdoor-gear-panel" class="lg:col-span-5 rounded-3xl bg-slate-900/95 border-2 border-amber-500/60 p-4 sm:p-5 shadow-2xl flex flex-col justify-between h-full">
         
-        <div class="border-b border-slate-800 pb-3">
+        <div class="border-b border-slate-800 pb-2.5 flex-shrink-0">
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider mb-1">
             <span>🛒</span> <span>Sélection Matériel Randonnée &amp; Aventure</span>
           </div>
-          <h2 class="text-lg sm:text-xl font-black text-white">
+          <h2 class="text-lg sm:text-xl font-black text-white leading-tight">
             Équipements &amp; Matériels Recommandés
           </h2>
           <p class="text-xs text-slate-300 mt-0.5 font-light">
@@ -1053,12 +1053,12 @@
           </p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch">
+        <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 grid-rows-3 gap-3 items-stretch mt-3">
           
           <!-- BLOC 1 : ÉQUIPEMENTS & PORTANCE -->
           <a href="https://www.amazon.fr/s?k=chaussures+randonnee+gore+tex+batons+carbone&tag=maprando-21" target="_blank" rel="noopener noreferrer"
-             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-            <div class="flex items-center justify-between mb-4">
+             class="group flex flex-col justify-between h-full p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
               <span class="text-3xl group-hover:scale-110 transition-transform">🥾</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Équipements &amp; Portance
@@ -1072,8 +1072,8 @@
 
           <!-- BLOC 2 : ÉNERGIE & SOLAIRE -->
           <a href="https://www.amazon.fr/s?k=batterie+externe+randonnee+chargeur+solaire+portable&tag=maprando-21" target="_blank" rel="noopener noreferrer"
-             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-            <div class="flex items-center justify-between mb-4">
+             class="group flex flex-col justify-between h-full p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
               <span class="text-3xl group-hover:scale-110 transition-transform">⚡</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Énergie &amp; Solaire
@@ -1087,8 +1087,8 @@
 
           <!-- BLOC 3 : ORIENTATION & GPS -->
           <a href="https://www.amazon.fr/s?k=boussole+visee+suunto+silva+gps+randonnee+garmin&tag=maprando-21" target="_blank" rel="noopener noreferrer"
-             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-            <div class="flex items-center justify-between mb-4">
+             class="group flex flex-col justify-between h-full p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
               <span class="text-3xl group-hover:scale-110 transition-transform">🧭</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Orientation &amp; GPS
@@ -1102,8 +1102,8 @@
 
           <!-- BLOC 4 : SÉCURITÉ & SECOURS -->
           <a href="https://www.amazon.fr/s?k=trousse+premiers+secours+randonnee+lampe+frontale+petzl&tag=maprando-21" target="_blank" rel="noopener noreferrer"
-             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-            <div class="flex items-center justify-between mb-4">
+             class="group flex flex-col justify-between h-full p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
               <span class="text-3xl group-hover:scale-110 transition-transform">🩹</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Sécurité &amp; Secours
@@ -1117,8 +1117,8 @@
 
           <!-- BLOC 5 : EAU & BIVOUAC -->
           <a href="https://www.amazon.fr/s?k=filtre+eau+randonnee+sawyer+lifestraw+rechaud+gaz&tag=maprando-21" target="_blank" rel="noopener noreferrer"
-             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-            <div class="flex items-center justify-between mb-4">
+             class="group flex flex-col justify-between h-full p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
               <span class="text-3xl group-hover:scale-110 transition-transform">💧</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Eau &amp; Bivouac
@@ -1132,8 +1132,8 @@
 
           <!-- BLOC 6 : CARTOGRAPHIE & OUTILS -->
           <a href="https://www.amazon.fr/s?k=porte+carte+etanche+randonnee+curvimetre+loupe&tag=maprando-21" target="_blank" rel="noopener noreferrer"
-             class="group block p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-            <div class="flex items-center justify-between mb-4">
+             class="group flex flex-col justify-between h-full p-3.5 rounded-2xl bg-slate-950/90 hover:bg-slate-800 border-2 border-slate-800 hover:border-amber-400 transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+            <div class="flex items-center justify-between mb-2">
               <span class="text-3xl group-hover:scale-110 transition-transform">🗺️</span>
               <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 Cartographie &amp; Outils
@@ -1896,7 +1896,7 @@
 
               <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
 
-                <img src="favicon-32x32.png?v=97" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
+                <img src="favicon-32x32.png?v=99" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
 
               </div>
 
@@ -6518,27 +6518,27 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <!-- Scripts -->
 
-  <script src="js/config.js?v=97"></script>
+  <script src="js/config.js?v=99"></script>
 
-  <script src="js/auth-manager.js?v=97"></script>
+  <script src="js/auth-manager.js?v=99"></script>
 
-  <script src="js/gpx-parser.js?v=97"></script>
+  <script src="js/gpx-parser.js?v=99"></script>
 
-  <script src="js/sample-data.js?v=97"></script>
+  <script src="js/sample-data.js?v=99"></script>
 
-  <script src="js/storage.js?v=97"></script>
+  <script src="js/storage.js?v=99"></script>
 
-  <script src="js/elevation-profile.js?v=97"></script>
+  <script src="js/elevation-profile.js?v=99"></script>
 
-  <script src="js/screen-calib-manager.js?v=97"></script>
-  <script src="js/ign-top25-sheets.js?v=97"></script>
-  <script src="js/map-manager.js?v=97"></script>
+  <script src="js/screen-calib-manager.js?v=99"></script>
+  <script src="js/ign-top25-sheets.js?v=99"></script>
+  <script src="js/map-manager.js?v=99"></script>
 
-  <script src="js/pdf-exporter.js?v=97"></script>
-  <script src="js/gr-manager.js?v=97"></script>
+  <script src="js/pdf-exporter.js?v=99"></script>
+  <script src="js/gr-manager.js?v=99"></script>
 
-  <script src="js/portal-router.js?v=97.2.0"></script>
-    <script src="js/app.js?v=97"></script>
+  <script src="js/portal-router.js?v=99.2.0"></script>
+    <script src="js/app.js?v=99"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->
