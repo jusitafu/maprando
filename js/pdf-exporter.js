@@ -109,6 +109,7 @@ class PDFExporter {
       'igntop25': isInsideFrance ? "FOND OFFICIEL IGN TOP 25 (CARTE PAPIER)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'ign': isInsideFrance ? "FOND OFFICIEL IGN TOP 25 (CARTE PAPIER)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'ignplan': isInsideFrance ? "FOND OFFICIEL PLAN IGN (NUMÉRIQUE V2)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
+      'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
       'opentopo': "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'osmfr': "FOND OPENSTREETMAP FRANCE (SENTIERS)",
       'satellite': "FOND SATELLITE HAUTE DÉFINITION (IGN / ESRI)"
@@ -664,6 +665,7 @@ class PDFExporter {
     const layerLabels = {
       'igntop25': "CARTE IGN TOP 25 OFFICIELLE (FLUX SCAN 25)",
       'ignplan': "PLAN IGN MULTI-ÉCHELLES (IGN EXPRESS)",
+      'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
       'opentopo': "OPENTOPO MAP (RELIEF ET COURBES DE NIVEAU)",
       'osm': "OPENSTREETMAP MONDE",
       'satellite': "FOND SATELLITE HAUTE DÉFINITION (IGN / ESRI)"
@@ -1206,8 +1208,15 @@ class PDFExporter {
 
     const esriSatUrl = (x, y, z) => `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
 
+    const cartoLightUrl = (x, y, z) => {
+      const sub = ['a', 'b', 'c', 'd'][Math.abs(x + y) % 4];
+      return `https://${sub}.basemaps.cartocdn.com/light_all/${z}/${x}/${y}.png`;
+    };
+    const waymarkedHikingUrl = (x, y, z) => `https://tile.waymarkedtrails.org/hiking/${z}/${x}/${y}.png`;
+
     // Établir la cascade de fournisseurs selon le choix demandé
     let primaryUrlFn, fallbackUrlFn1, fallbackUrlFn2;
+    let overlayUrlFn = null;
     let attributionText = '© IGN France / OpenStreetMap';
 
     if (mapLayer === 'ignplan') {
@@ -1222,6 +1231,12 @@ class PDFExporter {
         fallbackUrlFn2 = osmStdUrl;
         attributionText = '© OpenTopoMap / OpenStreetMap';
       }
+    } else if (mapLayer === 'grmap') {
+      primaryUrlFn = cartoLightUrl;
+      fallbackUrlFn1 = osmFrUrl;
+      fallbackUrlFn2 = osmStdUrl;
+      overlayUrlFn = waymarkedHikingUrl;
+      attributionText = '© OpenStreetMap / CARTO • Tracé GR® : Waymarked Trails';
     } else if (mapLayer === 'opentopo') {
       primaryUrlFn = openTopoUrl;
       fallbackUrlFn1 = isInsideFrance ? ignTop25Url : osmFrUrl;
@@ -1285,19 +1300,28 @@ class PDFExporter {
         try { ctx.drawImage(img, px, py, 256, 256); } catch (e) {}
       };
 
+      let baseDrawn = false;
       // 1. Fournisseur principal : 3 tentatives avec temporisation progressive
       const retryDelays = [0, 600, 1500];
       for (const delay of retryDelays) {
         if (delay) await sleep(delay);
         const img = await fetchTileImage(primaryUrlFn(tileX, tileY, zoom));
-        if (img) { draw(img); return; }
+        if (img) { draw(img); baseDrawn = true; break; }
       }
 
       // 2. Secours uniquement si le principal reste indisponible (ex: mer hors couverture IGN)
-      for (const fn of [fallbackUrlFn1, fallbackUrlFn2]) {
-        if (!fn) continue;
-        const img = await fetchTileImage(fn(tileX, tileY, zoom));
-        if (img) { draw(img); return; }
+      if (!baseDrawn) {
+        for (const fn of [fallbackUrlFn1, fallbackUrlFn2]) {
+          if (!fn) continue;
+          const img = await fetchTileImage(fn(tileX, tileY, zoom));
+          if (img) { draw(img); baseDrawn = true; break; }
+        }
+      }
+
+      // 3. Surcouche éventuelle (ex: Réseau GR® Waymarked Trails sur fond épuré)
+      if (overlayUrlFn && zoom <= 18) {
+        const ovImg = await fetchTileImage(overlayUrlFn(tileX, tileY, zoom));
+        if (ovImg) draw(ovImg);
       }
     };
 

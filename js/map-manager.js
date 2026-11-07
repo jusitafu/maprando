@@ -157,9 +157,24 @@ class MapManager {
       attribution: '&copy; IGN France (Orthophoto HD)'
     });
 
+    // Carte des GR sur fond épuré (CartoDB Positron + Waymarked Trails Hiking)
+    const cartoPositron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap &copy; CARTO (Fond épuré)'
+    });
+    const waymarkedGrOverlay = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      opacity: 0.95,
+      attribution: '&copy; Waymarked Trails (Réseau GR® & Sentiers balisés)'
+    });
+    const grMapLayer = L.layerGroup([cartoPositron, waymarkedGrOverlay]);
+
     this.baseLayers = {
       "IGN TOP 25 (Carte papier officielle)": ignTop25,
       "IGN Plan (Numérique moderne)": ignPlan,
+      "Carte des GR (Fond épuré)": grMapLayer,
       "OpenTopoMap (Relief mondial)": openTopo,
       "OpenStreetMap France (Sentiers)": osmFr,
       "Satellite Mondial (Esri 🌍)": esriSat,
@@ -218,6 +233,7 @@ class MapManager {
         }
       } else {
         if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
+        else if (name.includes('carte des gr') || name.includes('fond épuré')) this.currentBaseLayer = 'grmap';
         else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
         else if (name.includes('france') || name.includes('openstreetmap')) this.currentBaseLayer = 'osmfr';
         else if (name.includes('satellite')) this.currentBaseLayer = 'satellite';
@@ -585,6 +601,7 @@ class MapManager {
       if (key === 'opentopo' && lower.includes('opentopo')) { targetLayer = layer; break; }
       if (key === 'igntop25' && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; break; }
       if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; break; }
+      if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré'))) { targetLayer = layer; break; }
       if (key === 'osmfr' && (lower.includes('france') || lower.includes('openstreetmap'))) { targetLayer = layer; break; }
       if (key === 'satellite' && lower.includes('satellite')) { targetLayer = layer; break; }
     }

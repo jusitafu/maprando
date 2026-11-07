@@ -90,7 +90,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=92">
+  <link rel="stylesheet" href="css/styles.css?v=97">
 
 </head>
 
@@ -241,7 +241,7 @@
                 Guides &amp; Savoirs
               </h2>
               <p class="text-xs sm:text-sm text-slate-200 mt-2 font-medium leading-relaxed">
-                Fiches techniques sur le GPS différentiel &amp; système SBAS, réglages recommandés pour montres de sport et couverture nationale LiDAR HD de l'IGN.
+                Fiches techniques sur le GPS différentiel &amp; SBAS, réglages des montres de sport, programme LiDAR HD de l'IGN et évaluation de la difficulté par l'IBP Index.
               </p>
             </div>
           </div>
@@ -521,6 +521,167 @@
             </div>
           </div>
         </div>
+
+        <!-- ================================================================= -->
+        <!-- FICHE 3 : IBP INDEX - ÉVALUATION OBJECTIVE DE LA DIFFICULTÉ       -->
+        <!-- ================================================================= -->
+        <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-indigo-500/70 transition-all shadow-2xl overflow-hidden">
+          <!-- Entête cliquable (Titre seul) -->
+          <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-ibp-content', this)" 
+                  class="w-full p-6 sm:p-8 text-left flex items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-2xl flex-shrink-0 shadow-inner">
+                📊
+              </div>
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-black uppercase tracking-wider mb-1">
+                  <span>TECHNIQUE OUTDOOR &bull; ANALYSE NUMÉRIQUE &amp; PERFORMANCE</span>
+                </div>
+                <h2 class="text-lg sm:text-2xl font-black text-white leading-tight">
+                  IBP Index : L'Évaluation Objective de la Difficulté Physique en Randonnée
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1 font-light">
+                  Mécanisme algorithmique, étalonnage de l'effort, matrice de condition physique et interprétation des traces GPX.
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <span class="guide-toggle-icon text-sm px-3.5 py-2 rounded-xl bg-indigo-600/30 text-indigo-300 font-extrabold border border-indigo-500/40">
+                Déplier ▾
+              </span>
+            </div>
+          </button>
+
+          <!-- Contenu dépliable de la Fiche 3 (Initialement masqué) -->
+          <div id="fiche-ibp-content" class="hidden border-t border-slate-800 p-6 sm:p-10 bg-slate-950/60 space-y-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-indigo-950/30 p-4 rounded-2xl border border-indigo-800/50">
+              <div class="text-xs text-indigo-200">
+                📄 <strong>Fiche Pratique &bull; Analyse Numérique &amp; Performance Outdoor</strong> &bull; JLDApps 2026 &bull; Document PDF imprimable (2 pages)
+              </div>
+              <a href="docs/Fiche_Technique_IBP_Index.pdf" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex-shrink-0">
+                <span>📥</span> <span>Télécharger le PDF (184 Ko)</span>
+              </a>
+            </div>
+
+            <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-indigo-400">1.</span> Qu'est-ce que l'IBP Index (Intelligent Benchmark Prediction) ?
+                </h3>
+                <p>
+                  L'acronyme officiel <strong>IBP</strong> signifie <em>Intelligent Benchmark Prediction</em>. Développé en 2007 en Espagne pour standardiser l'effort sur les parcours de VTT (d'où l'analogie fréquente avec le sigle <em>BTT</em> en espagnol), ce système a été étendu avec succès à la <strong>randonnée pédestre (profil HKG / Hiking)</strong>, au trail et à la course à pied.
+                </p>
+                <p class="mt-2">
+                  L'IBP Index attribue une <strong>valeur numérique sans unité</strong> (de 0 à plus de 200) quantifiant la sévérité physique d'un itinéraire. Sa force réside dans sa <strong>neutralité absolue</strong> : la trace d'une même randonnée génère un score mathématique unique, strictement identique que l'on soit athlète chevronné ou marcheur occasionnel.
+                </p>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-indigo-400">2.</span> Principes algorithmiques et données analysées
+                </h3>
+                <p>
+                  Contrairement aux estimations basées uniquement sur le cumul kilométrique et le dénivelé global, l'algorithme IBP segmente la trace en micro-tronçons et analyse en continu la géométrie fine du tracé :
+                </p>
+                <ul class="list-disc list-inside space-y-2 pl-2 mt-2.5">
+                  <li><strong>Distance et répartition des pentes :</strong> Calcul des pourcentages d'inclinaison réels (montée, plat, descente) et distinction entre montées régulières et raidillons brutaux.</li>
+                  <li><strong>Dénivelé cumulé et tranches d'altitude :</strong> Prise en compte de l'impact physiologique de l'altitude absolue (un dénivelé positif franchi au-dessus de 2&nbsp;000&nbsp;m engendre un coût métabolique supérieur lié à la raréfaction de l'oxygène).</li>
+                  <li><strong>Rythme des changements de pente :</strong> Un itinéraire en « dents de scie » continuel obtient un score IBP nettement plus élevé qu'un profil à montée unique régulière pour un kilométrage et un dénivelé identiques.</li>
+                  <li><strong>Filtrage des données parasites :</strong> L'algorithme élimine automatiquement les pauses, les arrêts prolongés et les artefacts d'imprécision du signal GPS avant calcul.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-indigo-400">3.</span> Échelle des scores et matrice de condition physique (Randonnée pédestre)
+                </h3>
+                <div class="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-xs sm:text-sm text-indigo-200 mb-3">
+                  <strong>L'effort perçu est relatif :</strong> L'IBP Index mesure l'exigence intrinsèque du parcours. L'effort ressenti varie selon la préparation physique selon la matrice officielle à 5 couleurs :
+                </div>
+                <div class="overflow-x-auto rounded-2xl border border-slate-800">
+                  <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                      <tr class="bg-slate-900/90 text-slate-300 border-b border-slate-800 uppercase text-[11px] tracking-wider">
+                        <th class="py-3 px-4 font-black">Score IBP HKG</th>
+                        <th class="py-3 px-4 font-black">🚶 Condition faible</th>
+                        <th class="py-3 px-4 font-black">🥾 Condition moyenne</th>
+                        <th class="py-3 px-4 font-black">🏃 Très bonne forme</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/80 font-bold">
+                      <tr class="bg-slate-900/40">
+                        <td class="py-2.5 px-4 text-white font-black">0 à 25</td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">FACILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">TRÈS FACILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">NÉGLIGEABLE</span></td>
+                      </tr>
+                      <tr class="bg-slate-900/20">
+                        <td class="py-2.5 px-4 text-white font-black">26 à 50</td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs">MODÉRÉ</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">FACILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">TRÈS FACILE</span></td>
+                      </tr>
+                      <tr class="bg-slate-900/40">
+                        <td class="py-2.5 px-4 text-white font-black">51 à 75</td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs">DIFFICILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs">MODÉRÉ</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs">FACILE</span></td>
+                      </tr>
+                      <tr class="bg-slate-900/20">
+                        <td class="py-2.5 px-4 text-white font-black">76 à 100</td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-orange-500/20 text-orange-300 border border-orange-500/30 text-xs">TRÈS DIFFICILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs">DIFFICILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-sky-500/20 text-sky-300 border border-sky-500/30 text-xs">MODÉRÉ</span></td>
+                      </tr>
+                      <tr class="bg-slate-900/40">
+                        <td class="py-2.5 px-4 text-white font-black">101 à 150+</td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs">EXTRÊME</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-orange-500/20 text-orange-300 border border-orange-500/30 text-xs">TRÈS DIFFICILE</span></td>
+                        <td class="py-2.5 px-4"><span class="px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs">DIFFICILE</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-indigo-400">4.</span> Intérêts opérationnels et accès aux outils IBP Index
+                </h3>
+                <ul class="list-disc list-inside space-y-2 pl-2">
+                  <li><strong>Sélection sécurisée de ses randonnées :</strong> Évite de se fier à des mentions floues (« balade accessible ») pouvant cacher un score élevé (&gt; 65) inadapté aux débutants.</li>
+                  <li><strong>Étalonnage individuel :</strong> En analysant l'indice de ses sorties passées, chacun identifie sa plage d'effort idéale (ex. 40 à 60 pour une reprise, 75+ pour une sortie sportive).</li>
+                  <li><strong>Portail officiel IBP Index :</strong> Retrouvez l'ensemble des documentations et spécifications sur <a href="https://www.ibpindex.com" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline font-bold">www.ibpindex.com</a>.</li>
+                  <li><strong>Analyser une trace GPX :</strong> Pour obtenir gratuitement l'IBP Index détaillé de votre parcours (dénivelés récents, pourcentages par tranches, graphe altimétrique), déposez votre fichier sur l'analyseur en ligne : <a href="https://www.ibpindex.com/ibpindex/analyser.php" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline font-bold">ibpindex.com/ibpindex/analyser.php</a>.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 class="text-base sm:text-lg font-black text-white mb-2 flex items-center gap-2">
+                  <span class="text-indigo-400">5.</span> Ce que l'IBP Index ne mesure pas (Limites et complémentarités)
+                </h3>
+                <p>
+                  L'IBP Index est un indicateur <strong>purement physique et géométrique</strong>. Pour une sécurité totale en montagne, il doit être complété par l'analyse de deux autres critères essentiels (tels que formalisés par la cotation fédérale FFRandonnée) :
+                </p>
+                <ul class="list-disc list-inside space-y-2 pl-2 mt-2.5">
+                  <li><strong>La technicité du terrain :</strong> L'algorithme ignore la nature du sol (sentier forestier souple, pierrier instable, dalles glissantes, passages équipés de mains courantes ou barreaux).</li>
+                  <li><strong>L'exposition au vide et le danger :</strong> Une vire étroite le long d'une falaise abrupte ou une arête exposée présente un danger majeur sans pour autant augmenter le score IBP.</li>
+                  <li><strong>Les facteurs météorologiques du jour :</strong> La chaleur extrême, le vent violent, la pluie, la boue ou la neige augmentent la pénibilité réelle sans modifier l'indice théorique.</li>
+                </ul>
+              </section>
+            </div>
+
+            <!-- Bouton replier -->
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-ibp-content')" 
+                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                ▴ Replier la fiche
+              </button>
+            </div>
+          </div>
+        </div>
+
 
       </div>
 
@@ -1167,7 +1328,7 @@
 
               <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
 
-                <img src="favicon-32x32.png?v=41" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
+                <img src="favicon-32x32.png?v=97" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
 
               </div>
 
@@ -4297,6 +4458,8 @@
 
                   <option value="ign" selected>🗺️ IGN Top 25 / Plan v2 (Officiel France - Recommandé)</option>
 
+                  <option value="grmap">🥾 Carte des GR (Fond épuré)</option>
+
                   <option value="opentopo">⛰️ OpenTopoMap (Relief mondial)</option>
 
                   <option value="osmfr">📍 OpenStreetMap France (Sentiers)</option>
@@ -5758,27 +5921,27 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <!-- Scripts -->
 
-  <script src="js/config.js?v=91"></script>
+  <script src="js/config.js?v=97"></script>
 
-  <script src="js/auth-manager.js?v=91"></script>
+  <script src="js/auth-manager.js?v=97"></script>
 
-  <script src="js/gpx-parser.js?v=91"></script>
+  <script src="js/gpx-parser.js?v=97"></script>
 
-  <script src="js/sample-data.js?v=91"></script>
+  <script src="js/sample-data.js?v=97"></script>
 
-  <script src="js/storage.js?v=91"></script>
+  <script src="js/storage.js?v=97"></script>
 
-  <script src="js/elevation-profile.js?v=91"></script>
+  <script src="js/elevation-profile.js?v=97"></script>
 
-  <script src="js/screen-calib-manager.js?v=92"></script>
-  <script src="js/ign-top25-sheets.js?v=92"></script>
-  <script src="js/map-manager.js?v=94"></script>
+  <script src="js/screen-calib-manager.js?v=97"></script>
+  <script src="js/ign-top25-sheets.js?v=97"></script>
+  <script src="js/map-manager.js?v=97"></script>
 
-  <script src="js/pdf-exporter.js?v=95"></script>
-  <script src="js/gr-manager.js?v=95"></script>
+  <script src="js/pdf-exporter.js?v=97"></script>
+  <script src="js/gr-manager.js?v=97"></script>
 
-  <script src="js/portal-router.js?v=2.2.0"></script>
-    <script src="js/app.js?v=91"></script>
+  <script src="js/portal-router.js?v=97.2.0"></script>
+    <script src="js/app.js?v=97"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->
