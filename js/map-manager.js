@@ -2735,8 +2735,8 @@ class MapManager {
       this.standaloneTracks = [];
     }
     // Couleurs vives et contrastées (optimisées pour fond TOP 25 et IGN)
-    const DEFAULT_COLORS = ['#ef4444', '#2563eb', '#10b981']; // Rouge vif, Bleu électrique, Vert émeraude
-    const PALETTE = ['#ef4444', '#2563eb', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#1e293b'];
+    const DEFAULT_COLORS = ['#ff0033', '#0066ff', '#00d655']; // Rouge néon, Bleu roi électrique, Vert lime éclatant
+    const PALETTE = ['#ff0033', '#0066ff', '#00d655', '#ff6a00', '#a020f0', '#00d4ff', '#0f172a'];
 
     // Récupérer les points GPS
     let pts = gpxData.points || [];
@@ -2762,20 +2762,20 @@ class MapManager {
 
     const latlngs = pts.map(p => [p.lat, p.lon]);
 
-    // Halo blanc sous-jacent (bordure) pour détacher nettement la trace des fonds de carte denses (IGN TOP 25)
+    // Halo blanc sous-jacent ultra-large et opaque (14px) pour détacher nettement la trace des fonds très denses (IGN TOP 25)
     const borderPolyline = L.polyline(latlngs, {
       color: '#ffffff',
-      weight: 8,
-      opacity: 0.95,
+      weight: 14,
+      opacity: 1.0,
       lineCap: 'round',
       lineJoin: 'round',
       offset: 0
     });
 
-    // Tracé principal en couleur vive
+    // Tracé principal élargi (7px) en couleur néon éclatante
     const polyline = L.polyline(latlngs, {
       color: assignedColor,
-      weight: 4.5,
+      weight: 7,
       opacity: 1.0,
       lineCap: 'round',
       lineJoin: 'round',
@@ -2786,18 +2786,18 @@ class MapManager {
     const endPt = latlngs[latlngs.length - 1];
 
     const startMarker = L.circleMarker(startPt, {
-      radius: 6.5,
+      radius: 8.5,
       fillColor: assignedColor,
       color: '#ffffff',
-      weight: 2,
+      weight: 3,
       fillOpacity: 1
     }).bindTooltip('<b>Départ : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
     const endMarker = L.circleMarker(endPt, {
-      radius: 6.5,
-      fillColor: '#1e293b',
-      color: assignedColor,
-      weight: 2.5,
+      radius: 8.5,
+      fillColor: '#0f172a',
+      color: '#ffffff',
+      weight: 3,
       fillOpacity: 1
     }).bindTooltip('<b>Arrivée : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
@@ -2854,7 +2854,7 @@ class MapManager {
     // 1 trace: offset 0
     // 2 traces: -3.5 px, +3.5 px (écart de 7 px)
     // 3 traces: -6 px, 0 px, +6 px (écart de 6 px)
-    const step = total === 2 ? 7 : 6;
+    const step = 10; // Pas de 10px adapté au trait de 7px et halo de 14px
     this.standaloneTracks.forEach((t, idx) => {
       const offset = total <= 1 ? 0 : (idx - (total - 1) / 2) * step;
       t.offset = offset;
@@ -2897,7 +2897,7 @@ class MapManager {
 
   cycleTrackColor(trackId) {
     if (!this.standaloneTracks) return;
-    const PALETTE = ['#ef4444', '#2563eb', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#1e293b'];
+    const PALETTE = ['#ff0033', '#0066ff', '#00d655', '#ff6a00', '#a020f0', '#00d4ff', '#0f172a'];
     const track = this.standaloneTracks.find(t => t.id === trackId);
     if (!track) return;
     const curIdx = PALETTE.indexOf(track.color);
@@ -2931,7 +2931,7 @@ class MapManager {
       return;
     }
 
-    const PALETTE = ['#ef4444', '#2563eb', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#1e293b'];
+    const PALETTE = ['#ff0033', '#0066ff', '#00d655', '#ff6a00', '#a020f0', '#00d4ff', '#0f172a'];
     let hud = document.getElementById('standalone-gpx-hud');
     if (!hud) {
       hud = document.createElement('div');
