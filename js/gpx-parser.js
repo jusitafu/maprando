@@ -667,6 +667,60 @@ class GPXParser {
    * Calcul officiel de l'Indice IBP Index (Effort Physique FFRandonnée)
    * Prise en compte : Distance, Dénivelé D+, Distribution non-linéaire des pentes et descentes raides
    */
+  static IBP_API_KEY = 'l9xfyw1sjg6khvzvlm1n';
+
+  /**
+   * Appel asynchrone direct à l'API officielle IBP Index (ibpindex.com)
+   * Renvoie le score officiel hiking (HKG), ou null en cas d'erreur réseau/format
+   */
+  static async fetchOfficialIBP(gpxTextOrHike, filename = 'trace.gpx') {
+    let gpxToSend = '';
+    if (typeof gpxTextOrHike === 'object' && gpxTextOrHike !== null) {
+      // Si on passe l'objet hike directement analysé, exporter la version propre lissée
+      gpxToSend = this.exportToGpxString(gpxTextOrHike);
+      filename = (gpxTextOrHike.name || filename || 'trace.gpx').replace(/[\\/:*?"<>|]/g, '_') + '.gpx';
+    } else if (typeof gpxTextOrHike === 'string') {
+      // Parser d'abord pour lisser les altitudes et filtrer le bruit GPS
+      try {
+        const parsed = this.parse(gpxTextOrHike, filename);
+        if (parsed && parsed.points && parsed.points.length >= 5) {
+          gpxToSend = this.exportToGpxString(parsed);
+        } else {
+          gpxToSend = gpxTextOrHike;
+        }
+      } catch (e) {
+        gpxToSend = gpxTextOrHike;
+      }
+    }
+
+    if (!gpxToSend || gpxToSend.length < 50) return null;
+
+    try {
+      const cleanName = (filename || 'trace.gpx').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const blob = new Blob([gpxToSend], { type: 'application/gpx+xml' });
+      const formData = new FormData();
+      formData.append('key', this.IBP_API_KEY);
+      formData.append('file', blob, cleanName);
+
+      const resp = await fetch('https://www.ibpindex.com/api/', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      if (data && !data.error && data.hiking && data.hiking.ibp !== undefined) {
+        const val = parseInt(data.hiking.ibp, 10);
+        if (!isNaN(val) && val >= 0) {
+          return val;
+        }
+      }
+    } catch (e) {
+      console.warn("IBP Index API call warning:", e);
+    }
+    return null;
+  }
+
   static calculateIBP(hikeOrPoints, elevationGain = 0, distanceKm = 0) {
     let points = [];
     let dPlus = elevationGain;

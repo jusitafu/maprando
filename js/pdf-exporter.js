@@ -223,12 +223,12 @@ class PDFExporter {
 
         let mapResult = null;
         try {
-          const pxW = Math.round(mapW * 4.5);
-          const pxH = Math.round(actualMapH * 4.5);
+          const pxW = Math.round(mapW * 8.5);
+          const pxH = Math.round(actualMapH * 8.5);
           mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, options);
           const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
           if (mapImgData) {
-            doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH);
+            doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH, undefined, 'SLOW');
             doc.setDrawColor(203, 213, 225);
             doc.rect(mapX, actualMapY, mapW, actualMapH);
 
@@ -360,12 +360,12 @@ class PDFExporter {
           const actualMapH = mapH - 6;
 
           try {
-            const pxW = Math.round(mapW * 4.5);
-            const pxH = Math.round(actualMapH * 4.5);
+            const pxW = Math.round(mapW * 8.5);
+            const pxH = Math.round(actualMapH * 8.5);
             const mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, options);
             const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
             if (mapImgData) {
-              doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH);
+              doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH, undefined, 'SLOW');
               doc.setDrawColor(203, 213, 225);
               doc.rect(mapX, actualMapY, mapW, actualMapH);
             }
@@ -531,12 +531,12 @@ class PDFExporter {
         const mapH = isA3 ? 125 : 76; // mm
 
         try {
-          const pxW = Math.round(contentWidth * 4.5);
-          const pxH = Math.round(mapH * 4.5);
+          const pxW = Math.round(contentWidth * 8.5);
+          const pxH = Math.round(mapH * 8.5);
           const mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, options);
           const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
           if (mapImgData) {
-            doc.addImage(mapImgData, 'JPEG', margin, currentY, contentWidth, mapH);
+            doc.addImage(mapImgData, 'JPEG', margin, currentY, contentWidth, mapH, undefined, 'SLOW');
             doc.setDrawColor(203, 213, 225);
             doc.rect(margin, currentY, contentWidth, mapH);
             currentY += mapH + (isA3 ? 6 : 5);
@@ -715,9 +715,9 @@ class PDFExporter {
     currentY = subY + 3.5;
 
     // 3. Cadre de la carte : dimensions physiques précises sur le papier
-    const mapX = marginX;
+    let mapX = marginX;
     const mapY = currentY;
-    const mapW = contentWidth;
+    let mapW = contentWidth;
     const footerH = isA3 ? 14 : 11.5; // Espace réservé pour la règle en cm, l'échelle et les mentions UTM
     const mapH = pageHeight - marginBottom - footerH - mapY;
 
@@ -753,22 +753,27 @@ class PDFExporter {
       const origMetersX = Math.abs(maxLon - minLon) * metersPerLon;
       const aspectSel = origMetersX / Math.max(1, origMetersY);
 
-      if (aspectSel < aspectPaper) {
-        // Sélection plus haute que la page : on ajuste la largeur X
-        const targetMetersX = origMetersY * aspectPaper;
-        const diffLon = (targetMetersX - origMetersX) / (2 * metersPerLon);
-        minLon -= diffLon;
-        maxLon += diffLon;
+      // 100% CONFORME A LA SELECTION UTILISATEUR :
+      // On ne modifie PAS les coordonnées géographiques (zéro bande de carte ajoutée autour).
+      // On adapte le cadre physique du PDF (mapW et mapH) aux proportions exactes de la sélection !
+      const maxMapW = contentWidth;
+      const maxMapH = pageHeight - marginBottom - footerH - mapY;
+      const aspectMax = maxMapW / maxMapH;
+
+      if (aspectSel >= aspectMax) {
+        // La sélection est plus large : elle occupe toute la largeur disponible
+        mapW = maxMapW;
+        mapH = Math.round((mapW / aspectSel) * 10) / 10;
+        mapX = marginX;
       } else {
-        // Sélection plus large que la page : on ajuste la hauteur Y
-        const targetMetersY = origMetersX / aspectPaper;
-        const diffLat = (targetMetersY - origMetersY) / (2 * metersPerLat);
-        minLat -= diffLat;
-        maxLat += diffLat;
+        // La sélection est plus haute : elle occupe toute la hauteur disponible
+        mapH = maxMapH;
+        mapW = Math.round((mapH * aspectSel) * 10) / 10;
+        mapX = marginX + (maxMapW - mapW) / 2;
       }
 
       actualBounds = [[minLat, minLon], [maxLat, maxLon]];
-      const totalMetersY = Math.abs(maxLat - minLat) * metersPerLat;
+      const totalMetersY = origMetersY;
       finalScale = Math.round((totalMetersY / (mapH / 1000)) / 100) * 100;
     }
 
@@ -834,14 +839,14 @@ class PDFExporter {
 
         // 5. Génération du fond de carte haute résolution
     try {
-      const pxW = Math.round(mapW * 4.5);
-      const pxH = Math.round(mapH * 4.5);
-      const renderOpts = Object.assign({}, options, { showUtmGrid: false, fitExactBounds: true });
+      const pxW = Math.round(mapW * 8.5);
+      const pxH = Math.round(mapH * 8.5);
+      const renderOpts = Object.assign({}, options, { showUtmGrid: false, fitExactBounds: true, bearings: options.bearings || ((typeof window !== 'undefined' && window.MapManagerInstance) ? window.MapManagerInstance.bearingMeasurements : []) });
       const mapResult = await this.renderStaticMap(pseudoHike, pxW, pxH, mapLayer, 1.0, options.trackColor, renderOpts);
       const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
 
       if (mapImgData) {
-        doc.addImage(mapImgData, 'JPEG', mapX, mapY, mapW, mapH);
+        doc.addImage(mapImgData, 'JPEG', mapX, mapY, mapW, mapH, undefined, 'SLOW');
       }
     } catch (err) {
       console.warn("Erreur export carte zone :", err);
@@ -1154,6 +1159,8 @@ class PDFExporter {
     canvas.width = imgWidth;
     canvas.height = imgHeight;
     const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // 1. Fond immédiat avant tout chargement
     ctx.fillStyle = '#e2e8f0'; // Fond neutre terre/mer
@@ -1222,6 +1229,7 @@ class PDFExporter {
         }
       }
       zoom = Math.max(8, Math.min(18, zoom));
+      if (mapLayer === 'igntop25' && zoom > 16) zoom = 16;
 
       minTileX = lon2tile(minLon, zoom);
       maxTileX = lon2tile(maxLon, zoom);
@@ -1258,6 +1266,7 @@ class PDFExporter {
         }
       }
       zoom = Math.max(7, Math.min(17, zoom));
+      if (mapLayer === 'igntop25' && zoom > 16) zoom = 16;
 
       centerTileX = (lon2tile(minLon, zoom) + lon2tile(maxLon, zoom)) / 2;
       centerTileY = (lat2tile(minLat, zoom) + lat2tile(maxLat, zoom)) / 2;
@@ -1902,8 +1911,113 @@ class PDFExporter {
     ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText(fullAttribution, imgWidth - textWidth - 14, imgHeight - 10);
 
+    
+    // =========================================================================
+    // DESSIN VECTORIEL DES LIGNES DE CAP (1 A 3 CAPS SIMULTANES SUR LE FOND DE CARTE PDF)
+    // =========================================================================
+    const bearingsToDraw = (options && options.bearings && options.bearings.length > 0)
+      ? options.bearings
+      : ((typeof window !== 'undefined' && window.MapManagerInstance && window.MapManagerInstance.bearingMeasurements) ? window.MapManagerInstance.bearingMeasurements : []);
+
+    if (bearingsToDraw && bearingsToDraw.length > 0) {
+      bearingsToDraw.forEach((b, bIdx) => {
+        const ptA = b.pointA;
+        const ptB = b.pointB;
+        if (!ptA || !ptB) return;
+
+        const pixA = latLonToPixel(ptA.lat, (ptA.lng != null ? ptA.lng : ptA.lon));
+        const pixB = latLonToPixel(ptB.lat, (ptB.lng != null ? ptB.lng : ptB.lon));
+        const bColor = b.color || '#059669';
+        const capNum = b.num || (bIdx + 1);
+
+        // 1. Casing sombre sous la ligne pour lisibilité optimale sur fond IGN
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pixA.x, pixA.y);
+        ctx.lineTo(pixB.x, pixB.y);
+        ctx.lineWidth = Math.max(5, Math.round(imgWidth / 220));
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.setLineDash([]);
+        ctx.stroke();
+
+        // 2. Ligne de visée de cap colorée en pointillés haute visibilité
+        ctx.beginPath();
+        ctx.moveTo(pixA.x, pixA.y);
+        ctx.lineTo(pixB.x, pixB.y);
+        ctx.lineWidth = Math.max(3, Math.round(imgWidth / 360));
+        ctx.strokeStyle = bColor;
+        ctx.setLineDash([14, 8]);
+        ctx.stroke();
+        ctx.restore();
+
+        // 3. Pastille Point A (Départ)
+        const radA = Math.max(12, Math.round(imgWidth / 120));
+        ctx.beginPath();
+        ctx.arc(pixA.x, pixA.y, radA, 0, Math.PI * 2);
+        ctx.fillStyle = bColor;
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.round(radA * 1.1)}px Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`A${capNum}`, pixA.x, pixA.y);
+
+        // 4. Pastille Point B (Visée)
+        ctx.beginPath();
+        ctx.arc(pixB.x, pixB.y, radA, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = bColor;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.round(radA * 1.1)}px Arial, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`B${capNum}`, pixB.x, pixB.y);
+
+        // 5. Cartouche étiquette au milieu de la ligne
+        const midX = (pixA.x + pixB.x) / 2;
+        const midY = (pixA.y + pixB.y) / 2;
+        const metrics = b.metrics || {};
+        const capDeg = metrics.bearingRound != null ? metrics.bearingRound : '?';
+        const compass = metrics.compass ? ` (${metrics.compass})` : '';
+        const distStr = metrics.distStr ? ` • ${metrics.distStr}` : '';
+        const labelText = `🧭 Cap ${capNum} : ${capDeg}°${compass}${distStr}`;
+
+        const fontSize = Math.max(12, Math.round(imgWidth / 130));
+        ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+        const textMetrics = ctx.measureText(labelText);
+        const padX = 12, padY = 6;
+        const boxW = textMetrics.width + padX * 2;
+        const boxH = fontSize * 1.8;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+        ctx.strokeStyle = bColor;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(midX - boxW / 2, midY - boxH / 2, boxW, boxH, 8);
+        } else {
+          ctx.rect(midX - boxW / 2, midY - boxH / 2, boxW, boxH);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(labelText, midX, midY);
+      });
+    }
+
     return {
-      imgData: canvas.toDataURL('image/jpeg', 0.92),
+      imgData: canvas.toDataURL('image/jpeg', 0.96),
       zoom,
       centerTileX,
       centerTileY,

@@ -331,6 +331,20 @@ html, body {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
+/* Conteneurs bas Leaflet positionnés rigoureusement au-dessus du HUD et des boutons */
+.leaflet-bottom {
+  bottom: 74px !important;
+  pointer-events: none !important;
+}
+.leaflet-bottom .leaflet-control {
+  pointer-events: auto !important;
+}
+@media (max-width: 1199px) {
+  .leaflet-bottom {
+    bottom: 130px !important;
+  }
+}
+
 /* Boite echelle Leaflet positionnee au-dessus du HUD noir pour eviter tout chevauchement */
 .leaflet-bottom.leaflet-left .leaflet-control-scale {
   float: none !important;

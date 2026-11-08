@@ -3869,7 +3869,8 @@ class AppController {
         scaleDenom: scaleDenom,
         trackColor: trackColor,
         hike: hikeForTrack,
-        tracks: tracksForExport
+        tracks: tracksForExport,
+        bearings: (window.MapManagerInstance && window.MapManagerInstance.bearingMeasurements) ? window.MapManagerInstance.bearingMeasurements : []
       });
       let trackNotice = ' (fond vierge)';
       if (tracksForExport && tracksForExport.length > 0) {
@@ -6885,7 +6886,8 @@ class AppController {
         scaleDenom: scaleDenom,
         trackColor: trackColor,
         hike: hikeForTrack,
-        tracks: tracksForExport
+        tracks: tracksForExport,
+        bearings: (window.MapManagerInstance && window.MapManagerInstance.bearingMeasurements) ? window.MapManagerInstance.bearingMeasurements : []
       });
       let trackNotice = ' (fond vierge)';
       if (tracksForExport && tracksForExport.length > 0) {
@@ -9901,7 +9903,8 @@ class AppController {
         scaleDenom: scaleDenom,
         trackColor: trackColor,
         hike: hikeForTrack,
-        tracks: tracksForExport
+        tracks: tracksForExport,
+        bearings: (window.MapManagerInstance && window.MapManagerInstance.bearingMeasurements) ? window.MapManagerInstance.bearingMeasurements : []
       });
       let trackNotice = ' (fond vierge)';
       if (tracksForExport && tracksForExport.length > 0) {

@@ -1746,8 +1746,69 @@ class MapManager {
     this.renderBearingListUI();
   }
 
+  toggleMinimizeBearing(minimized) {
+    this.isBearingMinimized = !!minimized;
+    const panel = document.getElementById('map-bearing-panel');
+    const fullContent = document.getElementById('map-bearing-full-content');
+    const minContent = document.getElementById('map-bearing-minimized-content');
+    const btnMin = document.getElementById('btn-minimize-map-bearing');
+    const btnMax = document.getElementById('btn-maximize-map-bearing');
+
+    if (!panel) return;
+
+    if (this.isBearingMinimized) {
+      if (fullContent) fullContent.classList.add('hidden');
+      if (minContent) minContent.classList.remove('hidden');
+      panel.classList.remove('sm:w-88', 'max-w-sm');
+      panel.classList.add('sm:w-auto', 'max-w-[95vw]');
+      if (btnMin) {
+        btnMin.classList.add('opacity-40', 'cursor-default');
+        btnMin.classList.remove('hover:bg-slate-700', 'cursor-pointer');
+      }
+      if (btnMax) {
+        btnMax.classList.remove('opacity-40');
+        btnMax.classList.add('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
+      }
+    } else {
+      if (fullContent) fullContent.classList.remove('hidden');
+      if (minContent) minContent.classList.add('hidden');
+      panel.classList.add('sm:w-88', 'max-w-sm');
+      panel.classList.remove('sm:w-auto', 'max-w-[95vw]');
+      if (btnMin) {
+        btnMin.classList.remove('opacity-40', 'cursor-default');
+        btnMin.classList.add('hover:bg-slate-700', 'cursor-pointer');
+      }
+      if (btnMax) {
+        btnMax.classList.remove('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
+        btnMax.classList.add('bg-slate-800', 'text-slate-200');
+      }
+    }
+    this.renderBearingListUI();
+  }
+
   renderBearingListUI() {
     const listEl = document.getElementById('map-bearing-list');
+    const minBadgesEl = document.getElementById('map-bearing-min-badges');
+    const titleEl = document.getElementById('map-bearing-panel-title');
+    const count = (this.bearingMeasurements && this.bearingMeasurements.length) || 0;
+
+    if (titleEl) {
+      titleEl.textContent = count > 0 ? `Caps mesurés (${count}/3)` : 'Mesure de Cap (1 à 3)';
+    }
+
+    if (minBadgesEl) {
+      if (!this.bearingMeasurements || this.bearingMeasurements.length === 0) {
+        minBadgesEl.innerHTML = '<span class="text-slate-400 text-[10px]">Aucun cap mesuré</span>';
+      } else {
+        minBadgesEl.innerHTML = this.bearingMeasurements.map(cap => `
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold text-white shadow-xs" style="background:${cap.color}">
+            <span>${cap.num}: ${cap.metrics.bearingRound}°</span>
+            <span class="opacity-80">${cap.metrics.compass}</span>
+          </span>
+        `).join('');
+      }
+    }
+
     if (!listEl) return;
 
     if (!this.bearingMeasurements || this.bearingMeasurements.length === 0) {
