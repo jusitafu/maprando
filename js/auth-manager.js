@@ -30,6 +30,22 @@ class AuthManager {
     updated_at: '2026-01-01T00:00:00.000Z'
   };
 
+  // Hash SHA-256 pré-calculé pour 'test' avec salt 'sanary_salt_2026'
+  static DEFAULT_TEST_HASH = '250e312ff25a26c92fd9f381c65090e077fdc1a471e7fd98c567b768674f0946';
+
+  static DEFAULT_TEST_USER = {
+    id: 'user_test',
+    username: 'test',
+    password_hash: '250e312ff25a26c92fd9f381c65090e077fdc1a471e7fd98c567b768674f0946',
+    email: null,
+    role: 'test',
+    can_upload: false,
+    can_edit: false,
+    is_protected: true,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z'
+  };
+
   static users = [];
   static currentUser = null;
   static isSupabaseAvailable = false;
@@ -139,11 +155,26 @@ class AuthManager {
       console.warn("Erreur lecture utilisateurs locaux :", e);
     }
 
-    // Si la liste est vide ou ne contient pas 'admin', on injecte l'admin par défaut
-    if (!this.users || this.users.length === 0 || !this.users.some(u => u.username === 'admin')) {
-      this.users = [this.DEFAULT_ADMIN, ...(this.users || []).filter(u => u.username !== 'admin')];
-      this.saveToLocalStorage();
+    if (!this.users) this.users = [];
+
+    // Si 'admin' n'existe pas, on l'injecte
+    if (!this.users.some(u => u.username.toLowerCase() === 'admin')) {
+      this.users = [this.DEFAULT_ADMIN, ...this.users.filter(u => u.username.toLowerCase() !== 'admin')];
     }
+
+    // S'assurer que le compte test invité est toujours présent et intègre
+    const testIdx = this.users.findIndex(u => u.username.toLowerCase() === 'test');
+    if (testIdx === -1) {
+      this.users.push(this.DEFAULT_TEST_USER);
+    } else {
+      this.users[testIdx].password_hash = this.DEFAULT_TEST_HASH;
+      this.users[testIdx].role = 'test';
+      this.users[testIdx].can_upload = false;
+      this.users[testIdx].can_edit = false;
+      this.users[testIdx].is_protected = true;
+    }
+
+    this.saveToLocalStorage();
   }
 
   static saveToLocalStorage() {
@@ -309,6 +340,9 @@ class AuthManager {
    */
   static async changePassword(username, currentPassword, newPassword) {
     const cleanUser = (username || '').trim().toLowerCase();
+    if (cleanUser === 'test') {
+      return { success: false, error: "Le mot de passe du compte Invité 'test' est fixe et ne peut pas être modifié." };
+    }
     const user = this.users.find(u => u.username.toLowerCase() === cleanUser);
 
     if (!user) {
@@ -467,6 +501,10 @@ class AuthManager {
       return { success: false, error: "Utilisateur introuvable." };
     }
 
+    if (user.username.toLowerCase() === 'test') {
+      return { success: false, error: "Le compte Invité 'test' est un compte fixe. Son mot de passe est 'test'." };
+    }
+
     if (!user.email || !user.email.trim()) {
       return { 
         success: false, 
@@ -511,6 +549,11 @@ class AuthManager {
       user.can_upload = true;
       user.can_edit = true;
       user.role = 'admin';
+    } else if (user.username === 'test') {
+      user.can_upload = false;
+      user.can_edit = false;
+      user.role = 'test';
+      user.is_protected = true;
     } else {
       if (can_upload !== undefined) user.can_upload = Boolean(can_upload);
       if (can_edit !== undefined) user.can_edit = Boolean(can_edit);
@@ -548,6 +591,10 @@ class AuthManager {
       return { success: false, error: "Utilisateur introuvable." };
     }
 
+    if (user.username === 'test' || user.role === 'test') {
+      return { success: false, error: "Le mot de passe du compte Invité 'test' est fixe et ne peut pas être réinitialisé." };
+    }
+
     const tempPwd = (newTempPassword || user.username || this.generateTemporaryPassword()).trim();
     if (!tempPwd) {
       return { success: false, error: "Le mot de passe temporaire ne peut pas être vide." };
@@ -578,6 +625,9 @@ class AuthManager {
     if (user.username === 'admin') {
       return { success: false, error: "Le compte administrateur principal ne peut pas être supprimé." };
     }
+    if (user.username === 'test' || user.is_protected) {
+      return { success: false, error: "Le compte Invité 'test' est un compte système protégé et ne peut pas être supprimé." };
+    }
 
     this.users = this.users.filter(u => u.id !== userId);
     this.saveToLocalStorage();
@@ -594,9 +644,11 @@ class AuthManager {
     return (this.users || []).map(u => ({
       id: u.id,
       username: u.username,
+      email: u.email || '',
       role: u.role,
       can_upload: u.can_upload,
       can_edit: u.can_edit,
+      is_protected: Boolean(u.is_protected || u.username === 'admin' || u.username === 'test'),
       created_at: u.created_at,
       updated_at: u.updated_at
     }));
@@ -677,6 +729,21 @@ class AuthManager {
         if (!this.users.some(u => u.username === 'admin')) {
           this.users.unshift(this.DEFAULT_ADMIN);
           await this.pushUserToSupabase(this.DEFAULT_ADMIN);
+        }
+
+        // S'assurer que le compte invité test existe
+        if (!this.users.some(u => u.username === 'test')) {
+          this.users.push(this.DEFAULT_TEST_USER);
+          await this.pushUserToSupabase(this.DEFAULT_TEST_USER);
+        } else {
+          const t = this.users.find(u => u.username === 'test');
+          if (t) {
+            t.password_hash = this.DEFAULT_TEST_HASH;
+            t.role = 'test';
+            t.can_upload = false;
+            t.can_edit = false;
+            t.is_protected = true;
+          }
         }
 
         this.saveToLocalStorage();
@@ -816,6 +883,10 @@ CREATE POLICY "Allow public read-write for app_users"
 
 INSERT INTO public.app_users (id, username, password_hash, role, can_upload, can_edit)
 VALUES ('user_admin', 'admin', '43b8058a90e45ee18f465adfea6bcfad03871c8ca6f736381b95669265c95715', 'admin', true, true)
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO public.app_users (id, username, password_hash, role, can_upload, can_edit)
+VALUES ('user_test', 'test', '250e312ff25a26c92fd9f381c65090e077fdc1a471e7fd98c567b768674f0946', 'test', false, false)
 ON CONFLICT (username) DO NOTHING;
 
 -- ===============================================================

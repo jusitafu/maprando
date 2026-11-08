@@ -1777,7 +1777,7 @@
               2026
             </span>
             <span class="px-1.5 py-0.5 bg-emerald-100 border border-emerald-300 text-emerald-800 text-[9px] sm:text-[10px] font-extrabold rounded-md shadow-2xs">
-              v91
+              v92
             </span>
 
           </div>
@@ -5477,6 +5477,21 @@
 
 
 
+        <!-- Accès Visiteur / Découverte (test / test) -->
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs gap-2">
+          <div>
+            <div class="font-bold text-amber-900 flex items-center gap-1.5">
+              <span>🔍</span> <span>Accès Découverte (Visiteur)</span>
+            </div>
+            <div class="text-[11px] text-amber-700 mt-0.5">
+              Identifiant : <strong class="font-mono bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">test</strong> • Mot de passe : <strong class="font-mono bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">test</strong>
+            </div>
+          </div>
+          <button type="button" onclick="document.getElementById('login-username').value='test'; document.getElementById('login-password').value='test'; App.handleLoginSubmit();" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold rounded-xl text-xs shadow-sm transition whitespace-nowrap cursor-pointer">
+            Connexion directe ➔
+          </button>
+        </div>
+
         <button type="button" id="btn-login-submit" onclick="App.handleLoginSubmit();" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-900/10 transition flex items-center justify-center gap-2 cursor-pointer">
 
           <span>🔓</span>
@@ -6832,7 +6847,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/config.js?v=106"></script>
 
-  <script src="js/auth-manager.js?v=111"></script>
+  <script src="js/auth-manager.js?v=114"></script>
 
   <script src="js/gpx-parser.js?v=106"></script>
 
@@ -6850,7 +6865,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/gr-manager.js?v=110"></script>
 
   <script src="js/portal-router.js?v=113"></script>
-    <script src="js/app.js?v=111"></script>
+    <script src="js/app.js?v=114"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->

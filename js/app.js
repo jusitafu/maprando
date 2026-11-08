@@ -4275,6 +4275,9 @@ class AppController {
       if (user.role === 'admin') {
         roleBadge.textContent = 'Admin';
         roleBadge.className = 'px-1.5 py-0.5 bg-emerald-950 text-emerald-300 text-[10px] rounded font-semibold border border-emerald-800';
+      } else if (user.role === 'test' || user.username === 'test') {
+        roleBadge.textContent = 'Invité (Test)';
+        roleBadge.className = 'px-1.5 py-0.5 bg-amber-950 text-amber-300 text-[10px] rounded font-semibold border border-amber-800';
       } else {
         roleBadge.textContent = 'Membre';
         roleBadge.className = 'px-1.5 py-0.5 bg-slate-800 text-slate-300 text-[10px] rounded font-semibold border border-slate-700';
@@ -4282,13 +4285,18 @@ class AppController {
     }
 
     if (dropdownUsername) {
-      dropdownUsername.textContent = `Connecté : ${user.username} (${user.role === 'admin' ? 'Administrateur' : 'Membre'})`;
+      const roleLabel = user.role === 'admin' ? 'Administrateur' : (user.role === 'test' || user.username === 'test' ? 'Invité (Découverte)' : 'Membre');
+      dropdownUsername.textContent = `Connecté : ${user.username} (${roleLabel})`;
     }
     if (dropdownPerms) {
-      const perms = [];
-      if (user.role === 'admin' || user.can_upload) perms.push('📤 Upload');
-      if (user.role === 'admin' || user.can_edit) perms.push('✏️ Édition');
-      dropdownPerms.textContent = perms.length > 0 ? `Droits : ${perms.join(', ')}` : 'Droits : Consultation seule';
+      if (user.role === 'test' || user.username === 'test') {
+        dropdownPerms.textContent = 'Droits : Consultation & Carto seule (Aucune écriture)';
+      } else {
+        const perms = [];
+        if (user.role === 'admin' || user.can_upload) perms.push('📤 Upload');
+        if (user.role === 'admin' || user.can_edit) perms.push('✏️ Édition');
+        dropdownPerms.textContent = perms.length > 0 ? `Droits : ${perms.join(', ')}` : 'Droits : Consultation seule';
+      }
     }
   }
 
@@ -4317,6 +4325,13 @@ class AppController {
     const postLoginAdminBtn = document.getElementById('btn-post-login-manage-users');
     if (postLoginAdminBtn) {
       postLoginAdminBtn.classList.toggle('hidden', !isAdmin);
+    }
+
+    const curUser = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
+    const isTestUser = curUser && (curUser.role === 'test' || curUser.username === 'test');
+    const menuChangePwdBtn = document.getElementById('btn-menu-change-pwd');
+    if (menuChangePwdBtn) {
+      menuChangePwdBtn.classList.toggle('hidden', Boolean(isTestUser));
     }
 
     // 3. Dropzone
@@ -4446,6 +4461,9 @@ class AppController {
       if (user.role === 'admin') {
         roleSpan.textContent = 'Administrateur (Tous pouvoirs)';
         roleSpan.className = 'px-2 py-0.5 rounded-full font-bold text-[11px] bg-emerald-100 text-emerald-800 border border-emerald-300';
+      } else if (user.role === 'test' || user.username === 'test') {
+        roleSpan.textContent = 'Accès Découverte (Visiteur invité)';
+        roleSpan.className = 'px-2 py-0.5 rounded-full font-bold text-[11px] bg-amber-100 text-amber-800 border border-amber-300';
       } else {
         roleSpan.textContent = 'Membre du club';
         roleSpan.className = 'px-2 py-0.5 rounded-full font-bold text-[11px] bg-slate-100 text-slate-700 border border-slate-300';
@@ -4478,6 +4496,12 @@ class AppController {
       adminManageBtn.classList.toggle('hidden', user.role !== 'admin');
     }
 
+    // Masquer le bouton de changement de mot de passe pour le compte invité test
+    const postLoginChangePwdBtn = document.getElementById('btn-post-login-change-pwd');
+    if (postLoginChangePwdBtn) {
+      postLoginChangePwdBtn.classList.toggle('hidden', user.role === 'test' || user.username === 'test');
+    }
+
     modal.classList.remove('hidden');
   }
 
@@ -4498,10 +4522,14 @@ class AppController {
   }
 
   openChangePasswordModal() {
+    const user = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
+    if (user && (user.username === 'test' || user.role === 'test')) {
+      this.showToast("Le mot de passe du compte Invité 'test' est fixe et ne peut pas être modifié.", "warning");
+      return;
+    }
+
     const modal = document.getElementById('change-password-modal');
     if (!modal) return;
-
-    const user = typeof AuthManager !== 'undefined' ? AuthManager.getCurrentUser() : null;
     const nameEl = document.getElementById('change-pwd-account-name');
     if (nameEl && user) nameEl.textContent = user.username;
 
@@ -4709,6 +4737,7 @@ class AppController {
       tr.className = 'hover:bg-slate-50 transition';
 
       const isAdmin = u.role === 'admin';
+      const isTest = u.role === 'test' || u.username === 'test';
       const canUploadBadge = (isAdmin || u.can_upload) 
         ? `<span class="px-2 py-0.5 rounded font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300">📤 Upload</span>`
         : `<span class="px-2 py-0.5 rounded font-medium text-[10px] bg-slate-100 text-slate-400">📤 Non</span>`;
@@ -4717,18 +4746,26 @@ class AppController {
         ? `<span class="px-2 py-0.5 rounded font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300">✏️ Édition</span>`
         : `<span class="px-2 py-0.5 rounded font-medium text-[10px] bg-slate-100 text-slate-400">✏️ Non</span>`;
 
+      let roleBadgeHtml = '';
+      if (isAdmin) {
+        roleBadgeHtml = '<span class="px-2 py-0.5 rounded font-bold text-[10px] bg-indigo-100 text-indigo-800 border border-indigo-300">Administrateur</span>';
+      } else if (isTest) {
+        roleBadgeHtml = '<span class="px-2 py-0.5 rounded font-bold text-[10px] bg-amber-100 text-amber-800 border border-amber-300">Invité (Découverte)</span>';
+      } else {
+        roleBadgeHtml = '<span class="px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-700 border border-slate-200">Membre</span>';
+      }
+
       tr.innerHTML = `
         <td class="py-3 px-4 font-bold text-slate-900">
           <div class="flex items-center gap-1.5">
             <span>👤</span>
             <span>${u.username}</span>
             ${isAdmin ? '<span class="text-[9px] text-emerald-700 font-extrabold bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-300">Principal</span>' : ''}
+            ${isTest ? '<span class="text-[9px] text-amber-700 font-extrabold bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">Fixe</span>' : ''}
           </div>
         </td>
         <td class="py-3 px-3">
-          <span class="px-2 py-0.5 rounded font-bold text-[10px] ${isAdmin ? 'bg-indigo-100 text-indigo-800 border border-indigo-300' : 'bg-slate-100 text-slate-700 border border-slate-200'}">
-            ${isAdmin ? 'Administrateur' : 'Membre'}
-          </span>
+          ${roleBadgeHtml}
         </td>
         <td class="py-3 px-3">
           <div class="flex items-center gap-1.5">
@@ -4738,17 +4775,23 @@ class AppController {
         </td>
         <td class="py-3 px-4 text-right">
           <div class="flex items-center justify-end gap-1.5">
-            <button class="btn-user-reset-pwd px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition" title="Générer ou définir un mot de passe temporaire">
-              🔑 Réinit. MDP
-            </button>
-            ${!isAdmin ? `
-              <button class="btn-user-edit-perms px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-semibold transition" title="Modifier les droits">
-                ⚙️ Droits
+            ${isTest ? `
+              <span class="text-[10px] text-amber-800 font-bold px-2 py-1 bg-amber-50 rounded-lg border border-amber-200">
+                🔒 Compte fixe (test/test)
+              </span>
+            ` : `
+              <button class="btn-user-reset-pwd px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold transition" title="Générer ou définir un mot de passe temporaire">
+                🔑 Réinit. MDP
               </button>
-              <button class="btn-user-delete px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold transition" title="Supprimer cet utilisateur">
-                🗑️
-              </button>
-            ` : ''}
+              ${!isAdmin ? `
+                <button class="btn-user-edit-perms px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[11px] font-semibold transition" title="Modifier les droits">
+                  ⚙️ Droits
+                </button>
+                <button class="btn-user-delete px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-[11px] font-semibold transition" title="Supprimer cet utilisateur">
+                  🗑️
+                </button>
+              ` : ''}
+            `}
           </div>
         </td>
       `;
@@ -4892,6 +4935,10 @@ class AppController {
 
   async promptEditUserPermissions(user) {
     if (typeof AuthManager === 'undefined') return;
+    if (user.username === 'test' || user.role === 'test') {
+      this.showToast("Les permissions du compte Invité 'test' sont fixes (lecture seule).", "warning");
+      return;
+    }
     const newUpload = confirm(`Droits pour « ${user.username} » :\n\n1. Autoriser le CHARGEMENT de nouveaux fichiers GPX ?\n\n(OK = Autoriser, Annuler = Refuser)`);
     const newEdit = confirm(`Droits pour « ${user.username} » :\n\n2. Autoriser l'ÉDITION et SUPPRESSION dans la bibliothèque ?\n\n(OK = Autoriser, Annuler = Refuser)`);
 
@@ -4907,6 +4954,14 @@ class AppController {
 
   async confirmDeleteUser(userId, username) {
     if (typeof AuthManager === 'undefined') return;
+    if (username === 'admin') {
+      this.showToast("Le compte administrateur principal ne peut pas être supprimé.", "error");
+      return;
+    }
+    if (username === 'test') {
+      this.showToast("Le compte Invité 'test' est protégé et ne peut pas être supprimé.", "error");
+      return;
+    }
     const conf = confirm(`Êtes-vous certain de vouloir supprimer définitivement le compte utilisateur « ${username} » ?`);
     if (!conf) return;
 
