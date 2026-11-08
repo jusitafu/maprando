@@ -2951,29 +2951,29 @@ class MapManager {
     if (!hud) {
       hud = document.createElement('div');
       hud.id = 'standalone-gpx-hud';
-      hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex flex-col gap-2 text-xs text-white max-w-[95vw] sm:max-w-2xl';
+      hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/80 rounded-3xl px-4 sm:px-5 py-3 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95vw] sm:max-w-2xl';
       document.body.appendChild(hud);
     }
 
     const count = this.standaloneTracks.length;
 
-    // MODE RÉDUIT (Minimisé pour dégager la carte)
+    // MODE RÉDUIT (Minimisé pour dégager la carte tout en gardant les traces)
     if (this.isHudMinimized) {
-      hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500/80 rounded-2xl px-3.5 sm:px-4 py-2 shadow-2xl flex items-center justify-between gap-3 text-xs text-white max-w-[95vw]';
+      hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-4 sm:px-5 py-2.5 shadow-2xl flex items-center justify-between gap-4 text-sm text-white max-w-[95vw]';
       hud.innerHTML = `
-        <div class="flex items-center gap-2.5 cursor-pointer select-none" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Cliquer pour agrandir le cartouche">
-          <span class="text-base">📊</span>
-          <span class="text-amber-400 font-black text-xs sm:text-sm uppercase tracking-wider">Traces GPX (${count}/3)</span>
-          <div class="flex items-center gap-1.5 ml-1">
+        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Cliquer pour agrandir le cartouche">
+          <span class="text-xl">📊</span>
+          <span class="text-amber-400 font-black text-sm sm:text-base uppercase tracking-wider">Traces GPX (${count}/3)</span>
+          <div class="flex items-center gap-2 ml-1">
             ${this.standaloneTracks.map(t => `
-              <span class="w-4 h-4 rounded-full border-2 border-white shadow-sm inline-block cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="event.stopPropagation(); window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Trace: ${t.name} (cliquez pour changer de couleur)"></span>
+              <span class="w-5 h-5 rounded-full border-2 border-white shadow-md inline-block cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="event.stopPropagation(); window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Trace: ${t.name} (cliquez pour changer de couleur)"></span>
             `).join('')}
           </div>
-          <span class="text-xs text-slate-300 font-bold hidden sm:inline ml-1">
+          <span class="text-sm text-slate-200 font-bold hidden sm:inline ml-1">
             (${this.standaloneTracks.map(t => `${t.distance} km`).join(' • ')})
           </span>
         </div>
-        <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
+        <div class="flex items-center gap-2 ml-3 pl-3 border-l-2 border-slate-700">
           <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire (déjà réduit)" class="hud-win-btn bg-slate-800 text-slate-500 cursor-default" disabled>
             &minus;
           </button>
@@ -2989,39 +2989,39 @@ class MapManager {
       return;
     }
 
-    // MODE NORMAL AGRANDI (Plein écran / haute lisibilité)
-    hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex flex-col gap-2.5 text-xs text-white max-w-[95vw] sm:max-w-2xl';
+    // MODE NORMAL AGRANDI (Conforme aux standards ergonomiques 16px)
+    hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95vw] sm:max-w-3xl';
 
     let tracksHtml = this.standaloneTracks.map((t, i) => {
       const palettePicker = PALETTE.map(c => `
-        <button type="button" class="w-4 h-4 rounded-full transition-transform hover:scale-125 border ${c === t.color ? 'border-white scale-110 shadow-sm ring-2 ring-white/70' : 'border-black/50'}" style="background-color: ${c};" onclick="window.MapManagerInstance.setTrackColor('${t.id}', '${c}')" title="Appliquer cette couleur"></button>
+        <button type="button" class="w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 ${c === t.color ? 'border-white scale-110 shadow-sm ring-2 ring-white/80' : 'border-black/50'}" style="background-color: ${c};" onclick="window.MapManagerInstance.setTrackColor('${t.id}', '${c}')" title="Appliquer cette couleur"></button>
       `).join('');
 
       return `
-        <div class="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <!-- Pastille de couleur cliquable pour cycler les couleurs -->
-            <button type="button" class="w-6 h-6 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
+        <div class="flex items-center justify-between gap-3.5 p-2.5 rounded-2xl bg-slate-950/75 border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center gap-3 min-w-0">
+            <!-- Pastille de couleur cliquable grand format 28px -->
+            <button type="button" class="w-7 h-7 rounded-full border-2 border-white shadow-lg flex-shrink-0 cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
             </button>
-            <span class="font-black text-sm text-slate-100 truncate max-w-[130px] sm:max-w-[220px]" title="${t.name}">
+            <span class="font-black text-base text-white truncate max-w-[150px] sm:max-w-[260px]" title="${t.name}">
               ${t.name}
             </span>
-            <span class="px-2 py-0.5 rounded-lg bg-slate-800 text-xs font-mono text-emerald-400 font-bold whitespace-nowrap">
+            <span class="px-2.5 py-1 rounded-xl bg-slate-800 text-sm font-mono text-emerald-300 font-bold whitespace-nowrap shadow-xs">
               ${t.distance} km • +${t.elevationGain}m${t.ibp ? ` • <strong class="text-amber-400 font-extrabold">IBP ${t.ibp}</strong>` : ''}
             </span>
           </div>
 
-          <div class="flex items-center gap-2 flex-shrink-0">
+          <div class="flex items-center gap-2.5 flex-shrink-0">
             <!-- Palette rapide de couleurs -->
-            <div class="hidden sm:flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-800">
+            <div class="hidden sm:flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-2xl border border-slate-800">
               ${palettePicker}
             </div>
             <!-- Bouton centrer la vue sur cette trace -->
-            <button type="button" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm text-slate-200 hover:text-white flex items-center justify-center transition" onclick="if(window.MapManagerInstance.standaloneTracks[${i}].layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
+            <button type="button" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-base text-slate-100 hover:text-white flex items-center justify-center transition shadow cursor-pointer" onclick="if(window.MapManagerInstance.standaloneTracks[${i}].layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
               🎯
             </button>
             <!-- Bouton supprimer cette trace -->
-            <button type="button" class="w-7 h-7 rounded-lg hover:bg-rose-900/60 text-slate-400 hover:text-rose-400 text-sm font-bold flex items-center justify-center transition" onclick="window.MapManagerInstance.removeStandaloneTrack('${t.id}')" title="Fermer cette trace">
+            <button type="button" class="w-8 h-8 rounded-xl hover:bg-rose-900/70 text-slate-300 hover:text-rose-300 text-base font-black flex items-center justify-center transition cursor-pointer" onclick="window.MapManagerInstance.removeStandaloneTrack('${t.id}')" title="Fermer cette trace">
               ✕
             </button>
           </div>
@@ -3030,25 +3030,25 @@ class MapManager {
     }).join('');
 
     hud.innerHTML = `
-      <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-800">
-        <div class="flex items-center gap-2">
-          <span class="text-amber-400 font-black text-xs sm:text-sm uppercase tracking-wider">Traces GPX (${count}/3)</span>
-          <span class="text-xs text-slate-400 hidden sm:inline">Cliquez sur une pastille pour changer de couleur</span>
+      <div class="flex items-center justify-between gap-4 pb-2.5 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-amber-400 font-black text-sm sm:text-base uppercase tracking-wider">Traces GPX (${count}/3)</span>
+          <span class="text-xs sm:text-sm text-slate-300 hidden md:inline">Cliquez sur une pastille pour changer de couleur</span>
         </div>
         <div class="flex items-center gap-2">
           ${count < 3 ? `
-            <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1 shadow transition cursor-pointer">
-              <span>+</span> <span>Ajouter trace</span>
+            <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer">
+              <span class="text-base font-black">+</span> <span>Ajouter trace</span>
             </button>
           ` : ''}
-          <button id="btn-print-standalone-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow transition cursor-pointer">
-            <span>🖨️</span> <span>Imprimer</span>
+          <button id="btn-print-standalone-gpx" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer">
+            <span class="text-base">🖨️</span> <span>Imprimer</span>
           </button>
-          <button id="btn-clear-standalone-gpx" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-700 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer" title="Fermer toutes les traces">
+          <button id="btn-clear-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-700 text-slate-200 hover:text-white font-black text-xs sm:text-sm transition cursor-pointer" title="Fermer toutes les traces">
             Tout effacer
           </button>
           <!-- 3 solutions habituelles : - pour réduire, □ pour agrandir, ✕ pour fermer -->
-          <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
+          <div class="flex items-center gap-1.5 ml-2 pl-2.5 border-l-2 border-slate-700">
             <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire la boîte" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
               &minus;
             </button>
@@ -3061,7 +3061,7 @@ class MapManager {
           </div>
         </div>
       </div>
-      <div class="flex flex-col gap-1.5 max-h-56 overflow-y-auto">
+      <div class="flex flex-col gap-2 max-h-64 overflow-y-auto">
         ${tracksHtml}
       </div>
     `;

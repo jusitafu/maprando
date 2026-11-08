@@ -993,12 +993,112 @@ path.bearing-preview-line {
 
 
 /* =========================================================================
- * CONTRÔLES DE ZOOM LEAFLET HAUTE VISIBILITÉ (+ et - PAR PALIERS NETS)
+ * CONTRÔLES DE ZOOM LEAFLET HAUTE VISIBILITÉ (+ et - PAR PALIERS NETS - STANDARDS ERGONOMIQUES)
  * ========================================================================= */
 .leaflet-top.leaflet-left {
-  top: 65px !important; /* Dégagé sous la barre de recherche de lieu */
-  left: 16px !important;
+  top: 70px !important;
+  left: 18px !important;
   z-index: 1040 !important;
+}
+
+.leaflet-control-zoom {
+  border: 3px solid #0f172a !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.55), 0 8px 16px -3px rgba(0, 0, 0, 0.35) !important;
+}
+
+.leaflet-control-zoom a {
+  width: 52px !important;
+  height: 52px !important;
+  line-height: 50px !important;
+  font-size: 34px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  transition: all 0.15s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+  cursor: pointer !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #f1f5f9 !important;
+  color: #059669 !important;
+}
+
+.leaflet-control-zoom a:active {
+  background-color: #e2e8f0 !important;
+  transform: scale(0.95) !important;
+}
+
+.leaflet-control-zoom-in {
+  border-bottom: 2.5px solid #cbd5e1 !important;
+}
+
+/* =========================================================================
+ * STANDARDS ERGONOMIQUES POUR LES POLICES PÉRIPHÉRIQUES (WCAG / ERGONOMIE)
+ * ========================================================================= */
+#map-coords-hud {
+  font-size: 15px !important;
+  padding: 10px 18px !important;
+  border-radius: 18px !important;
+}
+
+#map-coords-hud label,
+#map-coords-hud span,
+#map-coords-hud input {
+  font-size: 15px !important;
+}
+
+#map-hud-scale-input {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  width: 95px !important;
+  padding: 4px 8px !important;
+}
+
+#btn-open-screen-calib {
+  font-size: 13px !important;
+  padding: 4px 10px !important;
+}
+
+.map-floating-tool-btn {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  padding: 11px 18px !important;
+  border-radius: 18px !important;
+}
+
+.map-floating-tool-btn span.tool-icon {
+  font-size: 20px !important;
+}
+
+/* =========================================================================
+ * CARTOUCHE DES TRACES GPX HAUTE LISIBILITÉ & BOUTONS DE GESTION (- □ ✕)
+ * ========================================================================= */
+#standalone-gpx-hud {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 24px 50px -8px rgba(0, 0, 0, 0.75), 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
+  border-radius: 22px !important;
+}
+
+.hud-win-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  font-weight: 900 !important;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  transition: all 0.15s ease;
+  user-select: none;
+  cursor: pointer;
 }
 
 .leaflet-control-zoom {
