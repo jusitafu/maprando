@@ -719,7 +719,7 @@ class PDFExporter {
     const mapY = currentY;
     let mapW = contentWidth;
     const footerH = isA3 ? 14 : 11.5; // Espace réservé pour la règle en cm, l'échelle et les mentions UTM
-    const mapH = pageHeight - marginBottom - footerH - mapY;
+    let mapH = pageHeight - marginBottom - footerH - mapY;
 
     // 4. Calcul de l'Échelle Vraie Physique et Cadrage Exact
     let finalScale = userScaleDenom;
