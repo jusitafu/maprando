@@ -2790,6 +2790,7 @@ class MapManager {
       name: trackName,
       distance: String(distVal),
       elevationGain: eleVal,
+      ibp: (gpxData.ibp !== undefined) ? gpxData.ibp : null,
       points: pts,
       startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
       endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] }
@@ -2812,7 +2813,7 @@ class MapManager {
       <div class="flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
         <span class="font-bold text-slate-100 truncate max-w-[180px] sm:max-w-[280px]" title="${hike.name}">${hike.name}</span>
-        <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-emerald-400 whitespace-nowrap">${hike.distance} km • +${hike.elevationGain}m</span>
+        <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-emerald-400 whitespace-nowrap">${hike.distance} km • +${hike.elevationGain}m${hike.ibp ? ` • <strong class="text-amber-400">IBP ${hike.ibp}</strong>` : ''}</span>
       </div>
       <div class="flex items-center gap-2 border-l border-slate-700 pl-3">
         <button id="btn-print-standalone-gpx" type="button" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">

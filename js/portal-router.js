@@ -780,12 +780,29 @@
     handleQuickGpxFile(file) {
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
           const content = e.target.result;
           const parsed = GPXParser.parse(content, file.name);
           if (parsed && window.MapManagerInstance) {
             window.MapManagerInstance.displayStandaloneGpxTrack(parsed, file.name);
+
+            // Calcul asynchrone IBP officiel en arrière-plan
+            try {
+              const officialIbp = await GPXParser.fetchOfficialIBP(content, file.name);
+              if (officialIbp !== null) {
+                parsed.ibp = officialIbp;
+                const lvl = GPXParser.getIBPLevel(officialIbp);
+                parsed.ibpLevel = lvl.level;
+                parsed.difficulty = lvl.label;
+                if (window.MapManagerInstance.standaloneHike) {
+                  window.MapManagerInstance.standaloneHike.ibp = officialIbp;
+                  window.MapManagerInstance.showStandaloneGpxHud(window.MapManagerInstance.standaloneHike);
+                }
+              }
+            } catch (errIbp) {
+              console.warn("IBP quick fetch notice:", errIbp);
+            }
           }
         } catch (err) {
           console.error("Erreur de lecture GPX :", err);

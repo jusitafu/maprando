@@ -3381,6 +3381,24 @@ class AppController {
           }
         }
 
+        // Calcul IBP officiel via l'API ibpindex.com si possible
+        try {
+          const officialIbp = await GPXParser.fetchOfficialIBP(text, file.name);
+          if (officialIbp !== null) {
+            hike.ibp = officialIbp;
+            const lvl = GPXParser.getIBPLevel(officialIbp);
+            hike.ibpLevel = lvl.level;
+            hike.difficulty = lvl.label;
+            if (hike.notes && /\[IBP:\s*\d+\]/i.test(hike.notes)) {
+              hike.notes = hike.notes.replace(/\[IBP:\s*\d+\]/i, `[IBP: ${officialIbp}]`);
+            } else {
+              hike.notes = `[IBP: ${officialIbp}] ${hike.notes || ''}`.trim();
+            }
+          }
+        } catch (e) {
+          console.warn("IBP API call error in upload:", e);
+        }
+
         // Auto-save immediately to persistent storage
         await StorageManager.saveHike(hike, text);
 
@@ -3518,6 +3536,24 @@ class AppController {
             hike.name = `${hike.name} (Bis)`;
           }
         }
+      }
+
+      // Calcul IBP officiel via l'API ibpindex.com si possible
+      try {
+        const officialIbp = await GPXParser.fetchOfficialIBP(rawText, (customName || 'trace') + '.gpx');
+        if (officialIbp !== null) {
+          hike.ibp = officialIbp;
+          const lvl = GPXParser.getIBPLevel(officialIbp);
+          hike.ibpLevel = lvl.level;
+          hike.difficulty = lvl.label;
+          if (hike.notes && /\[IBP:\s*\d+\]/i.test(hike.notes)) {
+            hike.notes = hike.notes.replace(/\[IBP:\s*\d+\]/i, `[IBP: ${officialIbp}]`);
+          } else {
+            hike.notes = `[IBP: ${officialIbp}] ${hike.notes || ''}`.trim();
+          }
+        }
+      } catch (e) {
+        console.warn("IBP API call error in paste:", e);
       }
 
       await StorageManager.saveHike(hike, rawText);
