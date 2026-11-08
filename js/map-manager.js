@@ -2734,8 +2734,9 @@ class MapManager {
     if (!this.standaloneTracks) {
       this.standaloneTracks = [];
     }
-    const DEFAULT_COLORS = ['#e11d48', '#2563eb', '#16a34a']; // Rose/Rouge, Bleu, Vert
-    const PALETTE = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#000000'];
+    // Couleurs vives et contrastées (optimisées pour fond TOP 25 et IGN)
+    const DEFAULT_COLORS = ['#ef4444', '#2563eb', '#10b981']; // Rouge vif, Bleu électrique, Vert émeraude
+    const PALETTE = ['#ef4444', '#2563eb', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#1e293b'];
 
     // Récupérer les points GPS
     let pts = gpxData.points || [];
@@ -2761,11 +2762,24 @@ class MapManager {
 
     const latlngs = pts.map(p => [p.lat, p.lon]);
 
+    // Halo blanc sous-jacent (bordure) pour détacher nettement la trace des fonds de carte denses (IGN TOP 25)
+    const borderPolyline = L.polyline(latlngs, {
+      color: '#ffffff',
+      weight: 8,
+      opacity: 0.95,
+      lineCap: 'round',
+      lineJoin: 'round',
+      offset: 0
+    });
+
+    // Tracé principal en couleur vive
     const polyline = L.polyline(latlngs, {
       color: assignedColor,
       weight: 4.5,
-      opacity: 0.95,
-      lineJoin: 'round'
+      opacity: 1.0,
+      lineCap: 'round',
+      lineJoin: 'round',
+      offset: 0
     });
 
     const startPt = latlngs[0];
@@ -2787,7 +2801,7 @@ class MapManager {
       fillOpacity: 1
     }).bindTooltip('<b>Arrivée : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
-    const trackLayer = L.featureGroup([polyline, startMarker, endMarker]);
+    const trackLayer = L.featureGroup([borderPolyline, polyline, startMarker, endMarker]);
     this.map.addLayer(trackLayer);
 
     const trackName = (gpxData.name || fileName || ('Trace ' + (trackIndex + 1))).replace(/\.gpx$/i, '');
@@ -2805,26 +2819,52 @@ class MapManager {
       startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
       endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] },
       layer: trackLayer,
+      borderPolyline: borderPolyline,
       polyline: polyline,
       startMarker: startMarker,
       endMarker: endMarker
     };
 
-    // Clic direct sur la trace sur la carte pour changer sa couleur au vol
-    polyline.on('click', (e) => {
+    // Clic direct sur la trace (trait ou halo blanc) pour changer sa couleur au vol
+    const handleColorClick = (e) => {
       L.DomEvent.stopPropagation(e);
       this.cycleTrackColor(trackItem.id);
-    });
+    };
+    polyline.on('click', handleColorClick);
+    borderPolyline.on('click', handleColorClick);
 
     this.standaloneTracks.push(trackItem);
     this.standaloneHike = trackItem; // dernière trace active
     this.selectedHike = trackItem;
+
+    // Recalculer les décalages parallèles (côte à côte) sur les tronçons communs
+    this.updateAllStandaloneOffsets();
 
     // Ajuster la vue pour englober toutes les traces affichées
     this.fitAllStandaloneTracks();
 
     // Afficher ou actualiser le HUD multi-traces interactif
     this.showStandaloneGpxHud();
+  }
+
+  updateAllStandaloneOffsets() {
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
+    const total = this.standaloneTracks.length;
+    // Décalage en pixels entre traces parallèles sur tronçons communs
+    // 1 trace: offset 0
+    // 2 traces: -3.5 px, +3.5 px (écart de 7 px)
+    // 3 traces: -6 px, 0 px, +6 px (écart de 6 px)
+    const step = total === 2 ? 7 : 6;
+    this.standaloneTracks.forEach((t, idx) => {
+      const offset = total <= 1 ? 0 : (idx - (total - 1) / 2) * step;
+      t.offset = offset;
+      if (t.borderPolyline && typeof t.borderPolyline.setOffset === 'function') {
+        t.borderPolyline.setOffset(offset);
+      }
+      if (t.polyline && typeof t.polyline.setOffset === 'function') {
+        t.polyline.setOffset(offset);
+      }
+    });
   }
 
   fitAllStandaloneTracks() {
@@ -2857,7 +2897,7 @@ class MapManager {
 
   cycleTrackColor(trackId) {
     if (!this.standaloneTracks) return;
-    const PALETTE = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#000000'];
+    const PALETTE = ['#ef4444', '#2563eb', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#1e293b'];
     const track = this.standaloneTracks.find(t => t.id === trackId);
     if (!track) return;
     const curIdx = PALETTE.indexOf(track.color);
@@ -2874,6 +2914,7 @@ class MapManager {
         this.map.removeLayer(removed.layer);
       }
     }
+    this.updateAllStandaloneOffsets();
     if (this.standaloneTracks.length === 0) {
       this.clearStandaloneGpxTrack();
     } else {
@@ -2890,7 +2931,7 @@ class MapManager {
       return;
     }
 
-    const PALETTE = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#000000'];
+    const PALETTE = ['#ef4444', '#2563eb', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#1e293b'];
     let hud = document.getElementById('standalone-gpx-hud');
     if (!hud) {
       hud = document.createElement('div');
