@@ -10699,22 +10699,40 @@ class AppController {
 
     this._customTempPwd = false;
 
-    // Réinitialiser formulaire création
-    const userInp = document.getElementById('new-user-username');
-    const pwdInp = document.getElementById('new-user-password');
-    const upChk = document.getElementById('new-user-can-upload');
-    const edChk = document.getElementById('new-user-can-edit');
-    const errBox = document.getElementById('create-user-error');
+    // Réinitialiser formulaire création de façon sécurisée
+    try {
+      const userInp = document.getElementById('new-user-username');
+      const pwdInp = document.getElementById('new-user-password');
+      const upChk = document.getElementById('new-user-can-upload');
+      const edChk = document.getElementById('new-user-can-edit');
+      const errBox = document.getElementById('create-user-error');
 
-    if (userInp) userInp.value = '';
-    if (pwdInp) pwdInp.value = '';
-    if (upChk) upChk.checked = true;
-    if (edChk) edChk.checked = false;
-    if (errBox) errBox.classList.add('hidden');
+      if (userInp) userInp.value = '';
+      if (pwdInp) pwdInp.value = '';
+      if (upChk) upChk.checked = true;
+      if (edChk) edChk.checked = false;
+      if (errBox) errBox.classList.add('hidden');
+    } catch (e) {
+      console.warn("Erreur réinitialisation formulaire création user :", e);
+    }
 
-    this.renderUsersTable();
-    this.updateSupabaseUsersStatusBadge();
-    this.updateDatabaseStatusUI();
+    try {
+      this.renderUsersTable();
+    } catch (e) {
+      console.error("Erreur lors du rendu de la table des utilisateurs :", e);
+    }
+
+    try {
+      this.updateSupabaseUsersStatusBadge();
+    } catch (e) {
+      console.warn("Erreur badge statut Supabase :", e);
+    }
+
+    try {
+      this.updateDatabaseStatusUI();
+    } catch (e) {
+      console.warn("Erreur mise à jour UI base :", e);
+    }
 
     modal.classList.remove('hidden');
   }
@@ -10879,7 +10897,10 @@ class AppController {
         </td>
       `;
 
-      tr.querySelector('.btn-user-reset-pwd').onclick = () => this.promptResetUserPassword(u.id, u.username);
+      const resetBtn = tr.querySelector('.btn-user-reset-pwd');
+      if (resetBtn) {
+        resetBtn.onclick = () => this.promptResetUserPassword(u.id, u.username);
+      }
       const editEmailBtn = tr.querySelector('.btn-user-edit-email');
       if (editEmailBtn) {
         editEmailBtn.onclick = () => this.promptEditUserEmail(u.id, u.username, u.email);
