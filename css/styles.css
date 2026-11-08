@@ -996,9 +996,70 @@ path.bearing-preview-line {
  * CONTRÔLES DE ZOOM LEAFLET HAUTE VISIBILITÉ (+ et - PAR PALIERS NETS)
  * ========================================================================= */
 .leaflet-top.leaflet-left {
-  top: 60px !important; /* Dégagé nettement sous la barre de recherche de lieu */
-  left: 14px !important;
+  top: 65px !important; /* Dégagé sous la barre de recherche de lieu */
+  left: 16px !important;
   z-index: 1040 !important;
+}
+
+.leaflet-control-zoom {
+  border: 3px solid #0f172a !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.5), 0 8px 16px -3px rgba(0, 0, 0, 0.35) !important;
+}
+
+.leaflet-control-zoom a {
+  width: 50px !important;
+  height: 50px !important;
+  line-height: 48px !important;
+  font-size: 32px !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  transition: all 0.15s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  user-select: none !important;
+  cursor: pointer !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #f1f5f9 !important;
+  color: #059669 !important;
+}
+
+.leaflet-control-zoom a:active {
+  background-color: #e2e8f0 !important;
+  transform: scale(0.95) !important;
+}
+
+.leaflet-control-zoom-in {
+  border-bottom: 2.5px solid #cbd5e1 !important;
+}
+
+/* =========================================================================
+ * CARTOUCHE DES TRACES GPX HAUTE LISIBILITÉ & BOUTONS DE GESTION (- □ ✕)
+ * ========================================================================= */
+#standalone-gpx-hud {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.7), 0 0 0 1.5px rgba(255, 255, 255, 0.15) !important;
+}
+
+.hud-win-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.15s ease;
+  user-select: none;
+  cursor: pointer;
 }
 
 .leaflet-control-zoom {
