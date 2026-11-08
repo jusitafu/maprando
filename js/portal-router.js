@@ -328,16 +328,42 @@
       // Recherche de lieu monde entier
       this.initWorldSearch();
 
-      // Visualiseur GPX libre (accès libre sans compte)
+      // Visualiseur GPX libre (accès libre sans compte : Glisser-Déposer + Chargement classique)
       const inputGpxViewer = document.getElementById('input-quick-gpx-viewer');
       const btnQuickGpx = document.getElementById('btn-quick-gpx-viewer');
       if (btnQuickGpx && inputGpxViewer) {
-        btnQuickGpx.addEventListener('click', () => inputGpxViewer.click());
+        btnQuickGpx.addEventListener('click', () => this.openQuickGpxModal());
         inputGpxViewer.addEventListener('change', (e) => {
           const file = e.target.files && e.target.files[0];
+          if (file) {
+            this.closeQuickGpxModal();
+            this.handleQuickGpxFile(file);
+            e.target.value = '';
+          }
+        });
+
+        // Glisser-déposer direct sur le bouton orange "Charger une trace GPX"
+        btnQuickGpx.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          btnQuickGpx.classList.add('ring-4', 'ring-amber-300', 'scale-105');
+        });
+        btnQuickGpx.addEventListener('dragleave', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          btnQuickGpx.classList.remove('ring-4', 'ring-amber-300', 'scale-105');
+        });
+        btnQuickGpx.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          btnQuickGpx.classList.remove('ring-4', 'ring-amber-300', 'scale-105');
+          const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
           if (file) this.handleQuickGpxFile(file);
         });
       }
+
+      // Glisser-déposer direct sur la carte (#map-column)
+      this.initMapDragAndDropGpx();
     }
 
     handleHashChange() {
@@ -597,6 +623,160 @@
     /* =========================================================================
      * CHARGEMENT GPX LIBRE & IMPRESSION AUTOUR DU TRACÉ
      * ========================================================================= */
+    ensureQuickGpxModal() {
+      let modal = document.getElementById('quick-gpx-drop-modal');
+      if (modal) return modal;
+
+      modal = document.createElement('div');
+      modal.id = 'quick-gpx-drop-modal';
+      modal.className = 'hidden fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4';
+      modal.innerHTML = `
+        <div class="bg-slate-900 border-2 border-amber-500/60 rounded-3xl max-w-lg w-full p-6 shadow-2xl text-white relative animate-fade-in">
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">📂</span>
+              <div>
+                <h3 class="text-base sm:text-lg font-black text-white leading-tight">Charger une trace GPX sur la carte</h3>
+                <p class="text-[11px] text-slate-400">Glisser-déposer ou parcourir depuis votre ordinateur</p>
+              </div>
+            </div>
+            <button type="button" id="btn-close-quick-gpx-modal" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white font-black text-sm flex items-center justify-center transition" title="Fermer">✕</button>
+          </div>
+
+          <div id="quick-gpx-modal-dropzone" class="border-2 border-dashed border-amber-400/80 hover:border-amber-300 bg-slate-950/70 hover:bg-slate-950 rounded-2xl p-7 text-center cursor-pointer transition-all group">
+            <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform pointer-events-none">
+              📥
+            </div>
+            <p class="text-sm sm:text-base font-extrabold text-white pointer-events-none">
+              Glissez-déposez votre fichier <span class="text-amber-400">.gpx</span> ici
+            </p>
+            <p class="text-xs text-slate-400 mt-1 pointer-events-none">
+              Relâchez directement votre fichier dans ce cadre pour afficher son tracé et son profil
+            </p>
+
+            <div class="my-4 flex items-center justify-center gap-3 pointer-events-none">
+              <span class="h-px w-14 bg-slate-800"></span>
+              <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">ou chargement classique</span>
+              <span class="h-px w-14 bg-slate-800"></span>
+            </div>
+
+            <button type="button" id="btn-quick-gpx-browse" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg transition cursor-pointer">
+              <span>📂</span>
+              <span>Parcourir sur mon ordinateur</span>
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      const closeBtn = modal.querySelector('#btn-close-quick-gpx-modal');
+      const browseBtn = modal.querySelector('#btn-quick-gpx-browse');
+      const dz = modal.querySelector('#quick-gpx-modal-dropzone');
+      const inputGpxViewer = document.getElementById('input-quick-gpx-viewer');
+
+      closeBtn.addEventListener('click', () => this.closeQuickGpxModal());
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closeQuickGpxModal();
+      });
+
+      const triggerBrowse = (e) => {
+        if (e) e.stopPropagation();
+        if (inputGpxViewer) inputGpxViewer.click();
+      };
+      browseBtn.addEventListener('click', triggerBrowse);
+      dz.addEventListener('click', triggerBrowse);
+
+      dz.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.add('border-amber-300', 'bg-amber-500/15', 'ring-4', 'ring-amber-400/30');
+      });
+      dz.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        dz.classList.add('border-amber-300', 'bg-amber-500/15', 'ring-4', 'ring-amber-400/30');
+      });
+      dz.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!dz.contains(e.relatedTarget)) {
+          dz.classList.remove('border-amber-300', 'bg-amber-500/15', 'ring-4', 'ring-amber-400/30');
+        }
+      });
+      dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.remove('border-amber-300', 'bg-amber-500/15', 'ring-4', 'ring-amber-400/30');
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) {
+          this.closeQuickGpxModal();
+          this.handleQuickGpxFile(file);
+        }
+      });
+
+      return modal;
+    }
+
+    openQuickGpxModal() {
+      const modal = this.ensureQuickGpxModal();
+      modal.classList.remove('hidden');
+    }
+
+    closeQuickGpxModal() {
+      const modal = document.getElementById('quick-gpx-drop-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    initMapDragAndDropGpx() {
+      const mapCol = document.getElementById('map-column');
+      if (!mapCol) return;
+
+      let overlay = document.getElementById('map-gpx-drag-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'map-gpx-drag-overlay';
+        overlay.className = 'hidden absolute inset-2 z-[2000] rounded-2xl border-4 border-dashed border-amber-400 bg-slate-950/75 backdrop-blur-xs flex flex-col items-center justify-center pointer-events-none text-white shadow-2xl';
+        overlay.innerHTML = `
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/25 border border-amber-400/60 flex items-center justify-center text-4xl mb-3 animate-bounce">📥</div>
+          <div class="text-base sm:text-lg font-black text-amber-300">Relâchez votre fichier GPX ici</div>
+          <div class="text-xs sm:text-sm text-slate-200 mt-1">Affichage immédiat du tracé sur la carte</div>
+        `;
+        mapCol.appendChild(overlay);
+      }
+
+      let dragDepth = 0;
+      mapCol.addEventListener('dragenter', (e) => {
+        if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return;
+        e.preventDefault();
+        dragDepth++;
+        overlay.classList.remove('hidden');
+      });
+      mapCol.addEventListener('dragover', (e) => {
+        if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        overlay.classList.remove('hidden');
+      });
+      mapCol.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0 || !mapCol.contains(e.relatedTarget)) {
+          dragDepth = 0;
+          overlay.classList.add('hidden');
+        }
+      });
+      mapCol.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dragDepth = 0;
+        overlay.classList.add('hidden');
+        const files = e.dataTransfer && e.dataTransfer.files;
+        if (!files || !files.length) return;
+        this.handleQuickGpxFile(files[0]);
+      });
+    }
+
     handleQuickGpxFile(file) {
       if (!file) return;
       const reader = new FileReader();

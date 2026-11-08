@@ -90,7 +90,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=103">
+  <link rel="stylesheet" href="css/styles.css?v=104">
 
 </head>
 
@@ -1899,7 +1899,7 @@
 
               <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
 
-                <img src="favicon-32x32.png?v=103" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
+                <img src="favicon-32x32.png?v=104" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
 
               </div>
 
@@ -2577,38 +2577,37 @@
 
         <!-- Native Reliable Dropzone with Label -->
 
-        <label for="file-input" id="upload-dropzone" class="block border-2 border-dashed border-emerald-400 hover:border-emerald-600 bg-white hover:bg-emerald-50/60 rounded-3xl p-8 sm:p-12 text-center cursor-pointer transition-all shadow-sm group">
+        <label for="file-input" id="upload-dropzone" class="block border-2 border-dashed border-emerald-400 hover:border-emerald-600 bg-white hover:bg-emerald-50/60 rounded-3xl p-7 sm:p-10 text-center cursor-pointer transition-all shadow-sm group relative overflow-hidden">
 
           <input type="file" id="file-input" accept=".gpx,.xml,.kml,.geojson,.json,*" multiple class="hidden">
 
-          
-
-          <div class="w-16 h-16 mx-auto mb-4 bg-emerald-100 group-hover:bg-emerald-200 text-emerald-700 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-inner">
-
+          <div class="w-16 h-16 mx-auto mb-3 bg-emerald-100 group-hover:bg-emerald-200 text-emerald-700 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform shadow-inner pointer-events-none">
             📥
-
           </div>
 
-          
-
-          <h3 class="text-base sm:text-lg font-bold text-slate-900">
-
-            Cliquez pour choisir un ou plusieurs fichiers GPX
-
+          <h3 class="text-base sm:text-lg font-extrabold text-slate-900 pointer-events-none">
+            Glissez-déposez un ou plusieurs fichiers GPX dans ce cadre
           </h3>
 
-          <p class="text-xs sm:text-sm text-slate-500 mt-1">
-
-            ou glissez-déposez-les directement dans cette zone (fichiers .gpx, .xml, .kml)
-
+          <p class="text-xs sm:text-sm text-slate-500 mt-1 pointer-events-none">
+            Déposez directement vos fichiers <code class="text-emerald-700 font-bold">.gpx</code>, <code class="text-emerald-700 font-bold">.xml</code> ou <code class="text-emerald-700 font-bold">.kml</code> depuis votre ordinateur
           </p>
 
-          
+          <div class="my-3.5 flex items-center justify-center gap-3 pointer-events-none">
+            <span class="h-px w-16 bg-slate-200"></span>
+            <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">ou alternative classique</span>
+            <span class="h-px w-16 bg-slate-200"></span>
+          </div>
 
-          <div class="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold border border-emerald-200">
+          <div class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 group-hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md transition pointer-events-none">
+            <span>📂</span>
+            <span>Parcourir sur mon ordinateur</span>
+          </div>
 
-            <span>⚡ Détection automatique : Lieu &bull; Distance &bull; Dénivelé D+ &bull; Profil Alti</span>
-
+          <div class="mt-4 block pointer-events-none">
+            <span class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-50 text-emerald-800 rounded-full text-xs font-semibold border border-emerald-200">
+              <span>⚡ Détection automatique : Lieu &bull; Distance &bull; Dénivelé D+ &bull; Profil Alti</span>
+            </span>
           </div>
 
         </label>
@@ -6521,27 +6520,27 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <!-- Scripts -->
 
-  <script src="js/config.js?v=103"></script>
+  <script src="js/config.js?v=104"></script>
 
-  <script src="js/auth-manager.js?v=103"></script>
+  <script src="js/auth-manager.js?v=104"></script>
 
-  <script src="js/gpx-parser.js?v=103"></script>
+  <script src="js/gpx-parser.js?v=104"></script>
 
-  <script src="js/sample-data.js?v=103"></script>
+  <script src="js/sample-data.js?v=104"></script>
 
-  <script src="js/storage.js?v=103"></script>
+  <script src="js/storage.js?v=104"></script>
 
-  <script src="js/elevation-profile.js?v=103"></script>
+  <script src="js/elevation-profile.js?v=104"></script>
 
-  <script src="js/screen-calib-manager.js?v=103"></script>
-  <script src="js/ign-top25-sheets.js?v=103"></script>
-  <script src="js/map-manager.js?v=103"></script>
+  <script src="js/screen-calib-manager.js?v=104"></script>
+  <script src="js/ign-top25-sheets.js?v=104"></script>
+  <script src="js/map-manager.js?v=104"></script>
 
-  <script src="js/pdf-exporter.js?v=103"></script>
-  <script src="js/gr-manager.js?v=103"></script>
+  <script src="js/pdf-exporter.js?v=104"></script>
+  <script src="js/gr-manager.js?v=104"></script>
 
-  <script src="js/portal-router.js?v=103.2.0"></script>
-    <script src="js/app.js?v=103"></script>
+  <script src="js/portal-router.js?v=104.2.0"></script>
+    <script src="js/app.js?v=104"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->

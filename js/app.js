@@ -442,21 +442,60 @@ class AppController {
     }
 
     if (dropzone) {
+      const highlightDz = (active) => {
+        dropzone.classList.toggle('border-emerald-600', active);
+        dropzone.classList.toggle('bg-emerald-100/80', active);
+        dropzone.classList.toggle('ring-4', active);
+        dropzone.classList.toggle('ring-emerald-400/40', active);
+        dropzone.classList.toggle('scale-[1.01]', active);
+      };
+      dropzone.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        highlightDz(true);
+      });
       dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropzone.classList.add('border-emerald-500', 'bg-emerald-50');
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        highlightDz(true);
       });
       dropzone.addEventListener('dragleave', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropzone.classList.remove('border-emerald-500', 'bg-emerald-50');
+        if (!dropzone.contains(e.relatedTarget)) {
+          highlightDz(false);
+        }
       });
       dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropzone.classList.remove('border-emerald-500', 'bg-emerald-50');
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        highlightDz(false);
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          this.handleFilesUploaded(e.dataTransfer.files);
+        }
+      });
+    }
+
+    // Allow dragging & dropping GPX files directly onto the "Charger une randonnée" tab button
+    const uploadTabBtn = document.querySelector('button[data-tab="upload"]');
+    if (uploadTabBtn) {
+      uploadTabBtn.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadTabBtn.classList.add('ring-2', 'ring-emerald-400');
+      });
+      uploadTabBtn.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadTabBtn.classList.remove('ring-2', 'ring-emerald-400');
+      });
+      uploadTabBtn.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadTabBtn.classList.remove('ring-2', 'ring-emerald-400');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          this.switchTab('upload');
           this.handleFilesUploaded(e.dataTransfer.files);
         }
       });
