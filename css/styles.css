@@ -334,7 +334,7 @@ html, body {
 /* Boite echelle Leaflet positionnee au-dessus du HUD noir pour eviter tout chevauchement */
 .leaflet-bottom.leaflet-left .leaflet-control-scale {
   float: none !important;
-  margin-bottom: 74px !important;
+  margin-bottom: 82px !important;
   margin-left: 12px !important;
   margin-right: 0 !important;
   margin-top: 0 !important;
@@ -387,7 +387,7 @@ html, body {
 
 /* Attribution Leaflet / IGN protegee contre tout chevauchement */
 .leaflet-bottom.leaflet-right .leaflet-control-attribution {
-  margin: 0 12px 74px 0 !important;
+  margin: 0 12px 82px 0 !important;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;

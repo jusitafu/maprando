@@ -759,26 +759,51 @@ class PDFExporter {
       ignSheetInfo = this.getIgnSheetInfoForBounds(actualBounds);
     }
 
-    // Tracé GPX optionnel
+    // Tracé GPX optionnel (Support mono-trace ou multi-traces affichées 1 à 3)
     const pseudoHike = {
       bounds: actualBounds,
-      points: []
+      points: [],
+      tracks: []
     };
 
-    const srcHike = options.hike || null;
-    if (srcHike) {
-      let pts = srcHike.points;
-      if ((!pts || pts.length === 0) && srcHike.rawGpx && typeof GPXParser !== 'undefined') {
-        try {
-          const parsed = GPXParser.parse(srcHike.rawGpx, srcHike.filename || 'trace.gpx');
-          pts = parsed.points || [];
-        } catch (e) { pts = []; }
+    if (options.tracks && options.tracks.length > 0) {
+      pseudoHike.tracks = options.tracks;
+      if (options.tracks[0].points && options.tracks[0].points.length > 0) {
+        pseudoHike.points = options.tracks[0].points;
+        pseudoHike.startPoint = options.tracks[0].startPoint || { lat: options.tracks[0].points[0].lat, lon: options.tracks[0].points[0].lon };
+        pseudoHike.endPoint = options.tracks[0].endPoint || { lat: options.tracks[0].points[options.tracks[0].points.length - 1].lat, lon: options.tracks[0].points[options.tracks[0].points.length - 1].lon };
+        pseudoHike.isLoop = !!options.tracks[0].isLoop;
       }
-      if (pts && pts.length > 0) {
-        pseudoHike.points = pts;
-        pseudoHike.startPoint = srcHike.startPoint || { lat: pts[0].lat, lon: pts[0].lon };
-        pseudoHike.endPoint = srcHike.endPoint || { lat: pts[pts.length - 1].lat, lon: pts[pts.length - 1].lon };
-        pseudoHike.isLoop = !!srcHike.isLoop;
+    } else {
+      const srcHike = options.hike || null;
+      if (srcHike) {
+        if (srcHike.tracks && srcHike.tracks.length > 0) {
+          pseudoHike.tracks = srcHike.tracks;
+        }
+        let pts = srcHike.points;
+        if ((!pts || pts.length === 0) && srcHike.rawGpx && typeof GPXParser !== 'undefined') {
+          try {
+            const parsed = GPXParser.parse(srcHike.rawGpx, srcHike.filename || 'trace.gpx');
+            pts = parsed.points || [];
+          } catch (e) { pts = []; }
+        }
+        if (pts && pts.length > 0) {
+          pseudoHike.points = pts;
+          pseudoHike.startPoint = srcHike.startPoint || { lat: pts[0].lat, lon: pts[0].lon };
+          pseudoHike.endPoint = srcHike.endPoint || { lat: pts[pts.length - 1].lat, lon: pts[pts.length - 1].lon };
+          pseudoHike.isLoop = !!srcHike.isLoop;
+          if (!pseudoHike.tracks || pseudoHike.tracks.length === 0) {
+            pseudoHike.tracks = [{
+              name: srcHike.name || 'Tracé GPX',
+              points: pts,
+              color: options.trackColor || '#1d4ed8',
+              distance: srcHike.distance || (srcHike.distanceKm ? srcHike.distanceKm : null),
+              startPoint: pseudoHike.startPoint,
+              endPoint: pseudoHike.endPoint,
+              isLoop: pseudoHike.isLoop
+            }];
+          }
+        }
       }
     }
 
@@ -1549,101 +1574,100 @@ class PDFExporter {
       }
     }
 
-    // Dessiner le tracé GPX avec contraste maximal absolu
-    if (hike.points && hike.points.length > 0) {
-      const finalTrackColor = trackColor || '#1d4ed8'; // Bleu Roi Électrique par défaut (contraste maximal sur Top 25)
+    // Dessiner le tracé GPX avec contraste maximal absolu (mono-trace ou multi-traces 1 à 3 parcours)
+    const tracksToDraw = (hike.tracks && hike.tracks.length > 0)
+      ? hike.tracks
+      : (hike.points && hike.points.length > 0 ? [{
+          name: hike.name || 'Tracé GPX',
+          points: hike.points,
+          color: trackColor || '#1d4ed8',
+          startPoint: hike.startPoint || { lat: hike.points[0].lat, lon: hike.points[0].lon },
+          endPoint: hike.endPoint || { lat: hike.points[hike.points.length - 1].lat, lon: hike.points[hike.points.length - 1].lon },
+          isLoop: !!hike.isLoop,
+          distance: hike.distance || hike.distanceKm || null
+        }] : []);
 
-      // 1. Bordure d'ombre externe sombre (détache le halo blanc même sur fond blanc/neige/rochers clairs)
-      ctx.beginPath();
-      let first = latLonToPixel(hike.points[0].lat, hike.points[0].lon);
-      ctx.moveTo(first.x, first.y);
-      for (let i = 1; i < hike.points.length; i++) {
-        const pt = latLonToPixel(hike.points[i].lat, hike.points[i].lon);
-        ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)'; // Liseré sombre 10px
-      ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
+    if (tracksToDraw.length > 0) {
+      tracksToDraw.forEach((trk, trkIdx) => {
+        const pts = trk.points;
+        if (!pts || pts.length === 0) return;
+        const curColor = trk.color || trackColor || '#1d4ed8';
 
-      // 2. Halo blanc pur très contrasté (détache la trace des forêts vertes et sentiers GR roses)
-      ctx.beginPath();
-      ctx.moveTo(first.x, first.y);
-      for (let i = 1; i < hike.points.length; i++) {
-        const pt = latLonToPixel(hike.points[i].lat, hike.points[i].lon);
-        ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 8;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-
-      // 3. Tracé principal Bleu Roi Électrique (ou couleur personnalisée)
-      ctx.beginPath();
-      ctx.moveTo(first.x, first.y);
-      for (let i = 1; i < hike.points.length; i++) {
-        const pt = latLonToPixel(hike.points[i].lat, hike.points[i].lon);
-        ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.strokeStyle = finalTrackColor;
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.stroke();
-
-      // 4. Chevrons directionnels (flèches blanches) le long du tracé pour certifier le sens du parcours
-      let accumulatedDist = 0;
-      const arrowSpacing = 65; // pixels
-      for (let i = 1; i < hike.points.length; i++) {
-        const p1 = latLonToPixel(hike.points[i - 1].lat, hike.points[i - 1].lon);
-        const p2 = latLonToPixel(hike.points[i].lat, hike.points[i].lon);
-        const segLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-        accumulatedDist += segLen;
-        if (accumulatedDist >= arrowSpacing && segLen > 4) {
-          accumulatedDist = 0;
-          const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-          const midX = (p1.x + p2.x) / 2;
-          const midY = (p1.y + p2.y) / 2;
-          
-          ctx.save();
-          ctx.translate(midX, midY);
-          ctx.rotate(angle);
-          ctx.beginPath();
-          ctx.moveTo(-3.5, -3);
-          ctx.lineTo(2.5, 0);
-          ctx.lineTo(-3.5, 3);
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.8;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
-
-      // 5. Marqueur de départ (Pastille verte 'D' avec halo blanc)
-      const startPix = latLonToPixel(hike.startPoint.lat, hike.startPoint.lon);
-      ctx.beginPath();
-      ctx.arc(startPix.x, startPix.y, 9.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#10b981';
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('D', startPix.x, startPix.y + 0.5);
-
-      // 6. Marqueur d'arrivée (si hors boucle : Pastille rouge 'A')
-      if (!hike.isLoop && hike.endPoint) {
-        const endPix = latLonToPixel(hike.endPoint.lat, hike.endPoint.lon);
+        // 1. Bordure d'ombre externe sombre (10px)
         ctx.beginPath();
-        ctx.arc(endPix.x, endPix.y, 9.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ef4444';
+        let first = latLonToPixel(pts[0].lat, pts[0].lon);
+        ctx.moveTo(first.x, first.y);
+        for (let i = 1; i < pts.length; i++) {
+          const pt = latLonToPixel(pts[i].lat, pts[i].lon);
+          ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // 2. Halo blanc pur (8px)
+        ctx.beginPath();
+        ctx.moveTo(first.x, first.y);
+        for (let i = 1; i < pts.length; i++) {
+          const pt = latLonToPixel(pts[i].lat, pts[i].lon);
+          ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // 3. Tracé principal avec sa propre couleur (5px)
+        ctx.beginPath();
+        ctx.moveTo(first.x, first.y);
+        for (let i = 1; i < pts.length; i++) {
+          const pt = latLonToPixel(pts[i].lat, pts[i].lon);
+          ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.strokeStyle = curColor;
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // 4. Chevrons directionnels (flèches blanches)
+        let accumulatedDist = 0;
+        const arrowSpacing = 65;
+        for (let i = 1; i < pts.length; i++) {
+          const p1 = latLonToPixel(pts[i - 1].lat, pts[i - 1].lon);
+          const p2 = latLonToPixel(pts[i].lat, pts[i].lon);
+          const segLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          accumulatedDist += segLen;
+          if (accumulatedDist >= arrowSpacing && segLen > 4) {
+            accumulatedDist = 0;
+            const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            ctx.save();
+            ctx.translate(midX, midY);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(-3.5, -3);
+            ctx.lineTo(2.5, 0);
+            ctx.lineTo(-3.5, 3);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.8;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+
+        // 5. Marqueur de départ
+        const sPt = trk.startPoint || { lat: pts[0].lat, lon: pts[0].lon };
+        const startPix = latLonToPixel(sPt.lat, sPt.lon);
+        ctx.beginPath();
+        ctx.arc(startPix.x, startPix.y, 9.5, 0, Math.PI * 2);
+        ctx.fillStyle = tracksToDraw.length > 1 ? curColor : '#10b981';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2.5;
@@ -1652,63 +1676,138 @@ class PDFExporter {
         ctx.font = 'bold 9px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('A', endPix.x, endPix.y + 0.5);
-      }
-    }
+        const startLabel = tracksToDraw.length > 1 ? `D${trkIdx + 1}` : 'D';
+        ctx.fillText(startLabel, startPix.x, startPix.y + 0.5);
 
-    // 7. Légende élégante en bas à gauche (uniquement si un tracé de randonnée est présent)
-    if (hike.points && hike.points.length > 0) {
-      const finalTrackColor = trackColor || '#1d4ed8';
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      if (ctx.roundRect) {
-        ctx.roundRect(10, imgHeight - 30, 260, 22, 5);
+        // 6. Marqueur d'arrivée (si hors boucle)
+        if (!trk.isLoop && (trk.endPoint || pts.length > 1)) {
+          const ePt = trk.endPoint || { lat: pts[pts.length - 1].lat, lon: pts[pts.length - 1].lon };
+          const endPix = latLonToPixel(ePt.lat, ePt.lon);
+          ctx.beginPath();
+          ctx.arc(endPix.x, endPix.y, 9.5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ef4444';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 9px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const endLabel = tracksToDraw.length > 1 ? `A${trkIdx + 1}` : 'A';
+          ctx.fillText(endLabel, endPix.x, endPix.y + 0.5);
+        }
+      });
+
+      // 7. Légende élégante en bas à gauche
+      if (tracksToDraw.length === 1) {
+        const finalTrackColor = tracksToDraw[0].color || trackColor || '#1d4ed8';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+        if (ctx.roundRect) {
+          ctx.roundRect(10, imgHeight - 30, 260, 22, 5);
+        } else {
+          ctx.rect(10, imgHeight - 30, 260, 22);
+        }
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(22, imgHeight - 19, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#10b981';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(92, imgHeight - 19, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(160, imgHeight - 19);
+        ctx.lineTo(182, imgHeight - 19);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(160, imgHeight - 19);
+        ctx.lineTo(182, imgHeight - 19);
+        ctx.strokeStyle = finalTrackColor;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText("Départ", 32, imgHeight - 16);
+        ctx.fillText("Arrivée", 102, imgHeight - 16);
+        ctx.fillText("Tracé GPX", 190, imgHeight - 16);
       } else {
-        ctx.rect(10, imgHeight - 30, 260, 22);
+        // Multi-traces : cartouche de légende multi-parcours
+        const badgeWidth = Math.min(imgWidth - 20, tracksToDraw.length * 190 + 20);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+        if (ctx.roundRect) {
+          ctx.roundRect(10, imgHeight - 30, badgeWidth, 22, 5);
+        } else {
+          ctx.rect(10, imgHeight - 30, badgeWidth, 22);
+        }
+        ctx.fill();
+
+        let curX = 18;
+        tracksToDraw.forEach((trk, idx) => {
+          const trkColor = trk.color || '#1d4ed8';
+          // Pastille départ
+          ctx.beginPath();
+          ctx.arc(curX, imgHeight - 19, 5, 0, Math.PI * 2);
+          ctx.fillStyle = trkColor;
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 7px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`D${idx + 1}`, curX, imgHeight - 18.5);
+
+          // Trait de couleur
+          ctx.beginPath();
+          ctx.moveTo(curX + 9, imgHeight - 19);
+          ctx.lineTo(curX + 25, imgHeight - 19);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(curX + 9, imgHeight - 19);
+          ctx.lineTo(curX + 25, imgHeight - 19);
+          ctx.strokeStyle = trkColor;
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // Libellé de la trace
+          let nameStr = trk.name || `Trace ${idx + 1}`;
+          if (nameStr.length > 15) nameStr = nameStr.substring(0, 13) + '…';
+          if (trk.distance) nameStr += ` (${trk.distance}k)`;
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'alphabetic';
+          ctx.fillText(nameStr, curX + 30, imgHeight - 16);
+
+          curX += 185;
+        });
       }
-      ctx.fill();
-
-      // Pastille verte Départ D
-      ctx.beginPath();
-      ctx.arc(22, imgHeight - 19, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#10b981';
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      // Pastille rouge Arrivée A
-      ctx.beginPath();
-      ctx.arc(92, imgHeight - 19, 5, 0, Math.PI * 2);
-      ctx.fillStyle = '#ef4444';
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-
-      // Trait Tracé GPX (Double contour Blanc + Bleu Roi)
-      ctx.beginPath();
-      ctx.moveTo(160, imgHeight - 19);
-      ctx.lineTo(182, imgHeight - 19);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(160, imgHeight - 19);
-      ctx.lineTo(182, imgHeight - 19);
-      ctx.strokeStyle = finalTrackColor;
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText("Départ", 32, imgHeight - 16);
-      ctx.fillText("Arrivée", 102, imgHeight - 16);
-      ctx.fillText("Tracé GPX", 190, imgHeight - 16);
     }
 
     // 6. Mention de copyright & Échelle cartographique en bas à droite

@@ -198,8 +198,9 @@ class MapManager {
       maxZoom: 19,
       layers: [ignTop25],
       zoomControl: true,
-      zoomSnap: 1,
-      zoomDelta: 1
+      zoomSnap: 0.25,
+      zoomDelta: 0.25,
+      wheelPxPerZoomLevel: 60
     });
 
     this.utmGridLayer = L.layerGroup();
