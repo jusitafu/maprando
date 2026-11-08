@@ -334,10 +334,10 @@
       if (btnQuickGpx && inputGpxViewer) {
         btnQuickGpx.addEventListener('click', () => this.openQuickGpxModal());
         inputGpxViewer.addEventListener('change', (e) => {
-          const file = e.target.files && e.target.files[0];
-          if (file) {
+          const files = e.target.files ? Array.from(e.target.files) : [];
+          if (files.length > 0) {
             this.closeQuickGpxModal();
-            this.handleQuickGpxFile(file);
+            files.slice(0, 3).forEach(f => this.handleQuickGpxFile(f));
             e.target.value = '';
           }
         });
@@ -357,8 +357,8 @@
           e.preventDefault();
           e.stopPropagation();
           btnQuickGpx.classList.remove('ring-4', 'ring-amber-300', 'scale-105');
-          const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-          if (file) this.handleQuickGpxFile(file);
+          const files = e.dataTransfer && e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+          files.slice(0, 3).forEach(f => this.handleQuickGpxFile(f));
         });
       }
 
@@ -708,10 +708,10 @@
         e.preventDefault();
         e.stopPropagation();
         dz.classList.remove('border-amber-300', 'bg-amber-500/15', 'ring-4', 'ring-amber-400/30');
-        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (file) {
+        const files = e.dataTransfer && e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+        if (files.length > 0) {
           this.closeQuickGpxModal();
-          this.handleQuickGpxFile(file);
+          files.slice(0, 3).forEach(f => this.handleQuickGpxFile(f));
         }
       });
 
@@ -771,9 +771,9 @@
         e.stopPropagation();
         dragDepth = 0;
         overlay.classList.add('hidden');
-        const files = e.dataTransfer && e.dataTransfer.files;
+        const files = e.dataTransfer && e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
         if (!files || !files.length) return;
-        this.handleQuickGpxFile(files[0]);
+        files.slice(0, 3).forEach(f => this.handleQuickGpxFile(f));
       });
     }
 

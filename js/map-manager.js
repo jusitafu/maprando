@@ -2725,19 +2725,19 @@ class MapManager {
     }
   }
 
-  /**
-   * Affiche un tracé GPX en mode autonome (accès libre sans enregistrement)
-   * et propose l'impression de la carte haute définition autour du tracé.
-   */
-  displayStandaloneGpxTrack(gpxData, fileName) {
+  /* =========================================================================
+   * MODULE VISUALISEUR MULTI-TRACES GPX (JUSQU'À 3 TRACES + COULEURS AU CLIC)
+   * ========================================================================= */
+  displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     if (!this.map || !gpxData) return;
 
-    if (this._standaloneGpxLayer) {
-      this.map.removeLayer(this._standaloneGpxLayer);
-      this._standaloneGpxLayer = null;
+    if (!this.standaloneTracks) {
+      this.standaloneTracks = [];
     }
+    const DEFAULT_COLORS = ['#e11d48', '#2563eb', '#16a34a']; // Rose/Rouge, Bleu, Vert
+    const PALETTE = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#000000'];
 
-    // Récupérer les points (soit direct de GPXParser.parse, soit tracks)
+    // Récupérer les points GPS
     let pts = gpxData.points || [];
     if (pts.length === 0 && gpxData.tracks) {
       gpxData.tracks.forEach(track => {
@@ -2746,13 +2746,23 @@ class MapManager {
         });
       });
     }
-
     if (pts.length === 0) return;
+
+    // Limite max : 3 traces. Si déjà 3, retirer la plus ancienne
+    if (this.standaloneTracks.length >= 3) {
+      const removed = this.standaloneTracks.shift();
+      if (removed && removed.layer && this.map.hasLayer(removed.layer)) {
+        this.map.removeLayer(removed.layer);
+      }
+    }
+
+    const trackIndex = this.standaloneTracks.length;
+    const assignedColor = preferredColor || DEFAULT_COLORS[trackIndex % DEFAULT_COLORS.length];
 
     const latlngs = pts.map(p => [p.lat, p.lon]);
 
     const polyline = L.polyline(latlngs, {
-      color: '#e11d48',
+      color: assignedColor,
       weight: 4.5,
       opacity: 0.95,
       lineJoin: 'round'
@@ -2762,98 +2772,234 @@ class MapManager {
     const endPt = latlngs[latlngs.length - 1];
 
     const startMarker = L.circleMarker(startPt, {
-      radius: 7,
-      fillColor: '#16a34a',
+      radius: 6.5,
+      fillColor: assignedColor,
       color: '#ffffff',
       weight: 2,
       fillOpacity: 1
-    }).bindTooltip('<b>Départ</b>');
+    }).bindTooltip('<b>Départ : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
     const endMarker = L.circleMarker(endPt, {
-      radius: 7,
-      fillColor: '#dc2626',
-      color: '#ffffff',
-      weight: 2,
+      radius: 6.5,
+      fillColor: '#1e293b',
+      color: assignedColor,
+      weight: 2.5,
       fillOpacity: 1
-    }).bindTooltip('<b>Arrivée</b>');
+    }).bindTooltip('<b>Arrivée : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
-    this._standaloneGpxLayer = L.featureGroup([polyline, startMarker, endMarker]);
-    this.map.addLayer(this._standaloneGpxLayer);
-    this.map.fitBounds(this._standaloneGpxLayer.getBounds(), { padding: [40, 40] });
+    const trackLayer = L.featureGroup([polyline, startMarker, endMarker]);
+    this.map.addLayer(trackLayer);
 
-    const trackName = (gpxData.name || fileName || 'Trace GPX importée').replace(/\.gpx$/i, '');
+    const trackName = (gpxData.name || fileName || ('Trace ' + (trackIndex + 1))).replace(/\.gpx$/i, '');
     const distVal = (gpxData.distanceKm !== undefined) ? gpxData.distanceKm : ((gpxData.distance !== undefined) ? gpxData.distance : '0');
     const eleVal = (gpxData.elevationGain !== undefined) ? Math.round(gpxData.elevationGain) : 0;
 
-    this.standaloneHike = {
-      id: gpxData.id || ('gpx_user_' + Date.now()),
+    const trackItem = {
+      id: gpxData.id || ('gpx_user_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
       name: trackName,
       distance: String(distVal),
       elevationGain: eleVal,
       ibp: (gpxData.ibp !== undefined) ? gpxData.ibp : null,
+      color: assignedColor,
       points: pts,
       startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
-      endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] }
+      endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] },
+      layer: trackLayer,
+      polyline: polyline,
+      startMarker: startMarker,
+      endMarker: endMarker
     };
-    this.selectedHike = this.standaloneHike;
 
-    // Afficher le HUD interactif avec bouton d'impression
-    this.showStandaloneGpxHud(this.standaloneHike);
+    // Clic direct sur la trace sur la carte pour changer sa couleur au vol
+    polyline.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      this.cycleTrackColor(trackItem.id);
+    });
+
+    this.standaloneTracks.push(trackItem);
+    this.standaloneHike = trackItem; // dernière trace active
+    this.selectedHike = trackItem;
+
+    // Ajuster la vue pour englober toutes les traces affichées
+    this.fitAllStandaloneTracks();
+
+    // Afficher ou actualiser le HUD multi-traces interactif
+    this.showStandaloneGpxHud();
   }
 
-  showStandaloneGpxHud(hike) {
+  fitAllStandaloneTracks() {
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
+    const allBounds = L.latLngBounds([]);
+    this.standaloneTracks.forEach(t => {
+      if (t.layer) allBounds.extend(t.layer.getBounds());
+    });
+    if (allBounds.isValid()) {
+      this.map.fitBounds(allBounds, { padding: [50, 50] });
+    }
+  }
+
+  setTrackColor(trackId, newColor) {
+    if (!this.standaloneTracks) return;
+    const track = this.standaloneTracks.find(t => t.id === trackId);
+    if (!track) return;
+    track.color = newColor;
+    if (track.polyline) {
+      track.polyline.setStyle({ color: newColor });
+    }
+    if (track.startMarker) {
+      track.startMarker.setStyle({ fillColor: newColor });
+    }
+    if (track.endMarker) {
+      track.endMarker.setStyle({ color: newColor });
+    }
+    this.showStandaloneGpxHud();
+  }
+
+  cycleTrackColor(trackId) {
+    if (!this.standaloneTracks) return;
+    const PALETTE = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#000000'];
+    const track = this.standaloneTracks.find(t => t.id === trackId);
+    if (!track) return;
+    const curIdx = PALETTE.indexOf(track.color);
+    const nextColor = PALETTE[(curIdx + 1) % PALETTE.length];
+    this.setTrackColor(trackId, nextColor);
+  }
+
+  removeStandaloneTrack(trackId) {
+    if (!this.standaloneTracks) return;
+    const idx = this.standaloneTracks.findIndex(t => t.id === trackId);
+    if (idx >= 0) {
+      const removed = this.standaloneTracks.splice(idx, 1)[0];
+      if (removed && removed.layer && this.map.hasLayer(removed.layer)) {
+        this.map.removeLayer(removed.layer);
+      }
+    }
+    if (this.standaloneTracks.length === 0) {
+      this.clearStandaloneGpxTrack();
+    } else {
+      this.standaloneHike = this.standaloneTracks[this.standaloneTracks.length - 1];
+      this.selectedHike = this.standaloneHike;
+      this.showStandaloneGpxHud();
+    }
+  }
+
+  showStandaloneGpxHud(ignoredParam = null) {
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) {
+      const hud = document.getElementById('standalone-gpx-hud');
+      if (hud) hud.classList.add('hidden');
+      return;
+    }
+
+    const PALETTE = ['#e11d48', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#0891b2', '#000000'];
     let hud = document.getElementById('standalone-gpx-hud');
     if (!hud) {
       hud = document.createElement('div');
       hud.id = 'standalone-gpx-hud';
-      hud.className = 'fixed top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-3 text-xs text-white';
+      hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex flex-col gap-2 text-xs text-white max-w-[95vw] sm:max-w-2xl';
       document.body.appendChild(hud);
     }
+
+    const count = this.standaloneTracks.length;
+    let tracksHtml = this.standaloneTracks.map((t, i) => {
+      const palettePicker = PALETTE.map(c => `
+        <button type="button" class="w-3.5 h-3.5 rounded-full transition-transform hover:scale-125 border ${c === t.color ? 'border-white scale-110 shadow-sm ring-1 ring-white/60' : 'border-black/40'}" style="background-color: ${c};" onclick="window.MapManagerInstance.setTrackColor('${t.id}', '${c}')" title="Appliquer cette couleur"></button>
+      `).join('');
+
+      return `
+        <div class="flex items-center justify-between gap-2.5 p-1.5 rounded-xl bg-slate-950/60 border border-slate-800">
+          <div class="flex items-center gap-2 min-w-0">
+            <!-- Pastille de couleur cliquable pour cycler les couleurs -->
+            <button type="button" class="w-4 h-4 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
+            </button>
+            <span class="font-extrabold text-slate-100 truncate max-w-[110px] sm:max-w-[200px]" title="${t.name}">
+              ${t.name}
+            </span>
+            <span class="px-1.5 py-0.5 rounded-md bg-slate-800 text-[10px] font-mono text-emerald-400 whitespace-nowrap">
+              ${t.distance} km • +${t.elevationGain}m${t.ibp ? ` • <strong class="text-amber-400">IBP ${t.ibp}</strong>` : ''}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <!-- Palette rapide de couleurs -->
+            <div class="hidden sm:flex items-center gap-1 bg-slate-900 px-1.5 py-1 rounded-lg border border-slate-800">
+              ${palettePicker}
+            </div>
+            <!-- Bouton centrer la vue sur cette trace -->
+            <button type="button" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 hover:text-white" onclick="if(window.MapManagerInstance.standaloneTracks[${i}].layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
+              🎯
+            </button>
+            <!-- Bouton supprimer cette trace -->
+            <button type="button" class="p-1 rounded-md hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 text-xs" onclick="window.MapManagerInstance.removeStandaloneTrack('${t.id}')" title="Fermer cette trace">
+              ✕
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
     hud.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-        <span class="font-bold text-slate-100 truncate max-w-[180px] sm:max-w-[280px]" title="${hike.name}">${hike.name}</span>
-        <span class="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-emerald-400 whitespace-nowrap">${hike.distance} km • +${hike.elevationGain}m${hike.ibp ? ` • <strong class="text-amber-400">IBP ${hike.ibp}</strong>` : ''}</span>
+      <div class="flex items-center justify-between gap-3 pb-1 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400 font-black text-xs uppercase tracking-wider">Traces GPX (${count}/3)</span>
+          <span class="text-[10px] text-slate-400 hidden sm:inline">Cliquez sur une trace ou sa pastille pour changer sa couleur</span>
+        </div>
+        <div class="flex items-center gap-2">
+          ${count < 3 ? `
+            <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] flex items-center gap-1 shadow transition cursor-pointer">
+              <span>+</span> <span>Ajouter trace</span>
+            </button>
+          ` : ''}
+          <button id="btn-print-standalone-gpx" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 shadow transition cursor-pointer">
+            <span>🖨️</span> <span>Imprimer</span>
+          </button>
+          <button id="btn-clear-standalone-gpx" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-700 text-slate-300 hover:text-white font-bold text-[11px] transition cursor-pointer" title="Fermer toutes les traces">
+            Tout effacer
+          </button>
+        </div>
       </div>
-      <div class="flex items-center gap-2 border-l border-slate-700 pl-3">
-        <button id="btn-print-standalone-gpx" type="button" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-          <span>🖨️</span> <span class="hidden sm:inline">Imprimer la carte</span><span class="sm:hidden">Imprimer</span>
-        </button>
-        <button id="btn-clear-standalone-gpx" type="button" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition cursor-pointer" title="Fermer cette trace">
-          ✕
-        </button>
+      <div class="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+        ${tracksHtml}
       </div>
     `;
     hud.classList.remove('hidden');
 
-    document.getElementById('btn-print-standalone-gpx').addEventListener('click', () => {
-      this.printAroundStandaloneGpx();
-    });
-
-    document.getElementById('btn-clear-standalone-gpx').addEventListener('click', () => {
-      this.clearStandaloneGpxTrack();
-    });
+    const printBtn = document.getElementById('btn-print-standalone-gpx');
+    if (printBtn) {
+      printBtn.onclick = () => this.printAroundStandaloneGpx();
+    }
+    const clearBtn = document.getElementById('btn-clear-standalone-gpx');
+    if (clearBtn) {
+      clearBtn.onclick = () => this.clearStandaloneGpxTrack();
+    }
   }
 
   printAroundStandaloneGpx() {
-    if (!this._standaloneGpxLayer) return;
-    const bounds = this._standaloneGpxLayer.getBounds();
-    const padLat = (bounds.getNorth() - bounds.getSouth()) * 0.15;
-    const padLng = (bounds.getEast() - bounds.getWest()) * 0.15;
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
+    const allBounds = L.latLngBounds([]);
+    this.standaloneTracks.forEach(t => {
+      if (t.layer) allBounds.extend(t.layer.getBounds());
+    });
+    if (!allBounds.isValid()) return;
+    const padLat = (allBounds.getNorth() - allBounds.getSouth()) * 0.15;
+    const padLng = (allBounds.getEast() - allBounds.getWest()) * 0.15;
     const paddedBounds = [
-      [bounds.getSouth() - padLat, bounds.getWest() - padLng],
-      [bounds.getNorth() + padLat, bounds.getEast() + padLng]
+      [allBounds.getSouth() - padLat, allBounds.getWest() - padLng],
+      [allBounds.getNorth() + padLat, allBounds.getEast() + padLng]
     ];
     if (window.App) {
-      window.App.areaPrintHike = this.standaloneHike;
+      window.App.areaPrintHike = this.standaloneHike || this.standaloneTracks[0];
       window.App.openMapAreaModal(paddedBounds);
     }
   }
 
   clearStandaloneGpxTrack() {
-    if (this._standaloneGpxLayer) {
-      this.map.removeLayer(this._standaloneGpxLayer);
-      this._standaloneGpxLayer = null;
+    if (this.standaloneTracks && this.standaloneTracks.length > 0) {
+      this.standaloneTracks.forEach(t => {
+        if (t.layer && this.map.hasLayer(t.layer)) {
+          this.map.removeLayer(t.layer);
+        }
+      });
+      this.standaloneTracks = [];
     }
     this.standaloneHike = null;
     if (this.selectedHike && String(this.selectedHike.id).startsWith('gpx_user_')) {
