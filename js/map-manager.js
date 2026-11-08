@@ -88,6 +88,7 @@ class MapManager {
 
     // Mesure d'itinéraire par clics successifs
     this.measurePathActive = false;
+    this.isHudMinimized = false;
     this.measurePoints = [];
     this.measureMarkers = [];
     this.measurePolyline = null;
@@ -197,7 +198,7 @@ class MapManager {
       maxZoom: 19,
       layers: [ignTop25],
       zoomControl: true,
-      zoomSnap: 0,
+      zoomSnap: 1,
       zoomDelta: 1
     });
 
@@ -1551,6 +1552,7 @@ class MapManager {
 
     // Mesure d'itinéraire par clics successifs
     this.measurePathActive = false;
+    this.isHudMinimized = false;
     this.measurePoints = [];
     this.measureMarkers = [];
     this.measurePolyline = null;
@@ -1646,6 +1648,7 @@ class MapManager {
 
     // Mesure d'itinéraire par clics successifs
     this.measurePathActive = false;
+    this.isHudMinimized = false;
     this.measurePoints = [];
     this.measureMarkers = [];
     this.measurePolyline = null;
@@ -1675,6 +1678,7 @@ class MapManager {
 
     // Mesure d'itinéraire par clics successifs
     this.measurePathActive = false;
+    this.isHudMinimized = false;
     this.measurePoints = [];
     this.measureMarkers = [];
     this.measurePolyline = null;
@@ -1755,6 +1759,7 @@ class MapManager {
 
     // Mesure d'itinéraire par clics successifs
     this.measurePathActive = false;
+    this.isHudMinimized = false;
     this.measurePoints = [];
     this.measureMarkers = [];
     this.measurePolyline = null;
@@ -2308,6 +2313,7 @@ class MapManager {
   cancelMeasurePath() {
     this.finishMeasurePath();
     this.measurePathActive = false;
+    this.isHudMinimized = false;
     this.measurePoints = [];
     this.measureMarkers = [];
     this.measureTotalDistance = 0;
@@ -2924,6 +2930,15 @@ class MapManager {
     }
   }
 
+    toggleMinimizeHud(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.isHudMinimized = forceState;
+    } else {
+      this.isHudMinimized = !this.isHudMinimized;
+    }
+    this.showStandaloneGpxHud();
+  }
+
   showStandaloneGpxHud(ignoredParam = null) {
     if (!this.standaloneTracks || this.standaloneTracks.length === 0) {
       const hud = document.getElementById('standalone-gpx-hud');
@@ -2941,36 +2956,72 @@ class MapManager {
     }
 
     const count = this.standaloneTracks.length;
+
+    // MODE RÉDUIT (Minimisé pour dégager la carte)
+    if (this.isHudMinimized) {
+      hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500/80 rounded-2xl px-3.5 sm:px-4 py-2 shadow-2xl flex items-center justify-between gap-3 text-xs text-white max-w-[95vw]';
+      hud.innerHTML = `
+        <div class="flex items-center gap-2.5 cursor-pointer select-none" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Cliquer pour agrandir le cartouche">
+          <span class="text-base">📊</span>
+          <span class="text-amber-400 font-black text-xs sm:text-sm uppercase tracking-wider">Traces GPX (${count}/3)</span>
+          <div class="flex items-center gap-1.5 ml-1">
+            ${this.standaloneTracks.map(t => `
+              <span class="w-4 h-4 rounded-full border-2 border-white shadow-sm inline-block cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="event.stopPropagation(); window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Trace: ${t.name} (cliquez pour changer de couleur)"></span>
+            `).join('')}
+          </div>
+          <span class="text-xs text-slate-300 font-bold hidden sm:inline ml-1">
+            (${this.standaloneTracks.map(t => `${t.distance} km`).join(' • ')})
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
+          <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire (déjà réduit)" class="hud-win-btn bg-slate-800 text-slate-500 cursor-default" disabled>
+            &minus;
+          </button>
+          <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Agrandir / Afficher les détails" class="hud-win-btn bg-emerald-600 hover:bg-emerald-500 text-white shadow-md">
+            &#x25A1;
+          </button>
+          <button type="button" onclick="window.MapManagerInstance.clearStandaloneGpxTrack()" title="Fermer et effacer les traces GPX" class="hud-win-btn bg-rose-950/80 hover:bg-rose-700 text-rose-300 hover:text-white">
+            &#x2715;
+          </button>
+        </div>
+      `;
+      hud.classList.remove('hidden');
+      return;
+    }
+
+    // MODE NORMAL AGRANDI (Plein écran / haute lisibilité)
+    hud.className = 'fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-2xl flex flex-col gap-2.5 text-xs text-white max-w-[95vw] sm:max-w-2xl';
+
     let tracksHtml = this.standaloneTracks.map((t, i) => {
       const palettePicker = PALETTE.map(c => `
-        <button type="button" class="w-3.5 h-3.5 rounded-full transition-transform hover:scale-125 border ${c === t.color ? 'border-white scale-110 shadow-sm ring-1 ring-white/60' : 'border-black/40'}" style="background-color: ${c};" onclick="window.MapManagerInstance.setTrackColor('${t.id}', '${c}')" title="Appliquer cette couleur"></button>
+        <button type="button" class="w-4 h-4 rounded-full transition-transform hover:scale-125 border ${c === t.color ? 'border-white scale-110 shadow-sm ring-2 ring-white/70' : 'border-black/50'}" style="background-color: ${c};" onclick="window.MapManagerInstance.setTrackColor('${t.id}', '${c}')" title="Appliquer cette couleur"></button>
       `).join('');
 
       return `
-        <div class="flex items-center justify-between gap-2.5 p-1.5 rounded-xl bg-slate-950/60 border border-slate-800">
-          <div class="flex items-center gap-2 min-w-0">
+        <div class="flex items-center justify-between gap-3 p-2 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center gap-2.5 min-w-0">
             <!-- Pastille de couleur cliquable pour cycler les couleurs -->
-            <button type="button" class="w-4 h-4 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
+            <button type="button" class="w-6 h-6 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
             </button>
-            <span class="font-extrabold text-slate-100 truncate max-w-[110px] sm:max-w-[200px]" title="${t.name}">
+            <span class="font-black text-sm text-slate-100 truncate max-w-[130px] sm:max-w-[220px]" title="${t.name}">
               ${t.name}
             </span>
-            <span class="px-1.5 py-0.5 rounded-md bg-slate-800 text-[10px] font-mono text-emerald-400 whitespace-nowrap">
-              ${t.distance} km • +${t.elevationGain}m${t.ibp ? ` • <strong class="text-amber-400">IBP ${t.ibp}</strong>` : ''}
+            <span class="px-2 py-0.5 rounded-lg bg-slate-800 text-xs font-mono text-emerald-400 font-bold whitespace-nowrap">
+              ${t.distance} km • +${t.elevationGain}m${t.ibp ? ` • <strong class="text-amber-400 font-extrabold">IBP ${t.ibp}</strong>` : ''}
             </span>
           </div>
 
           <div class="flex items-center gap-2 flex-shrink-0">
             <!-- Palette rapide de couleurs -->
-            <div class="hidden sm:flex items-center gap-1 bg-slate-900 px-1.5 py-1 rounded-lg border border-slate-800">
+            <div class="hidden sm:flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-xl border border-slate-800">
               ${palettePicker}
             </div>
             <!-- Bouton centrer la vue sur cette trace -->
-            <button type="button" class="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 hover:text-white" onclick="if(window.MapManagerInstance.standaloneTracks[${i}].layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
+            <button type="button" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm text-slate-200 hover:text-white flex items-center justify-center transition" onclick="if(window.MapManagerInstance.standaloneTracks[${i}].layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
               🎯
             </button>
             <!-- Bouton supprimer cette trace -->
-            <button type="button" class="p-1 rounded-md hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 text-xs" onclick="window.MapManagerInstance.removeStandaloneTrack('${t.id}')" title="Fermer cette trace">
+            <button type="button" class="w-7 h-7 rounded-lg hover:bg-rose-900/60 text-slate-400 hover:text-rose-400 text-sm font-bold flex items-center justify-center transition" onclick="window.MapManagerInstance.removeStandaloneTrack('${t.id}')" title="Fermer cette trace">
               ✕
             </button>
           </div>
@@ -2979,26 +3030,38 @@ class MapManager {
     }).join('');
 
     hud.innerHTML = `
-      <div class="flex items-center justify-between gap-3 pb-1 border-b border-slate-800">
+      <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-800">
         <div class="flex items-center gap-2">
-          <span class="text-amber-400 font-black text-xs uppercase tracking-wider">Traces GPX (${count}/3)</span>
-          <span class="text-[10px] text-slate-400 hidden sm:inline">Cliquez sur une trace ou sa pastille pour changer sa couleur</span>
+          <span class="text-amber-400 font-black text-xs sm:text-sm uppercase tracking-wider">Traces GPX (${count}/3)</span>
+          <span class="text-xs text-slate-400 hidden sm:inline">Cliquez sur une pastille pour changer de couleur</span>
         </div>
         <div class="flex items-center gap-2">
           ${count < 3 ? `
-            <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-[11px] flex items-center gap-1 shadow transition cursor-pointer">
+            <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1 shadow transition cursor-pointer">
               <span>+</span> <span>Ajouter trace</span>
             </button>
           ` : ''}
-          <button id="btn-print-standalone-gpx" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center gap-1 shadow transition cursor-pointer">
+          <button id="btn-print-standalone-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 shadow transition cursor-pointer">
             <span>🖨️</span> <span>Imprimer</span>
           </button>
-          <button id="btn-clear-standalone-gpx" type="button" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-700 text-slate-300 hover:text-white font-bold text-[11px] transition cursor-pointer" title="Fermer toutes les traces">
+          <button id="btn-clear-standalone-gpx" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-700 text-slate-300 hover:text-white font-bold text-xs transition cursor-pointer" title="Fermer toutes les traces">
             Tout effacer
           </button>
+          <!-- 3 solutions habituelles : - pour réduire, □ pour agrandir, ✕ pour fermer -->
+          <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
+            <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire la boîte" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
+              &minus;
+            </button>
+            <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Agrandir / Pleine taille" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
+              &#x25A1;
+            </button>
+            <button type="button" onclick="window.MapManagerInstance.clearStandaloneGpxTrack()" title="Fermer et effacer les traces GPX" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
+              &#x2715;
+            </button>
+          </div>
         </div>
       </div>
-      <div class="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+      <div class="flex flex-col gap-1.5 max-h-56 overflow-y-auto">
         ${tracksHtml}
       </div>
     `;
