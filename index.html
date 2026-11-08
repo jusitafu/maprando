@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=111">
+  <link rel="stylesheet" href="css/styles.css?v=112">
 
 </head>
 
@@ -246,7 +246,7 @@
                 Guides &amp; Savoirs
               </h2>
               <p class="text-xs sm:text-sm text-slate-200 mt-2 font-medium leading-relaxed">
-                Fiches techniques sur le GPS &amp; SBAS, le programme LiDAR HD de l'IGN, l'évaluation d'effort IBP Index et la Check-list essentielle avant de partir en randonnée.
+                Fiches techniques sur le GPS &amp; SBAS, le LiDAR HD, l'IBP Index, la Check-list départ et la gestion des secours en zone blanche (Téléphonie &amp; SOS Satellite).
               </p>
             </div>
           </div>
@@ -1033,6 +1033,252 @@
             </div>
           </div>
         </div>
+
+        <!-- ================================================================= -->
+        <!-- FICHE 5 : GESTION DES SECOURS EN ZONE BLANCHE & SOS SATELLITE     -->
+        <!-- ================================================================= -->
+        <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-rose-500/70 transition-all shadow-2xl overflow-hidden">
+          <!-- Entête cliquable (Titre seul) -->
+          <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-secours-content', this)" 
+                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
+                📡
+              </div>
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
+                  <span>PROCÉDURES D'ALERTE &bull; SÉCURITÉ OUTDOOR &amp; MONTAGNE</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
+                  Gestion des Secours en Zone Blanche : Téléphonie &amp; SOS Satellite
+                </h2>
+                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
+                  Numéros d'urgence officiels, vérités sur le 112 sans réseau, protocole SMS 114 et secours par satellite direct.
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <span class="guide-toggle-icon text-sm px-3.5 py-2 rounded-xl bg-rose-600/30 text-rose-300 font-extrabold border border-rose-500/40">
+                Déplier ▾
+              </span>
+            </div>
+          </button>
+
+          <!-- Contenu dépliable de la Fiche 5 -->
+          <div id="fiche-secours-content" class="hidden border-t border-slate-800 p-6 sm:p-10 bg-slate-950/60 space-y-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-rose-950/30 p-4 rounded-2xl border border-rose-800/50">
+              <div class="text-xs text-rose-200">
+                📄 <strong>Fiche Pratique &bull; Procédures d'Urgence &amp; Sécurité Outdoor</strong> &bull; JLDApps 2026 &bull; Document PDF imprimable (2 pages)
+              </div>
+              <a href="docs/Fiche_Pratique_Secours_Zone_Blanche_Satellite.pdf" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex-shrink-0">
+                <span>📥</span> <span>Télécharger le PDF (208 Ko)</span>
+              </a>
+            </div>
+
+            <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
+              <!-- SECTION 1 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-rose-400">1.</span> Les Numéros d'Urgence en Situation Normale (Réseau Présent)
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300">
+                  Avant d'envisager une défaillance de couverture, rappel des numéros prioritaires à composer selon la situation et le lieu en France :
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="px-2 py-0.5 rounded-md bg-rose-500 text-white font-black text-xs font-mono">112</span>
+                      <strong class="text-white text-xs sm:text-sm">Numéro d'Urgence Européen</strong>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                      Valable sur tout le continent, accessible gratuitement 24h/24 depuis tout téléphone fixe ou mobile (même écran verrouillé). Il aiguille vers les pompiers, le SAMU ou les forces de l'ordre.
+                    </p>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-xs font-mono">15</span>
+                      <strong class="text-white text-xs sm:text-sm">SAMU (Urgence Médicale)</strong>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                      Urgence médicale absolue, détresse vitale, malaise cardiaque ou blessure grave nécessitant un médecin régulateur.
+                    </p>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="px-2 py-0.5 rounded-md bg-red-600 text-white font-black text-xs font-mono">18</span>
+                      <strong class="text-white text-xs sm:text-sm">Sapeurs-Pompiers</strong>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                      Incendie, sauvetage technique, accident de la circulation, secours à victime en milieu périurbain et rural.
+                    </p>
+                  </div>
+
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="px-2 py-0.5 rounded-md bg-blue-600 text-white font-black text-xs font-mono">17</span>
+                      <strong class="text-white text-xs sm:text-sm">Gendarmerie / Police</strong>
+                    </div>
+                    <p class="text-xs text-slate-300">
+                      Disparition inquiétante, accident, sécurité publique.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-xl bg-sky-950/40 border border-sky-800/60 text-xs sm:text-sm text-sky-200 mt-2">
+                  ⛰️ <strong>Postes Spécifiques Montagne (PGHM / CRS) :</strong> En haute montagne, composer le <strong>112</strong> bascule directement sur le peloton de gendarmerie de haute montagne ou la CRS Montagne territorialement compétente.
+                </div>
+              </section>
+
+              <!-- SECTION 2 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-rose-400">2.</span> Peut-on Réellement Appeler le 112 « Sans Réseau » ? (Démystification)
+                </h3>
+                
+                <div class="p-4 rounded-xl bg-rose-950/50 border-2 border-rose-500/60 text-xs sm:text-sm text-rose-100">
+                  ⚠️ <strong>La règle absolue :</strong> Un téléphone mobile ordinaire <strong>ne peut pas émettre d'ondes radio dans le vide</strong>. Sans aucune onde GSM/4G à portée, <strong>aucun appel vocal classique ne peut aboutir</strong>.
+                </div>
+
+                <div class="space-y-3 text-xs sm:text-sm text-slate-300">
+                  <p><strong>D'où vient alors la mention « Appels d'urgence uniquement » affichée sur l'écran ?</strong></p>
+                  <ul class="list-disc list-inside space-y-2 pl-2">
+                    <li><strong>L'Itinérance d'Urgence (All-Operator Roaming) :</strong> Si vous êtes abonné chez un opérateur A (ex. Orange) et que son antenne ne couvre pas votre combe, votre téléphone affiche « Aucun réseau ». Mais si une antenne concurrente (SFR, Bouygues, Free ou réseau transfrontalier suisse/italien) arrose la zone, <strong>la loi oblige cette antenne à relayer votre appel au 112 gratuitement</strong>.</li>
+                    <li><strong>Vraie zone blanche totale :</strong> Si aucun opérateur national n'a d'antenne captée par l'appareil, <strong>l'appel 112 échoue immédiatement</strong>.</li>
+                    <li><strong>L'astuce vitale du SMS au 114 :</strong> En cas de signal extrêmement faible et intermittent (où la voix hachée coupe sans cesse), <strong>envoyez un SMS au 114</strong> (numéro national d'urgence par texte). Un SMS n'exige qu'un dixième de seconde de connexion furtive pour partir et s'envoie automatiquement dès qu'un micro-relais est capté.</li>
+                  </ul>
+                </div>
+              </section>
+
+              <!-- SECTION 3 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-rose-400">3.</span> Smartphones Dotés de la Capacité SOS Satellite Directe (État au 1<sup>er</sup> Novembre 2026)
+                </h3>
+                
+                <div class="overflow-x-auto rounded-2xl border border-slate-800">
+                  <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-slate-900 text-slate-200 border-b border-slate-800 font-extrabold uppercase tracking-wider">
+                      <tr>
+                        <th class="p-3">Constructeur</th>
+                        <th class="p-3">Modèles compatibles</th>
+                        <th class="p-3">Constellation</th>
+                        <th class="p-3">Statut &amp; Coût</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60 bg-slate-950/40 font-medium">
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Apple</td>
+                        <td class="p-3 text-slate-300">iPhone 14, 15, 16 et 17 (standards, Plus, Pro, Pro Max)</td>
+                        <td class="p-3 text-slate-400">Globalstar (Bande L / S)</td>
+                        <td class="p-3 text-emerald-400 font-bold">INCLUS (GRATUIT)</td>
+                      </tr>
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Google</td>
+                        <td class="p-3 text-slate-300">Pixel 9, 9 Pro, 9 Pro XL, 9 Pro Fold, Pixel 10 et 10 Pro</td>
+                        <td class="p-3 text-slate-400">Skylo / Garmin Response</td>
+                        <td class="p-3 text-emerald-400 font-bold">INCLUS (GRATUIT)</td>
+                      </tr>
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Samsung</td>
+                        <td class="p-3 text-slate-300">Galaxy S25 Ultra, gamme Galaxy S26 (S26, S26+, Ultra)</td>
+                        <td class="p-3 text-slate-400">Partenariats NTN (Exynos/Snapdragon)</td>
+                        <td class="p-3 text-emerald-400 font-bold">INCLUS (GRATUIT)</td>
+                      </tr>
+                      <tr class="hover:bg-slate-800/30">
+                        <td class="p-3 font-bold text-white">Boîtiers Dédiés</td>
+                        <td class="p-3 text-slate-300">Garmin inReach (Mini 2/Messenger), ZOLEO, Motorola Defy</td>
+                        <td class="p-3 text-slate-400">Iridium (100 % couverture globale)</td>
+                        <td class="p-3 text-amber-400 font-bold">ABONNEMENT REQUIS</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="space-y-1.5 text-xs text-slate-400 pt-2">
+                  <p><strong>Signification des statuts d'accès :</strong></p>
+                  <p>&bull; <strong class="text-emerald-400">Inclus (Gratuit) :</strong> Fonction d'urgence utilisable immédiatement sans abonnement ni surcoût opérateur (pris en charge par le constructeur de l'appareil).</p>
+                  <p>&bull; <strong class="text-amber-400">Abonnement Requis (Matériel Pro) :</strong> Balises autonomes spécialisées (inReach) nécessitant un forfait mensuel/annuel dédié, mais offrant une fiabilité extrême à 100 % du globe et une autonomie de plusieurs semaines.</p>
+                </div>
+              </section>
+
+              <!-- SECTION 4 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-rose-400">4.</span> Méthode d'Alignement Satellite Pas à Pas
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="font-bold text-emerald-400 text-xs mb-1">Étape 1 &bull; Déclenchement</div>
+                    <p class="text-xs text-slate-300">Composer le <strong>112</strong> ou <strong>911</strong>. Lorsque l'appel échoue faute de relais terrestre, le smartphone propose automatiquement l'option <em>« SOS d'urgence par satellite »</em> ou <em>« Message d'urgence »</em>.</p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="font-bold text-emerald-400 text-xs mb-1">Étape 2 &bull; Dégager le champ de vision</div>
+                    <p class="text-xs text-slate-300">S'éloigner impérativement des parois rocheuses abruptes, surplombs, grottes ou sous-bois denses. Un ciel dégagé avec vue vers l'horizon est indispensable.</p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="font-bold text-emerald-400 text-xs mb-1">Étape 3 &bull; Visée et suivi à l'écran</div>
+                    <p class="text-xs text-slate-300">Tenir l'appareil naturellement en main. Un radar graphique guide l'orientation (vers la gauche ou la droite). Tourner sur soi-même pour maintenir le symbole dans la zone verte jusqu'à confirmation de liaison.</p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <div class="font-bold text-emerald-400 text-xs mb-1">Étape 4 &bull; Questionnaire guidé</div>
+                    <p class="text-xs text-slate-300">Répondre brièvement aux questions à l'écran (nature de l'accident, nombre de blessés, capacité à marcher). Ces données sont compressées et envoyées sous forme de mini-paquets chiffrés avec vos coordonnées GPS.</p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- SECTION 5 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-rose-400">5.</span> Que Transmettre aux Secours et Règle d'Or de la Communication
+                </h3>
+                
+                <div class="p-4 rounded-xl bg-amber-950/50 border-2 border-amber-500/70 text-xs sm:text-sm text-amber-200">
+                  🚨 <strong>Règle d'or absolue : NE JAMAIS RACCROCHER LE PREMIER.</strong><br>
+                  Seul le médecin régulateur ou le secouriste en ligne a autorité pour mettre fin à la communication. C'est lui qui s'assure que toutes les informations vitales sont enregistrées avant de couper.
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-300 pt-1">
+                  Lors de l'échange (vocal, SMS 114 ou questionnaire satellite), formulez clairement ces <strong>5 points essentiels</strong> :
+                </p>
+
+                <ol class="space-y-2.5 text-xs sm:text-sm pl-2">
+                  <li class="flex items-start gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-rose-400 font-mono font-bold flex-shrink-0">1</span>
+                    <div><strong>Qui êtes-vous et numéro de rappel :</strong> Votre nom, prénom et le numéro du téléphone actif (pour vous rappeler en cas de coupure).</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-rose-400 font-mono font-bold flex-shrink-0">2</span>
+                    <div><strong>Localisation précise :</strong> Coordonnées GPS (degrés décimaux ou UTM), nom du sentier/massif, altitude barométrique, dernier repère remarquable traversé.</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-rose-400 font-mono font-bold flex-shrink-0">3</span>
+                    <div><strong>Nature de l'accident &amp; bilan corporel :</strong> Chute, malaise, traumatisme, état de conscience, respiration, saignements actifs.</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-rose-400 font-mono font-bold flex-shrink-0">4</span>
+                    <div><strong>Nombre de personnes :</strong> Nombre total dans le groupe, nombre de victimes, équipement et autonomie restante (eau, vêtements chauds).</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-rose-400 font-mono font-bold flex-shrink-0">5</span>
+                    <div><strong>Météo sur zone &amp; aérologie :</strong> Visibilité, plafond nuageux, force du vent, présence d'obstacles (câbles, lignes haute tension, arbres) pour guider une éventuelle approche par hélicoptère.</div>
+                  </li>
+                </ol>
+              </section>
+            </div>
+
+            <!-- Bouton replier -->
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-secours-content')" 
+                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                ▴ Replier la fiche
+              </button>
+            </div>
+          </div>
+        </div>
+
 
 
       </div>
@@ -6603,7 +6849,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/pdf-exporter.js?v=110"></script>
   <script src="js/gr-manager.js?v=110"></script>
 
-  <script src="js/portal-router.js?v=111"></script>
+  <script src="js/portal-router.js?v=112"></script>
     <script src="js/app.js?v=111"></script>
 
 
