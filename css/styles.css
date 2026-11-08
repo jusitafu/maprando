@@ -302,13 +302,27 @@ html, body {
 }
 
 #map-coords-hud {
-  max-width: calc(100% - 430px) !important;
+  max-width: calc(100% - 600px) !important;
   overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  bottom: 12px !important;
+  left: 12px !important;
+  z-index: 20 !important;
 }
+
+@media (max-width: 1199px) {
+  #map-coords-hud {
+    bottom: 74px !important;
+    left: 12px !important;
+    max-width: calc(100% - 24px) !important;
+  }
+}
+
 @media (max-width: 639px) {
   #map-coords-hud {
     max-width: calc(100% - 16px) !important;
-    bottom: 30px !important;
+    bottom: 70px !important;
   }
 }
 
@@ -317,11 +331,11 @@ html, body {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
-/* Boite echelle Leaflet alignee sur les boutons blancs d outils cartographiques */
+/* Boite echelle Leaflet positionnee au-dessus du HUD noir pour eviter tout chevauchement */
 .leaflet-bottom.leaflet-left .leaflet-control-scale {
   float: none !important;
-  margin-bottom: 44px !important;
-  margin-left: 10px !important;
+  margin-bottom: 74px !important;
+  margin-left: 12px !important;
   margin-right: 0 !important;
   margin-top: 0 !important;
   background: rgba(255, 255, 255, 0.95) !important;
@@ -338,12 +352,12 @@ html, body {
   box-sizing: border-box !important;
   pointer-events: auto !important;
   transition: all 0.2s ease !important;
+  z-index: 25 !important;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 1199px) {
   .leaflet-bottom.leaflet-left .leaflet-control-scale {
-    margin-bottom: 48px !important;
-    margin-left: 12px !important;
+    margin-bottom: 136px !important;
   }
 }
 
@@ -373,7 +387,7 @@ html, body {
 
 /* Attribution Leaflet / IGN protegee contre tout chevauchement */
 .leaflet-bottom.leaflet-right .leaflet-control-attribution {
-  margin: 0 12px 8px 0 !important;
+  margin: 0 12px 74px 0 !important;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
@@ -1221,4 +1235,12 @@ path.bearing-preview-line {
   transition: all 0.15s ease;
   user-select: none;
   cursor: pointer;
+}
+
+/* Ajustement ergonomique des boutons outils flottants du bas de carte */
+.map-floating-tool-btn {
+  padding: 8.5px 16px !important;
+  font-size: 14.5px !important;
+  gap: 8px !important;
+  border-radius: 16px !important;
 }
