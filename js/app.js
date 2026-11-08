@@ -4754,6 +4754,10 @@ class AppController {
       `;
 
       tr.querySelector('.btn-user-reset-pwd').onclick = () => this.promptResetUserPassword(u.id, u.username);
+      const editEmailBtn = tr.querySelector('.btn-user-edit-email');
+      if (editEmailBtn) {
+        editEmailBtn.onclick = () => this.promptEditUserEmail(u.id, u.username, u.email);
+      }
 
       const editPermsBtn = tr.querySelector('.btn-user-edit-perms');
       if (editPermsBtn) {
@@ -4767,6 +4771,105 @@ class AppController {
 
       tbody.appendChild(tr);
     });
+  }
+
+  async promptEditUserEmail(userId, username, currentEmail) {
+    if (typeof AuthManager === 'undefined') return;
+    const input = prompt(
+      `Adresse email associée à l'adhérent « ${username} » :\n(Laissez vide pour supprimer l'association)`,
+      currentEmail || ''
+    );
+    if (input === null) return;
+    const res = await AuthManager.updateUserEmail(userId, input.trim());
+    if (res.success) {
+      this.showToast(`Email mis à jour pour « ${username} »`, "success");
+      this.renderUsersTable();
+    } else {
+      this.showToast(`Erreur : ${res.error}`, "error");
+    }
+  }
+
+  openForgotPasswordModal() {
+    const currentUsername = document.getElementById('login-username')?.value.trim() || '';
+    const targetInp = document.getElementById('forgot-pwd-username');
+    if (targetInp) targetInp.value = currentUsername;
+    const msgBox = document.getElementById('forgot-pwd-msg');
+    if (msgBox) {
+      msgBox.className = 'hidden';
+      msgBox.innerHTML = '';
+    }
+    const modal = document.getElementById('modal-forgot-password');
+    if (modal) modal.classList.remove('hidden');
+    const lockModal = document.getElementById('login-lock-modal');
+    if (lockModal) lockModal.classList.add('hidden');
+  }
+
+  closeForgotPasswordModal() {
+    const modal = document.getElementById('modal-forgot-password');
+    if (modal) modal.classList.add('hidden');
+    const lockModal = document.getElementById('login-lock-modal');
+    if (lockModal) lockModal.classList.remove('hidden');
+  }
+
+  async handleForgotPasswordSubmit() {
+    const userInp = document.getElementById('forgot-pwd-username');
+    const msgBox = document.getElementById('forgot-pwd-msg');
+    if (!userInp || !msgBox) return;
+
+    const username = userInp.value.trim();
+    if (!username) {
+      msgBox.className = 'p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2';
+      msgBox.innerHTML = '<span>⚠️</span> <span>Veuillez renseigner votre nom d\'utilisateur ou prénom.</span>';
+      msgBox.classList.remove('hidden');
+      return;
+    }
+
+    const res = await AuthManager.resetPasswordAndPrepareEmail(username);
+
+    if (!res.success) {
+      if (res.noEmail) {
+        msgBox.className = 'p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold flex items-center gap-2.5';
+        msgBox.innerHTML = '<span>⚠️</span> <span>pas d\'adresse mail associée à cet utilisateur</span>';
+      } else {
+        msgBox.className = 'p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2';
+        msgBox.innerHTML = `<span>⚠️</span> <span>${res.error || "Utilisateur introuvable."}</span>`;
+      }
+      msgBox.classList.remove('hidden');
+      return;
+    }
+
+    // Succès : mot de passe généré et envoyé
+    msgBox.className = 'p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-slate-800 text-xs space-y-2.5';
+    msgBox.innerHTML = `
+      <div class="flex items-center gap-2 text-emerald-800 font-extrabold text-sm">
+        <span>✉️</span> <span>Mot de passe renvoyé !</span>
+      </div>
+      <p class="text-slate-600 leading-relaxed">
+        Un message a été préparé pour votre adresse email <strong class="text-slate-900">${res.email}</strong>.
+      </p>
+      <div class="p-3 bg-white border border-emerald-300 rounded-xl flex items-center justify-between gap-2 shadow-sm">
+        <div>
+          <div class="text-[10px] uppercase tracking-wider text-slate-400 font-black">Nouveau mot de passe temporaire :</div>
+          <div class="font-mono text-base font-extrabold text-emerald-700 select-all">${res.tempPassword}</div>
+        </div>
+        <button type="button" onclick="navigator.clipboard.writeText('${res.tempPassword}'); App.showToast('Mot de passe copié !', 'success')" class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+          <span>📋</span> <span>Copier</span>
+        </button>
+      </div>
+      <div class="pt-1 flex flex-col gap-1.5">
+        <button type="button" onclick="window.location.href='${res.mailtoUrl}'" class="w-full py-2 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>📨</span> <span>Ouvrir ma messagerie (${res.email})</span>
+        </button>
+        <button type="button" onclick="document.getElementById('login-username').value='${res.username.replace(/'/g, "\\'")}'; document.getElementById('login-password').value='${res.tempPassword}'; App.closeForgotPasswordModal(); App.handleLoginSubmit();" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>🔓</span> <span>Se connecter directement</span>
+        </button>
+      </div>
+    `;
+    msgBox.classList.remove('hidden');
+
+    try {
+      window.location.href = res.mailtoUrl;
+    } catch (e) {}
   }
 
   async promptResetUserPassword(userId, username) {

@@ -5204,11 +5204,14 @@
 
         <div>
 
-          <label for="login-password" class="block text-xs font-bold text-slate-700 mb-1">
-
-            Mot de passe
-
-          </label>
+          <div class="flex items-center justify-between mb-1">
+            <label for="login-password" class="block text-xs font-bold text-slate-700">
+              Mot de passe
+            </label>
+            <button type="button" onclick="App.openForgotPasswordModal()" class="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold hover:underline cursor-pointer">
+              Mot de passe oublié ?
+            </button>
+          </div>
 
           <div class="relative">
 
@@ -5264,6 +5267,49 @@
 
 
   <!-- ========================================================================= -->
+
+  
+  <!-- ========================================================================= -->
+  <!-- MODAL : MOT DE PASSE OUBLIÉ -->
+  <!-- ========================================================================= -->
+  <div id="modal-forgot-password" class="hidden fixed inset-0 z-[10001] bg-slate-950/90 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-700">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white p-5 text-center relative border-b border-emerald-900/60">
+        <button type="button" onclick="App.closeForgotPasswordModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg cursor-pointer">✕</button>
+        <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-sm mb-2">
+          <span>🔑 Récupération d'accès</span>
+        </div>
+        <h3 class="text-base font-extrabold text-white">Mot de passe oublié</h3>
+        <p class="text-xs text-slate-300 mt-1">Saisissez votre nom d'utilisateur pour recevoir votre mot de passe par email.</p>
+      </div>
+
+      <!-- Content -->
+      <div class="p-6 space-y-4">
+        <div id="forgot-pwd-msg" class="hidden"></div>
+
+        <div>
+          <label for="forgot-pwd-username" class="block text-xs font-bold text-slate-700 mb-1">
+            Nom d'utilisateur ou prénom
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">👤</span>
+            <input type="text" id="forgot-pwd-username" placeholder="ex: Jean-Michel Populaire"
+              class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-base sm:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2 pt-2">
+          <button type="button" id="btn-forgot-pwd-submit" onclick="App.handleForgotPasswordSubmit()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-md shadow-emerald-900/10 transition flex items-center justify-center gap-2 cursor-pointer">
+            <span>✉️</span> <span>Renvoyer le mot de passe</span>
+          </button>
+          <button type="button" onclick="App.closeForgotPasswordModal()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center cursor-pointer">
+            Retour à la connexion
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL : ACCÈS POST-CONNEXION (CHOIX DE DIRECTION) -->
 
@@ -5967,6 +6013,23 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
 
 
+            
+            <!-- Adresse email optionnelle -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">
+                Adresse email <span class="text-slate-400 font-normal text-[11px]">(Optionnel)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">✉️</span>
+                <input type="email" id="new-user-email" placeholder="ex: jean-michel@exemple.fr"
+                  class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition">
+              </div>
+              <div class="mt-1 text-[11px] text-slate-500">
+                Permet l'envoi du mot de passe par email en cas d'oubli lors de la connexion.
+              </div>
+            </div>
+
+
             <!-- Note explicative politique de mot de passe -->
 
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-xs space-y-1.5">
@@ -6523,7 +6586,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/config.js?v=106"></script>
 
-  <script src="js/auth-manager.js?v=106"></script>
+  <script src="js/auth-manager.js?v=108"></script>
 
   <script src="js/gpx-parser.js?v=106"></script>
 
@@ -6541,7 +6604,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/gr-manager.js?v=106"></script>
 
   <script src="js/portal-router.js?v=106.2.0"></script>
-    <script src="js/app.js?v=106"></script>
+    <script src="js/app.js?v=108"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->

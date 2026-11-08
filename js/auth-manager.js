@@ -342,7 +342,7 @@ class AuthManager {
   /**
    * Création d'un nouvel utilisateur par l'administrateur
    */
-  static async createUser({ username, password, can_upload, can_edit, role = 'user' }) {
+  static async createUser({ username, password, email = null, can_upload, can_edit, role = 'user' }) {
     if (!this.isAdmin()) {
       return { success: false, error: "Action réservée à l'administrateur." };
     }
@@ -373,6 +373,12 @@ class AuthManager {
       return { success: false, error: "Veuillez renseigner un mot de passe temporaire." };
     }
 
+    // Validation email si renseigné (optionnel)
+    const cleanEmail = (email || '').trim().toLowerCase() || null;
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return { success: false, error: "Format d'adresse email invalide." };
+    }
+
     // Si le mot de passe est égal au nom d'utilisateur (par défaut club), il est accepté directement.
     // Sinon, il doit faire au moins 4 caractères (ou satisfaire les critères).
     const isEqualToUsername = (cleanPwd.toLowerCase() === cleanUser.toLowerCase());
@@ -383,6 +389,7 @@ class AuthManager {
     const newUser = {
       id: 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
       username: cleanUser,
+      email: cleanEmail,
       password_hash: await this.hashPassword(cleanPwd),
       role: role || 'user',
       can_upload: Boolean(can_upload),
@@ -401,8 +408,94 @@ class AuthManager {
   }
 
   /**
-   * Mise à jour des permissions d'un utilisateur par l'admin
+   * Mise à jour de l'email d'un utilisateur par l'admin
    */
+  static async updateUserEmail(userId, email) {
+    if (!this.isAdmin()) {
+      return { success: false, error: "Action réservée à l'administrateur." };
+    }
+
+    const user = this.users.find(u => u.id === userId);
+    if (!user) {
+      return { success: false, error: "Utilisateur introuvable." };
+    }
+
+    const cleanEmail = (email || '').trim().toLowerCase() || null;
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return { success: false, error: "Format d'adresse email invalide." };
+    }
+
+    user.email = cleanEmail;
+    user.updated_at = new Date().toISOString();
+    this.saveToLocalStorage();
+    await this.pushUserToSupabase(user);
+
+    return { success: true, email: cleanEmail };
+  }
+
+  /**
+   * Recherche un utilisateur pour la procédure mot de passe oublié
+   */
+  static findUserForPasswordReset(username) {
+    const rawUser = (username || '').trim().normalize('NFC');
+    const cleanUser = rawUser.toLowerCase();
+    if (!cleanUser) return null;
+    const normUser = cleanUser.replace(/[-.]/g, ' ').replace(/\s+/g, ' ');
+
+    let user = (this.users || []).find(u => {
+      const uClean = (u.username || '').trim().normalize('NFC').toLowerCase();
+      const uNorm = uClean.replace(/[-.]/g, ' ').replace(/\s+/g, ' ');
+      return uClean === cleanUser || uNorm === normUser;
+    });
+
+    if (!user) {
+      const matches = (this.users || []).filter(u => {
+        const parts = (u.username || '').trim().normalize('NFC').toLowerCase().split(/\s+/);
+        return parts.length > 0 && parts[0] === cleanUser;
+      });
+      if (matches.length === 1) user = matches[0];
+    }
+    return user;
+  }
+
+  /**
+   * Procédure 'Mot de passe oublié' : génère un mot de passe temporaire et prépare l'email
+   */
+  static async resetPasswordAndPrepareEmail(username) {
+    const user = this.findUserForPasswordReset(username);
+    if (!user) {
+      return { success: false, error: "Utilisateur introuvable." };
+    }
+
+    if (!user.email || !user.email.trim()) {
+      return { 
+        success: false, 
+        noEmail: true, 
+        error: "pas d'adresse mail associée à cet utilisateur" 
+      };
+    }
+
+    const tempPwd = this.generateTemporaryPassword();
+    user.password_hash = await this.hashPassword(tempPwd);
+    user.updated_at = new Date().toISOString();
+
+    this.saveToLocalStorage();
+    await this.pushUserToSupabase(user);
+
+    const subject = "Votre mot de passe Map & Rando / RandoFinder";
+    const body = `Bonjour ${user.username},\n\nVoici votre nouveau mot de passe temporaire pour vous connecter à Map & Rando / RandoFinder :\n\nIdentifiant : ${user.username}\nMot de passe : ${tempPwd}\n\nVous pourrez modifier ce mot de passe à tout moment après votre connexion.\n\nBonne randonnée !\nLes Randonneurs Sanaryens\nhttps://jusitafu.github.io/RandoFinder/`;
+
+    const mailtoUrl = `mailto:${encodeURIComponent(user.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    return {
+      success: true,
+      username: user.username,
+      email: user.email.trim(),
+      tempPassword: tempPwd,
+      mailtoUrl: mailtoUrl
+    };
+  }
+
   static async updateUserPermissions(userId, { can_upload, can_edit, role }) {
     if (!this.isAdmin()) {
       return { success: false, error: "Action réservée à l'administrateur." };
