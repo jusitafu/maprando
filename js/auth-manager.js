@@ -800,6 +800,7 @@ CREATE TABLE IF NOT EXISTS public.app_users (
   id text PRIMARY KEY,
   username text UNIQUE NOT NULL,
   password_hash text NOT NULL,
+  email text,
   role text NOT NULL DEFAULT 'user',
   can_upload boolean DEFAULT false,
   can_edit boolean DEFAULT false,
