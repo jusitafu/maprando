@@ -3731,7 +3731,7 @@ class AppController {
     const updateScalePreview = () => {
       const fmt = (formatEl ? formatEl.value : 'a4').toLowerCase();
       const ori = (orientEl ? orientEl.value : 'landscape').toLowerCase();
-      const mode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const mode = scaleModeEl ? scaleModeEl.value : 'fit';
       const denom = parseInt(scaleDenomEl ? scaleDenomEl.value : '25000', 10) || 25000;
 
       const pageDims = {
@@ -3754,7 +3754,7 @@ class AppController {
 
       if (scalePreviewEl) {
         if (mode === 'fit') {
-          scalePreviewEl.innerHTML = `Mode <strong>Ajusté</strong> : la zone sélectionnée (~${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km) occupera 100% de la feuille ${fmt.toUpperCase()}.`;
+          scalePreviewEl.innerHTML = `Mode <strong>Cadrage exact</strong> : la zone sélectionnée (~${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km) occupera 100% de la feuille ${fmt.toUpperCase()}.`;
         } else {
           const mapBoxW_m = (mapBoxW_mm / 1000) * denom;
           const mapBoxH_m = (mapBoxH_mm / 1000) * denom;
@@ -3854,7 +3854,7 @@ class AppController {
       }
       const showUtm = document.getElementById('map-area-opt-utm') ? document.getElementById('map-area-opt-utm').checked : true;
       const scaleModeEl = document.getElementById('map-area-scale-mode');
-      const scaleMode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const scaleMode = scaleModeEl ? scaleModeEl.value : 'fit';
       const scaleDenomEl = document.getElementById('map-area-scale-denom');
       const scaleDenom = scaleDenomEl ? (parseInt(scaleDenomEl.value, 10) || 25000) : 25000;
 
@@ -6747,7 +6747,7 @@ class AppController {
     const updateScalePreview = () => {
       const fmt = (formatEl ? formatEl.value : 'a4').toLowerCase();
       const ori = (orientEl ? orientEl.value : 'landscape').toLowerCase();
-      const mode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const mode = scaleModeEl ? scaleModeEl.value : 'fit';
       const denom = parseInt(scaleDenomEl ? scaleDenomEl.value : '25000', 10) || 25000;
 
       const pageDims = {
@@ -6770,7 +6770,7 @@ class AppController {
 
       if (scalePreviewEl) {
         if (mode === 'fit') {
-          scalePreviewEl.innerHTML = `Mode <strong>Ajusté</strong> : la zone sélectionnée (~${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km) occupera 100% de la feuille ${fmt.toUpperCase()}.`;
+          scalePreviewEl.innerHTML = `Mode <strong>Cadrage exact</strong> : la zone sélectionnée (~${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km) occupera 100% de la feuille ${fmt.toUpperCase()}.`;
         } else {
           const mapBoxW_m = (mapBoxW_mm / 1000) * denom;
           const mapBoxH_m = (mapBoxH_mm / 1000) * denom;
@@ -6870,7 +6870,7 @@ class AppController {
       }
       const showUtm = document.getElementById('map-area-opt-utm') ? document.getElementById('map-area-opt-utm').checked : true;
       const scaleModeEl = document.getElementById('map-area-scale-mode');
-      const scaleMode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const scaleMode = scaleModeEl ? scaleModeEl.value : 'fit';
       const scaleDenomEl = document.getElementById('map-area-scale-denom');
       const scaleDenom = scaleDenomEl ? (parseInt(scaleDenomEl.value, 10) || 25000) : 25000;
 
@@ -6902,7 +6902,7 @@ class AppController {
 
   
 
-  deselectHike() {
+    deselectHike() {
     this.selectedHike = null;
     this.hoveredHike = null;
     this.isMouseOverPreview = false;
@@ -9655,7 +9655,7 @@ class AppController {
 
     const infoEl = document.getElementById('modal-map-area-info');
     if (infoEl) {
-      infoEl.textContent = `Zone sélectionnée : ~${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km • 2 clics`;
+      infoEl.textContent = `Zone sélectionnée : ~${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km (2 clics)`;
     }
 
     // Déterminer la (ou les) trace(s) active(s) (jusqu'à 3 traces GPX libres ou randonnée club)
@@ -9745,13 +9745,13 @@ class AppController {
       }
     }
 
-        // Default layer matching currently active map layer
+    // Default layer matching currently active map layer
     const layerSelect = document.getElementById('map-area-layer');
     if (layerSelect && window.MapManagerInstance) {
       layerSelect.value = window.MapManagerInstance.getCurrentBaseLayerKey();
     }
 
-    // Gestion de l'echelle vraie physique (1/XXXXXX)
+    // Gestion de l'échelle vraie physique (1/XXXXXX)
     const formatEl = document.getElementById('map-area-format');
     const orientEl = document.getElementById('map-area-orientation');
     const scaleModeEl = document.getElementById('map-area-scale-mode');
@@ -9763,35 +9763,38 @@ class AppController {
     const updateScalePreview = () => {
       const fmt = (formatEl ? formatEl.value : 'a4').toLowerCase();
       const ori = (orientEl ? orientEl.value : 'landscape').toLowerCase();
-      const mode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const mode = scaleModeEl ? scaleModeEl.value : 'fit';
       const denom = parseInt(scaleDenomEl ? scaleDenomEl.value : '25000', 10) || 25000;
 
-      if (mode === 'auto') {
-        if (scaleInputBox) scaleInputBox.classList.add('opacity-40', 'pointer-events-none');
-        if (scalePresetsBox) scalePresetsBox.classList.add('opacity-40', 'pointer-events-none');
-        if (scalePreviewEl) {
-          scalePreviewEl.innerHTML = `<strong>Mode Automatique :</strong> L'echelle s'adaptera exactement a la zone selectionnee (~${dKmWidth.toFixed(1)} x ${dKmHeight.toFixed(1)} km).`;
-        }
-        return;
-      }
+      const pageDims = {
+        a4: { w: 297, h: 210 },
+        a3: { w: 420, h: 297 }
+      };
+      const dims = pageDims[fmt] || pageDims.a4;
+      const sheetW = ori === 'landscape' ? Math.max(dims.w, dims.h) : Math.min(dims.w, dims.h);
+      const sheetH = ori === 'landscape' ? Math.min(dims.w, dims.h) : Math.max(dims.w, dims.h);
 
-      if (scaleInputBox) scaleInputBox.classList.remove('opacity-40', 'pointer-events-none');
-      if (scalePresetsBox) scalePresetsBox.classList.remove('opacity-40', 'pointer-events-none');
+      const marginX = 12;
+      const marginY = 12;
+      const topBannerH = 14;
+      const botLegendH = 12;
+      const mapBoxW_mm = sheetW - (2 * marginX);
+      const mapBoxH_mm = sheetH - marginY - topBannerH - botLegendH - marginY;
 
-      const isA3 = fmt === 'a3';
-      const isLand = ori === 'landscape';
-      const pageW_mm = isA3 ? (isLand ? 420 : 297) : (isLand ? 297 : 210);
-      const pageH_mm = isA3 ? (isLand ? 297 : 420) : (isLand ? 210 : 297);
-      const margin_mm = isA3 ? 18 : 15;
-      const mapW_mm = pageW_mm - (margin_mm * 2);
-      const mapH_mm = pageH_mm - (margin_mm * 2) - 40;
-
-      const groundW_km = (mapW_mm / 1000) * (denom / 1000);
-      const groundH_km = (mapH_mm / 1000) * (denom / 1000);
-      const metersPerCm = denom / 100;
+      if (scaleInputBox) scaleInputBox.style.display = (mode === 'custom') ? 'block' : 'none';
+      if (scalePresetsBox) scalePresetsBox.style.display = (mode === 'custom') ? 'flex' : 'none';
 
       if (scalePreviewEl) {
-        scalePreviewEl.innerHTML = `<strong>📏 1 cm sur papier = ${metersPerCm >= 1000 ? (metersPerCm/1000).toFixed(1) + ' km' : metersPerCm + ' m'} terrain</strong> • Emprise sur ${fmt.toUpperCase()} ${isLand ? 'Paysage' : 'Portrait'} : <strong>${groundW_km.toFixed(1)} km × ${groundH_km.toFixed(1)} km</strong> (centre)`;
+        if (mode === 'fit') {
+          scalePreviewEl.innerHTML = `Mode <strong>Cadrage exact</strong> : la zone sélectionnée (~${dKmWidth.toFixed(1)} × ${dKmHeight.toFixed(1)} km) occupera 100% de la feuille ${fmt.toUpperCase()}.`;
+        } else {
+          const mapBoxW_m = (mapBoxW_mm / 1000) * denom;
+          const mapBoxH_m = (mapBoxH_mm / 1000) * denom;
+          const mapBoxW_km = mapBoxW_m / 1000;
+          const mapBoxH_km = mapBoxH_m / 1000;
+          const denomFmt = denom.toLocaleString('fr-FR');
+          scalePreviewEl.innerHTML = `Échelle <strong>1 : ${denomFmt}</strong> sur ${fmt.toUpperCase()} (${mapBoxW_mm} × ${Math.round(mapBoxH_mm)} mm utiles) : cadre de <strong>~${mapBoxW_km.toFixed(2)} km × ${mapBoxH_km.toFixed(2)} km</strong> centré sur votre sélection (1 cm papier = ${denom < 100000 ? Math.round(denom / 100) + ' m' : (denom / 100000).toFixed(1) + ' km'} terrain).`;
+        }
       }
     };
 
@@ -9804,7 +9807,7 @@ class AppController {
     presetBtns.forEach(btn => {
       btn.onclick = () => {
         const sc = btn.dataset.scale;
-        if (scaleDenomEl && sc) {
+        if (sc && scaleDenomEl) {
           scaleDenomEl.value = sc;
           presetBtns.forEach(b => {
             b.classList.remove('bg-emerald-600', 'text-white');
@@ -9883,7 +9886,7 @@ class AppController {
       }
       const showUtm = document.getElementById('map-area-opt-utm') ? document.getElementById('map-area-opt-utm').checked : true;
       const scaleModeEl = document.getElementById('map-area-scale-mode');
-      const scaleMode = scaleModeEl ? scaleModeEl.value : 'custom';
+      const scaleMode = scaleModeEl ? scaleModeEl.value : 'fit';
       const scaleDenomEl = document.getElementById('map-area-scale-denom');
       const scaleDenom = scaleDenomEl ? (parseInt(scaleDenomEl.value, 10) || 25000) : 25000;
 
@@ -9913,7 +9916,9 @@ class AppController {
     }
   }
 
-  // =========================================================================
+  
+
+    // =========================================================================
   // MAP LEGEND MODAL (IGN TOP 25 / OPENTOPOMAP / OSM / SATELLITE & GPX)
   // =========================================================================
   handleBaseLayerChange(layerKey) {

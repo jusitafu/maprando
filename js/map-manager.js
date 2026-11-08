@@ -81,6 +81,7 @@ class MapManager {
 
     // Mesure de Cap / Azimut (2 clics entre Point A et Point B)
     this.bearingMeasurementActive = false;
+    this.bearingMeasurements = [];
     this.bearingPointA = null;
     this.bearingPointB = null;
     this.bearingLayer = null;
@@ -1531,10 +1532,13 @@ class MapManager {
     }
 
     this.bearingMeasurementActive = true;
+    if (!this.bearingMeasurements) {
+      this.bearingMeasurements = [];
+    }
     this.bearingPointA = null;
     this.bearingPointB = null;
 
-    // Désactiver le zoom au double-clic et les interactions parasites
+    // Désactiver le zoom au double-clic
     if (this.map.doubleClickZoom) {
       this.map.doubleClickZoom.disable();
     }
@@ -1544,57 +1548,41 @@ class MapManager {
     // Curseur réticule
     L.DomUtil.addClass(this.map.getContainer(), 'bearing-selection-cursor');
 
-    // Calque dédié pour la ligne et les marqueurs A/B
+    // Calque dédié pour les lignes et marqueurs
     if (!this.bearingLayer) {
       this.bearingLayer = L.layerGroup().addTo(this.map);
     }
-    this.bearingLayer.clearLayers();
     this.bearingPreviewLine = null;
-
-    // Mesure d'itinéraire par clics successifs
-    this.measurePathActive = false;
-    this.isHudMinimized = false;
-    this.measurePoints = [];
-    this.measureMarkers = [];
-    this.measurePolyline = null;
-    this.measurePreviewLine = null;
-    this.measureLayer = null;
-    this._onMeasureMouseMove = null;
-    this.measureTotalDistance = 0;
 
     // Afficher le panneau flottant
     const panel = document.getElementById('map-bearing-panel');
     const btn = document.getElementById('btn-map-bearing');
     const btnText = document.getElementById('btn-map-bearing-text');
-    const instrText = document.getElementById('map-bearing-instruction-text');
-    const valEl = document.getElementById('map-bearing-val');
-    const compassEl = document.getElementById('map-bearing-compass');
-    const revEl = document.getElementById('map-bearing-reverse');
-    const distEl = document.getElementById('map-bearing-distance');
-    const coordsBox = document.getElementById('map-bearing-coords');
-    const arrowEl = document.getElementById('map-bearing-arrow');
 
     if (panel) panel.classList.remove('hidden');
     if (btn) {
       btn.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-400');
     }
-    if (btnText) btnText.textContent = 'Cap (actif)';
-    if (instrText) instrText.textContent = 'Étape 1 sur 2 : Cliquez sur la carte pour poser le point A (départ).';
-    if (valEl) valEl.textContent = '--°';
-    if (compassEl) compassEl.textContent = '';
-    if (revEl) revEl.textContent = '--°';
-    if (distEl) distEl.textContent = '-- km';
-    if (coordsBox) coordsBox.classList.add('hidden');
-    if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+    if (btnText) btnText.textContent = `Cap (${this.bearingMeasurements.length}/3)`;
 
-    // Suivi de la souris pour la ligne en temps réel vers le curseur
+    this.updateBearingInstructionText();
+    this.renderBearingListUI();
+
+    // Suivi de la souris pour la ligne en temps réel
+    if (this._onBearingMouseMove) {
+      this.map.off('mousemove', this._onBearingMouseMove);
+    }
     this._onBearingMouseMove = (e) => {
       if (!this.bearingMeasurementActive || !this.bearingPointA || this.bearingPointB) return;
+      if (this.bearingMeasurements.length >= 3) return;
+
       const currentPoint = e.latlng;
+      const colors = ['#059669', '#2563eb', '#dc2626'];
+      const curColor = colors[this.bearingMeasurements.length] || '#059669';
 
       if (!this.bearingPreviewLine) {
         this.bearingPreviewLine = L.polyline([this.bearingPointA, currentPoint], {
-          color: '#10b981',
+          color: curColor,
           weight: 3,
           dashArray: '6, 6',
           opacity: 0.85
@@ -1607,18 +1595,69 @@ class MapManager {
     };
     this.map.on('mousemove', this._onBearingMouseMove);
 
-    // Échap pour annuler
+    // Échap pour annuler la mesure en cours
+    if (this._onBearingKeyDown) {
+      window.removeEventListener('keydown', this._onBearingKeyDown);
+    }
     this._onBearingKeyDown = (e) => {
       if (e.key === 'Escape') {
-        this.cancelBearingMeasurement();
+        if (this.bearingPointA) {
+          // Annuler le point A en cours
+          if (this.currentPendingMarkerA) {
+            this.bearingLayer.removeLayer(this.currentPendingMarkerA);
+            this.currentPendingMarkerA = null;
+          }
+          if (this.bearingPreviewLine) {
+            this.bearingLayer.removeLayer(this.bearingPreviewLine);
+            this.bearingPreviewLine = null;
+          }
+          this.bearingPointA = null;
+          this.updateBearingInstructionText();
+        } else {
+          this.cancelBearingMeasurement();
+        }
       }
     };
     window.addEventListener('keydown', this._onBearingKeyDown);
   }
 
-  /**
-   * Ferme le panneau et réinitialise l'outil Cap
-   */
+  updateBearingInstructionText() {
+    const instrText = document.getElementById('map-bearing-instruction-text');
+    const liveTitle = document.getElementById('map-bearing-live-title');
+    const restartBtn = document.getElementById('btn-restart-map-bearing');
+    const restartBtnText = document.getElementById('btn-restart-map-bearing-text');
+    const btnText = document.getElementById('btn-map-bearing-text');
+
+    const count = (this.bearingMeasurements && this.bearingMeasurements.length) || 0;
+    if (btnText) btnText.textContent = count > 0 ? `Cap (${count}/3)` : 'Cap (actif)';
+
+    if (count >= 3) {
+      if (instrText) instrText.textContent = '✅ Maximum de 3 caps atteint. Tous sont visibles sur la carte.';
+      if (liveTitle) liveTitle.textContent = '3/3 caps enregistrés';
+      if (restartBtn) {
+        restartBtn.disabled = true;
+        restartBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+      if (restartBtnText) restartBtnText.textContent = '3/3 caps mesurés';
+      return;
+    }
+
+    if (restartBtn) {
+      restartBtn.disabled = false;
+      restartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    if (restartBtnText) restartBtnText.textContent = `Cap suivant (${count + 1}/3)`;
+
+    const capNum = count + 1;
+    if (liveTitle) liveTitle.textContent = `Cap ${capNum} en cours`;
+
+    if (!this.bearingPointA) {
+      if (instrText) instrText.textContent = `Cap ${capNum}/3 : Cliquez sur la carte pour poser A${capNum} (départ).`;
+    } else {
+      if (instrText) instrText.textContent = `Cap ${capNum}/3 : Déplacez le curseur et cliquez pour poser B${capNum} (arrivée).`;
+    }
+  }
+
   cancelBearingMeasurement() {
     this.bearingMeasurementActive = false;
     this.bearingPointA = null;
@@ -1642,21 +1681,14 @@ class MapManager {
       this._onBearingKeyDown = null;
     }
 
-    if (this.bearingLayer) {
-      this.bearingLayer.clearLayers();
+    if (this.bearingPreviewLine && this.bearingLayer) {
+      this.bearingLayer.removeLayer(this.bearingPreviewLine);
+      this.bearingPreviewLine = null;
     }
-    this.bearingPreviewLine = null;
-
-    // Mesure d'itinéraire par clics successifs
-    this.measurePathActive = false;
-    this.isHudMinimized = false;
-    this.measurePoints = [];
-    this.measureMarkers = [];
-    this.measurePolyline = null;
-    this.measurePreviewLine = null;
-    this.measureLayer = null;
-    this._onMeasureMouseMove = null;
-    this.measureTotalDistance = 0;
+    if (this.currentPendingMarkerA && this.bearingLayer) {
+      this.bearingLayer.removeLayer(this.currentPendingMarkerA);
+      this.currentPendingMarkerA = null;
+    }
 
     const panel = document.getElementById('map-bearing-panel');
     const btn = document.getElementById('btn-map-bearing');
@@ -1668,158 +1700,178 @@ class MapManager {
     if (btnText) btnText.textContent = 'Cap';
   }
 
-  /**
-   * Efface le tracé actuel pour recommencer immédiatement une mesure
-   */
   clearBearingVisuals() {
     if (this.bearingLayer) {
       this.bearingLayer.clearLayers();
     }
     this.bearingPreviewLine = null;
-
-    // Mesure d'itinéraire par clics successifs
-    this.measurePathActive = false;
-    this.isHudMinimized = false;
-    this.measurePoints = [];
-    this.measureMarkers = [];
-    this.measurePolyline = null;
-    this.measurePreviewLine = null;
-    this.measureLayer = null;
-    this._onMeasureMouseMove = null;
-    this.measureTotalDistance = 0;
+    this.currentPendingMarkerA = null;
     this.bearingPointA = null;
     this.bearingPointB = null;
+    this.bearingMeasurements = [];
 
-    const instrText = document.getElementById('map-bearing-instruction-text');
     const valEl = document.getElementById('map-bearing-val');
     const compassEl = document.getElementById('map-bearing-compass');
     const revEl = document.getElementById('map-bearing-reverse');
     const distEl = document.getElementById('map-bearing-distance');
-    const coordsBox = document.getElementById('map-bearing-coords');
     const arrowEl = document.getElementById('map-bearing-arrow');
 
-    if (instrText) instrText.textContent = 'Étape 1 sur 2 : Cliquez sur la carte pour poser le point A (départ).';
     if (valEl) valEl.textContent = '--°';
     if (compassEl) compassEl.textContent = '';
     if (revEl) revEl.textContent = '--°';
     if (distEl) distEl.textContent = '-- km';
-    if (coordsBox) coordsBox.classList.add('hidden');
     if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
 
-    if (this.map) {
+    this.updateBearingInstructionText();
+    this.renderBearingListUI();
+
+    if (this.bearingMeasurementActive && this.map) {
       L.DomUtil.addClass(this.map.getContainer(), 'bearing-selection-cursor');
-      if (this._onBearingMouseMove) {
-        this.map.off('mousemove', this._onBearingMouseMove);
-      }
-      this._onBearingMouseMove = (e) => {
-        if (!this.bearingMeasurementActive || !this.bearingPointA || this.bearingPointB) return;
-        const currentPoint = e.latlng;
-        if (!this.bearingPreviewLine) {
-          this.bearingPreviewLine = L.polyline([this.bearingPointA, currentPoint], {
-            color: '#10b981',
-            weight: 3,
-            dashArray: '6, 6',
-            opacity: 0.85
-          }).addTo(this.bearingLayer);
-        } else {
-          this.bearingPreviewLine.setLatLngs([this.bearingPointA, currentPoint]);
-        }
-        this.updateBearingDisplay(this.bearingPointA, currentPoint, true);
-      };
-      this.map.on('mousemove', this._onBearingMouseMove);
     }
   }
 
-  /**
-   * Gestion du clic sur la carte pendant la mesure de cap
-   */
+  removeSingleBearing(capNum) {
+    if (!this.bearingMeasurements) return;
+    const idx = this.bearingMeasurements.findIndex(c => c.num === capNum);
+    if (idx === -1) return;
+
+    const removed = this.bearingMeasurements.splice(idx, 1)[0];
+    if (removed && removed.layers && this.bearingLayer) {
+      removed.layers.forEach(l => {
+        try { this.bearingLayer.removeLayer(l); } catch (e) {}
+      });
+    }
+
+    this.updateBearingInstructionText();
+    this.renderBearingListUI();
+  }
+
+  renderBearingListUI() {
+    const listEl = document.getElementById('map-bearing-list');
+    if (!listEl) return;
+
+    if (!this.bearingMeasurements || this.bearingMeasurements.length === 0) {
+      listEl.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    this.bearingMeasurements.forEach(cap => {
+      html += `
+        <div class="p-2 rounded-xl border flex items-center justify-between text-[11px]" style="background:rgba(15,23,42,0.8);border-color:${cap.color};box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full text-white font-black text-[10px] flex items-center justify-center shrink-0 shadow-sm" style="background:${cap.color}">${cap.num}</span>
+            <div>
+              <div class="font-bold text-white flex items-center gap-1.5 font-mono">
+                <span>Cap : ${cap.metrics.bearingRound}°</span>
+                <span class="text-xs" style="color:${cap.color}">(${cap.metrics.compass})</span>
+                <span class="text-slate-400 font-sans font-normal">• ${cap.metrics.distStr}</span>
+              </div>
+              <div class="text-[10px] text-slate-300 font-mono">
+                Retour : ${cap.metrics.reverseRound}° (${cap.metrics.reverseCompass})
+              </div>
+            </div>
+          </div>
+          <button type="button" class="w-5 h-5 rounded-md bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-200 flex items-center justify-center text-xs transition cursor-pointer" onclick="window.MapManagerInstance.removeSingleBearing(${cap.num});" title="Supprimer ce cap">✕</button>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
+  }
+
   handleBearingClick(latlng) {
+    if (!this.bearingMeasurements) {
+      this.bearingMeasurements = [];
+    }
+
+    if (this.bearingMeasurements.length >= 3) {
+      this.updateBearingInstructionText();
+      return;
+    }
+
+    const currentCapNum = this.bearingMeasurements.length + 1;
+    const colors = ['#059669', '#2563eb', '#dc2626'];
+    const curColor = colors[this.bearingMeasurements.length] || '#059669';
+
     if (!this.bearingPointA) {
-      // 1er clic : Point A
+      // 1er clic de ce cap : Point A
       this.bearingPointA = latlng;
 
       const iconA = L.divIcon({
         className: 'bearing-marker-icon',
-        html: '<div class="bearing-marker-badge marker-a">A</div>',
+        html: `<div class="bearing-marker-badge" style="background:${curColor};color:#ffffff;border:2px solid #ffffff;border-radius:9999px;font-weight:900;font-size:11px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.4);">A${currentCapNum}</div>`,
         iconSize: [26, 26],
         iconAnchor: [13, 13]
       });
-      L.marker(latlng, { icon: iconA, interactive: false }).addTo(this.bearingLayer);
+      const markerA = L.marker(latlng, { icon: iconA, interactive: false }).addTo(this.bearingLayer);
+      this.currentPendingMarkerA = markerA;
 
-      const instrText = document.getElementById('map-bearing-instruction-text');
-      if (instrText) {
-        instrText.textContent = 'Étape 2 sur 2 : Déplacez le curseur et cliquez pour le point B (arrivée).';
-      }
-    } else if (!this.bearingPointB) {
+      this.updateBearingInstructionText();
+    } else {
       // 2e clic : Point B
-      this.bearingPointB = latlng;
+      const pointA = this.bearingPointA;
+      const pointB = latlng;
+      const markerA = this.currentPendingMarkerA;
+      this.currentPendingMarkerA = null;
 
       if (this.bearingPreviewLine) {
         this.bearingLayer.removeLayer(this.bearingPreviewLine);
         this.bearingPreviewLine = null;
-
-    // Mesure d'itinéraire par clics successifs
-    this.measurePathActive = false;
-    this.isHudMinimized = false;
-    this.measurePoints = [];
-    this.measureMarkers = [];
-    this.measurePolyline = null;
-    this.measurePreviewLine = null;
-    this.measureLayer = null;
-    this._onMeasureMouseMove = null;
-    this.measureTotalDistance = 0;
-      }
-
-      if (this._onBearingMouseMove && this.map) {
-        this.map.off('mousemove', this._onBearingMouseMove);
-        this._onBearingMouseMove = null;
-      }
-      if (this.map) {
-        L.DomUtil.removeClass(this.map.getContainer(), 'bearing-selection-cursor');
       }
 
       const iconB = L.divIcon({
         className: 'bearing-marker-icon',
-        html: '<div class="bearing-marker-badge marker-b">B</div>',
+        html: `<div class="bearing-marker-badge" style="background:${curColor};color:#ffffff;border:2px solid #ffffff;border-radius:9999px;font-weight:900;font-size:11px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.4);">B${currentCapNum}</div>`,
         iconSize: [26, 26],
         iconAnchor: [13, 13]
       });
-      L.marker(latlng, { icon: iconB, interactive: false }).addTo(this.bearingLayer);
+      const markerB = L.marker(pointB, { icon: iconB, interactive: false }).addTo(this.bearingLayer);
 
-      // Tracé plein A -> B
-      L.polyline([this.bearingPointA, this.bearingPointB], {
-        color: '#059669',
+      // Tracé plein A -> B avec sa couleur dédiée
+      const polyline = L.polyline([pointA, pointB], {
+        color: curColor,
         weight: 4,
         opacity: 0.95
       }).addTo(this.bearingLayer);
 
-      const metrics = this.updateBearingDisplay(this.bearingPointA, this.bearingPointB, false);
+      const metrics = this.updateBearingDisplay(pointA, pointB, false);
 
       // Badge au milieu de la ligne
-      const midLat = (this.bearingPointA.lat + this.bearingPointB.lat) / 2;
-      const midLng = (this.bearingPointA.lng + this.bearingPointB.lng) / 2;
+      const midLat = (pointA.lat + pointB.lat) / 2;
+      const midLng = (pointA.lng + pointB.lng) / 2;
       const midIcon = L.divIcon({
         className: 'bearing-line-label',
-        html: `<span>🧭 ${metrics.bearingRound}° (${metrics.compass}) • ${metrics.distStr}</span>`,
-        iconSize: [140, 24],
-        iconAnchor: [70, 12]
+        html: `<span style="background:rgba(15,23,42,0.92);color:#ffffff;padding:3px 8px;border-radius:8px;font-weight:800;font-size:10.5px;box-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;border:1.5px solid ${curColor};">🧭 Cap ${currentCapNum} : ${metrics.bearingRound}° (${metrics.compass}) • ${metrics.distStr}</span>`,
+        iconSize: [160, 24],
+        iconAnchor: [80, 12]
       });
-      L.marker([midLat, midLng], { icon: midIcon, interactive: false }).addTo(this.bearingLayer);
+      const badgeMarker = L.marker([midLat, midLng], { icon: midIcon, interactive: false }).addTo(this.bearingLayer);
 
-      const instrText = document.getElementById('map-bearing-instruction-text');
-      if (instrText) {
-        instrText.textContent = '✅ Cap mesuré ! Cliquez sur "Nouvelle mesure" pour recommencer.';
-      }
+      // Enregistrer ce cap (reste affiché sur la carte !)
+      this.bearingMeasurements.push({
+        num: currentCapNum,
+        color: curColor,
+        pointA: pointA,
+        pointB: pointB,
+        metrics: metrics,
+        layers: [markerA, markerB, polyline, badgeMarker].filter(Boolean)
+      });
+
+      // Réinitialiser pour le cap suivant
+      this.bearingPointA = null;
+      this.bearingPointB = null;
+
+      this.updateBearingInstructionText();
+      this.renderBearingListUI();
     }
   }
 
-  /**
-   * Calcul géodésique et mise à jour de l'affichage du panneau Cap
-   */
   updateBearingDisplay(pointA, pointB, isLive) {
     const bearing = MapManager.calculateBearing(pointA.lat, pointA.lng, pointB.lat, pointB.lng);
     const reverseBearing = (bearing + 180) % 360;
     const compass = MapManager.getCompassDirection(bearing);
+    const reverseCompass = MapManager.getCompassDirection(reverseBearing);
     const bearingRound = Math.round(bearing);
     const reverseRound = Math.round(reverseBearing);
 
@@ -1834,9 +1886,6 @@ class MapManager {
     const revEl = document.getElementById('map-bearing-reverse');
     const distEl = document.getElementById('map-bearing-distance');
     const arrowEl = document.getElementById('map-bearing-arrow');
-    const coordsBox = document.getElementById('map-bearing-coords');
-    const coordA = document.getElementById('map-bearing-coord-a');
-    const coordB = document.getElementById('map-bearing-coord-b');
 
     if (valEl) valEl.textContent = `${bearingRound}°`;
     if (compassEl) compassEl.textContent = `(${compass})`;
@@ -1844,21 +1893,10 @@ class MapManager {
     if (distEl) distEl.textContent = distStr;
     if (arrowEl) arrowEl.style.transform = `rotate(${bearingRound}deg)`;
 
-    if (!isLive && coordsBox && coordA && coordB) {
-      coordsBox.classList.remove('hidden');
-      const utmA = MapManager.latLonToUtm(pointA.lat, pointA.lng);
-      const utmB = MapManager.latLonToUtm(pointB.lat, pointB.lng);
-      coordA.textContent = `${pointA.lat.toFixed(4)}°, ${pointA.lng.toFixed(4)}° • ${utmA.zone}${utmA.band} ${utmA.easting}E ${utmA.northing}N`;
-      coordB.textContent = `${pointB.lat.toFixed(4)}°, ${pointB.lng.toFixed(4)}° • ${utmB.zone}${utmB.band} ${utmB.easting}E ${utmB.northing}N`;
-    }
-
-    return { bearing, bearingRound, reverseRound, compass, distKm, distMeters, distStr };
+    return { bearing, bearingRound, reverseBearing, reverseRound, compass, reverseCompass, distKm, distMeters, distStr };
   }
 
-  /**
-   * Calcul du cap (azimut initial géodésique) en degrés entre 2 coordonnées WGS84
-   */
-  static calculateBearing(lat1, lon1, lat2, lon2) {
+    static calculateBearing(lat1, lon1, lat2, lon2) {
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
     const phi1 = (lat1 * Math.PI) / 180;
     const phi2 = (lat2 * Math.PI) / 180;

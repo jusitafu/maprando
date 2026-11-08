@@ -721,11 +721,13 @@ class PDFExporter {
     const footerH = isA3 ? 14 : 11.5; // Espace réservé pour la règle en cm, l'échelle et les mentions UTM
     const mapH = pageHeight - marginBottom - footerH - mapY;
 
-    // 4. Calcul de l'Échelle Vraie Physique
+    // 4. Calcul de l'Échelle Vraie Physique et Cadrage Exact
     let finalScale = userScaleDenom;
+    let actualBounds;
+
     if (scaleMode === 'custom' && userScaleDenom > 0) {
       finalScale = userScaleDenom;
-      // Dimensions terrain couvertes par la carte papier au millimètre près
+      // Dimensions terrain imposées par l'échelle fixe demandée
       const groundW_m = (mapW / 1000) * finalScale;
       const groundH_m = (mapH / 1000) * finalScale;
 
@@ -739,19 +741,42 @@ class PDFExporter {
       maxLat = origCenterLat + deltaLat / 2;
       minLon = origCenterLon - deltaLon / 2;
       maxLon = origCenterLon + deltaLon / 2;
+      actualBounds = [[minLat, minLon], [maxLat, maxLon]];
     } else {
-      // Mode Auto : calcul de l'échelle résultante
-      const dLatMeters = Math.abs(maxLat - minLat) * 111139;
-      finalScale = Math.round((dLatMeters / (mapH / 1000)) / 100) * 100;
+      // Mode Cadrage Exact (Par défaut) : respect rigoureux de la sélection utilisateur
+      // Harmonisation précise du ratio largeur/hauteur pour remplir 100% du cadre papier sans déformation
+      const aspectPaper = mapW / mapH;
+      const metersPerLat = 111139;
+      const metersPerLon = 111139 * Math.cos((origCenterLat * Math.PI) / 180);
+
+      const origMetersY = Math.abs(maxLat - minLat) * metersPerLat;
+      const origMetersX = Math.abs(maxLon - minLon) * metersPerLon;
+      const aspectSel = origMetersX / Math.max(1, origMetersY);
+
+      if (aspectSel < aspectPaper) {
+        // Sélection plus haute que la page : on ajuste la largeur X
+        const targetMetersX = origMetersY * aspectPaper;
+        const diffLon = (targetMetersX - origMetersX) / (2 * metersPerLon);
+        minLon -= diffLon;
+        maxLon += diffLon;
+      } else {
+        // Sélection plus large que la page : on ajuste la hauteur Y
+        const targetMetersY = origMetersX / aspectPaper;
+        const diffLat = (targetMetersY - origMetersY) / (2 * metersPerLat);
+        minLat -= diffLat;
+        maxLat += diffLat;
+      }
+
+      actualBounds = [[minLat, minLon], [maxLat, maxLon]];
+      const totalMetersY = Math.abs(maxLat - minLat) * metersPerLat;
+      finalScale = Math.round((totalMetersY / (mapH / 1000)) / 100) * 100;
     }
 
-    const dKmWidth = ((mapW / 1000) * finalScale) / 1000;
-    const dKmHeight = ((mapH / 1000) * finalScale) / 1000;
+    const dKmWidth = (Math.abs(maxLon - minLon) * 111.139 * Math.cos((origCenterLat * Math.PI) / 180));
+    const dKmHeight = (Math.abs(maxLat - minLat) * 111.139);
     const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const areaSubtitle = 'Zone couverte : ' + dKmWidth.toFixed(1) + ' km × ' + dKmHeight.toFixed(1) + ' km • Centre : Lat ' + origCenterLat.toFixed(4) + '°, Lon ' + origCenterLon.toFixed(4) + '° • ' + layerLabel + ' • Édité le ' + today;
+    const areaSubtitle = 'Zone cadrée : ' + dKmWidth.toFixed(1) + ' km × ' + dKmHeight.toFixed(1) + ' km • Centre : Lat ' + origCenterLat.toFixed(4) + '°, Lon ' + origCenterLon.toFixed(4) + '° • Échelle ~ 1 : ' + finalScale.toLocaleString('fr-FR') + ' • ' + layerLabel + ' • Édité le ' + today;
     doc.text(areaSubtitle, marginX, subY);
-
-    const actualBounds = [[minLat, minLon], [maxLat, maxLon]];
 
     // Détection de la (ou des) feuille(s) IGN TOP 25
     let ignSheetInfo = null;
@@ -807,11 +832,11 @@ class PDFExporter {
       }
     }
 
-    // 5. Génération du fond de carte haute résolution
+        // 5. Génération du fond de carte haute résolution
     try {
       const pxW = Math.round(mapW * 4.5);
       const pxH = Math.round(mapH * 4.5);
-      const renderOpts = Object.assign({}, options, { showUtmGrid: false });
+      const renderOpts = Object.assign({}, options, { showUtmGrid: false, fitExactBounds: true });
       const mapResult = await this.renderStaticMap(pseudoHike, pxW, pxH, mapLayer, 1.0, options.trackColor, renderOpts);
       const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
 
@@ -1180,40 +1205,77 @@ class PDFExporter {
       ((1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2) *
       Math.pow(2, z);
 
-    // Calcul du zoom maximal pour cadrer au plus près de la trace (zoom maximal juste autour de la trace)
-    // Marge de 14% (0.86) par défaut, ou customPadding (ex: 0.96 pour extrait de carte)
-    const padding = customPadding || 0.86;
-    let zoom = 8;
-    for (let z = 8; z <= 17; z++) {
-      const tileDx = Math.abs(lon2tile(maxLon, z) - lon2tile(minLon, z));
-      const tileDy = Math.abs(lat2tile(maxLat, z) - lat2tile(minLat, z));
-      const pixW = tileDx * 256;
-      const pixH = tileDy * 256;
-      if (pixW <= imgWidth * padding && pixH <= imgHeight * padding) {
-        zoom = z;
-      } else {
-        break;
-      }
-    }
-    zoom = Math.max(7, Math.min(17, zoom));
+    const isExactFit = (customPadding === 1.0 || (options && options.fitExactBounds));
 
-    // Centrage mathématique parfait sur la boîte englobante de la trace
-    const centerTileX = (lon2tile(minLon, zoom) + lon2tile(maxLon, zoom)) / 2;
-    const centerTileY = (lat2tile(minLat, zoom) + lat2tile(maxLat, zoom)) / 2;
+    let zoom = 8;
+    let minTileX, maxTileX, minTileY, maxTileY, spanTileX, spanTileY, scaleX = 1.0, scaleY = 1.0;
+    let startTileX, endTileX, startTileY, endTileY, tilesAcross, tilesDown;
+    let centerTileX, centerTileY;
+
+    if (isExactFit) {
+      // Calcul du zoom optimal pour remplir 100% de la zone avec une résolution HD
+      for (let testZ = 8; testZ <= 18; testZ++) {
+        const dx = Math.abs(lon2tile(maxLon, testZ) - lon2tile(minLon, testZ));
+        if (dx * 256 >= imgWidth * 0.95) {
+          zoom = testZ;
+          break;
+        }
+      }
+      zoom = Math.max(8, Math.min(18, zoom));
+
+      minTileX = lon2tile(minLon, zoom);
+      maxTileX = lon2tile(maxLon, zoom);
+      minTileY = lat2tile(maxLat, zoom);
+      maxTileY = lat2tile(minLat, zoom);
+
+      spanTileX = maxTileX - minTileX;
+      spanTileY = maxTileY - minTileY;
+
+      scaleX = imgWidth / (spanTileX * 256);
+      scaleY = imgHeight / (spanTileY * 256);
+
+      startTileX = Math.floor(minTileX);
+      endTileX = Math.ceil(maxTileX);
+      startTileY = Math.floor(minTileY);
+      endTileY = Math.ceil(maxTileY);
+
+      tilesAcross = Math.max(1, (endTileX - startTileX) + 1);
+      tilesDown = Math.max(1, (endTileY - startTileY) + 1);
+      centerTileX = (minTileX + maxTileX) / 2;
+      centerTileY = (minTileY + maxTileY) / 2;
+    } else {
+      // Calcul du zoom pour tracé de randonnée avec marge de sécurité
+      const padding = customPadding || 0.86;
+      for (let z = 8; z <= 17; z++) {
+        const tileDx = Math.abs(lon2tile(maxLon, z) - lon2tile(minLon, z));
+        const tileDy = Math.abs(lat2tile(maxLat, z) - lat2tile(minLat, z));
+        const pixW = tileDx * 256;
+        const pixH = tileDy * 256;
+        if (pixW <= imgWidth * padding && pixH <= imgHeight * padding) {
+          zoom = z;
+        } else {
+          break;
+        }
+      }
+      zoom = Math.max(7, Math.min(17, zoom));
+
+      centerTileX = (lon2tile(minLon, zoom) + lon2tile(maxLon, zoom)) / 2;
+      centerTileY = (lat2tile(minLat, zoom) + lat2tile(maxLat, zoom)) / 2;
+
+      tilesAcross = Math.ceil(imgWidth / 256) + 2;
+      tilesDown = Math.ceil(imgHeight / 256) + 2;
+
+      startTileX = Math.floor(centerTileX - tilesAcross / 2);
+      startTileY = Math.floor(centerTileY - tilesDown / 2);
+    }
 
     const centerPixelX = imgWidth / 2;
     const centerPixelY = imgHeight / 2;
 
-    const tilesAcross = Math.ceil(imgWidth / 256) + 2;
-    const tilesDown = Math.ceil(imgHeight / 256) + 2;
-
-    const startTileX = Math.floor(centerTileX - tilesAcross / 2);
-    const startTileY = Math.floor(centerTileY - tilesDown / 2);
-
-    // Détection si la randonnée est en France (IGN dessert la France métropolitaine + DOM)
+    // Détection si la zone est en France (IGN dessert la France métropolitaine + DOM)
     const isInsideFrance = (centerLat >= 41.0 && centerLat <= 51.5 && centerLon >= -5.5 && centerLon <= 10.0);
 
-    // URLs des serveurs de tuiles cartographiques
+        // URLs des serveurs de tuiles cartographiques
     // Véritable IGN TOP 25 officiel (Scan 25 Touristique avec balisage GR® rose et rochers)
     const ignTop25Url = (x, y, z) => `https://data.geopf.fr/private/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=${z}&TILEROW=${y}&TILECOL=${x}&FORMAT=image%2Fjpeg&apikey=ign_scan_ws`;
 
@@ -1391,6 +1453,14 @@ class PDFExporter {
 
     // Helper: conversion (lat, lon) vers pixels canvas
     const latLonToPixel = (lat, lon) => {
+      if (isExactFit) {
+        const tx = lon2tile(lon, zoom);
+        const ty = lat2tile(lat, zoom);
+        return {
+          x: ((tx - minTileX) / spanTileX) * imgWidth,
+          y: ((ty - minTileY) / spanTileY) * imgHeight
+        };
+      }
       const tx = lon2tile(lon, zoom);
       const ty = lat2tile(lat, zoom);
       return {
