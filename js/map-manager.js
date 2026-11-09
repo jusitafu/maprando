@@ -221,16 +221,18 @@ class MapManager {
       attribution: '&copy; <a href="https://basemap.at" target="_blank">basemap.at (Autriche)</a>'
     });
 
-    // 6. Italie - IGM 1:25 000 officiel (Geoportale Nazionale / MinAmbiente)
-    const ignItaly = L.tileLayer.wms('https://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/IGM_25000.map', {
-      layers: 'CB.IGM25000.32,CB.IGM25000.33',
-      format: 'image/jpeg',
-      transparent: false,
-      version: '1.3.0',
-      crs: L.CRS.EPSG3857,
-      maxZoom: 19,
-      attribution: '&copy; <a href="http://www.pcn.minambiente.it" target="_blank">Geoportale Nazionale / IGM 1:25 000</a>'
+    // 6. Italie - Topographie & Sentiers officiels CAI (Club Alpino Italiano / OpenTopo)
+    const italyTopoBase = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      subdomains: 'abc',
+      attribution: '&copy; OpenTopoMap'
     });
+    const italyCaiTrails = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      opacity: 0.95,
+      attribution: '&copy; Sentiers CAI (Club Alpino Italiano) • Waymarked Trails'
+    });
+    const ignItaly = L.layerGroup([italyTopoBase, italyCaiTrails]);
 
     // 7. Luxembourg - ACT Geoportail.lu Topo 1:20 000 officiel (Open Data Luxembourg)
     const ignLuxembourg = L.tileLayer('https://wmts.geoportail.lu/opendata/wmts/topomap/GLOBAL_WEBMERCATOR/{z}/{x}/{y}.png', {
@@ -256,7 +258,7 @@ class MapManager {
       "🇦🇹 Autriche (basemap.at Topo)": ignAustria,
       "🇧🇪 Belgique (IGN CartoWeb 1:25 000)": ignBelgium,
       "🇪🇸 Espagne (IGN MTN 1:25 000)": ignSpain,
-      "🇮🇹 Italie (IGM 1:25 000 officiel)": ignItaly,
+      "🇮🇹 Italie (Topo & Sentiers CAI)": ignItaly,
       "🇱🇺 Luxembourg (ACT Topo 1:20 000)": ignLuxembourg,
       "🇳🇴 Norvège (Kartverket Topo)": ignNorway,
       "🇨🇭 Suisse (Swisstopo 1:25 000)": swisstopo,
@@ -324,7 +326,7 @@ class MapManager {
         else if (name.includes('belgique') || name.includes('belgium')) this.currentBaseLayer = 'ignbelgium';
         else if (name.includes('allemagne') || name.includes('germany') || name.includes('basemap.de')) this.currentBaseLayer = 'igngermany';
         else if (name.includes('autriche') || name.includes('austria') || name.includes('basemap.at')) this.currentBaseLayer = 'ignaustria';
-        else if (name.includes('italie') || name.includes('italy') || name.includes('igm')) this.currentBaseLayer = 'ignitaly';
+        else if (name.includes('italie') || name.includes('italy') || name.includes('igm') || name.includes('cai')) this.currentBaseLayer = 'ignitaly';
         else if (name.includes('luxembourg') || name.includes('geoportail.lu')) this.currentBaseLayer = 'ignluxembourg';
         else if (name.includes('norvège') || name.includes('norvege') || name.includes('norway') || name.includes('kartverket')) this.currentBaseLayer = 'ignnorway';
         else if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
@@ -724,7 +726,7 @@ class MapManager {
       if (key === 'ignbelgium' && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; break; }
       if (key === 'igngermany' && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; break; }
       if (key === 'ignaustria' && (lower.includes('autriche') || lower.includes('austria') || lower.includes('basemap.at'))) { targetLayer = layer; break; }
-      if (key === 'ignitaly' && (lower.includes('italie') || lower.includes('italy') || lower.includes('igm'))) { targetLayer = layer; break; }
+      if (key === 'ignitaly' && (lower.includes('italie') || lower.includes('italy') || lower.includes('igm') || lower.includes('cai'))) { targetLayer = layer; break; }
       if (key === 'ignluxembourg' && (lower.includes('luxembourg') || lower.includes('geoportail.lu'))) { targetLayer = layer; break; }
       if (key === 'ignnorway' && (lower.includes('norvège') || lower.includes('norvege') || lower.includes('norway') || lower.includes('kartverket'))) { targetLayer = layer; break; }
       if (key === 'opentopo' && lower.includes('opentopo')) { targetLayer = layer; break; }

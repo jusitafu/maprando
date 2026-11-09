@@ -114,7 +114,7 @@ class PDFExporter {
       'ignaustria': "CARTE AUTRICHE OFFICIELLE (BASEMAP.AT TOPO)",
       'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
       'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
-      'ignitaly': "CARTE ITALIE OFFICIELLE (IGM 1:25 000)",
+      'ignitaly': "CARTE ITALIE (TOPOGRAPHIE & SENTIERS CAI)",
       'ignluxembourg': "CARTE LUXEMBOURG OFFICIELLE (ACT TOPO 1:20 000)",
       'ignnorway': "CARTE NORVÈGE OFFICIELLE (KARTVERKET TOPO)",
       'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
@@ -678,7 +678,7 @@ class PDFExporter {
       'ignaustria': "CARTE AUTRICHE OFFICIELLE (BASEMAP.AT TOPO)",
       'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
       'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
-      'ignitaly': "CARTE ITALIE OFFICIELLE (IGM 1:25 000)",
+      'ignitaly': "CARTE ITALIE (TOPOGRAPHIE & SENTIERS CAI)",
       'ignluxembourg': "CARTE LUXEMBOURG OFFICIELLE (ACT TOPO 1:20 000)",
       'ignnorway': "CARTE NORVÈGE OFFICIELLE (KARTVERKET TOPO)",
       'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
@@ -1375,10 +1375,11 @@ class PDFExporter {
       fallbackUrlFn2 = osmStdUrl;
       attributionText = '© IGN Belgique - CartoWeb (1:25 000)';
     } else if (mapLayer === 'ignitaly') {
-      primaryUrlFn = ignItalyUrl;
-      fallbackUrlFn1 = openTopoUrl;
+      primaryUrlFn = openTopoUrl;
+      fallbackUrlFn1 = osmFrUrl;
       fallbackUrlFn2 = osmStdUrl;
-      attributionText = '© Geoportale Nazionale / IGM 1:25 000 (Italie)';
+      overlayUrlFn = waymarkedHikingUrl;
+      attributionText = '© Topographie OpenTopoMap • Sentiers CAI (Club Alpino Italiano)';
     } else if (mapLayer === 'ignluxembourg') {
       primaryUrlFn = ignLuxembourgUrl;
       fallbackUrlFn1 = openTopoUrl;
