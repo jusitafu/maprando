@@ -111,7 +111,7 @@ class PDFExporter {
       'ignplan': isInsideFrance ? "FOND OFFICIEL PLAN IGN (NUMÉRIQUE V2)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
       'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
-      'ignaustria': "CARTE AUTRICHE OFFICIELLE (BASEMAP.AT TOPO)",
+      'ignaustria': "CARTE AUTRICHE (TOPOGRAPHIE & SENTIERS ÖAV)",
       'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
       'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
       'ignitaly': "CARTE ITALIE (TOPOGRAPHIE & SENTIERS CAI)",
@@ -675,7 +675,7 @@ class PDFExporter {
       'ignplan': "PLAN IGN MULTI-ÉCHELLES (IGN EXPRESS)",
       'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
       'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
-      'ignaustria': "CARTE AUTRICHE OFFICIELLE (BASEMAP.AT TOPO)",
+      'ignaustria': "CARTE AUTRICHE (TOPOGRAPHIE & SENTIERS ÖAV)",
       'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
       'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
       'ignitaly': "CARTE ITALIE (TOPOGRAPHIE & SENTIERS CAI)",
@@ -1365,10 +1365,11 @@ class PDFExporter {
       fallbackUrlFn2 = osmStdUrl;
       attributionText = '© BKG / basemap.de (Allemagne)';
     } else if (mapLayer === 'ignaustria') {
-      primaryUrlFn = ignAustriaUrl;
-      fallbackUrlFn1 = openTopoUrl;
+      primaryUrlFn = openTopoUrl;
+      fallbackUrlFn1 = osmFrUrl;
       fallbackUrlFn2 = osmStdUrl;
-      attributionText = '© basemap.at (Autriche Topo)';
+      overlayUrlFn = waymarkedHikingUrl;
+      attributionText = '© Topographie OpenTopoMap • Sentiers ÖAV (Alpenverein Autriche)';
     } else if (mapLayer === 'ignbelgium') {
       primaryUrlFn = ignBelgiumUrl;
       fallbackUrlFn1 = openTopoUrl;

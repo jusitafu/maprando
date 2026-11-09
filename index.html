@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=124">
+  <link rel="stylesheet" href="css/styles.css?v=125">
 
 </head>
 
@@ -1465,13 +1465,21 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🗺️</span> Choix des 7 Fonds de Carte (Bouton Calques en haut à droite)</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🗺️</span> Fonds de Carte Nationaux &amp; Mondiaux (Bouton Calques en haut à droite)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>IGN Cartes Topographiques (TOP 25 / SCAN 25) :</strong> la carte officielle de randonnée IGN au 1:25 000 avec courbes de niveau, sentiers balisés, refuges et points d'eau.</li>
-                <li><strong>IGN Plan J+1 Standard :</strong> fond cartographique vectoriel IGN mis à jour quotidiennement.</li>
-                <li><strong>🥾 Carte des GR® (Fond épuré) :</strong> fond topographique clair mettant en évidence les sentiers balisés avec <strong>liste déroulante numérique de tous les GR® Français</strong> (<code>GR 1</code> à <code>GR 2013</code>, <code>GR R1..R3</code> et grands itinéraires réputés), <strong>cases à cocher par couleur</strong> (Bleu Europe, Rouge GR®, Orange GRP, Violet PR) et <strong>identification au clic direct sur un chemin</strong>.</li>
-                <li><strong>OpenTopoMap &amp; OpenStreetMap France :</strong> couverture topographique et routière mondiale.</li>
-                <li><strong>Esri World Imagery (Satellite Mondial HD) &amp; IGN Orthophotos HR :</strong> vues aériennes et satellites haute résolution avec <strong>affichage automatique de la date de prise de vue de l'image</strong> au centre de l'écran.</li>
+                <li><strong>🇫🇷 France – IGN TOP 25 &amp; Plan v2 :</strong> carte officielle de randonnée IGN au 1:25 000 (SCAN 25) avec courbes de niveau, sentiers balisés, rochers, limites des feuilles papier avec année de dernière édition et carroyage kilométrique UTM universel.</li>
+                <li><strong>🇫🇷 France – Carte des GR® (Fond épuré) :</strong> fond topographique clair avec réseau national des GR®, GRP® et PR, liste déroulante et filtrage par couleur.</li>
+                <li><strong>🇩🇪 Allemagne – BKG basemap.de Topo :</strong> cartographie officielle de précision de l'Agence fédérale de cartographie allemande (relief et sentiers).</li>
+                <li><strong>🇦🇹 Autriche – Topographie alpine &amp; Sentiers ÖAV :</strong> relief alpin haute précision (Tyrol, Tauern) combiné à tous les sentiers de randonnée balisés du Club Alpin Autrichien (Alpenverein).</li>
+                <li><strong>🇧🇪 Belgique – IGN CartoWeb 1:25 000 :</strong> cartographie topographique officielle de l'Institut Géographique National belge (Ardennes, Fagnes).</li>
+                <li><strong>🇪🇸 Espagne – IGN España MTN 1:25 000 :</strong> Mapa Topográfico Nacional officiel du CNIG (Pyrénées espagnoles, Picos de Europa, sierras).</li>
+                <li><strong>🇮🇹 Italie – Topographie &amp; Sentiers CAI :</strong> relief alpin complet et réseau de sentiers de randonnée officiels balisés du Club Alpino Italiano (Val d'Aoste, Dolomites, Piémont, Apennins).</li>
+                <li><strong>🇱🇺 Luxembourg – ACT Topo 1:20 000 :</strong> cartographie officielle du Grand-Duché (Mullerthal, sentiers transfrontaliers).</li>
+                <li><strong>🇳🇴 Norvège – Kartverket Topo :</strong> cartographie officielle d'État de référence pour les treks nordiques (fjords, Lofoten).</li>
+                <li><strong>🇨🇭 Suisse – Swisstopo 1:25 000 :</strong> la référence mondiale des cartes fédérales suisses en Open Data officiel.</li>
+                <li><strong>🔄 Bascule automatique intelligente :</strong> lors d'une recherche de lieu, de la sélection d'une randonnée ou du déplacement de la carte d'un pays à l'autre, Map &amp; Rando bascule automatiquement sur la carte de randonnée officielle du pays correspondant.</li>
+                <li><strong>🌍 Couverture Mondiale :</strong> OpenTopoMap (relief mondial avec courbes de niveau) &amp; OpenStreetMap France (sentiers).</li>
+                <li><strong>🛰️ Satellite HD :</strong> Esri World Imagery mondial &amp; IGN Orthophotos HR France avec <strong>date de prise de vue automatique</strong>.</li>
               </ul>
             </div>
 
@@ -3934,20 +3942,20 @@
           <label for="map-area-layer" class="block text-xs font-bold text-slate-700 mb-1">Fond de carte topographique :</label>
 
           <select id="map-area-layer" class="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-emerald-500 font-medium cursor-pointer shadow-2xs">
-            <option value="igntop25" selected>🇫🇷 France (IGN TOP 25 officiel)</option>
-            <option value="ignplan">🇫🇷 France (IGN Plan moderne)</option>
-            <option value="grmap">🇫🇷 France (Carte des GR® épurée)</option>
-            <option value="igngermany">🇩🇪 Allemagne (basemap.de Topo)</option>
-            <option value="ignaustria">🇦🇹 Autriche (basemap.at Topo)</option>
-            <option value="ignbelgium">🇧🇪 Belgique (IGN CartoWeb 1:25 000)</option>
-            <option value="ignspain">🇪🇸 Espagne (IGN MTN 1:25 000)</option>
-            <option value="ignitaly">🇮🇹 Italie (Topo & Sentiers CAI)</option>
-            <option value="ignluxembourg">🇱🇺 Luxembourg (ACT Topo 1:20 000)</option>
-            <option value="ignnorway">🇳🇴 Norvège (Kartverket Topo)</option>
-            <option value="swisstopo">🇨🇭 Suisse (Swisstopo 1:25 000)</option>
-            <option value="opentopo">🌍 OpenTopoMap (Relief mondial)</option>
-            <option value="osmfr">🌍 OpenStreetMap (Sentiers)</option>
-            <option value="satellite">🛰️ Satellite HD (IGN / Esri)</option>
+            <option value="igntop25" selected>[🇫🇷 FR] France (IGN TOP 25 officiel)</option>
+            <option value="ignplan">[🇫🇷 FR] France (IGN Plan moderne)</option>
+            <option value="grmap">[🇫🇷 FR] France (Carte des GR® épurée)</option>
+            <option value="igngermany">[🇩🇪 DE] Allemagne (basemap.de Topo)</option>
+            <option value="ignaustria">[🇦🇹 AT] Autriche (Topo & Sentiers ÖAV)</option>
+            <option value="ignbelgium">[🇧🇪 BE] Belgique (IGN CartoWeb 1:25 000)</option>
+            <option value="ignspain">[🇪🇸 ES] Espagne (IGN MTN 1:25 000)</option>
+            <option value="ignitaly">[🇮🇹 IT] Italie (Topo & Sentiers CAI)</option>
+            <option value="ignluxembourg">[🇱🇺 LU] Luxembourg (ACT Topo 1:20 000)</option>
+            <option value="ignnorway">[🇳🇴 NO] Norvège (Kartverket Topo)</option>
+            <option value="swisstopo">[🇨🇭 CH] Suisse (Swisstopo 1:25 000)</option>
+            <option value="opentopo">[🌍 Monde] OpenTopoMap (Relief mondial)</option>
+            <option value="osmfr">[🌍 Monde] OpenStreetMap (Sentiers)</option>
+            <option value="satellite">[🛰️ Satellite] Satellite HD (IGN / Esri)</option>
           </select>
 
         </div>
@@ -5311,19 +5319,19 @@
                 <label for="opt-pdf-map-layer" class="text-[11px] font-semibold text-slate-500 whitespace-nowrap">Fond de carte :</label>
 
                 <select id="opt-pdf-map-layer" class="w-full bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-1 focus:ring-2 focus:ring-emerald-500 font-medium cursor-pointer shadow-2xs">
-                  <option value="ign" selected>🇫🇷 France (IGN TOP 25 / Plan v2)</option>
-                  <option value="grmap">🇫🇷 France (Carte des GR® épurée)</option>
-                  <option value="igngermany">🇩🇪 Allemagne (basemap.de Topo)</option>
-                  <option value="ignaustria">🇦🇹 Autriche (basemap.at Topo)</option>
-                  <option value="ignbelgium">🇧🇪 Belgique (IGN CartoWeb 1:25 000)</option>
-                  <option value="ignspain">🇪🇸 Espagne (IGN MTN 1:25 000)</option>
-                  <option value="ignitaly">🇮🇹 Italie (Topo & Sentiers CAI)</option>
-                  <option value="ignluxembourg">🇱🇺 Luxembourg (ACT Topo 1:20 000)</option>
-                  <option value="ignnorway">🇳🇴 Norvège (Kartverket Topo)</option>
-                  <option value="swisstopo">🇨🇭 Suisse (Swisstopo 1:25 000)</option>
-                  <option value="opentopo">🌍 OpenTopoMap (Relief mondial)</option>
-                  <option value="osmfr">🌍 OpenStreetMap (Sentiers)</option>
-                  <option value="satellite">🛰️ Satellite HD (IGN / Esri)</option>
+                  <option value="ign" selected>[🇫🇷 FR] France (IGN TOP 25 / Plan v2)</option>
+                  <option value="grmap">[🇫🇷 FR] France (Carte des GR® épurée)</option>
+                  <option value="igngermany">[🇩🇪 DE] Allemagne (basemap.de Topo)</option>
+                  <option value="ignaustria">[🇦🇹 AT] Autriche (Topo & Sentiers ÖAV)</option>
+                  <option value="ignbelgium">[🇧🇪 BE] Belgique (IGN CartoWeb 1:25 000)</option>
+                  <option value="ignspain">[🇪🇸 ES] Espagne (IGN MTN 1:25 000)</option>
+                  <option value="ignitaly">[🇮🇹 IT] Italie (Topo & Sentiers CAI)</option>
+                  <option value="ignluxembourg">[🇱🇺 LU] Luxembourg (ACT Topo 1:20 000)</option>
+                  <option value="ignnorway">[🇳🇴 NO] Norvège (Kartverket Topo)</option>
+                  <option value="swisstopo">[🇨🇭 CH] Suisse (Swisstopo 1:25 000)</option>
+                  <option value="opentopo">[🌍 Monde] OpenTopoMap (Relief mondial)</option>
+                  <option value="osmfr">[🌍 Monde] OpenStreetMap (Sentiers)</option>
+                  <option value="satellite">[🛰️ Satellite] Satellite HD (IGN / Esri)</option>
                 </select>
 
               </div>
@@ -6871,13 +6879,13 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=106"></script>
   <script src="js/ign-top25-sheets.js?v=106"></script>
-  <script src="js/map-manager.js?v=124"></script>
+  <script src="js/map-manager.js?v=125"></script>
 
-  <script src="js/pdf-exporter.js?v=124"></script>
+  <script src="js/pdf-exporter.js?v=125"></script>
   <script src="js/gr-manager.js?v=110"></script>
 
   <script src="js/portal-router.js?v=113"></script>
-    <script src="js/app.js?v=124"></script>
+    <script src="js/app.js?v=125"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->

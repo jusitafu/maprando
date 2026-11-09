@@ -184,6 +184,21 @@ class MapManager {
     const grMapLayer = L.layerGroup([esriLightGray, ignPlanEpure, waymarkedGrOverlay]);
 
     // -------------------------------------------------------------
+    // DRAPEAUX SVG VECTORIELS (Compatibilité 100% Windows, Mac & Mobile)
+    // -------------------------------------------------------------
+    const flagFr = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Crect width='1' height='2' fill='%23002654'/%3E%3Crect x='1' width='1' height='2' fill='%23ffffff'/%3E%3Crect x='2' width='1' height='2' fill='%23ce1126'/%3E%3C/svg%3E";
+    const flagDe = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 3'%3E%3Crect width='5' height='1' fill='%23000'/%3E%3Crect y='1' width='5' height='1' fill='%23d00'/%3E%3Crect y='2' width='5' height='1' fill='%23ffce00'/%3E%3C/svg%3E";
+    const flagAt = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Crect width='3' height='2' fill='%23ed2939'/%3E%3Crect y='0.667' width='3' height='0.667' fill='%23fff'/%3E%3C/svg%3E";
+    const flagBe = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Crect width='1' height='2' fill='%23000'/%3E%3Crect x='1' width='1' height='2' fill='%23ffd90c'/%3E%3Crect x='2' width='1' height='2' fill='%23f31830'/%3E%3C/svg%3E";
+    const flagEs = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Crect width='3' height='2' fill='%23aa151b'/%3E%3Crect y='0.5' width='3' height='1' fill='%23f1bf00'/%3E%3C/svg%3E";
+    const flagIt = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 3 2'%3E%3Crect width='1' height='2' fill='%23009246'/%3E%3Crect x='1' width='1' height='2' fill='%23fff'/%3E%3Crect x='2' width='1' height='2' fill='%23ce2b37'/%3E%3C/svg%3E";
+    const flagLu = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 3'%3E%3Crect width='5' height='1' fill='%23ea141d'/%3E%3Crect y='1' width='5' height='1' fill='%23fff'/%3E%3Crect y='2' width='5' height='1' fill='%2300a1de'/%3E%3C/svg%3E";
+    const flagNo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Crect width='22' height='16' fill='%23ba0c2f'/%3E%3Cpath d='M0,8h22M8,0v16' stroke='%23fff' stroke-width='4'/%3E%3Cpath d='M0,8h22M8,0v16' stroke='%2300205b' stroke-width='2'/%3E%3C/svg%3E";
+    const flagCh = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23d52b1e' rx='2'/%3E%3Cpath d='M13,6h6v7h7v6h-7v7h-6v-7h-7v-6h7z' fill='%23fff'/%3E%3C/svg%3E";
+
+    const flagBadge = (dataUri, alt) => `<img src="${dataUri}" alt="${alt}" style="display:inline-block;width:17px;height:12px;vertical-align:middle;margin-right:6px;border-radius:2px;border:1px solid rgba(0,0,0,0.25);box-shadow:0 1px 2px rgba(0,0,0,0.15)">`;
+
+    // -------------------------------------------------------------
     // FONDS NATIONAUX OFFICIELS (France, Limitrophes & Europe)
     // -------------------------------------------------------------
     // 1. Suisse - Swisstopo Pixelkarte 1:25 000 officiel (Open Data Confédération Suisse)
@@ -214,14 +229,20 @@ class MapManager {
       attribution: '&copy; <a href="https://www.bkg.bund.de" target="_blank">BKG / basemap.de</a>'
     });
 
-    // 5. Autriche - basemap.at Topo officiel (Open Data Autriche)
-    const ignAustria = L.tileLayer('https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png', {
-      maxZoom: 19,
-      maxNativeZoom: 18,
-      attribution: '&copy; <a href="https://basemap.at" target="_blank">basemap.at (Autriche)</a>'
+    // 5. Autriche - Carte de randonnée alpine (Relief Topo & Sentiers balisés ÖAV Alpenverein)
+    const austriaTopoBase = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      subdomains: 'abc',
+      attribution: '&copy; OpenTopoMap'
     });
+    const austriaTrails = L.tileLayer('https://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      opacity: 0.95,
+      attribution: '&copy; Sentiers ÖAV (Alpenverein) • Waymarked Trails'
+    });
+    const ignAustria = L.layerGroup([austriaTopoBase, austriaTrails]);
 
-    // 6. Italie - Topographie & Sentiers officiels CAI (Club Alpino Italiano / OpenTopo)
+    // 6. Italie - Carte de randonnée alpine (Relief Topo & Sentiers balisés CAI Club Alpino Italiano)
     const italyTopoBase = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
       maxZoom: 17,
       subdomains: 'abc',
@@ -250,18 +271,18 @@ class MapManager {
 
     this.baseLayers = {
       // 1er : France
-      "🇫🇷 France (IGN TOP 25 officiel)": ignTop25,
-      "🇫🇷 France (IGN Plan moderne)": ignPlan,
-      "🇫🇷 France (Carte des GR® épurée)": grMapLayer,
+      [`${flagBadge(flagFr, 'FR')} France (IGN TOP 25 officiel)`]: ignTop25,
+      [`${flagBadge(flagFr, 'FR')} France (IGN Plan moderne)`]: ignPlan,
+      [`${flagBadge(flagFr, 'FR')} France (Carte des GR® épurée)`]: grMapLayer,
       // Puis par ordre alphabétique des pays
-      "🇩🇪 Allemagne (basemap.de Topo)": ignGermany,
-      "🇦🇹 Autriche (basemap.at Topo)": ignAustria,
-      "🇧🇪 Belgique (IGN CartoWeb 1:25 000)": ignBelgium,
-      "🇪🇸 Espagne (IGN MTN 1:25 000)": ignSpain,
-      "🇮🇹 Italie (Topo & Sentiers CAI)": ignItaly,
-      "🇱🇺 Luxembourg (ACT Topo 1:20 000)": ignLuxembourg,
-      "🇳🇴 Norvège (Kartverket Topo)": ignNorway,
-      "🇨🇭 Suisse (Swisstopo 1:25 000)": swisstopo,
+      [`${flagBadge(flagDe, 'DE')} Allemagne (basemap.de Topo)`]: ignGermany,
+      [`${flagBadge(flagAt, 'AT')} Autriche (Topo & Sentiers ÖAV)`]: ignAustria,
+      [`${flagBadge(flagBe, 'BE')} Belgique (IGN CartoWeb 1:25 000)`]: ignBelgium,
+      [`${flagBadge(flagEs, 'ES')} Espagne (IGN MTN 1:25 000)`]: ignSpain,
+      [`${flagBadge(flagIt, 'IT')} Italie (Topo & Sentiers CAI)`]: ignItaly,
+      [`${flagBadge(flagLu, 'LU')} Luxembourg (ACT Topo 1:20 000)`]: ignLuxembourg,
+      [`${flagBadge(flagNo, 'NO')} Norvège (Kartverket Topo)`]: ignNorway,
+      [`${flagBadge(flagCh, 'CH')} Suisse (Swisstopo 1:25 000)`]: swisstopo,
       // Après les pays : fonds mondiaux & satellites
       "🌍 OpenTopoMap (Relief mondial)": openTopo,
       "🌍 OpenStreetMap France (Sentiers)": osmFr,
@@ -303,6 +324,17 @@ class MapManager {
     if (showPaperLimits) {
       this.paperSheetLayer.addTo(this.map);
     }
+
+        // Détection automatique du pays lors du déplacement libre de la carte (pan/zoom)
+    this.map.on('moveend', () => {
+      if (this.currentBaseLayer === 'satellite' || this.currentBaseLayer === 'grmap') return;
+      const center = this.map.getCenter();
+      if (!center) return;
+      const rec = this.getCountryForCoords(center.lat, center.lng);
+      if (rec && rec !== this.currentBaseLayer && this.map.getZoom() >= 8) {
+        this.setBaseLayer(rec);
+      }
+    });
 
     this.updateSearchRadiusVisuals(false);
 
@@ -721,20 +753,20 @@ class MapManager {
     let targetKey = key;
     for (const [name, layer] of Object.entries(this.baseLayers)) {
       const lower = name.toLowerCase();
-      if (key === 'swisstopo' && (lower.includes('swisstopo') || lower.includes('suisse'))) { targetLayer = layer; break; }
-      if (key === 'ignspain' && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; break; }
-      if (key === 'ignbelgium' && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; break; }
-      if (key === 'igngermany' && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; break; }
-      if (key === 'ignaustria' && (lower.includes('autriche') || lower.includes('austria') || lower.includes('basemap.at'))) { targetLayer = layer; break; }
-      if (key === 'ignitaly' && (lower.includes('italie') || lower.includes('italy') || lower.includes('igm') || lower.includes('cai'))) { targetLayer = layer; break; }
-      if (key === 'ignluxembourg' && (lower.includes('luxembourg') || lower.includes('geoportail.lu'))) { targetLayer = layer; break; }
-      if (key === 'ignnorway' && (lower.includes('norvège') || lower.includes('norvege') || lower.includes('norway') || lower.includes('kartverket'))) { targetLayer = layer; break; }
-      if (key === 'opentopo' && lower.includes('opentopo')) { targetLayer = layer; break; }
-      if (key === 'igntop25' && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; break; }
-      if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; break; }
-      if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré') || lower.includes('gr®'))) { targetLayer = layer; break; }
-      if (key === 'osmfr' && (lower.includes('openstreetmap') || lower.includes('sentiers') || lower.includes('france'))) { targetLayer = layer; break; }
-      if (key === 'satellite' && lower.includes('satellite')) { targetLayer = layer; break; }
+      if ((key === 'swisstopo' || key === 'ch') && (lower.includes('swisstopo') || lower.includes('suisse'))) { targetLayer = layer; targetKey = 'swisstopo'; break; }
+      if ((key === 'ignspain' || key === 'es') && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; targetKey = 'ignspain'; break; }
+      if ((key === 'ignbelgium' || key === 'be') && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; targetKey = 'ignbelgium'; break; }
+      if ((key === 'igngermany' || key === 'de') && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; targetKey = 'igngermany'; break; }
+      if ((key === 'ignaustria' || key === 'at') && (lower.includes('autriche') || lower.includes('austria') || lower.includes('öav') || lower.includes('oav'))) { targetLayer = layer; targetKey = 'ignaustria'; break; }
+      if ((key === 'ignitaly' || key === 'it') && (lower.includes('italie') || lower.includes('italy') || lower.includes('cai') || lower.includes('igm'))) { targetLayer = layer; targetKey = 'ignitaly'; break; }
+      if ((key === 'ignluxembourg' || key === 'lu') && (lower.includes('luxembourg') || lower.includes('geoportail.lu'))) { targetLayer = layer; targetKey = 'ignluxembourg'; break; }
+      if ((key === 'ignnorway' || key === 'no') && (lower.includes('norvège') || lower.includes('norvege') || lower.includes('norway') || lower.includes('kartverket'))) { targetLayer = layer; targetKey = 'ignnorway'; break; }
+      if ((key === 'opentopo' || key === 'opentopomap') && lower.includes('opentopo')) { targetLayer = layer; targetKey = 'opentopo'; break; }
+      if ((key === 'igntop25' || key === 'ign' || key === 'fr') && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; targetKey = 'igntop25'; break; }
+      if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; targetKey = 'ignplan'; break; }
+      if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré') || lower.includes('gr®'))) { targetLayer = layer; targetKey = 'grmap'; break; }
+      if (key === 'osmfr' && (lower.includes('openstreetmap') || lower.includes('sentiers') || lower.includes('france'))) { targetLayer = layer; targetKey = 'osmfr'; break; }
+      if (key === 'satellite' && lower.includes('satellite')) { targetLayer = layer; targetKey = 'satellite'; break; }
     }
     if (targetLayer && !this.map.hasLayer(targetLayer)) {
       for (const [_, l] of Object.entries(this.baseLayers)) {
@@ -769,40 +801,63 @@ class MapManager {
     }
   }
 
+    getCountryForCoords(lat, lon) {
+    // 1. Luxembourg (territoire précis entre Belgique, France et Allemagne)
+    if (lat >= 49.44 && lat <= 50.22 && lon >= 5.73 && lon <= 6.54) {
+      return 'ignluxembourg';
+    }
+    // 2. Suisse (Valais, Genève, Tessin, Grisons, Alpes suisses)
+    // Frontière nord avec l'Allemagne : le Rhin (lat ~ 47.58, sauf Schaffhouse jusqu'à 47.81 entre 8.45 et 8.75)
+    // Frontière ouest avec la France : Chamonix exclu (< 6.93 et lat < 46.05)
+    if (lat >= 45.81 && lat <= 47.81 && lon >= 5.95 && lon <= 10.50) {
+      const isChamonix = (lon < 6.93 && lat < 46.05);
+      const isGermanSchwarzwald = (lat > 47.60 && lon < 8.45);
+      const isGermanBodensee = (lat > 47.60 && lon > 8.75);
+      if (!isChamonix && !isGermanSchwarzwald && !isGermanBodensee) return 'swisstopo';
+    }
+    // 3. Autriche (Tyrol, Tauern, Alpes autrichiennes - exclure la Bavière allemande au nord de 47.75)
+    if (lat >= 46.37 && lat <= 49.03 && lon >= 9.53 && lon <= 17.17) {
+      if (!(lat > 47.75 && lon < 12.8)) return 'ignaustria';
+    }
+    // 4. Belgique (Ardennes, Fagnes)
+    if (lat >= 49.49 && lat <= 51.51 && lon >= 2.54 && lon <= 6.41) {
+      return 'ignbelgium';
+    }
+    // 5. Espagne (Pyrénées espagnoles, Picos de Europa, Sierras)
+    if (lat >= 35.9 && lat <= 43.8 && lon >= -9.3 && lon <= 3.35) {
+      return 'ignspain';
+    }
+    // 6. Italie (Val d'Aoste, Piémont, Dolomites, Apennins)
+    if (lat >= 36.6 && lat <= 47.1 && lon >= 6.62 && lon <= 18.53) {
+      if (!(lat > 45.8 && lon < 6.93)) return 'ignitaly';
+    }
+    // 7. Allemagne (Forêt Noire, Bavière, Harz)
+    if (lat >= 47.27 && lat <= 55.06 && lon >= 5.86 && lon <= 15.05) {
+      return 'igngermany';
+    }
+    // 8. Norvège (Fjords, Lofoten, Jotunheimen)
+    if (lat >= 57.9 && lat <= 71.2 && lon >= 4.5 && lon <= 31.1) {
+      return 'ignnorway';
+    }
+    // 9. France métropolitaine & Corse
+    if (this.isInsideFrance(lat, lon)) {
+      return 'igntop25';
+    }
+    // 10. Reste du monde
+    return 'opentopo';
+  }
+
   setSearchOrigin(lat, lon, name = 'Lieu sélectionné', autoZoom = false) {
     this.searchOrigin = { lat, lon, name };
 
     // Si le lieu est hors de France (ex: Rome, Tokyo, Madrid, New York, Aoste, Genève)
     // et que le fond de carte actif est IGN (qui ne couvre que la France),
     // basculer automatiquement sur OpenTopoMap (Relief mondial) pour afficher le relief et la topographie
-    if (!this.isInsideFrance(lat, lon)) {
-      if (this.currentBaseLayer === 'igntop25' || this.currentBaseLayer === 'ignplan') {
-        // Détecter le pays limitrophe ou d'Europe pour basculer sur sa carte nationale officielle
-        if (lat >= 49.4 && lat <= 50.25 && lon >= 5.7 && lon <= 6.55) {
-          this.setBaseLayer('ignluxembourg');
-        } else if (lat >= 45.8 && lat <= 47.85 && lon >= 5.95 && lon <= 10.5) {
-          this.setBaseLayer('swisstopo');
-        } else if (lat >= 35.9 && lat <= 43.8 && lon >= -9.3 && lon <= 3.4) {
-          this.setBaseLayer('ignspain');
-        } else if (lat >= 49.45 && lat <= 51.55 && lon >= 2.5 && lon <= 6.45) {
-          this.setBaseLayer('ignbelgium');
-        } else if (lat >= 46.35 && lat <= 49.05 && lon >= 9.5 && lon <= 17.2) {
-          this.setBaseLayer('ignaustria');
-        } else if (lat >= 47.25 && lat <= 55.1 && lon >= 5.85 && lon <= 15.1) {
-          this.setBaseLayer('igngermany');
-        } else if (lat >= 36.6 && lat <= 47.1 && lon >= 6.6 && lon <= 18.5) {
-          this.setBaseLayer('ignitaly');
-        } else if (lat >= 57.9 && lat <= 71.2 && lon >= 4.5 && lon <= 31.1) {
-          this.setBaseLayer('ignnorway');
-        } else {
-          this.setBaseLayer('opentopo');
-        }
-        this._autoSwitchedForeign = true;
-      }
-    } else {
-      if (this._autoSwitchedForeign && (this.currentBaseLayer === 'opentopo' || this.currentBaseLayer === 'swisstopo' || this.currentBaseLayer === 'ignspain' || this.currentBaseLayer === 'ignbelgium' || this.currentBaseLayer === 'igngermany' || this.currentBaseLayer === 'ignaustria' || this.currentBaseLayer === 'ignitaly' || this.currentBaseLayer === 'ignluxembourg' || this.currentBaseLayer === 'ignnorway')) {
-        this.setBaseLayer('igntop25');
-        this._autoSwitchedForeign = false;
+    // Auto-détection intelligente du pays et bascule automatique sur sa carte de randonnée
+    if (this.currentBaseLayer !== 'satellite' && this.currentBaseLayer !== 'grmap') {
+      const rec = this.getCountryForCoords(lat, lon);
+      if (rec && rec !== this.currentBaseLayer) {
+        this.setBaseLayer(rec);
       }
     }
 
@@ -1076,6 +1131,18 @@ class MapManager {
    */
   selectHike(hike, fitBounds = true, triggerCallback = true) {
     if (!hike) return;
+
+    // Bascule automatique sur la carte de randonnée officielle du pays de la randonnée
+    if (this.currentBaseLayer !== 'satellite' && this.currentBaseLayer !== 'grmap') {
+      const hLat = (hike.startPoint && hike.startPoint.lat) || hike.lat || (hike.points && hike.points[0] && hike.points[0].lat);
+      const hLon = (hike.startPoint && hike.startPoint.lon) || hike.lon || (hike.points && hike.points[0] && hike.points[0].lon);
+      if (hLat != null && hLon != null) {
+        const recLayer = this.getCountryForCoords(hLat, hLon);
+        if (recLayer && recLayer !== this.currentBaseLayer) {
+          this.setBaseLayer(recLayer);
+        }
+      }
+    }
 
     this.selectedHike = hike;
     this.displayTrack(hike, true);
