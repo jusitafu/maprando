@@ -109,11 +109,15 @@ class PDFExporter {
       'igntop25': isInsideFrance ? "FOND OFFICIEL IGN TOP 25 (CARTE PAPIER)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'ign': isInsideFrance ? "FOND OFFICIEL IGN TOP 25 (CARTE PAPIER)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'ignplan': isInsideFrance ? "FOND OFFICIEL PLAN IGN (NUMÉRIQUE V2)" : "FOND OPENTOPOMAP (RELIEF MONDIAL)",
-      'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
-      'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
-      'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
-      'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
       'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
+      'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
+      'ignaustria': "CARTE AUTRICHE OFFICIELLE (BASEMAP.AT TOPO)",
+      'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
+      'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
+      'ignitaly': "CARTE ITALIE OFFICIELLE (IGM 1:25 000)",
+      'ignluxembourg': "CARTE LUXEMBOURG OFFICIELLE (ACT TOPO 1:20 000)",
+      'ignnorway': "CARTE NORVÈGE OFFICIELLE (KARTVERKET TOPO)",
+      'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
       'opentopo': "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'osmfr': "FOND OPENSTREETMAP FRANCE (SENTIERS)",
       'satellite': "FOND SATELLITE HAUTE DÉFINITION (IGN / ESRI)"
@@ -669,11 +673,15 @@ class PDFExporter {
     const layerLabels = {
       'igntop25': "CARTE IGN TOP 25 OFFICIELLE (FLUX SCAN 25)",
       'ignplan': "PLAN IGN MULTI-ÉCHELLES (IGN EXPRESS)",
-      'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
-      'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
-      'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
-      'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
       'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
+      'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
+      'ignaustria': "CARTE AUTRICHE OFFICIELLE (BASEMAP.AT TOPO)",
+      'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
+      'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
+      'ignitaly': "CARTE ITALIE OFFICIELLE (IGM 1:25 000)",
+      'ignluxembourg': "CARTE LUXEMBOURG OFFICIELLE (ACT TOPO 1:20 000)",
+      'ignnorway': "CARTE NORVÈGE OFFICIELLE (KARTVERKET TOPO)",
+      'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
       'opentopo': "OPENTOPO MAP (RELIEF ET COURBES DE NIVEAU)",
       'osm': "OPENSTREETMAP MONDE",
       'satellite': "FOND SATELLITE HAUTE DÉFINITION (IGN / ESRI)"
@@ -1299,7 +1307,18 @@ class PDFExporter {
     const ignSpainUrl = (x, y, z) => `https://www.ign.es/wmts/mapa-raster?request=getTile&layer=MTN&TileMatrixSet=GoogleMapsCompatible&TileMatrix=${z}&TileCol=${x}&TileRow=${y}&format=image/jpeg`;
     const ignBelgiumUrl = (x, y, z) => `https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/${z}/${y}/${x}.png`;
     const ignGermanyUrl = (x, y, z) => `https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/${z}/${y}/${x}.png`;
-
+    const ignAustriaUrl = (x, y, z) => `https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/${z}/${y}/${x}.png`;
+    const ignLuxembourgUrl = (x, y, z) => `https://wmts.geoportail.lu/opendata/wmts/topomap/GLOBAL_WEBMERCATOR/${z}/${x}/${y}.png`;
+    const ignNorwayUrl = (x, y, z) => `https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/${z}/${y}/${x}.png`;
+    const ignItalyUrl = (x, y, z) => {
+      const world_size = 20037508.342789244 * 2;
+      const tile_size = world_size / (2 ** z);
+      const min_x = -20037508.342789244 + x * tile_size;
+      const max_x = min_x + tile_size;
+      const max_y = 20037508.342789244 - y * tile_size;
+      const min_y = max_y - tile_size;
+      return `https://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/IGM_25000.map&service=WMS&version=1.3.0&request=GetMap&layers=CB.IGM25000.32,CB.IGM25000.33&styles=&crs=EPSG:3857&bbox=${min_x},${min_y},${max_x},${max_y}&width=256&height=256&format=image/jpeg`;
+    };
 
     const ignTop25Url = (x, y, z) => `https://data.geopf.fr/private/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=${z}&TILEROW=${y}&TILECOL=${x}&FORMAT=image%2Fjpeg&apikey=ign_scan_ws`;
 
@@ -1345,11 +1364,31 @@ class PDFExporter {
       fallbackUrlFn1 = openTopoUrl;
       fallbackUrlFn2 = osmStdUrl;
       attributionText = '© BKG / basemap.de (Allemagne)';
+    } else if (mapLayer === 'ignaustria') {
+      primaryUrlFn = ignAustriaUrl;
+      fallbackUrlFn1 = openTopoUrl;
+      fallbackUrlFn2 = osmStdUrl;
+      attributionText = '© basemap.at (Autriche Topo)';
     } else if (mapLayer === 'ignbelgium') {
       primaryUrlFn = ignBelgiumUrl;
       fallbackUrlFn1 = openTopoUrl;
       fallbackUrlFn2 = osmStdUrl;
       attributionText = '© IGN Belgique - CartoWeb (1:25 000)';
+    } else if (mapLayer === 'ignitaly') {
+      primaryUrlFn = ignItalyUrl;
+      fallbackUrlFn1 = openTopoUrl;
+      fallbackUrlFn2 = osmStdUrl;
+      attributionText = '© Geoportale Nazionale / IGM 1:25 000 (Italie)';
+    } else if (mapLayer === 'ignluxembourg') {
+      primaryUrlFn = ignLuxembourgUrl;
+      fallbackUrlFn1 = openTopoUrl;
+      fallbackUrlFn2 = osmStdUrl;
+      attributionText = '© ACT Geoportail.lu (Luxembourg Topo 1:20 000)';
+    } else if (mapLayer === 'ignnorway') {
+      primaryUrlFn = ignNorwayUrl;
+      fallbackUrlFn1 = openTopoUrl;
+      fallbackUrlFn2 = osmStdUrl;
+      attributionText = '© Kartverket (Norvège Topo)';
     } else if (mapLayer === 'ignplan') {
       if (isInsideFrance) {
         primaryUrlFn = ignPlanUrl;

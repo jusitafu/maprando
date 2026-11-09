@@ -41,36 +41,6 @@ class MapManager {
     this.containerId = mapContainerId;
     this.map = null;
         // -------------------------------------------------------------
-    // FONDS TRANSFRONTALIERS OFFICIELS (Suisse, Espagne, Belgique)
-    // -------------------------------------------------------------
-    // 1. Suisse - Swisstopo Pixelkarte 1:25 000 officiel (Open Data Confédération Suisse)
-    const swisstopo = L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
-      maxZoom: 19,
-      maxNativeZoom: 18,
-      attribution: '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">Swisstopo</a>'
-    });
-
-    // 2. Espagne - IGN España MTN Mapa Ráster 1:25 000 officiel (Open Data Espagne / CNIG)
-    const ignSpain = L.tileLayer('https://www.ign.es/wmts/mapa-raster?request=getTile&layer=MTN&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileCol={x}&TileRow={y}&format=image/jpeg', {
-      maxZoom: 19,
-      maxNativeZoom: 18,
-      attribution: '&copy; <a href="https://www.ign.es" target="_blank">IGN España - CNIG</a>'
-    });
-
-    // 3. Belgique - IGN Belgique CartoWeb Topo 1:25 000 officiel (Open Data Belgique / NGI)
-    const ignBelgium = L.tileLayer('https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png', {
-      maxZoom: 19,
-      maxNativeZoom: 17,
-      attribution: '&copy; <a href="https://www.ngi.be" target="_blank">IGN Belgique - CartoWeb</a>'
-    });
-
-        // 4. Allemagne - BKG basemap.de Web Raster officiel (Open Data Allemagne)
-    const ignGermany = L.tileLayer('https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', {
-      maxZoom: 19,
-      maxNativeZoom: 18,
-      attribution: '&copy; <a href="https://www.bkg.bund.de" target="_blank">BKG / basemap.de</a>'
-    });
-
     this.baseLayers = {};
     this.markersLayer = null;
     this.selectionHaloLayer = null;
@@ -213,8 +183,8 @@ class MapManager {
     this.waymarkedGrOverlay = waymarkedGrOverlay;
     const grMapLayer = L.layerGroup([esriLightGray, ignPlanEpure, waymarkedGrOverlay]);
 
-        // -------------------------------------------------------------
-    // FONDS TRANSFRONTALIERS OFFICIELS (Suisse, Espagne, Belgique)
+    // -------------------------------------------------------------
+    // FONDS NATIONAUX OFFICIELS (France, Limitrophes & Europe)
     // -------------------------------------------------------------
     // 1. Suisse - Swisstopo Pixelkarte 1:25 000 officiel (Open Data Confédération Suisse)
     const swisstopo = L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
@@ -237,25 +207,64 @@ class MapManager {
       attribution: '&copy; <a href="https://www.ngi.be" target="_blank">IGN Belgique - CartoWeb</a>'
     });
 
-        // 4. Allemagne - BKG basemap.de Web Raster officiel (Open Data Allemagne)
+    // 4. Allemagne - BKG basemap.de Web Raster officiel (Open Data Allemagne)
     const ignGermany = L.tileLayer('https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', {
       maxZoom: 19,
       maxNativeZoom: 18,
       attribution: '&copy; <a href="https://www.bkg.bund.de" target="_blank">BKG / basemap.de</a>'
     });
 
+    // 5. Autriche - basemap.at Topo officiel (Open Data Autriche)
+    const ignAustria = L.tileLayer('https://mapsneu.wien.gv.at/basemap/geolandbasemap/normal/google3857/{z}/{y}/{x}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://basemap.at" target="_blank">basemap.at (Autriche)</a>'
+    });
+
+    // 6. Italie - IGM 1:25 000 officiel (Geoportale Nazionale / MinAmbiente)
+    const ignItaly = L.tileLayer.wms('https://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/IGM_25000.map', {
+      layers: 'CB.IGM25000.32,CB.IGM25000.33',
+      format: 'image/jpeg',
+      transparent: false,
+      version: '1.3.0',
+      crs: L.CRS.EPSG3857,
+      maxZoom: 19,
+      attribution: '&copy; <a href="http://www.pcn.minambiente.it" target="_blank">Geoportale Nazionale / IGM 1:25 000</a>'
+    });
+
+    // 7. Luxembourg - ACT Geoportail.lu Topo 1:20 000 officiel (Open Data Luxembourg)
+    const ignLuxembourg = L.tileLayer('https://wmts.geoportail.lu/opendata/wmts/topomap/GLOBAL_WEBMERCATOR/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.geoportail.lu" target="_blank">ACT Geoportail.lu (Luxembourg)</a>'
+    });
+
+    // 8. Norvège - Kartverket Toporaster officiel (Open Data Norvège)
+    const ignNorway = L.tileLayer('https://cache.kartverket.no/v1/wmts/1.0.0/toporaster/default/webmercator/{z}/{y}/{x}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.kartverket.no" target="_blank">Kartverket (Norvège)</a>'
+    });
+
     this.baseLayers = {
-      "IGN TOP 25 (France officiel)": ignTop25,
-      "IGN Plan (Numérique moderne)": ignPlan,
-      "Carte des GR (Fond épuré)": grMapLayer,
-      "🇨🇭 Suisse (Swisstopo 1:25 000)": swisstopo,
-      "🇪🇸 Espagne (IGN 1:25 000)": ignSpain,
-      "🇧🇪 Belgique (IGN 1:25 000)": ignBelgium,
+      // 1er : France
+      "🇫🇷 France (IGN TOP 25 officiel)": ignTop25,
+      "🇫🇷 France (IGN Plan moderne)": ignPlan,
+      "🇫🇷 France (Carte des GR® épurée)": grMapLayer,
+      // Puis par ordre alphabétique des pays
       "🇩🇪 Allemagne (basemap.de Topo)": ignGermany,
-      "OpenTopoMap (Relief mondial)": openTopo,
-      "OpenStreetMap France (Sentiers)": osmFr,
-      "Satellite Mondial (Esri 🌍)": esriSat,
-      "Satellite France (IGN Ortho)": ignSat
+      "🇦🇹 Autriche (basemap.at Topo)": ignAustria,
+      "🇧🇪 Belgique (IGN CartoWeb 1:25 000)": ignBelgium,
+      "🇪🇸 Espagne (IGN MTN 1:25 000)": ignSpain,
+      "🇮🇹 Italie (IGM 1:25 000 officiel)": ignItaly,
+      "🇱🇺 Luxembourg (ACT Topo 1:20 000)": ignLuxembourg,
+      "🇳🇴 Norvège (Kartverket Topo)": ignNorway,
+      "🇨🇭 Suisse (Swisstopo 1:25 000)": swisstopo,
+      // Après les pays : fonds mondiaux & satellites
+      "🌍 OpenTopoMap (Relief mondial)": openTopo,
+      "🌍 OpenStreetMap France (Sentiers)": osmFr,
+      "🛰️ Satellite Mondial (Esri 🌍)": esriSat,
+      "🛰️ Satellite France (IGN Ortho)": ignSat
     };
 
     // 2. Init Map centered on Sanary-sur-Mer with official IGN Top 25 layer
@@ -314,10 +323,14 @@ class MapManager {
         else if (name.includes('espagne') || name.includes('spain')) this.currentBaseLayer = 'ignspain';
         else if (name.includes('belgique') || name.includes('belgium')) this.currentBaseLayer = 'ignbelgium';
         else if (name.includes('allemagne') || name.includes('germany') || name.includes('basemap.de')) this.currentBaseLayer = 'igngermany';
+        else if (name.includes('autriche') || name.includes('austria') || name.includes('basemap.at')) this.currentBaseLayer = 'ignaustria';
+        else if (name.includes('italie') || name.includes('italy') || name.includes('igm')) this.currentBaseLayer = 'ignitaly';
+        else if (name.includes('luxembourg') || name.includes('geoportail.lu')) this.currentBaseLayer = 'ignluxembourg';
+        else if (name.includes('norvège') || name.includes('norvege') || name.includes('norway') || name.includes('kartverket')) this.currentBaseLayer = 'ignnorway';
         else if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
-        else if (name.includes('carte des gr') || name.includes('fond épuré')) this.currentBaseLayer = 'grmap';
+        else if (name.includes('carte des gr') || name.includes('fond épuré') || name.includes('gr®')) this.currentBaseLayer = 'grmap';
         else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
-        else if (name.includes('france') || name.includes('openstreetmap')) this.currentBaseLayer = 'osmfr';
+        else if (name.includes('france') || name.includes('openstreetmap') || name.includes('sentiers')) this.currentBaseLayer = 'osmfr';
         else if (name.includes('satellite')) this.currentBaseLayer = 'satellite';
         else this.currentBaseLayer = 'other';
 
@@ -710,11 +723,15 @@ class MapManager {
       if (key === 'ignspain' && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; break; }
       if (key === 'ignbelgium' && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; break; }
       if (key === 'igngermany' && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; break; }
+      if (key === 'ignaustria' && (lower.includes('autriche') || lower.includes('austria') || lower.includes('basemap.at'))) { targetLayer = layer; break; }
+      if (key === 'ignitaly' && (lower.includes('italie') || lower.includes('italy') || lower.includes('igm'))) { targetLayer = layer; break; }
+      if (key === 'ignluxembourg' && (lower.includes('luxembourg') || lower.includes('geoportail.lu'))) { targetLayer = layer; break; }
+      if (key === 'ignnorway' && (lower.includes('norvège') || lower.includes('norvege') || lower.includes('norway') || lower.includes('kartverket'))) { targetLayer = layer; break; }
       if (key === 'opentopo' && lower.includes('opentopo')) { targetLayer = layer; break; }
       if (key === 'igntop25' && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; break; }
       if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; break; }
-      if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré'))) { targetLayer = layer; break; }
-      if (key === 'osmfr' && (lower.includes('france') || lower.includes('openstreetmap'))) { targetLayer = layer; break; }
+      if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré') || lower.includes('gr®'))) { targetLayer = layer; break; }
+      if (key === 'osmfr' && (lower.includes('openstreetmap') || lower.includes('sentiers') || lower.includes('france'))) { targetLayer = layer; break; }
       if (key === 'satellite' && lower.includes('satellite')) { targetLayer = layer; break; }
     }
     if (targetLayer && !this.map.hasLayer(targetLayer)) {
@@ -758,20 +775,30 @@ class MapManager {
     // basculer automatiquement sur OpenTopoMap (Relief mondial) pour afficher le relief et la topographie
     if (!this.isInsideFrance(lat, lon)) {
       if (this.currentBaseLayer === 'igntop25' || this.currentBaseLayer === 'ignplan') {
-        // Détecter si on est en Suisse, Espagne ou Belgique pour basculer sur leur carte nationale officielle
-        if (lat >= 45.8 && lat <= 47.85 && lon >= 5.95 && lon <= 10.5) {
+        // Détecter le pays limitrophe ou d'Europe pour basculer sur sa carte nationale officielle
+        if (lat >= 49.4 && lat <= 50.25 && lon >= 5.7 && lon <= 6.55) {
+          this.setBaseLayer('ignluxembourg');
+        } else if (lat >= 45.8 && lat <= 47.85 && lon >= 5.95 && lon <= 10.5) {
           this.setBaseLayer('swisstopo');
         } else if (lat >= 35.9 && lat <= 43.8 && lon >= -9.3 && lon <= 3.4) {
           this.setBaseLayer('ignspain');
         } else if (lat >= 49.45 && lat <= 51.55 && lon >= 2.5 && lon <= 6.45) {
           this.setBaseLayer('ignbelgium');
+        } else if (lat >= 46.35 && lat <= 49.05 && lon >= 9.5 && lon <= 17.2) {
+          this.setBaseLayer('ignaustria');
+        } else if (lat >= 47.25 && lat <= 55.1 && lon >= 5.85 && lon <= 15.1) {
+          this.setBaseLayer('igngermany');
+        } else if (lat >= 36.6 && lat <= 47.1 && lon >= 6.6 && lon <= 18.5) {
+          this.setBaseLayer('ignitaly');
+        } else if (lat >= 57.9 && lat <= 71.2 && lon >= 4.5 && lon <= 31.1) {
+          this.setBaseLayer('ignnorway');
         } else {
           this.setBaseLayer('opentopo');
         }
         this._autoSwitchedForeign = true;
       }
     } else {
-      if (this._autoSwitchedForeign && this.currentBaseLayer === 'opentopo') {
+      if (this._autoSwitchedForeign && (this.currentBaseLayer === 'opentopo' || this.currentBaseLayer === 'swisstopo' || this.currentBaseLayer === 'ignspain' || this.currentBaseLayer === 'ignbelgium' || this.currentBaseLayer === 'igngermany' || this.currentBaseLayer === 'ignaustria' || this.currentBaseLayer === 'ignitaly' || this.currentBaseLayer === 'ignluxembourg' || this.currentBaseLayer === 'ignnorway')) {
         this.setBaseLayer('igntop25');
         this._autoSwitchedForeign = false;
       }
@@ -2754,7 +2781,7 @@ class MapManager {
 
     const newAttr = `&copy; IGN France - Carte TOPO 25 (SCAN 25® • <span id="ign-paper-date-badge" class="font-bold text-slate-700 hover:text-sky-600 cursor-pointer" onclick="window.MapManagerInstance && window.MapManagerInstance.togglePaperSheetBounds()" title="${fullTooltip} • Cliquer pour afficher/masquer les limites papier">Édition papier : ${annee}</span>)`;
 
-    const top25Layer = this.baseLayers && this.baseLayers["IGN TOP 25 (Carte papier officielle)"];
+    const top25Layer = this.baseLayers && (this.baseLayers["🇫🇷 France (IGN TOP 25 officiel)"] || this.baseLayers["IGN TOP 25 (France officiel)"] || this.baseLayers["IGN TOP 25 (Carte papier officielle)"]);
     if (top25Layer) {
       top25Layer.options.attribution = newAttr;
     }
