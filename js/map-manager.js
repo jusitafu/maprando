@@ -40,6 +40,30 @@ class MapManager {
   constructor(mapContainerId) {
     this.containerId = mapContainerId;
     this.map = null;
+        // -------------------------------------------------------------
+    // FONDS TRANSFRONTALIERS OFFICIELS (Suisse, Espagne, Belgique)
+    // -------------------------------------------------------------
+    // 1. Suisse - Swisstopo Pixelkarte 1:25 000 officiel (Open Data Confédération Suisse)
+    const swisstopo = L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">Swisstopo</a>'
+    });
+
+    // 2. Espagne - IGN España MTN Mapa Ráster 1:25 000 officiel (Open Data Espagne / CNIG)
+    const ignSpain = L.tileLayer('https://www.ign.es/wmts/mapa-raster?request=getTile&layer=MTN&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileCol={x}&TileRow={y}&format=image/jpeg', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.ign.es" target="_blank">IGN España - CNIG</a>'
+    });
+
+    // 3. Belgique - IGN Belgique CartoWeb Topo 1:25 000 officiel (Open Data Belgique / NGI)
+    const ignBelgium = L.tileLayer('https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 17,
+      attribution: '&copy; <a href="https://www.ngi.be" target="_blank">IGN Belgique - CartoWeb</a>'
+    });
+
     this.baseLayers = {};
     this.markersLayer = null;
     this.selectionHaloLayer = null;
@@ -182,10 +206,37 @@ class MapManager {
     this.waymarkedGrOverlay = waymarkedGrOverlay;
     const grMapLayer = L.layerGroup([esriLightGray, ignPlanEpure, waymarkedGrOverlay]);
 
+        // -------------------------------------------------------------
+    // FONDS TRANSFRONTALIERS OFFICIELS (Suisse, Espagne, Belgique)
+    // -------------------------------------------------------------
+    // 1. Suisse - Swisstopo Pixelkarte 1:25 000 officiel (Open Data Confédération Suisse)
+    const swisstopo = L.tileLayer('https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">Swisstopo</a>'
+    });
+
+    // 2. Espagne - IGN España MTN Mapa Ráster 1:25 000 officiel (Open Data Espagne / CNIG)
+    const ignSpain = L.tileLayer('https://www.ign.es/wmts/mapa-raster?request=getTile&layer=MTN&TileMatrixSet=GoogleMapsCompatible&TileMatrix={z}&TileCol={x}&TileRow={y}&format=image/jpeg', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.ign.es" target="_blank">IGN España - CNIG</a>'
+    });
+
+    // 3. Belgique - IGN Belgique CartoWeb Topo 1:25 000 officiel (Open Data Belgique / NGI)
+    const ignBelgium = L.tileLayer('https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/{z}/{y}/{x}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 17,
+      attribution: '&copy; <a href="https://www.ngi.be" target="_blank">IGN Belgique - CartoWeb</a>'
+    });
+
     this.baseLayers = {
-      "IGN TOP 25 (Carte papier officielle)": ignTop25,
+      "IGN TOP 25 (France officiel)": ignTop25,
       "IGN Plan (Numérique moderne)": ignPlan,
       "Carte des GR (Fond épuré)": grMapLayer,
+      "🇨🇭 Suisse (Swisstopo 1:25 000)": swisstopo,
+      "🇪🇸 Espagne (IGN 1:25 000)": ignSpain,
+      "🇧🇪 Belgique (IGN 1:25 000)": ignBelgium,
       "OpenTopoMap (Relief mondial)": openTopo,
       "OpenStreetMap France (Sentiers)": osmFr,
       "Satellite Mondial (Esri 🌍)": esriSat,
@@ -244,7 +295,10 @@ class MapManager {
           this.renderPaperSheetBounds();
         }
       } else {
-        if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
+        if (name.includes('swisstopo') || name.includes('suisse')) this.currentBaseLayer = 'swisstopo';
+        else if (name.includes('espagne') || name.includes('spain')) this.currentBaseLayer = 'ignspain';
+        else if (name.includes('belgique') || name.includes('belgium')) this.currentBaseLayer = 'ignbelgium';
+        else if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
         else if (name.includes('carte des gr') || name.includes('fond épuré')) this.currentBaseLayer = 'grmap';
         else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
         else if (name.includes('france') || name.includes('openstreetmap')) this.currentBaseLayer = 'osmfr';
@@ -636,6 +690,9 @@ class MapManager {
     let targetKey = key;
     for (const [name, layer] of Object.entries(this.baseLayers)) {
       const lower = name.toLowerCase();
+      if (key === 'swisstopo' && (lower.includes('swisstopo') || lower.includes('suisse'))) { targetLayer = layer; break; }
+      if (key === 'ignspain' && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; break; }
+      if (key === 'ignbelgium' && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; break; }
       if (key === 'opentopo' && lower.includes('opentopo')) { targetLayer = layer; break; }
       if (key === 'igntop25' && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; break; }
       if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; break; }
@@ -684,7 +741,16 @@ class MapManager {
     // basculer automatiquement sur OpenTopoMap (Relief mondial) pour afficher le relief et la topographie
     if (!this.isInsideFrance(lat, lon)) {
       if (this.currentBaseLayer === 'igntop25' || this.currentBaseLayer === 'ignplan') {
-        this.setBaseLayer('opentopo');
+        // Détecter si on est en Suisse, Espagne ou Belgique pour basculer sur leur carte nationale officielle
+        if (lat >= 45.8 && lat <= 47.85 && lon >= 5.95 && lon <= 10.5) {
+          this.setBaseLayer('swisstopo');
+        } else if (lat >= 35.9 && lat <= 43.8 && lon >= -9.3 && lon <= 3.4) {
+          this.setBaseLayer('ignspain');
+        } else if (lat >= 49.45 && lat <= 51.55 && lon >= 2.5 && lon <= 6.45) {
+          this.setBaseLayer('ignbelgium');
+        } else {
+          this.setBaseLayer('opentopo');
+        }
         this._autoSwitchedForeign = true;
       }
     } else {
