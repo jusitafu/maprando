@@ -7051,13 +7051,26 @@ class MapManager {
     }
     this._calanquesDelimLayer = L.layerGroup();
 
-    // Contour officiel feuille 89035 en BORDEAUX (#800020)
-    const rect = L.rectangle(this._calanquesBounds, {
+    // Contour officiel feuille 89035 : même trait et pointillé que les cartes TOP 25 (dashArray 8, 6) mais en BORDEAUX
+    // 1. Bande extérieure translucide
+    L.rectangle(this._calanquesBounds, {
       color: '#800020',
-      weight: 3.5,
-      dashArray: '12, 6',
+      weight: 3,
+      opacity: 0.40,
+      fill: true,
       fillColor: '#800020',
-      fillOpacity: 0.08
+      fillOpacity: 0.03,
+      interactive: false
+    }).addTo(this._calanquesDelimLayer);
+
+    // 2. Trait intérieur en pointillés identique aux feuilles TOP 25
+    L.rectangle(this._calanquesBounds, {
+      color: '#800020',
+      weight: 2,
+      opacity: 0.90,
+      dashArray: '8, 6',
+      fill: false,
+      interactive: false
     }).addTo(this._calanquesDelimLayer);
 
     // Cartouche titre sur la feuille en BORDEAUX avec bouton croix "✕" de retour TOP 25
