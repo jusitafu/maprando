@@ -6928,7 +6928,7 @@ class MapManager {
 
 
 
-                /* =========================================================================
+                  /* =========================================================================
    * DÉTECTION ET BASCULE SPÉCIALE CARTE DES CALANQUES (IGN 89035 - 1:15 000)
    * ========================================================================= */
   initCalanquesDetection() {
@@ -6969,19 +6969,19 @@ class MapManager {
 
   checkCalanquesProximity() {
     if (!this.map || !this._calanquesBounds) return;
-    const mapBounds = this.map.getBounds();
-    if (!mapBounds) return;
+    const center = this.map.getCenter();
+    if (!center) return;
 
     const zoom = this.map.getZoom();
-    // On est dans la zone des Calanques si le champ visuel intersecte les limites de la feuille 89035
-    // à un niveau de zoom randonnée (zoom >= 10)
-    const inZone = zoom >= 10 && mapBounds.intersects(this._calanquesBounds);
+    // On est dans la zone des Calanques si le centre de la carte est dans le massif des Calanques
+    // à une échelle de randonnée (zoom >= 12)
+    const inZone = zoom >= 12 && this._calanquesBounds.contains(center);
 
     const legendBtnUnderMap = document.getElementById('btn-open-calanques-legend');
 
     if (!inZone) {
-      // REGLE UTILISATEUR STRICTE :
-      // "quand on n'est plus dans la zone des calanques, le bandeau bordeau 89035 doit disparaître de même que la légende"
+      // REGLE STRICTE DEMANDÉE PAR L'UTILISATEUR :
+      // "quand on a quitté la zone, le bandeau bordeau 89035 doit disparaître de même que la légende"
       this.hideCalanquesFloatingBadge();
       this.hideCalanquesAlert();
       if (legendBtnUnderMap) {
@@ -6991,24 +6991,23 @@ class MapManager {
     } else {
       // On est DANS la zone des Calanques
       if (this._calanquesActive) {
-        // La carte 89035 est active : afficher le bandeau bordeaux avec [✕] et les légendes
+        // La carte 89035 est active : afficher le bandeau bordeaux avec [✕] et la légende sous la carte
         this.showCalanquesFloatingBadge(true);
         if (legendBtnUnderMap) {
           legendBtnUnderMap.classList.remove('hidden');
           legendBtnUnderMap.style.display = 'inline-flex';
         }
       } else {
-        // La carte 89035 n'est pas active :
-        // La légende doit rester masquée
+        // La carte 89035 n'est pas active : la légende sous la carte reste masquée
         if (legendBtnUnderMap) {
           legendBtnUnderMap.classList.add('hidden');
           legendBtnUnderMap.style.display = 'none';
         }
-        // Si l'utilisateur avait précédemment activé la carte puis cliqué sur le carré pour masquer le calque
-        // tout en restant dans la zone des Calanques, on maintient le bandeau avec le carré vide [ ]
+        // Si l'utilisateur avait déjà activé la carte puis cliqué sur le carré pour masquer le calque
+        // tout en restant dans les Calanques, on maintient le bandeau avec le carré vide [ ]
         if (this._calanquesEverActivated) {
           this.showCalanquesFloatingBadge(false);
-        } else if (!this._calanquesAlertDismissed && zoom >= 10 && zoom < 15) {
+        } else if (!this._calanquesAlertDismissed && zoom >= 12 && zoom < 15) {
           this.showCalanquesAlert();
         }
       }
@@ -7076,7 +7075,7 @@ class MapManager {
     // 2. Afficher la délimitation officielle feuille 89035 en BORDEAUX
     this.renderCalanquesDelimitation();
 
-    // 3. Afficher l'UNIQUE bandeau en haut avec le carré coché (✕) et le bouton Légende
+    // 3. Afficher l'UNIQUE bandeau en haut avec le carré coché (✕) - sans bouton légende redondant
     this.showCalanquesFloatingBadge(true);
 
     // 4. Afficher le bouton Légende sous la carte
@@ -7098,18 +7097,10 @@ class MapManager {
       chip = document.createElement('div');
       chip.id = 'calanques-floating-chip';
       chip.className = 'fixed top-14 left-1/2 -translate-x-1/2 z-[1000] bg-gradient-to-r from-[#2b040e] to-[#4c0519] text-[#ffe4e6] border-2 border-[#be123c] px-3.5 py-1.5 rounded-2xl text-xs font-black shadow-2xl flex items-center gap-2.5 transition-all pointer-events-auto';
+      // Plus de bouton légende dans le bandeau : il y a déjà le bouton légende sous la carte
       chip.innerHTML = `
         <span class="text-sm">🗺️</span>
         <span class="whitespace-nowrap font-black">IGN 89035 &bull; Traversée des Calanques</span>
-        
-        <button type="button" id="btn-calanques-chip-legend"
-                title="Consulter la légende détaillée de la carte IGN 89035" 
-                class="${isActive ? '' : 'hidden'}"
-                style="margin-left:4px;background:#881337;border:1px solid #fda4af;color:#ffffff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:bold;cursor:pointer;display:${isActive ? 'inline-flex' : 'none'};align-items:center;gap:3px;transition:all 0.2s;" 
-                onmouseover="this.style.background='#be123c'" 
-                onmouseout="this.style.background='#881337'">
-          <span>📖</span><span>Légende</span>
-        </button>
 
         <button type="button" id="btn-toggle-calanques-square" 
                 title="${isActive ? "Désactiver la carte IGN 89035 (revenir à TOP 25)" : "Réafficher la carte IGN 89035 (1:15 000)"}" 
@@ -7118,11 +7109,6 @@ class MapManager {
                 onmouseout="this.style.transform='scale(1)'">${isActive ? '✕' : ''}</button>
       `;
       document.body.appendChild(chip);
-
-      document.getElementById('btn-calanques-chip-legend').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (window.App) window.App.openMapLegendModal('calanques');
-      });
 
       document.getElementById('btn-toggle-calanques-square').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -7145,7 +7131,6 @@ class MapManager {
 
   updateCalanquesSquare(isActive) {
     const square = document.getElementById('btn-toggle-calanques-square');
-    const chipLegendBtn = document.getElementById('btn-calanques-chip-legend');
     const underMapLegendBtn = document.getElementById('btn-open-calanques-legend');
 
     if (isActive) {
@@ -7155,10 +7140,6 @@ class MapManager {
         square.style.background = '#881337';
         square.style.borderColor = '#fecdd3';
         square.style.color = '#ffffff';
-      }
-      if (chipLegendBtn) {
-        chipLegendBtn.style.display = 'inline-flex';
-        chipLegendBtn.classList.remove('hidden');
       }
       if (underMapLegendBtn) {
         underMapLegendBtn.style.display = 'inline-flex';
@@ -7172,11 +7153,7 @@ class MapManager {
         square.style.borderColor = '#fda4af';
         square.style.color = 'transparent';
       }
-      // La légende ne doit apparaître QUE quand la carte calanques est active
-      if (chipLegendBtn) {
-        chipLegendBtn.style.display = 'none';
-        chipLegendBtn.classList.add('hidden');
-      }
+      // La légende sous la carte ne doit apparaître QUE quand la carte calanques est active
       if (underMapLegendBtn) {
         underMapLegendBtn.style.display = 'none';
         underMapLegendBtn.classList.add('hidden');
@@ -7274,33 +7251,7 @@ class MapManager {
   deactivateCalanquesMode() {
     this.toggleCalanquesLayer();
   }
-
-  deactivateCalanquesMode() {
-    this._calanquesActive = false;
-    this._calanquesAlertDismissed = true;
-    
-    // 1. Supprimer le calque de délimitation
-    if (this._calanquesDelimLayer) {
-      this.map.removeLayer(this._calanquesDelimLayer);
-      this._calanquesDelimLayer = null;
-    }
-
-    // 2. S'assurer d'être sur la couche TOP 25 Standard
-    if (this.currentBaseLayer !== 'igntop25') {
-      this.setBaseLayer('igntop25');
-    }
-
-    // 3. Revenir à l'échelle standard TOP 25 (1:25 000, zoom 14)
-    this._isProgrammaticZoom = true;
-    this.map.setZoom(14, { animate: true, duration: 0.5 });
-
-    // 4. Mettre à jour l'indicateur d'échelle et les affichages
-    this.updateMapHud();
-  }
-
 }
-
-
 
 window.MapManager = MapManager;
 
