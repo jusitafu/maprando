@@ -6928,7 +6928,7 @@ class MapManager {
 
 
 
-                    /* =========================================================================
+                      /* =========================================================================
    * DÉTECTION ET BASCULE SPÉCIALE CARTE DES CALANQUES (IGN 89035 - 1:15 000)
    * ========================================================================= */
   initCalanquesDetection() {
@@ -6948,6 +6948,9 @@ class MapManager {
 
     this.map.on('moveend', () => {
       this.checkCalanquesProximity();
+      if (this._calanquesActive) {
+        this.renderCalanquesDelimitation();
+      }
     });
 
     this.map.on('zoomend', () => {
@@ -7251,43 +7254,53 @@ class MapManager {
       }).addTo(this._calanquesDelimLayer);
     }
 
-    // C. CARTOUCHE DE LA CARTE DES CALANQUES (à l'instar des cartouches TOP 25 comme 3245 ET • LA CIOTAT)
-    const topLat = 43.275;
-    const centerLon = 5.480;
-    const labelEstimatedWidth = 230;
-
+    // C. CARTOUCHE DE LA CARTE DES CALANQUES (STRICTEMENT MÊME RÈGLE QUE LES CARTOUCHES TOP 25)
+    const labelEstimatedWidth = 200;
     const pTopLeft = this.map.latLngToContainerPoint([43.275, 5.335]);
     const pTopRight = this.map.latLngToContainerPoint([43.275, 5.625]);
     const sheetWidthPx = Math.abs(pTopRight.x - pTopLeft.x);
 
-    // Ne tracer le cartouche que si la largeur de la feuille sur l'écran est suffisante (zoom >= 8)
-    if (sheetWidthPx >= 140) {
-      const labelHtml = `
-        <div class="calanques-sheet-badge-label" title="Feuille IGN : IGN 89035 • LES CALANQUES
+    // RÈGLE STRICTE IDENTIQUE AUX CARTES TOP 25 :
+    // Le cartouche ne s'affiche que s'il ne dépasse pas la largeur de la feuille (avec marge de sécurité de 20px).
+    // Au dézoom, dès que la feuille devient trop petite (comme à zoom <= 11), le cartouche disparaît
+    // exactement de la même manière que pour toutes les autres cartes !
+    if (labelEstimatedWidth + 20 <= sheetWidthPx) {
+      const topLat = 43.275;
+      const centerLon = (5.335 + 5.625) / 2;
+      const pMarker = this.map.latLngToContainerPoint([topLat, centerLon]);
+      const mapSize = this.map.getSize();
+
+      // Évite tout débordement d'écran ou chevauchement avec la barre basse d'attribution / HUD
+      if (pMarker.y >= 20 && pMarker.y <= mapSize.y - 48 &&
+          pMarker.x >= (labelEstimatedWidth / 2) && pMarker.x <= mapSize.x - (labelEstimatedWidth / 2)) {
+        
+        const labelHtml = `
+          <div class="calanques-sheet-badge-label" title="Feuille IGN : 89035 • LES CALANQUES
 Édition : Spéciale 1:15 000
 Cliquer pour recadrer toute la feuille">
-          <span class="mr-1">📄</span>
-          <strong>IGN 89035 &bull; LES CALANQUES</strong>
-          <span class="ml-1 px-1 py-0.5 rounded bg-rose-100 text-rose-900 font-mono text-[9px] font-bold">1:15 000</span>
-        </div>
-      `;
+            <span class="mr-1">📄</span>
+            <strong>89035 &bull; LES CALANQUES</strong>
+            <span class="ml-1 px-1 py-0.5 rounded bg-rose-100 text-rose-800 font-mono text-[9px] font-bold">1:15 000</span>
+          </div>
+        `;
 
-      const calanquesMarker = L.marker([topLat, centerLon], {
-        icon: L.divIcon({
-          className: 'paper-sheet-label-container',
-          html: labelHtml,
-          iconSize: [labelEstimatedWidth, 26],
-          iconAnchor: [labelEstimatedWidth / 2, 13]
-        }),
-        interactive: true
-      });
+        const calanquesMarker = L.marker([topLat, centerLon], {
+          icon: L.divIcon({
+            className: 'paper-sheet-label-container',
+            html: labelHtml,
+            iconSize: [labelEstimatedWidth, 26],
+            iconAnchor: [labelEstimatedWidth / 2, 13]
+          }),
+          interactive: true
+        });
 
-      calanquesMarker.on('click', () => {
-        if (this.bearingMeasurementActive || this.measurePathActive || this.areaSelectionActive) return;
-        this.map.fitBounds(this._calanquesBounds, { padding: [30, 30] });
-      });
+        calanquesMarker.on('click', () => {
+          if (this.bearingMeasurementActive || this.measurePathActive || this.areaSelectionActive) return;
+          this.map.fitBounds(this._calanquesBounds, { padding: [30, 30] });
+        });
 
-      this._calanquesDelimLayer.addLayer(calanquesMarker);
+        this._calanquesDelimLayer.addLayer(calanquesMarker);
+      }
     }
 
     this._calanquesDelimLayer.addTo(this.map);
