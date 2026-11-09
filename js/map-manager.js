@@ -252,6 +252,25 @@ class MapManager {
 
     // Véritable IGN TOP 25 officiel (Scan 25 Touristique papier avec balisages GR® roses et rochers)
 
+    
+    // Rechargement automatique des tuiles en cas de micro-coupure réseau IGN
+    const attachTileAutoRetry = (layer, maxRetries = 2, delayMs = 600) => {
+      if (!layer) return;
+      layer.on('tileerror', (error) => {
+        const tile = error.tile;
+        if (!tile) return;
+        const count = parseInt(tile.dataset.retryCount || '0', 10);
+        if (count < maxRetries) {
+          tile.dataset.retryCount = count + 1;
+          setTimeout(() => {
+            const rawSrc = tile.src.split('&_retry=')[0];
+            const sep = rawSrc.includes('?') ? '&' : '?';
+            tile.src = `${rawSrc}${sep}_retry=${count + 1}_${Date.now()}`;
+          }, delayMs);
+        }
+      });
+    };
+
     const ignTop25 = L.tileLayer('https://data.geopf.fr/private/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fjpeg&apikey=ign_scan_ws', {
 
       maxZoom: 19,
