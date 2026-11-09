@@ -300,6 +300,7 @@
 
     bindDomButtons() {
       // Modale CGU
+      this.initMusicPlayer();
       const btnOpenCgu = document.getElementById('btn-open-cgu');
       const modalCgu = document.getElementById('modal-cgu');
       if (btnOpenCgu && modalCgu) {
@@ -387,7 +388,10 @@
       if (viewMapContainer) viewMapContainer.classList.add('hidden');
       if (viewGuides) viewGuides.classList.add('hidden');
 
+      if (viewName !== 'accueil') { this.pauseMusic(); }
       if (viewName === 'accueil') {
+        const portalActions = document.getElementById('portal-header-actions');
+        if (portalActions) portalActions.classList.remove('hidden');
         if (viewPortal) viewPortal.classList.remove('hidden');
         if (window.ScrollElevatorInstance) window.ScrollElevatorInstance.checkAndShowMobileWarning();
         if (lockModal) lockModal.classList.add('hidden');
@@ -483,7 +487,7 @@
       const searchInstructionsBar = document.getElementById('search-instructions-bar');
       const dbSelectorBox = document.getElementById('header-db-selector')?.closest('div');
       const storageBadge = document.getElementById('storage-badge')?.closest('div');
-      const userControls = document.querySelector('header .flex.items-center.gap-2.flex-wrap.justify-end');
+      const userControls = document.querySelector('#main-map-app-container header .flex.items-center.gap-2.flex-wrap.justify-end');
       const tabButtons = document.querySelectorAll('.tab-btn');
       const quickGpxBtn = document.getElementById('btn-quick-gpx-viewer');
       const tableCol = document.getElementById('table-column');
@@ -816,8 +820,67 @@
       const hud = document.getElementById('standalone-gpx-hud');
       if (hud) hud.classList.add('hidden');
     }
+  
+
+    /* =========================================================================
+     * MUSIQUE D'AMBIANCE ACCUEIL (HAUT-PARLEUR ON/OFF)
+     * ========================================================================= */
+    initMusicPlayer() {
+      const btn = document.getElementById('btn-toggle-music');
+      const audio = document.getElementById('portal-bg-music');
+      const icon = document.getElementById('music-icon');
+      const label = document.getElementById('music-label');
+      if (!btn || !audio) return;
+
+      audio.volume = 0.40;
+      let isPlaying = false;
+
+      const setPlayingState = (playing) => {
+        isPlaying = playing;
+        if (playing) {
+          if (icon) icon.textContent = '🔊';
+          if (label) label.textContent = 'Musique ON';
+          btn.classList.add('border-emerald-400', 'bg-emerald-950/80', 'text-emerald-300', 'ring-2', 'ring-emerald-500/50');
+          btn.classList.remove('border-slate-600', 'bg-slate-800', 'text-slate-200');
+          btn.title = "Musique d'ambiance active (cliquer pour couper)";
+        } else {
+          if (icon) icon.textContent = '🔈';
+          if (label) label.textContent = 'Musique';
+          btn.classList.remove('border-emerald-400', 'bg-emerald-950/80', 'text-emerald-300', 'ring-2', 'ring-emerald-500/50');
+          btn.classList.add('border-slate-600', 'bg-slate-800', 'text-slate-200');
+          btn.title = "Musique d'ambiance (cliquer pour écouter)";
+        }
+      };
+
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (audio.paused) {
+          audio.play().then(() => {
+            setPlayingState(true);
+          }).catch(err => {
+            console.warn('Lecture audio bloquée ou non autorisée:', err);
+          });
+        } else {
+          audio.pause();
+          setPlayingState(false);
+        }
+      });
+
+      audio.addEventListener('play', () => setPlayingState(true));
+      audio.addEventListener('pause', () => setPlayingState(false));
+      audio.addEventListener('ended', () => setPlayingState(false));
+
+      this._musicAudio = audio;
+    }
+
+    pauseMusic() {
+      if (this._musicAudio && !this._musicAudio.paused) {
+        this._musicAudio.pause();
+      }
+    }
   }
 
   // Instanciation globale
-  window.PortalRouterInstance = new PortalRouter();
+  
+    window.PortalRouterInstance = new PortalRouter();
 })();

@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=125">
+  <link rel="stylesheet" href="css/styles.css?v=127">
 
 </head>
 
@@ -137,7 +137,15 @@
       </div>
       
       <!-- Boîte Mode d'emploi détaillé (à gauche) & Boîte CGU (à droite) -->
-      <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+      <div id="portal-header-actions" class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+        <button id="btn-toggle-music" type="button" class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-extrabold text-xs sm:text-sm border-2 border-slate-600 hover:border-emerald-400 shadow-xl transition-all cursor-pointer" title="Musique d'ambiance (Cliquer pour écouter / éteindre)">
+          <span id="music-icon" class="text-base sm:text-lg">🔈</span>
+          <span id="music-label" class="hidden sm:inline">Musique</span>
+        </button>
+        <button id="btn-toggle-music" type="button" class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-extrabold text-xs sm:text-sm border-2 border-slate-600 hover:border-emerald-400 shadow-xl transition-all cursor-pointer" title="Musique d'ambiance (Cliquer pour écouter / éteindre)">
+          <span id="music-icon" class="text-base sm:text-lg">🔈</span>
+          <span id="music-label" class="hidden sm:inline">Musique</span>
+        </button>
         <button id="btn-open-mode-emploi" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm border-2 border-emerald-400 hover:border-white shadow-xl transition-all cursor-pointer">
           <span class="text-sm">📖</span>
           <span>Mode d'emploi</span>
@@ -148,6 +156,8 @@
         </button>
       </div>
     </header>
+    <!-- Piste musicale d'ambiance portail (contrôlée par le bouton haut-parleur) -->
+    <audio id="portal-bg-music" src="audio/ambiance.mp3" loop preload="auto"></audio>
 
     <!-- Contenu Principal Centré & Dimensionné pour tout écran PC -->
     <main class="max-w-6xl w-full mx-auto px-4 sm:px-8 py-2 sm:py-3 flex-grow flex flex-col justify-center my-auto">
@@ -6879,13 +6889,13 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=106"></script>
   <script src="js/ign-top25-sheets.js?v=106"></script>
-  <script src="js/map-manager.js?v=125"></script>
+  <script src="js/map-manager.js?v=127"></script>
 
-  <script src="js/pdf-exporter.js?v=125"></script>
+  <script src="js/pdf-exporter.js?v=127"></script>
   <script src="js/gr-manager.js?v=110"></script>
 
   <script src="js/portal-router.js?v=113"></script>
-    <script src="js/app.js?v=125"></script>
+    <script src="js/app.js?v=127"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->
