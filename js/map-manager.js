@@ -6928,7 +6928,7 @@ class MapManager {
 
 
 
-                  /* =========================================================================
+                    /* =========================================================================
    * DÉTECTION ET BASCULE SPÉCIALE CARTE DES CALANQUES (IGN 89035 - 1:15 000)
    * ========================================================================= */
   initCalanquesDetection() {
@@ -6936,6 +6936,10 @@ class MapManager {
     this._calanquesAlertDismissed = false;
     this._calanquesActive = false;
     this._calanquesEverActivated = false;
+
+    // Suppression défensive de tout ancien bouton légende résiduel dans le bandeau
+    const oldBtn = document.getElementById('btn-calanques-chip-legend');
+    if (oldBtn) oldBtn.remove();
 
     // Déplacement et zoom carte : détection continue en direct
     this.map.on('move', () => {
@@ -7003,7 +7007,7 @@ class MapManager {
           legendBtnUnderMap.classList.add('hidden');
           legendBtnUnderMap.style.display = 'none';
         }
-        // Si l'utilisateur avait déjà activé la carte puis cliqué sur le carré pour masquer le calque
+        // Si l'utilisateur avait précédemment activé la carte puis cliqué sur le carré pour masquer le calque
         // tout en restant dans les Calanques, on maintient le bandeau avec le carré vide [ ]
         if (this._calanquesEverActivated) {
           this.showCalanquesFloatingBadge(false);
@@ -7075,7 +7079,7 @@ class MapManager {
     // 2. Afficher la délimitation officielle feuille 89035 en BORDEAUX
     this.renderCalanquesDelimitation();
 
-    // 3. Afficher l'UNIQUE bandeau en haut avec le carré coché (✕) - sans bouton légende redondant
+    // 3. Afficher l'UNIQUE bandeau en haut avec le carré coché (✕) - sans bouton légende
     this.showCalanquesFloatingBadge(true);
 
     // 4. Afficher le bouton Légende sous la carte
@@ -7097,26 +7101,29 @@ class MapManager {
       chip = document.createElement('div');
       chip.id = 'calanques-floating-chip';
       chip.className = 'fixed top-14 left-1/2 -translate-x-1/2 z-[1000] bg-gradient-to-r from-[#2b040e] to-[#4c0519] text-[#ffe4e6] border-2 border-[#be123c] px-3.5 py-1.5 rounded-2xl text-xs font-black shadow-2xl flex items-center gap-2.5 transition-all pointer-events-auto';
-      // Plus de bouton légende dans le bandeau : il y a déjà le bouton légende sous la carte
-      chip.innerHTML = `
-        <span class="text-sm">🗺️</span>
-        <span class="whitespace-nowrap font-black">IGN 89035 &bull; Traversée des Calanques</span>
-
-        <button type="button" id="btn-toggle-calanques-square" 
-                title="${isActive ? "Désactiver la carte IGN 89035 (revenir à TOP 25)" : "Réafficher la carte IGN 89035 (1:15 000)"}" 
-                style="margin-left:4px;background:${isActive ? '#881337' : 'rgba(43,4,14,0.5)'};border:2px solid ${isActive ? '#fecdd3' : '#fda4af'};color:#ffffff;border-radius:5px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;cursor:pointer;transition:all 0.2s;" 
-                onmouseover="this.style.transform='scale(1.1)'" 
-                onmouseout="this.style.transform='scale(1)'">${isActive ? '✕' : ''}</button>
-      `;
       document.body.appendChild(chip);
+    }
 
-      document.getElementById('btn-toggle-calanques-square').addEventListener('click', (e) => {
+    // Définir STRICTEMENT le contenu sans bouton légende (uniquement titre et carré toggle [✕] ou [ ])
+    chip.innerHTML = `
+      <span class="text-sm">🗺️</span>
+      <span class="whitespace-nowrap font-black">IGN 89035 &bull; Traversée des Calanques</span>
+
+      <button type="button" id="btn-toggle-calanques-square" 
+              title="${isActive ? "Désactiver la carte IGN 89035 (revenir à TOP 25)" : "Réafficher la carte IGN 89035 (1:15 000)"}" 
+              style="margin-left:4px;background:${isActive ? '#881337' : 'rgba(43,4,14,0.5)'};border:2px solid ${isActive ? '#fecdd3' : '#fda4af'};color:#ffffff;border-radius:5px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;cursor:pointer;transition:all 0.2s;" 
+              onmouseover="this.style.transform='scale(1.1)'" 
+              onmouseout="this.style.transform='scale(1)'">${isActive ? '✕' : ''}</button>
+    `;
+
+    const squareBtn = document.getElementById('btn-toggle-calanques-square');
+    if (squareBtn) {
+      squareBtn.onclick = (e) => {
         e.stopPropagation();
         this.toggleCalanquesLayer();
-      });
-    } else {
-      this.updateCalanquesSquare(isActive);
+      };
     }
+
     chip.classList.remove('hidden');
     chip.style.display = 'flex';
   }
@@ -7244,7 +7251,45 @@ class MapManager {
       }).addTo(this._calanquesDelimLayer);
     }
 
-    // Un seul bandeau unique existe en haut de l'écran tant qu'on est dans la zone.
+    // C. CARTOUCHE DE LA CARTE DES CALANQUES (à l'instar des cartouches TOP 25 comme 3245 ET • LA CIOTAT)
+    const topLat = 43.275;
+    const centerLon = 5.480;
+    const labelEstimatedWidth = 230;
+
+    const pTopLeft = this.map.latLngToContainerPoint([43.275, 5.335]);
+    const pTopRight = this.map.latLngToContainerPoint([43.275, 5.625]);
+    const sheetWidthPx = Math.abs(pTopRight.x - pTopLeft.x);
+
+    // Ne tracer le cartouche que si la largeur de la feuille sur l'écran est suffisante (zoom >= 8)
+    if (sheetWidthPx >= 140) {
+      const labelHtml = `
+        <div class="calanques-sheet-badge-label" title="Feuille IGN : IGN 89035 • LES CALANQUES
+Édition : Spéciale 1:15 000
+Cliquer pour recadrer toute la feuille">
+          <span class="mr-1">📄</span>
+          <strong>IGN 89035 &bull; LES CALANQUES</strong>
+          <span class="ml-1 px-1 py-0.5 rounded bg-rose-100 text-rose-900 font-mono text-[9px] font-bold">1:15 000</span>
+        </div>
+      `;
+
+      const calanquesMarker = L.marker([topLat, centerLon], {
+        icon: L.divIcon({
+          className: 'paper-sheet-label-container',
+          html: labelHtml,
+          iconSize: [labelEstimatedWidth, 26],
+          iconAnchor: [labelEstimatedWidth / 2, 13]
+        }),
+        interactive: true
+      });
+
+      calanquesMarker.on('click', () => {
+        if (this.bearingMeasurementActive || this.measurePathActive || this.areaSelectionActive) return;
+        this.map.fitBounds(this._calanquesBounds, { padding: [30, 30] });
+      });
+
+      this._calanquesDelimLayer.addLayer(calanquesMarker);
+    }
+
     this._calanquesDelimLayer.addTo(this.map);
   }
 
