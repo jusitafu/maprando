@@ -9994,7 +9994,7 @@ class AppController {
   }
 
   switchLegendTab(tabKey) {
-    const tabs = ['satellite', 'ign', 'ibp', 'opentopo', 'osm'];
+    const tabs = ['satellite', 'ign', 'ibp', 'opentopo', 'osm', 'calanques'];
     tabs.forEach(t => {
       const btn = document.getElementById(`tab-legend-btn-${t}`);
       const pane = document.getElementById(`legend-pane-${t}`);
