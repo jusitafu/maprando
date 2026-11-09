@@ -6909,7 +6909,7 @@ class MapManager {
 
 
 
-  /* =========================================================================
+        /* =========================================================================
    * DÉTECTION ET BASCULE SPÉCIALE CARTE DES CALANQUES (IGN 89035 - 1:15 000)
    * ========================================================================= */
   initCalanquesDetection() {
@@ -6937,13 +6937,15 @@ class MapManager {
   }
 
   checkCalanquesProximity() {
-    if (!this.map || this._calanquesAlertDismissed || this._calanquesActive) return;
+    if (!this.map || this._calanquesActive) return;
     const center = this.map.getCenter();
     if (!center) return;
-    if (this._calanquesBounds && this._calanquesBounds.contains(center) && this.map.getZoom() >= 10 && this.map.getZoom() < 15) {
-      this.showCalanquesAlert();
-    } else if (this._calanquesBounds && !this._calanquesBounds.contains(center)) {
+    if (this._calanquesBounds && !this._calanquesBounds.contains(center)) {
+      // Réarme l'alerte dès qu'on quitte l'emprise des Calanques
+      this._calanquesAlertDismissed = false;
       this.hideCalanquesAlert();
+    } else if (this._calanquesBounds && this._calanquesBounds.contains(center) && !this._calanquesAlertDismissed && this.map.getZoom() >= 10 && this.map.getZoom() < 15) {
+      this.showCalanquesAlert();
     }
   }
 
@@ -6953,18 +6955,18 @@ class MapManager {
     if (!hud) {
       hud = document.createElement('div');
       hud.id = 'calanques-alert-hud';
-      hud.className = 'fixed bottom-14 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-cyan-400 rounded-2xl px-3.5 sm:px-5 py-2.5 shadow-2xl flex items-center gap-2.5 sm:gap-4 text-xs sm:text-sm text-white transition-all transform duration-300';
+      hud.className = 'fixed bottom-14 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 backdrop-blur-md border-2 border-rose-800 rounded-2xl px-3.5 sm:px-5 py-2.5 shadow-2xl flex items-center gap-2.5 sm:gap-4 text-xs sm:text-sm text-white transition-all transform duration-300';
       hud.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="text-base sm:text-xl">🏖️</span>
           <div>
-            <span class="font-black text-cyan-300">Zone Calanques</span>
+            <span class="font-black text-rose-300">Zone Calanques</span>
             <span class="text-slate-300 text-xs hidden sm:inline"> (Carte IGN 89035)</span>
             <div class="text-[11px] text-slate-300">Voulez-vous passer à l'échelle détaillée 1:15 000 ?</div>
           </div>
         </div>
         <div class="flex items-center gap-2 ml-1">
-          <button id="btn-confirm-calanques" type="button" class="px-3 py-1.5 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1">
+          <button id="btn-confirm-calanques" type="button" class="px-3 py-1.5 bg-gradient-to-r from-rose-800 to-amber-700 hover:from-rose-700 hover:to-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1">
             <span>Oui, basculer</span>
             <span>&rarr;</span>
           </button>
@@ -7000,12 +7002,46 @@ class MapManager {
       this.setBaseLayer('igntop25');
     }
 
-    // 2. Afficher la délimitation officielle de la feuille IGN 89035
+    // 2. Afficher la délimitation officielle de la feuille IGN 89035 en BORDEAUX
     this.renderCalanquesDelimitation();
 
-    // 3. Zoomer à l'échelle détaillée 1:15 000 sur le massif des Calanques
+    // 3. Afficher le badge flottant en haut
+    this.showCalanquesFloatingBadge();
+
+    // 4. Cadrer sur les Calanques
     this._isProgrammaticZoom = true;
-    this.map.setView([43.218, 5.465], 15, { animate: true, duration: 0.5 });
+    this.map.fitBounds(this._calanquesBounds, { padding: [30, 30], animate: true });
+    this.updateMapHud();
+  }
+
+  showCalanquesFloatingBadge() {
+    let chip = document.getElementById('calanques-floating-chip');
+    if (!chip) {
+      chip = document.createElement('div');
+      chip.id = 'calanques-floating-chip';
+      chip.className = 'fixed top-14 left-1/2 -translate-x-1/2 z-[1000] bg-gradient-to-r from-[#2b040e] to-[#4c0519] text-[#ffe4e6] border-2 border-[#be123c] px-4 py-1.5 rounded-2xl text-xs font-black shadow-2xl flex items-center gap-3 transition-all pointer-events-auto';
+      chip.innerHTML = `
+        <span class="text-sm">🗺️</span>
+        <span>IGN 89035 &bull; Traversée des Calanques (1:15 000 / 1:19 000)</span>
+        <button type="button" id="btn-close-calanques-chip" 
+                title="Revenir à la carte IGN TOP 25 Standard (1:25 000)" 
+                style="margin-left:4px;background:#881337;border:1px solid #fecdd3;color:#ffffff;border-radius:6px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;cursor:pointer;transition:all 0.2s;" 
+                onmouseover="this.style.background='#be123c'" 
+                onmouseout="this.style.background='#881337'">✕</button>
+      `;
+      document.body.appendChild(chip);
+
+      document.getElementById('btn-close-calanques-chip').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deactivateCalanquesMode();
+      });
+    }
+    chip.classList.remove('hidden');
+  }
+
+  hideCalanquesFloatingBadge() {
+    const chip = document.getElementById('calanques-floating-chip');
+    if (chip) chip.classList.add('hidden');
   }
 
   renderCalanquesDelimitation() {
@@ -7015,27 +7051,95 @@ class MapManager {
     }
     this._calanquesDelimLayer = L.layerGroup();
 
-    // Contour officiel feuille 89035
+    // Contour officiel feuille 89035 en BORDEAUX (#800020)
     const rect = L.rectangle(this._calanquesBounds, {
-      color: '#06b6d4',
-      weight: 3,
-      dashArray: '8, 6',
-      fillColor: '#06b6d4',
+      color: '#800020',
+      weight: 3.5,
+      dashArray: '12, 6',
+      fillColor: '#800020',
       fillOpacity: 0.08
     }).addTo(this._calanquesDelimLayer);
 
-    // Cartouche titre sur la feuille
+    // Cartouche titre sur la feuille en BORDEAUX avec bouton croix "✕" de retour TOP 25
     const badge = L.marker([43.272, 5.465], {
       icon: L.divIcon({
         className: 'calanques-badge-marker',
-        html: `<div style="background:#091e2b;color:#38bdf8;border:2px solid #06b6d4;padding:4px 10px;border-radius:10px;font-size:11px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,0.6);white-space:nowrap;display:inline-flex;align-items:center;gap:5px;">
-                 <span>🗺️</span> <span>IGN 89035 &bull; Traversée des Calanques (1:15 000 / 1:19 000)</span>
+        html: `<div style="background:linear-gradient(135deg, #2b040e 0%, #4c0519 100%);color:#ffe4e6;border:2px solid #be123c;padding:5px 12px;border-radius:12px;font-size:12px;font-weight:900;box-shadow:0 6px 20px rgba(0,0,0,0.7);white-space:nowrap;display:inline-flex;align-items:center;gap:8px;pointer-events:auto;">
+                 <span style="font-size:14px;">🗺️</span>
+                 <span>IGN 89035 &bull; Traversée des Calanques (1:15 000 / 1:19 000)</span>
+                 <button type="button" id="btn-close-calanques-badge" onclick="if(window.MapManagerInstance) window.MapManagerInstance.deactivateCalanquesMode(); event.stopPropagation();" 
+                         title="Revenir à la carte IGN TOP 25 Standard (1:25 000)" 
+                         style="margin-left:6px;background:#881337;border:1px solid #fecdd3;color:#ffffff;border-radius:6px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;cursor:pointer;transition:all 0.2s;" 
+                         onmouseover="this.style.background='#be123c';this.style.transform='scale(1.1)'" 
+                         onmouseout="this.style.background='#881337';this.style.transform='scale(1)'">✕</button>
                </div>`,
-        iconAnchor: [150, 15]
+        iconAnchor: [160, 16]
       })
     }).addTo(this._calanquesDelimLayer);
 
+    badge.on('add', () => {
+      setTimeout(() => {
+        const btn = document.getElementById('btn-close-calanques-badge');
+        if (btn) {
+          L.DomEvent.disableClickPropagation(btn);
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.deactivateCalanquesMode();
+          });
+        }
+      }, 50);
+    });
+
     this._calanquesDelimLayer.addTo(this.map);
+  }
+
+  deactivateCalanquesMode() {
+    this._calanquesActive = false;
+    this._calanquesAlertDismissed = true;
+    
+    // 1. Supprimer le calque de délimitation
+    if (this._calanquesDelimLayer) {
+      this.map.removeLayer(this._calanquesDelimLayer);
+      this._calanquesDelimLayer = null;
+    }
+
+    // 2. Masquer le badge flottant
+    this.hideCalanquesFloatingBadge();
+
+    // 3. S'assurer d'être sur la couche TOP 25 Standard
+    if (this.currentBaseLayer !== 'igntop25') {
+      this.setBaseLayer('igntop25');
+    }
+
+    // 4. Revenir à l'échelle standard TOP 25 (1:25 000, zoom 14)
+    this._isProgrammaticZoom = true;
+    this.map.setZoom(14, { animate: true, duration: 0.5 });
+
+    // 5. Mettre à jour l'indicateur d'échelle et les affichages
+    this.updateMapHud();
+  }
+
+  deactivateCalanquesMode() {
+    this._calanquesActive = false;
+    this._calanquesAlertDismissed = true;
+    
+    // 1. Supprimer le calque de délimitation
+    if (this._calanquesDelimLayer) {
+      this.map.removeLayer(this._calanquesDelimLayer);
+      this._calanquesDelimLayer = null;
+    }
+
+    // 2. S'assurer d'être sur la couche TOP 25 Standard
+    if (this.currentBaseLayer !== 'igntop25') {
+      this.setBaseLayer('igntop25');
+    }
+
+    // 3. Revenir à l'échelle standard TOP 25 (1:25 000, zoom 14)
+    this._isProgrammaticZoom = true;
+    this.map.setZoom(14, { animate: true, duration: 0.5 });
+
+    // 4. Mettre à jour l'indicateur d'échelle et les affichages
+    this.updateMapHud();
   }
 
 }
