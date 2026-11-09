@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=127">
+  <link rel="stylesheet" href="css/styles.css?v=128">
 
 </head>
 
@@ -138,13 +138,13 @@
       
       <!-- Boîte Mode d'emploi détaillé (à gauche) & Boîte CGU (à droite) -->
       <div id="portal-header-actions" class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
-        <button id="btn-toggle-music" type="button" class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-extrabold text-xs sm:text-sm border-2 border-slate-600 hover:border-emerald-400 shadow-xl transition-all cursor-pointer" title="Musique d'ambiance (Cliquer pour écouter / éteindre)">
-          <span id="music-icon" class="text-base sm:text-lg">🔈</span>
-          <span id="music-label" class="hidden sm:inline">Musique</span>
-        </button>
-        <button id="btn-toggle-music" type="button" class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-extrabold text-xs sm:text-sm border-2 border-slate-600 hover:border-emerald-400 shadow-xl transition-all cursor-pointer" title="Musique d'ambiance (Cliquer pour écouter / éteindre)">
-          <span id="music-icon" class="text-base sm:text-lg">🔈</span>
-          <span id="music-label" class="hidden sm:inline">Musique</span>
+        <button id="btn-toggle-music" type="button" class="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer bg-transparent border-0 outline-none flex items-center justify-center rounded-lg" title="Musique d'ambiance (Cliquer pour écouter)">
+          <span id="music-icon" class="flex items-center justify-center">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+              <line x1="22" y1="2" x2="2" y2="22" stroke-width="2.2"></line>
+            </svg>
+          </span>
         </button>
         <button id="btn-open-mode-emploi" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm border-2 border-emerald-400 hover:border-white shadow-xl transition-all cursor-pointer">
           <span class="text-sm">📖</span>
@@ -321,7 +321,7 @@
     <!-- Pied de page avec évocation des 4 territoires réunis par cours d'eau -->
     <footer class="w-full border-t border-slate-800/80 bg-slate-950/90 backdrop-blur-md py-3 px-4 sm:px-8 text-center text-xs text-slate-300 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-inner">
       <div class="flex items-center gap-2 text-[11px] text-slate-400">
-        <span>🌊 4 Territoires en cours d'eau :</span>
+        <span>🗺️ Fresque des 4 Territoires (fond d'écran) :</span>
         <span class="text-slate-300 font-medium">🌋 Tongariro &bull; 🏜️ Bardenas &bull; 🌲 Morimond &bull; 🏖️ Sanary-Bandol</span>
       </div>
       <div>
@@ -1435,6 +1435,14 @@
         </div>
       </div>
 
+      <!-- Bannière Ambiance & Navigation -->
+      <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-2 text-slate-300">
+          <span class="text-xl">🎶</span>
+          <span><strong>Musique d'ambiance :</strong> activez ou coupez la bande sonore relaxante sur la page d'accueil via le bouton haut-parleur dans le bandeau supérieur (icône sobre : barrée = éteinte, pas barrée = en lecture) (pause automatique lors de l'accès à la carte).</span>
+        </div>
+      </div>
+
       <!-- Sommaire rapide -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         <a href="#me-section-cartes" onclick="document.getElementById('me-section-cartes').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40 flex items-center gap-3 transition cursor-pointer">
@@ -1476,6 +1484,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🗺️</span> Fonds de Carte Nationaux &amp; Mondiaux (Bouton Calques en haut à droite)</div>
+              <p class="text-[11px] text-emerald-200/90 mb-1">Fonds officiels présentés avec leurs <strong>drapeaux nationaux</strong> : 🇫🇷 France en 1<sup>er</sup>, puis par <strong>ordre alphabétique</strong> (🇩🇪, 🇦🇹, 🇧🇪, 🇪🇸, 🇮🇹, 🇱🇺, 🇳🇴, 🇨🇭), suivis des fonds mondiaux et satellites.</p>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>🇫🇷 France – IGN TOP 25 &amp; Plan v2 :</strong> carte officielle de randonnée IGN au 1:25 000 (SCAN 25) avec courbes de niveau, sentiers balisés, rochers, limites des feuilles papier avec année de dernière édition et carroyage kilométrique UTM universel.</li>
                 <li><strong>🇫🇷 France – Carte des GR® (Fond épuré) :</strong> fond topographique clair avec réseau national des GR®, GRP® et PR, liste déroulante et filtrage par couleur.</li>
@@ -1487,6 +1496,7 @@
                 <li><strong>🇱🇺 Luxembourg – ACT Topo 1:20 000 :</strong> cartographie officielle du Grand-Duché (Mullerthal, sentiers transfrontaliers).</li>
                 <li><strong>🇳🇴 Norvège – Kartverket Topo :</strong> cartographie officielle d'État de référence pour les treks nordiques (fjords, Lofoten).</li>
                 <li><strong>🇨🇭 Suisse – Swisstopo 1:25 000 :</strong> la référence mondiale des cartes fédérales suisses en Open Data officiel.</li>
+                <li><strong>🌊 Carte spéciale IGN 89035 – Calanques (1:15 000) :</strong> détection automatique du Parc National des Calanques (Marseille, Cassis). Une alerte discrète vous propose de basculer en 1 clic vers cette échelle ultra-détaillée (1:15 000), avec affichage de l'emprise officielle en pointillés cyan.</li>
                 <li><strong>🔄 Bascule automatique intelligente :</strong> lors d'une recherche de lieu, de la sélection d'une randonnée ou du déplacement de la carte d'un pays à l'autre, Map &amp; Rando bascule automatiquement sur la carte de randonnée officielle du pays correspondant.</li>
                 <li><strong>🌍 Couverture Mondiale :</strong> OpenTopoMap (relief mondial avec courbes de niveau) &amp; OpenStreetMap France (sentiers).</li>
                 <li><strong>🛰️ Satellite HD :</strong> Esri World Imagery mondial &amp; IGN Orthophotos HR France avec <strong>date de prise de vue automatique</strong>.</li>
@@ -1507,7 +1517,7 @@
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>Échelle saisissable (en bas à gauche) :</strong> tapez directement <code>25000</code> ou <code>50000</code> dans la case <code>Échelle ~ 1 :</code> et validez par Entrée.</li>
                 <li><strong>Bouton « 📏 1 cm vrai » :</strong> étalonnez votre écran à l'aide d'une règle physique graduée pour qu'à l'échelle <code>1 : 25 000</code>, <strong>1 centimètre mesuré sur votre écran représente exactement 250 mètres sur le terrain</strong> (comme sur une carte papier IGN TOP 25).</li>
-                <li><strong>Altitude temps réel (⛰️) &amp; Commune (🏛️) :</strong> affiche en continu sous le curseur l'altitude exacte issue du modèle numérique <strong>IGN RGE Alti® / LiDAR HD</strong> ainsi que le nom de la commune et le département.</li>
+                <li><strong>Altitude temps réel (⛰️) &amp; Détection France (LiDAR HD) :</strong> en France, affiche sous le curseur l'altitude exacte issue du modèle numérique haute précision <strong>IGN LiDAR HD / RGE Alti®</strong> ainsi que le nom de la commune. Hors des frontières françaises, l'indicateur d'altitude est automatiquement masqué pour garantir une fiabilité stricte des données affichées.</li>
                 <li><strong>Coordonnées GPS WGS84 &amp; UTM :</strong> affichées en direct en bas à gauche ; cliquez sur le bandeau pour les copier dans le presse-papier.</li>
               </ul>
             </div>
@@ -1569,26 +1579,30 @@
             <span class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-xl font-bold">📚</span>
             <div>
               <h4 class="text-base sm:text-lg font-black text-white">3. Module « Guides &amp; Savoirs » (Fiches Techniques &amp; Équipements)</h4>
-              <p class="text-xs text-amber-300">4 dossiers techniques de référence consultables en ligne (mode accordéon) et téléchargeables en PDF imprimable.</p>
+              <p class="text-xs text-amber-300">5 dossiers techniques de référence consultables en ligne (mode accordéon) et téléchargeables en PDF imprimable.</p>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-300">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs text-slate-300">
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-amber-300 mb-1">🛰️ Fiche 1 : GPS, SBAS (EGNOS) &amp; Montres de Sport</div>
-              <p>Comprendre la précision GNSS, le rôle des satellites géostationnaires SBAS, le mode Multi-bandes double fréquence (L1+L5) et l'enregistrement à la seconde (1s).</p>
+              <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5"><span>🛰️</span> Fiche 1 : GPS, SBAS &amp; Montres de Sport</div>
+              <p>Comprendre la précision GNSS, le rôle des satellites géostationnaires SBAS (EGNOS), le mode Multi-bandes double fréquence (L1+L5) et l'enregistrement 1s.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-emerald-300 mb-1">🌲 Fiche 2 : Programme National LiDAR HD de l'IGN</div>
+              <div class="font-extrabold text-emerald-300 mb-1 flex items-center gap-1.5"><span>🌲</span> Fiche 2 : Programme National LiDAR HD IGN</div>
               <p>Modélisation laser 3D haute densité (10 pts/m²) traversant la canopée forestière pour produire des Modèles Numériques de Terrain (MNT) d'une précision de 50 cm.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-indigo-300 mb-1">📊 Fiche 3 : IBP Index &amp; Évaluation de l'Effort Physique</div>
-              <p>Fonctionnement de l'algorithme IBP Index, grille de lecture croisant le score IBP avec les 5 niveaux de condition physique et limites face à la technicité du terrain.</p>
+              <div class="font-extrabold text-indigo-300 mb-1 flex items-center gap-1.5"><span>📊</span> Fiche 3 : IBP Index &amp; Effort Physique</div>
+              <p>Algorithme IBP Index officiel, grille de lecture croisant le score IBP avec les 5 niveaux de condition physique et limites face à la technicité du terrain.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-amber-300 mb-1">✅ Fiche 4 : Check-list Avant de Partir en Randonnée</div>
+              <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5"><span>✅</span> Fiche 4 : Check-list Départ Randonnée</div>
               <p>Toutes les vérifications de J-1 à H-0 (Météo, Carte IGN, Boussole, Powerbank, Fond de sac, 3 Couches, Eau, Fix GPS) avec liens directs vers chaque équipement sur Amazon.</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 sm:col-span-2 lg:col-span-2">
+              <div class="font-extrabold text-rose-300 mb-1 flex items-center gap-1.5"><span>🚨</span> Fiche 5 : Secours en Randonnée &bull; Zone Blanche &amp; SOS Satellite</div>
+              <p>Procédures d'urgence en montagne (112 en itinérance multi-opérateurs sans réseau propre, SMS 114 pour signal très faible), balises de détresse autonomes (Garmin inReach, ACR Bivy Stick via réseau Iridium) et nouveaux smartphones avec SOS satellite intégré (Apple iPhone 14/15/16 et Google Pixel / Android).</p>
             </div>
           </div>
         </section>
@@ -6889,13 +6903,13 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=106"></script>
   <script src="js/ign-top25-sheets.js?v=106"></script>
-  <script src="js/map-manager.js?v=127"></script>
+  <script src="js/map-manager.js?v=128"></script>
 
-  <script src="js/pdf-exporter.js?v=127"></script>
+  <script src="js/pdf-exporter.js?v=128"></script>
   <script src="js/gr-manager.js?v=110"></script>
 
-  <script src="js/portal-router.js?v=113"></script>
-    <script src="js/app.js?v=127"></script>
+  <script src="js/portal-router.js?v=128"></script>
+    <script src="js/app.js?v=128"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->

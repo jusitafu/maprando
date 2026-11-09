@@ -822,35 +822,48 @@
     }
   
 
-    /* =========================================================================
-     * MUSIQUE D'AMBIANCE ACCUEIL (HAUT-PARLEUR ON/OFF)
+        /* =========================================================================
+     * MUSIQUE D'AMBIANCE ACCUEIL (HAUT-PARLEUR ÉPURÉ : BARRÉ / PAS BARRÉ)
      * ========================================================================= */
     initMusicPlayer() {
       const btn = document.getElementById('btn-toggle-music');
       const audio = document.getElementById('portal-bg-music');
       const icon = document.getElementById('music-icon');
-      const label = document.getElementById('music-label');
       if (!btn || !audio) return;
 
       audio.volume = 0.40;
       let isPlaying = false;
 
+      // Haut-parleur barré (quand pas de musique / off)
+      const SVG_MUTED = `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+        <line x1="22" y1="2" x2="2" y2="22" stroke-width="2.2"></line>
+      </svg>`;
+
+      // Haut-parleur pas barré (quand musique active)
+      const SVG_PLAYING = `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"></path>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+      </svg>`;
+
       const setPlayingState = (playing) => {
         isPlaying = playing;
         if (playing) {
-          if (icon) icon.textContent = '🔊';
-          if (label) label.textContent = 'Musique ON';
-          btn.classList.add('border-emerald-400', 'bg-emerald-950/80', 'text-emerald-300', 'ring-2', 'ring-emerald-500/50');
-          btn.classList.remove('border-slate-600', 'bg-slate-800', 'text-slate-200');
+          if (icon) icon.innerHTML = SVG_PLAYING;
+          btn.classList.add('text-emerald-400');
+          btn.classList.remove('text-slate-400');
           btn.title = "Musique d'ambiance active (cliquer pour couper)";
         } else {
-          if (icon) icon.textContent = '🔈';
-          if (label) label.textContent = 'Musique';
-          btn.classList.remove('border-emerald-400', 'bg-emerald-950/80', 'text-emerald-300', 'ring-2', 'ring-emerald-500/50');
-          btn.classList.add('border-slate-600', 'bg-slate-800', 'text-slate-200');
+          if (icon) icon.innerHTML = SVG_MUTED;
+          btn.classList.add('text-slate-400');
+          btn.classList.remove('text-emerald-400');
           btn.title = "Musique d'ambiance (cliquer pour écouter)";
         }
       };
+
+      // État initial sobre : barré (pas de musique)
+      setPlayingState(false);
 
       btn.addEventListener('click', (e) => {
         e.preventDefault();
