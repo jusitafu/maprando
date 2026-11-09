@@ -64,6 +64,13 @@ class MapManager {
       attribution: '&copy; <a href="https://www.ngi.be" target="_blank">IGN Belgique - CartoWeb</a>'
     });
 
+        // 4. Allemagne - BKG basemap.de Web Raster officiel (Open Data Allemagne)
+    const ignGermany = L.tileLayer('https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.bkg.bund.de" target="_blank">BKG / basemap.de</a>'
+    });
+
     this.baseLayers = {};
     this.markersLayer = null;
     this.selectionHaloLayer = null;
@@ -230,6 +237,13 @@ class MapManager {
       attribution: '&copy; <a href="https://www.ngi.be" target="_blank">IGN Belgique - CartoWeb</a>'
     });
 
+        // 4. Allemagne - BKG basemap.de Web Raster officiel (Open Data Allemagne)
+    const ignGermany = L.tileLayer('https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/{z}/{y}/{x}.png', {
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      attribution: '&copy; <a href="https://www.bkg.bund.de" target="_blank">BKG / basemap.de</a>'
+    });
+
     this.baseLayers = {
       "IGN TOP 25 (France officiel)": ignTop25,
       "IGN Plan (Numérique moderne)": ignPlan,
@@ -237,6 +251,7 @@ class MapManager {
       "🇨🇭 Suisse (Swisstopo 1:25 000)": swisstopo,
       "🇪🇸 Espagne (IGN 1:25 000)": ignSpain,
       "🇧🇪 Belgique (IGN 1:25 000)": ignBelgium,
+      "🇩🇪 Allemagne (basemap.de Topo)": ignGermany,
       "OpenTopoMap (Relief mondial)": openTopo,
       "OpenStreetMap France (Sentiers)": osmFr,
       "Satellite Mondial (Esri 🌍)": esriSat,
@@ -298,6 +313,7 @@ class MapManager {
         if (name.includes('swisstopo') || name.includes('suisse')) this.currentBaseLayer = 'swisstopo';
         else if (name.includes('espagne') || name.includes('spain')) this.currentBaseLayer = 'ignspain';
         else if (name.includes('belgique') || name.includes('belgium')) this.currentBaseLayer = 'ignbelgium';
+        else if (name.includes('allemagne') || name.includes('germany') || name.includes('basemap.de')) this.currentBaseLayer = 'igngermany';
         else if (name.includes('plan')) this.currentBaseLayer = 'ignplan';
         else if (name.includes('carte des gr') || name.includes('fond épuré')) this.currentBaseLayer = 'grmap';
         else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
@@ -693,6 +709,7 @@ class MapManager {
       if (key === 'swisstopo' && (lower.includes('swisstopo') || lower.includes('suisse'))) { targetLayer = layer; break; }
       if (key === 'ignspain' && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; break; }
       if (key === 'ignbelgium' && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; break; }
+      if (key === 'igngermany' && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; break; }
       if (key === 'opentopo' && lower.includes('opentopo')) { targetLayer = layer; break; }
       if (key === 'igntop25' && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; break; }
       if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; break; }

@@ -112,6 +112,7 @@ class PDFExporter {
       'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
       'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
       'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
+      'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
       'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
       'opentopo': "FOND OPENTOPOMAP (RELIEF MONDIAL)",
       'osmfr': "FOND OPENSTREETMAP FRANCE (SENTIERS)",
@@ -671,6 +672,7 @@ class PDFExporter {
       'swisstopo': "CARTE SUISSE OFFICIELLE (SWISSTOPO 1:25 000)",
       'ignspain': "CARTE ESPAGNE OFFICIELLE (IGN ESPAÑA MTN 1:25 000)",
       'ignbelgium': "CARTE BELGIQUE OFFICIELLE (IGN BELGIQUE CARTOWEB 1:25 000)",
+      'igngermany': "CARTE ALLEMAGNE OFFICIELLE (BASEMAP.DE TOPO)",
       'grmap': "CARTE DES GR® & SENTIERS BALISÉS (FOND ÉPURÉ)",
       'opentopo': "OPENTOPO MAP (RELIEF ET COURBES DE NIVEAU)",
       'osm': "OPENSTREETMAP MONDE",
@@ -1296,6 +1298,8 @@ class PDFExporter {
     const swisstopoUrl = (x, y, z) => `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/${z}/${x}/${y}.jpeg`;
     const ignSpainUrl = (x, y, z) => `https://www.ign.es/wmts/mapa-raster?request=getTile&layer=MTN&TileMatrixSet=GoogleMapsCompatible&TileMatrix=${z}&TileCol=${x}&TileRow=${y}&format=image/jpeg`;
     const ignBelgiumUrl = (x, y, z) => `https://cartoweb.wmts.ngi.be/1.0.0/topo/default/3857/${z}/${y}/${x}.png`;
+    const ignGermanyUrl = (x, y, z) => `https://sgx.geodatenzentrum.de/wmts_basemapde/tile/1.0.0/de_basemapde_web_raster_farbe/default/GLOBAL_WEBMERCATOR/${z}/${y}/${x}.png`;
+
 
     const ignTop25Url = (x, y, z) => `https://data.geopf.fr/private/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=${z}&TILEROW=${y}&TILECOL=${x}&FORMAT=image%2Fjpeg&apikey=ign_scan_ws`;
 
@@ -1336,6 +1340,11 @@ class PDFExporter {
       fallbackUrlFn1 = openTopoUrl;
       fallbackUrlFn2 = osmStdUrl;
       attributionText = '© IGN España - CNIG (MTN 1:25 000)';
+    } else if (mapLayer === 'igngermany') {
+      primaryUrlFn = ignGermanyUrl;
+      fallbackUrlFn1 = openTopoUrl;
+      fallbackUrlFn2 = osmStdUrl;
+      attributionText = '© BKG / basemap.de (Allemagne)';
     } else if (mapLayer === 'ignbelgium') {
       primaryUrlFn = ignBelgiumUrl;
       fallbackUrlFn1 = openTopoUrl;
