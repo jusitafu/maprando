@@ -46,20 +46,23 @@ window.IGN_COMMERCIAL_REFS = {
 
 };
 
-const IGN_COMMERCIAL_REFS = window.IGN_COMMERCIAL_REFS;
-
-
+const IGN_COMMERCIAL_REFS = window.IGN_COMMERCIAL_REFS || {};
 
 function getSheetCommercialLabel(num, title) {
-
   if (IGN_COMMERCIAL_REFS[num]) {
-
     return `${IGN_COMMERCIAL_REFS[num]} • ${title}`;
-
   }
-
+  if (window.IGN_TOP25_SHEETS) {
+    if (!window._ignSheetsByNum) {
+      window._ignSheetsByNum = {};
+      window.IGN_TOP25_SHEETS.forEach(s => { window._ignSheetsByNum[s.n] = s; });
+    }
+    const s = window._ignSheetsByNum[num];
+    if (s && s.r) {
+      return `${s.r} • ${title}`;
+    }
+  }
   return `TOP 25 ${title}`;
-
 }
 
 
@@ -5449,9 +5452,9 @@ class MapManager {
 
 
 
-      // Largeur requise estimee pour le cartouche texte (titre + numero + annee)
+      // Largeur requise estimee pour le cartouche texte (ref commerciale + titre + annee)
 
-      const labelText = `TOP 25 ${s.t} (${s.n}) Éd. ${s.a}`;
+      const labelText = `${getSheetCommercialLabel(s.n, s.t)} Éd. ${s.a}`;
 
       const labelEstimatedWidth = Math.max(160, labelText.length * 7.5 + 44);
 
