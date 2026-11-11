@@ -2108,62 +2108,59 @@ class MapManager {
 
 
 
-    // 1. Bordure d'ombre externe sombre (détache le halo blanc des zones claires/falaises)
-
+    // 1. Bordure d'ombre externe sombre
     L.polyline(latLngs, {
-
       color: '#0f172a',
-
       weight: isSelected ? 10 : 8,
-
       opacity: 0.35,
-
       lineCap: 'round',
-
       lineJoin: 'round',
-
       interactive: false
-
     }).addTo(this.trackLayer);
 
-
-
-    // 2. Halo blanc pur très contrasté (détache la trace des forêts vertes et sentiers GR roses)
-
-    L.polyline(latLngs, {
-
+    // 2. Halo blanc pur très contrasté (interactif)
+    const haloPolyline = L.polyline(latLngs, {
       color: '#ffffff',
-
-      weight: isSelected ? 8 : 6,
-
+      weight: isSelected ? 14 : 12,
       opacity: 0.95,
-
       lineCap: 'round',
-
       lineJoin: 'round',
-
-      interactive: false
-
+      interactive: true
     }).addTo(this.trackLayer);
 
-
-
-        // 3. Tracé GPS principal en Bleu Roi Électrique (interactif pour le survol et clic)
+    // 3. Tracé GPS principal en Bleu Roi Électrique
     this.activeTrackPolyline = L.polyline(latLngs, {
       color: trackColor,
-      weight: isSelected ? 5 : 4,
+      weight: isSelected ? 6 : 5,
       opacity: 1,
       lineCap: 'round',
       lineJoin: 'round',
       interactive: true
     }).addTo(this.trackLayer);
 
+    // 4. Hitbox invisible très large (24px) pour confort maximal de survol
+    const trackHitbox = L.polyline(latLngs, {
+      color: '#000000',
+      weight: 24,
+      opacity: 0.001,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: true
+    }).addTo(this.trackLayer);
+
+    let trackLeaveTimer = null;
+
     const handleTrackHover = (e) => {
+      if (trackLeaveTimer) {
+        clearTimeout(trackLeaveTimer);
+        trackLeaveTimer = null;
+      }
       if (window.App) {
-        if (!window.App.isHikePinned && window.App.selectedHike !== hike) {
+        window.App.cancelHoverClear();
+        const previewPanel = document.getElementById('hike-preview-panel');
+        if (!previewPanel || previewPanel.classList.contains('hidden') || (!window.App.isHikePinned && window.App.selectedHike !== hike)) {
           window.App.showHikePreviewPanel(hike);
         }
-        window.App.cancelHoverClear();
       }
       if (e && e.latlng) {
         const closest = this.findClosestTrackPoint(e.latlng, hike.points);
@@ -2177,19 +2174,24 @@ class MapManager {
     };
 
     const handleTrackLeave = () => {
-      if (window.App && !window.App.isHikePinned) {
-        window.App.scheduleHoverClear(250);
-      }
-      if (!window.App || !window.App.isHikePinned) {
-        this.clearCursorPosition();
-        if (window.ElevationProfileInstance) {
-          window.ElevationProfileInstance.clearCursor();
+      if (trackLeaveTimer) clearTimeout(trackLeaveTimer);
+      trackLeaveTimer = setTimeout(() => {
+        if (window.App && !window.App.isHikePinned) {
+          window.App.scheduleHoverClear(500);
+          this.clearCursorPosition();
+          if (window.ElevationProfileInstance) {
+            window.ElevationProfileInstance.clearCursor();
+          }
         }
-      }
+      }, 150);
     };
 
     const handleTrackClick = (e) => {
       L.DomEvent.stopPropagation(e);
+      if (trackLeaveTimer) {
+        clearTimeout(trackLeaveTimer);
+        trackLeaveTimer = null;
+      }
       if (window.App) {
         window.App.isHikePinned = true;
         window.App.selectedHike = hike;
@@ -2207,10 +2209,12 @@ class MapManager {
       }
     };
 
-    this.activeTrackPolyline.on('mouseover', handleTrackHover);
-    this.activeTrackPolyline.on('mousemove', handleTrackHover);
-    this.activeTrackPolyline.on('mouseout', handleTrackLeave);
-    this.activeTrackPolyline.on('click', handleTrackClick);
+    [this.activeTrackPolyline, haloPolyline, trackHitbox].forEach(lyr => {
+      lyr.on('mouseover', handleTrackHover);
+      lyr.on('mousemove', handleTrackHover);
+      lyr.on('mouseout', handleTrackLeave);
+      lyr.on('click', handleTrackClick);
+    });
 
 
 
@@ -2392,36 +2396,34 @@ class MapManager {
 
 
 
-  setCursorPosition(point) {
-
+    setCursorPosition(point) {
     if (!this.map || !point) return;
-
-
+    const lat = point.lat;
+    const lon = point.lon !== undefined ? point.lon : point.lng;
+    if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) return;
 
     if (!this.cursorMarker) {
-
-      this.cursorMarker = L.circleMarker([point.lat, point.lon], {
-
-        radius: 6,
-
-        fillColor: '#dc2626',
-
+      this.cursorMarker = L.circleMarker([lat, lon], {
+        radius: 7.5,
+        fillColor: '#ef4444',
         color: '#ffffff',
-
-        weight: 2,
-
+        weight: 3,
         fillOpacity: 1,
-
-        zIndexOffset: 2000
-
+        zIndexOffset: 3000
       }).addTo(this.map);
-
     } else {
-
-      this.cursorMarker.setLatLng([point.lat, point.lon]);
-
+      this.cursorMarker.setLatLng([lat, lon]);
+      if (!this.map.hasLayer(this.cursorMarker)) {
+        this.cursorMarker.addTo(this.map);
+      }
     }
+  }
 
+  clearCursorPosition() {
+    if (this.cursorMarker && this.map && this.map.hasLayer(this.cursorMarker)) {
+      this.map.removeLayer(this.cursorMarker);
+      this.cursorMarker = null;
+    }
   }
 
 
@@ -6151,120 +6153,83 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
 
     // Tracé principal élargi (7px) en couleur néon éclatante
-
     const polyline = L.polyline(latlngs, {
-
       color: assignedColor,
-
       weight: 7,
-
       opacity: 1.0,
-
       lineCap: 'round',
-
       lineJoin: 'round',
-
+      interactive: true,
       offset: 0
-
     });
 
-
+    // Hitbox invisible très large (24px) pour capter le survol confortablement
+    const hitboxPolyline = L.polyline(latlngs, {
+      color: '#000000',
+      weight: 24,
+      opacity: 0.001,
+      lineCap: 'round',
+      lineJoin: 'round',
+      interactive: true,
+      offset: 0
+    });
 
     const startPt = latlngs[0];
-
     const endPt = latlngs[latlngs.length - 1];
 
-
-
     const startMarker = L.circleMarker(startPt, {
-
       radius: 8.5,
-
       fillColor: assignedColor,
-
       color: '#ffffff',
-
       weight: 3,
-
       fillOpacity: 1
-
     }).bindTooltip('<b>Départ : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
-
-
     const endMarker = L.circleMarker(endPt, {
-
       radius: 8.5,
-
       fillColor: '#0f172a',
-
       color: '#ffffff',
-
       weight: 3,
-
       fillOpacity: 1
-
     }).bindTooltip('<b>Arrivée : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
-
-
-    const trackLayer = L.featureGroup([borderPolyline, polyline, startMarker, endMarker]);
-
+    const trackLayer = L.featureGroup([borderPolyline, polyline, hitboxPolyline, startMarker, endMarker]);
     this.map.addLayer(trackLayer);
 
-
-
     const trackName = (gpxData.name || fileName || ('Trace ' + (trackIndex + 1))).replace(/\.gpx$/i, '');
-
     const distVal = (gpxData.distanceKm !== undefined) ? gpxData.distanceKm : ((gpxData.distance !== undefined) ? gpxData.distance : '0');
-
     const eleVal = (gpxData.elevationGain !== undefined) ? Math.round(gpxData.elevationGain) : 0;
 
-
-
     const trackItem = {
-
       id: gpxData.id || ('gpx_user_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
-
       name: trackName,
-
       distance: String(distVal),
-
+      distanceKm: parseFloat(distVal) || 0,
       elevationGain: eleVal,
-
       ibp: (gpxData.ibp !== undefined) ? gpxData.ibp : null,
-
       color: assignedColor,
-
       points: pts,
-
       startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
-
       endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] },
-
       layer: trackLayer,
-
       borderPolyline: borderPolyline,
-
       polyline: polyline,
-
+      hitboxPolyline: hitboxPolyline,
       startMarker: startMarker,
-
       endMarker: endMarker
-
     };
 
-
-
-        // Calcul systématique des distances cumulées et altitudes pour le profil altimétrique
+    // Calcul systématique des distances cumulées et altitudes pour le profil altimétrique
     if (pts && pts.length > 0 && typeof pts[0].dist === 'undefined') {
       let cumulative = 0;
       pts[0].dist = 0;
       for (let i = 1; i < pts.length; i++) {
         const p1 = pts[i - 1];
         const p2 = pts[i];
+        const p1Lon = p1.lon !== undefined ? p1.lon : p1.lng;
+        const p2Lon = p2.lon !== undefined ? p2.lon : p2.lng;
         const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
-        const dLon = ((p2.lon - p1.lon) * Math.PI) / 180;
+        const dLon = ((p2Lon - p1Lon) * Math.PI) / 180;
         const a = Math.sin(dLat / 2) ** 2 + Math.cos((p1.lat * Math.PI) / 180) * Math.cos((p2.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
         cumulative += 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         p2.dist = Math.round(cumulative * 100) / 100;
@@ -6286,12 +6251,19 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     }
 
     // Gestion du survol et du clic interactif sur la trace (synchronisation profil altimétrique)
+    let standaloneLeaveTimer = null;
+
     const handleTrackHover = (e) => {
+      if (standaloneLeaveTimer) {
+        clearTimeout(standaloneLeaveTimer);
+        standaloneLeaveTimer = null;
+      }
       if (window.App) {
-        if (!window.App.isHikePinned && window.App.selectedHike !== trackItem) {
+        window.App.cancelHoverClear();
+        const previewPanel = document.getElementById('hike-preview-panel');
+        if (!previewPanel || previewPanel.classList.contains('hidden') || (!window.App.isHikePinned && window.App.selectedHike !== trackItem)) {
           window.App.showHikePreviewPanel(trackItem);
         }
-        window.App.cancelHoverClear();
       }
       if (e && e.latlng) {
         const closest = this.findClosestTrackPoint(e.latlng, pts);
@@ -6305,19 +6277,24 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     };
 
     const handleTrackLeave = () => {
-      if (window.App && !window.App.isHikePinned) {
-        window.App.scheduleHoverClear(250);
-      }
-      if (!window.App || !window.App.isHikePinned) {
-        this.clearCursorPosition();
-        if (window.ElevationProfileInstance) {
-          window.ElevationProfileInstance.clearCursor();
+      if (standaloneLeaveTimer) clearTimeout(standaloneLeaveTimer);
+      standaloneLeaveTimer = setTimeout(() => {
+        if (window.App && !window.App.isHikePinned) {
+          window.App.scheduleHoverClear(500);
+          this.clearCursorPosition();
+          if (window.ElevationProfileInstance) {
+            window.ElevationProfileInstance.clearCursor();
+          }
         }
-      }
+      }, 150);
     };
 
     const handleTrackClick = (e) => {
       L.DomEvent.stopPropagation(e);
+      if (standaloneLeaveTimer) {
+        clearTimeout(standaloneLeaveTimer);
+        standaloneLeaveTimer = null;
+      }
       if (window.App) {
         window.App.isHikePinned = true;
         window.App.selectedHike = trackItem;
@@ -6335,181 +6312,27 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       }
     };
 
-    polyline.on('mouseover', handleTrackHover);
-    polyline.on('mousemove', handleTrackHover);
-    polyline.on('mouseout', handleTrackLeave);
-    polyline.on('click', handleTrackClick);
-
-    borderPolyline.on('mouseover', handleTrackHover);
-    borderPolyline.on('mousemove', handleTrackHover);
-    borderPolyline.on('mouseout', handleTrackLeave);
-    borderPolyline.on('click', handleTrackClick);
-
-
+    [polyline, borderPolyline, hitboxPolyline].forEach(lyr => {
+      lyr.on('mouseover', handleTrackHover);
+      lyr.on('mousemove', handleTrackHover);
+      lyr.on('mouseout', handleTrackLeave);
+      lyr.on('click', handleTrackClick);
+    });
 
     this.standaloneTracks.push(trackItem);
-
-    this.standaloneHike = trackItem; // dernière trace active
-
+    this.standaloneHike = trackItem;
     this.selectedHike = trackItem;
 
-
-
-    // Recalculer les décalages parallèles (côte à côte) sur les tronçons communs
-
-    this.updateAllStandaloneOffsets();
-
-
-
-    // Ajuster la vue pour englober toutes les traces affichées
-
-    this.fitAllStandaloneTracks();
-
-
-
-    // Afficher ou actualiser le HUD multi-traces interactif
-
-    this.showStandaloneGpxHud();
-
-  }
-
-
-
-  updateAllStandaloneOffsets() {
-
-    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
-
-    const total = this.standaloneTracks.length;
-
-    // Décalage en pixels entre traces parallèles sur tronçons communs
-
-    // 1 trace: offset 0
-
-    // 2 traces: -3.5 px, +3.5 px (écart de 7 px)
-
-    // 3 traces: -6 px, 0 px, +6 px (écart de 6 px)
-
-    const step = 10; // Pas de 10px adapté au trait de 7px et halo de 14px
-
-    this.standaloneTracks.forEach((t, idx) => {
-
-      const offset = total <= 1 ? 0 : (idx - (total - 1) / 2) * step;
-
-      t.offset = offset;
-
-      if (t.borderPolyline && typeof t.borderPolyline.setOffset === 'function') {
-
-        t.borderPolyline.setOffset(offset);
-
-      }
-
-      if (t.polyline && typeof t.polyline.setOffset === 'function') {
-
-        t.polyline.setOffset(offset);
-
-      }
-
-    });
-
-  }
-
-
-
-  fitAllStandaloneTracks() {
-
-    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
-
-    const allBounds = L.latLngBounds([]);
-
-    this.standaloneTracks.forEach(t => {
-
-      if (t.layer) allBounds.extend(t.layer.getBounds());
-
-    });
-
-    if (allBounds.isValid()) {
-
-      this.map.fitBounds(allBounds, { padding: [50, 50] });
-
+    // Dès le chargement de la trace dans Cartes & Outils : ouvrir immédiatement le profil altimétrique
+    if (window.App) {
+      window.App.isHikePinned = true;
+      window.App.selectedHike = trackItem;
+      window.App.showHikePreviewPanel(trackItem);
     }
 
-  }
-
-
-
-  setTrackColor(trackId, newColor) {
-
-    if (!this.standaloneTracks) return;
-
-    const track = this.standaloneTracks.find(t => t.id === trackId);
-
-    if (!track) return;
-
-    track.color = newColor;
-
-    if (track.polyline) {
-
-      track.polyline.setStyle({ color: newColor });
-
+    if (typeof this.updateAllStandaloneOffsets === 'function') {
+      this.updateAllStandaloneOffsets();
     }
-
-    if (track.startMarker) {
-
-      track.startMarker.setStyle({ fillColor: newColor });
-
-    }
-
-    if (track.endMarker) {
-
-      track.endMarker.setStyle({ color: newColor });
-
-    }
-
-    this.showStandaloneGpxHud();
-
-  }
-
-
-
-  cycleTrackColor(trackId) {
-
-    if (!this.standaloneTracks) return;
-
-    const PALETTE = ['#ff0033', '#0066ff', '#00d655', '#ff6a00', '#a020f0', '#00d4ff', '#0f172a'];
-
-    const track = this.standaloneTracks.find(t => t.id === trackId);
-
-    if (!track) return;
-
-    const curIdx = PALETTE.indexOf(track.color);
-
-    const nextColor = PALETTE[(curIdx + 1) % PALETTE.length];
-
-    this.setTrackColor(trackId, nextColor);
-
-  }
-
-
-
-  removeStandaloneTrack(trackId) {
-
-    if (!this.standaloneTracks) return;
-
-    const idx = this.standaloneTracks.findIndex(t => t.id === trackId);
-
-    if (idx >= 0) {
-
-      const removed = this.standaloneTracks.splice(idx, 1)[0];
-
-      if (removed && removed.layer && this.map.hasLayer(removed.layer)) {
-
-        this.map.removeLayer(removed.layer);
-
-      }
-
-    }
-
-    this.updateAllStandaloneOffsets();
 
     if (this.standaloneTracks.length === 0) {
 

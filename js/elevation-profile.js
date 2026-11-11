@@ -48,6 +48,45 @@ class ElevationProfile {
   }
 
   render(hike, onHover = null, onLeave = null) {
+    if (!hike) return;
+
+    // Assurer que les points ont leurs distances cumulées calculées
+    if (hike.points && hike.points.length > 0 && typeof hike.points[0].dist === 'undefined') {
+      let cumulative = 0;
+      hike.points[0].dist = 0;
+      for (let i = 1; i < hike.points.length; i++) {
+        const p1 = hike.points[i - 1];
+        const p2 = hike.points[i];
+        const p1Lon = p1.lon !== undefined ? p1.lon : p1.lng;
+        const p2Lon = p2.lon !== undefined ? p2.lon : p2.lng;
+        const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+        const dLon = ((p2Lon - p1Lon) * Math.PI) / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos((p1.lat * Math.PI) / 180) * Math.cos((p2.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+        cumulative += 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        p2.dist = Math.round(cumulative * 100) / 100;
+      }
+      if (!hike.distanceKm) {
+        hike.distanceKm = Math.round(cumulative * 10) / 10;
+      }
+    }
+
+    if (!hike.distanceKm && hike.distance) {
+      hike.distanceKm = parseFloat(hike.distance) || 0;
+    }
+    if ((!hike.minElevation || !hike.maxElevation) && hike.points && hike.points.length > 0) {
+      let minE = Infinity, maxE = -Infinity;
+      hike.points.forEach(p => {
+        if (p.ele != null) {
+          if (p.ele < minE) minE = p.ele;
+          if (p.ele > maxE) maxE = p.ele;
+        }
+      });
+      if (minE !== Infinity) {
+        hike.minElevation = Math.round(minE);
+        hike.maxElevation = Math.round(maxE);
+      }
+    }
+
     this.currentHike = hike;
     this.onHoverCallback = onHover;
     this.onLeaveCallback = onLeave;
@@ -72,11 +111,14 @@ class ElevationProfile {
 
   resizeAndDraw(cursorDist = null) {
     if (!this.canvas || !this.ctx || !this.currentHike) return;
+    this.cursorDist = cursorDist;
 
     const rect = this.container.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    const width = Math.max(10, rect.width || 380);
-    const height = Math.max(10, rect.height || 110);
+    const containerW = rect.width || this.container.clientWidth || this.container.parentElement?.clientWidth || 380;
+    const containerH = rect.height || this.container.clientHeight || 112;
+    const width = Math.max(50, containerW);
+    const height = Math.max(30, containerH);
 
     const targetWidth = Math.round(width * dpr);
     const targetHeight = Math.round(height * dpr);
@@ -104,7 +146,7 @@ class ElevationProfile {
     const chartW = Math.max(1, width - padding.left - padding.right);
     const chartH = Math.max(1, height - padding.top - padding.bottom);
 
-    const maxDist = Math.max(0.1, hike.distanceKm);
+    const maxDist = Math.max(0.1, parseFloat(hike.distanceKm || hike.distance || 0) || (points[points.length - 1]?.dist || 1));
     
     // Extract actual min and max elevation from the points array
     let minEle = Infinity;
@@ -288,7 +330,8 @@ class ElevationProfile {
     const padding = { left: 40, right: 18 };
     const chartW = width - padding.left - padding.right;
     const relativeX = Math.max(0, Math.min(chartW, x - padding.left));
-    const dist = (relativeX / chartW) * this.currentHike.distanceKm;
+    const maxDist = parseFloat(this.currentHike.distanceKm || this.currentHike.distance || 0) || (this.currentHike.points && this.currentHike.points.length > 0 ? (this.currentHike.points[this.currentHike.points.length - 1].dist || 1) : 1);
+    const dist = (relativeX / chartW) * maxDist;
 
     this.resizeAndDraw(dist);
 

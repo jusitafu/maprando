@@ -79,6 +79,8 @@ class AppController {
 
   async init() {
     console.log("Démarrage de RandoFinder (v86) - Randonneurs Sanaryens...");
+    window.App = this;
+    window.app = this;
 
     // 0. Initialisation de l'authentification et session (Mode B2 - Accès Privé)
     if (typeof AuthManager !== 'undefined') {
@@ -100,14 +102,17 @@ class AppController {
       console.error("Erreur UI :", e);
     }
 
-    // 2. Initialize Storage
+    // 2. Initialize Elevation Profile immediately
     try {
-      await StorageManager.init();
+      if (typeof ElevationProfile !== 'undefined') {
+        this.elevationProfile = new ElevationProfile('elevation-chart-container');
+        window.ElevationProfileInstance = this.elevationProfile;
+      }
     } catch (e) {
-      console.warn("Storage init warning :", e);
+      console.error("Erreur profile init :", e);
     }
 
-    // 3. Initialize Map
+    // 3. Initialize Map immediately (never blocked by storage)
     try {
       if (typeof L !== 'undefined' && typeof MapManager !== 'undefined') {
         window.MapManagerInstance = new MapManager('map-view');
@@ -149,14 +154,13 @@ class AppController {
       console.error("Erreur map init :", e);
     }
 
-    // 4. Initialize Elevation Profile
+
+
+    // Storage initialization
     try {
-      if (typeof ElevationProfile !== 'undefined') {
-        this.elevationProfile = new ElevationProfile('elevation-chart-container');
-        window.ElevationProfileInstance = this.elevationProfile;
-      }
+      await StorageManager.init();
     } catch (e) {
-      console.error("Erreur profile init :", e);
+      console.warn("Storage init warning :", e);
     }
 
     // 5. Load Hikes from Storage for the Active Database
@@ -11337,6 +11341,7 @@ class AppController {
 function bootstrapApp() {
   if (!window.App) {
     window.App = new AppController();
+    window.app = window.App;
     window.App.init();
   }
 }

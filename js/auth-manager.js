@@ -134,11 +134,13 @@ class AuthManager {
     // 2. Vérification / Restauration de la session active
     this.restoreSession();
 
-    // 3. Tentative de synchronisation avec Supabase (si disponible)
+    // 3. Tentative de synchronisation avec Supabase en arrière-plan sans bloquer l'initialisation
     try {
-      await this.syncFromSupabase();
+      this.syncFromSupabase().catch(e => {
+        console.info("Info Supabase app_users (mode local actif) :", e ? e.message : e);
+      });
     } catch (e) {
-      console.info("Info Supabase app_users (mode local actif) :", e.message);
+      console.info("Info Supabase app_users (mode local actif) :", e ? e.message : e);
     }
   }
 
