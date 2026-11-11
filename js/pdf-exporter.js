@@ -78,7 +78,164 @@ class PDFExporter {
    * @param {Object} hike - Hike data
    * @param {Object} options - { includeMap: bool, mapLayer: string, format: string, orientation: string, includeProfile: bool, includeNotes: bool }
    */
-  static async exportFichePDF(hike, options = {}) {
+    /**
+   * Tracé vectoriel universel du Carroyage UTM et Coordonnées en périphérie de carte
+   * Conforme aux normes cartographiques officielles TOP 25 de l'IGN (1 km x 1 km)
+   */
+  static drawUtmGridVector(doc, bounds, mapX, mapY, mapW, mapH, options = {}) {
+    if (!doc || !bounds || typeof MapManager === 'undefined') return;
+
+    const minLat = bounds[0][0];
+    const minLon = bounds[0][1];
+    const maxLat = bounds[1][0];
+    const maxLon = bounds[1][1];
+    const centerLat = (minLat + maxLat) / 2;
+    const centerLon = (minLon + maxLon) / 2;
+    const isA3 = options.isA3 || false;
+
+    const centerUtm = MapManager.latLonToUtm(centerLat, centerLon);
+    const zone = centerUtm.zone;
+
+    const utmSW = MapManager.latLonToUtm(minLat, minLon);
+    const utmNE = MapManager.latLonToUtm(maxLat, maxLon);
+    const utmNW = MapManager.latLonToUtm(maxLat, minLon);
+    const utmSE = MapManager.latLonToUtm(minLat, maxLon);
+
+    const minE = Math.min(utmSW.easting, utmNE.easting, utmNW.easting, utmSE.easting);
+    const maxE = Math.max(utmSW.easting, utmNE.easting, utmNW.easting, utmSE.easting);
+    const minN = Math.min(utmSW.northing, utmNE.northing, utmNW.northing, utmSE.northing);
+    const maxN = Math.max(utmSW.northing, utmNE.northing, utmNW.northing, utmSE.northing);
+
+    const utmStep = 1000; // Carroyage 1 km x 1 km officiel TOP 25
+    const startE = Math.floor(minE / utmStep) * utmStep;
+    const endE = Math.ceil(maxE / utmStep) * utmStep;
+    const startN = Math.floor(minN / utmStep) * utmStep;
+    const endN = Math.ceil(maxN / utmStep) * utmStep;
+
+    const lon2tileNorm = (lon) => (lon + 180) / 360;
+    const lat2tileNorm = (lat) => (1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2;
+
+    const minTx = lon2tileNorm(minLon);
+    const maxTx = lon2tileNorm(maxLon);
+    const minTy = lat2tileNorm(maxLat);
+    const maxTy = lat2tileNorm(minLat);
+
+    const latLonToPdfMm = (lat, lon) => {
+      const tx = lon2tileNorm(lon);
+      const ty = lat2tileNorm(lat);
+      const xFrac = (tx - minTx) / (maxTx - minTx);
+      const yFrac = (ty - minTy) / (maxTy - minTy);
+      return {
+        x: mapX + xFrac * mapW,
+        y: mapY + yFrac * mapH
+      };
+    };
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(isA3 ? 7.5 : 6.0);
+
+    // Lignes horizontales (Northing N) et graduations / valeurs sur les bords latéraux
+    for (let n = startN; n <= endN; n += utmStep) {
+      const nSteps = 10;
+      const pts = [];
+      for (let s = 0; s <= nSteps; s++) {
+        const currE = minE + (s / nSteps) * (maxE - minE);
+        const ll = MapManager.utmToLatLon(currE, n, zone, centerLat >= 0);
+        pts.push(latLonToPdfMm(ll.lat, ll.lon));
+      }
+
+      // 1. Tracé de la ligne de carroyage bleue TOP 25
+      doc.setDrawColor(2, 132, 199); // Bleu Cyan TOP 25
+      doc.setLineWidth(0.18);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const x1 = Math.max(mapX, Math.min(mapX + mapW, p1.x));
+        const y1 = Math.max(mapY, Math.min(mapY + mapH, p1.y));
+        const x2 = Math.max(mapX, Math.min(mapX + mapW, p2.x));
+        const y2 = Math.max(mapY, Math.min(mapY + mapH, p2.y));
+        doc.line(x1, y1, x2, y2);
+      }
+
+      // 2. Graduations et Valeurs sur les BORDS LATÉRAUX (Gauche et Droite)
+      const kmN = Math.round(n / 1000);
+      const leftLl = MapManager.utmToLatLon(minE, n, zone, centerLat >= 0);
+      const leftPt = latLonToPdfMm(leftLl.lat, leftLl.lon);
+      const rightLl = MapManager.utmToLatLon(maxE, n, zone, centerLat >= 0);
+      const rightPt = latLonToPdfMm(rightLl.lat, rightLl.lon);
+
+      // Bord latéral gauche
+      if (leftPt.y >= mapY + 2 && leftPt.y <= mapY + mapH - 2) {
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(0.4);
+        doc.line(mapX - 2.5, leftPt.y, mapX, leftPt.y); // Tick vers l'extérieur
+
+        doc.setTextColor(2, 132, 199);
+        doc.text(String(kmN), mapX - 3.0, leftPt.y + 0.8, { align: 'right' });
+      }
+
+      // Bord latéral droit
+      if (rightPt.y >= mapY + 2 && rightPt.y <= mapY + mapH - 2) {
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(0.4);
+        doc.line(mapX + mapW, rightPt.y, mapX + mapW + 2.5, rightPt.y); // Tick vers l'extérieur
+
+        doc.setTextColor(2, 132, 199);
+        doc.text(String(kmN), mapX + mapW + 3.0, rightPt.y + 0.8, { align: 'left' });
+      }
+    }
+
+    // Lignes verticales (Easting E) et graduations / valeurs sur les bords Haut et Bas
+    for (let e = startE; e <= endE; e += utmStep) {
+      const nSteps = 10;
+      const pts = [];
+      for (let s = 0; s <= nSteps; s++) {
+        const currN = minN + (s / nSteps) * (maxN - minN);
+        const ll = MapManager.utmToLatLon(e, currN, zone, centerLat >= 0);
+        pts.push(latLonToPdfMm(ll.lat, ll.lon));
+      }
+
+      doc.setDrawColor(2, 132, 199);
+      doc.setLineWidth(0.18);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const x1 = Math.max(mapX, Math.min(mapX + mapW, p1.x));
+        const y1 = Math.max(mapY, Math.min(mapY + mapH, p1.y));
+        const x2 = Math.max(mapX, Math.min(mapX + mapW, p2.x));
+        const y2 = Math.max(mapY, Math.min(mapY + mapH, p2.y));
+        doc.line(x1, y1, x2, y2);
+      }
+
+      const kmE = Math.round(e / 1000);
+      const topLl = MapManager.utmToLatLon(e, maxN, zone, centerLat >= 0);
+      const topPt = latLonToPdfMm(topLl.lat, topLl.lon);
+      const botLl = MapManager.utmToLatLon(e, minN, zone, centerLat >= 0);
+      const botPt = latLonToPdfMm(botLl.lat, botLl.lon);
+
+      // Bord supérieur
+      if (topPt.x >= mapX + 3 && topPt.x <= mapX + mapW - 3) {
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(0.4);
+        doc.line(topPt.x, mapY - 2.5, topPt.x, mapY);
+
+        doc.setTextColor(2, 132, 199);
+        doc.text(String(kmE), topPt.x, mapY - 3.0, { align: 'center' });
+      }
+
+      // Bord inférieur
+      if (botPt.x >= mapX + 3 && botPt.x <= mapX + mapW - 3) {
+        doc.setDrawColor(2, 132, 199);
+        doc.setLineWidth(0.4);
+        doc.line(botPt.x, mapY + mapH, botPt.x, mapY + mapH + 2.5);
+
+        doc.setTextColor(2, 132, 199);
+        doc.text(String(kmE), botPt.x, mapY + mapH + 4.5, { align: 'center' });
+      }
+    }
+  }
+
+static async exportFichePDF(hike, options = {}) {
     const { jsPDF } = window.jspdf;
     const format = (options.format || 'a4').toLowerCase(); // 'a4' or 'a3'
     const orientation = (options.orientation || 'portrait').toLowerCase(); // 'portrait' or 'landscape'
@@ -233,12 +390,20 @@ class PDFExporter {
         try {
           const pxW = Math.round(mapW * 8.5);
           const pxH = Math.round(actualMapH * 8.5);
-          mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, options);
+          const renderStaticOpts = Object.assign({}, options, { showUtmGrid: false });
+          mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, renderStaticOpts);
           const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
           if (mapImgData) {
             doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH, undefined, 'SLOW');
-            doc.setDrawColor(203, 213, 225);
+            doc.setDrawColor(15, 23, 42);
+            doc.setLineWidth(0.5);
             doc.rect(mapX, actualMapY, mapW, actualMapH);
+
+            // Carroyage vectoriel UTM et valeurs en périphérie de carte (TOP 25)
+            if (options.showUtmGrid !== false) {
+              const boundsForUtm = (mapResult && mapResult.renderedBounds) ? mapResult.renderedBounds : (hike.bounds || [[hike.points[0].lat, hike.points[0].lon], [hike.points[hike.points.length-1].lat, hike.points[hike.points.length-1].lon]]);
+              this.drawUtmGridVector(doc, boundsForUtm, mapX, actualMapY, mapW, actualMapH, { isA3 });
+            }
 
             // Mention verticale IGN TOP 25 sur le bord droit de la carte
             if (mapLayer === 'igntop25' && (hike.bounds || (hike.points && hike.points.length > 0))) {
@@ -370,12 +535,20 @@ class PDFExporter {
           try {
             const pxW = Math.round(mapW * 8.5);
             const pxH = Math.round(actualMapH * 8.5);
-            const mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, options);
+            const renderStaticOpts = Object.assign({}, options, { showUtmGrid: false });
+            const mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, renderStaticOpts);
             const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
             if (mapImgData) {
               doc.addImage(mapImgData, 'JPEG', mapX, actualMapY, mapW, actualMapH, undefined, 'SLOW');
-              doc.setDrawColor(203, 213, 225);
+              doc.setDrawColor(15, 23, 42);
+              doc.setLineWidth(0.5);
               doc.rect(mapX, actualMapY, mapW, actualMapH);
+
+              // Carroyage vectoriel UTM et valeurs en périphérie de carte (TOP 25)
+              if (options.showUtmGrid !== false) {
+                const boundsForUtm = (mapResult && mapResult.renderedBounds) ? mapResult.renderedBounds : (hike.bounds || [[hike.points[0].lat, hike.points[0].lon], [hike.points[hike.points.length-1].lat, hike.points[hike.points.length-1].lon]]);
+                this.drawUtmGridVector(doc, boundsForUtm, mapX, actualMapY, mapW, actualMapH, { isA3 });
+              }
             }
           } catch (err) {
             console.warn("Erreur image carte paysage :", err);
@@ -541,12 +714,20 @@ class PDFExporter {
         try {
           const pxW = Math.round(contentWidth * 8.5);
           const pxH = Math.round(mapH * 8.5);
-          const mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, options);
+          const renderStaticOpts = Object.assign({}, options, { showUtmGrid: false });
+          const mapResult = await this.renderStaticMap(hike, pxW, pxH, mapLayer, null, options.trackColor, renderStaticOpts);
           const mapImgData = mapResult && mapResult.imgData ? mapResult.imgData : mapResult;
           if (mapImgData) {
             doc.addImage(mapImgData, 'JPEG', margin, currentY, contentWidth, mapH, undefined, 'SLOW');
-            doc.setDrawColor(203, 213, 225);
+            doc.setDrawColor(15, 23, 42);
+            doc.setLineWidth(0.5);
             doc.rect(margin, currentY, contentWidth, mapH);
+
+            // Carroyage vectoriel UTM et valeurs en périphérie de carte (TOP 25)
+            if (options.showUtmGrid !== false) {
+              const boundsForUtm = (mapResult && mapResult.renderedBounds) ? mapResult.renderedBounds : (hike.bounds || [[hike.points[0].lat, hike.points[0].lon], [hike.points[hike.points.length-1].lat, hike.points[hike.points.length-1].lon]]);
+              this.drawUtmGridVector(doc, boundsForUtm, margin, currentY, contentWidth, mapH, { isA3 });
+            }
             currentY += mapH + (isA3 ? 6 : 5);
           }
         } catch (err) {
@@ -869,148 +1050,8 @@ class PDFExporter {
     }
 
     // 6. Tracé vectoriel du Carroyage UTM et Coordonnées sur les Bords Latéraux (universel WGS84 mondial)
-    const centerUtm = (typeof MapManager !== 'undefined') ? MapManager.latLonToUtm(origCenterLat, origCenterLon) : { zone: 31, band: 'T' };
-    const zone = centerUtm.zone;
-    const band = centerUtm.band;
-
     if (showUtm && typeof MapManager !== 'undefined') {
-      const utmSW = MapManager.latLonToUtm(minLat, minLon);
-      const utmNE = MapManager.latLonToUtm(maxLat, maxLon);
-      const utmNW = MapManager.latLonToUtm(maxLat, minLon);
-      const utmSE = MapManager.latLonToUtm(minLat, maxLon);
-
-      const minE = Math.min(utmSW.easting, utmNE.easting, utmNW.easting, utmSE.easting);
-      const maxE = Math.max(utmSW.easting, utmNE.easting, utmNW.easting, utmSE.easting);
-      const minN = Math.min(utmSW.northing, utmNE.northing, utmNW.northing, utmSE.northing);
-      const maxN = Math.max(utmSW.northing, utmNE.northing, utmNW.northing, utmSE.northing);
-
-      const utmStep = 1000; // Carroyage 1 km x 1 km officiel TOP 25
-      const startE = Math.floor(minE / utmStep) * utmStep;
-      const endE = Math.ceil(maxE / utmStep) * utmStep;
-      const startN = Math.floor(minN / utmStep) * utmStep;
-      const endN = Math.ceil(maxN / utmStep) * utmStep;
-
-      const lon2tileNorm = (lon) => (lon + 180) / 360;
-      const lat2tileNorm = (lat) => (1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2;
-
-      const minTx = lon2tileNorm(minLon);
-      const maxTx = lon2tileNorm(maxLon);
-      const minTy = lat2tileNorm(maxLat);
-      const maxTy = lat2tileNorm(minLat);
-
-      const latLonToPdfMm = (lat, lon) => {
-        const tx = lon2tileNorm(lon);
-        const ty = lat2tileNorm(lat);
-        const xFrac = (tx - minTx) / (maxTx - minTx);
-        const yFrac = (ty - minTy) / (maxTy - minTy);
-        return {
-          x: mapX + xFrac * mapW,
-          y: mapY + yFrac * mapH
-        };
-      };
-
-      // 6.A LIGNES HORIZONTALES (Northing N) ET VALEURS SUR LES BORDS LATÉRAUX (Gauche & Droite)
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(isA3 ? 7.5 : 6.2);
-
-      for (let n = startN; n <= endN; n += utmStep) {
-        const nSteps = 10;
-        const pts = [];
-        for (let s = 0; s <= nSteps; s++) {
-          const currE = minE + (s / nSteps) * (maxE - minE);
-          const ll = MapManager.utmToLatLon(currE, n, zone, origCenterLat >= 0);
-          pts.push(latLonToPdfMm(ll.lat, ll.lon));
-        }
-
-        // 1. Tracé de la ligne de carroyage bleue
-        doc.setDrawColor(2, 132, 199); // Bleu Cyan TOP 25
-        doc.setLineWidth(0.18);
-        for (let i = 0; i < pts.length - 1; i++) {
-          const p1 = pts[i];
-          const p2 = pts[i + 1];
-          const x1 = Math.max(mapX, Math.min(mapX + mapW, p1.x));
-          const y1 = Math.max(mapY, Math.min(mapY + mapH, p1.y));
-          const x2 = Math.max(mapX, Math.min(mapX + mapW, p2.x));
-          const y2 = Math.max(mapY, Math.min(mapY + mapH, p2.y));
-          doc.line(x1, y1, x2, y2);
-        }
-
-        // 2. Graduations et Valeurs sur les BORDS LATÉRAUX (Gauche et Droite)
-        const kmN = Math.round(n / 1000);
-        const leftLl = MapManager.utmToLatLon(minE, n, zone, origCenterLat >= 0);
-        const leftPt = latLonToPdfMm(leftLl.lat, leftLl.lon);
-        const rightLl = MapManager.utmToLatLon(maxE, n, zone, origCenterLat >= 0);
-        const rightPt = latLonToPdfMm(rightLl.lat, rightLl.lon);
-
-        // Bord latéral gauche
-        if (leftPt.y >= mapY + 2 && leftPt.y <= mapY + mapH - 2) {
-          doc.setDrawColor(2, 132, 199);
-          doc.setLineWidth(0.4);
-          doc.line(mapX - 2.5, leftPt.y, mapX, leftPt.y); // Tick vers l'extérieur
-
-          doc.setTextColor(2, 132, 199);
-          doc.text(String(kmN), mapX - 3.2, leftPt.y + 0.8, { align: 'right' });
-        }
-
-        // Bord latéral droit
-        if (rightPt.y >= mapY + 2 && rightPt.y <= mapY + mapH - 2) {
-          doc.setDrawColor(2, 132, 199);
-          doc.setLineWidth(0.4);
-          doc.line(mapX + mapW, rightPt.y, mapX + mapW + 2.5, rightPt.y); // Tick vers l'extérieur
-
-          doc.setTextColor(2, 132, 199);
-          doc.text(String(kmN), mapX + mapW + 3.2, rightPt.y + 0.8, { align: 'left' });
-        }
-      }
-
-      // 6.B LIGNES VERTICALES (Easting E) ET VALEURS SUR LES BORDS HAUT ET BAS
-      for (let e = startE; e <= endE; e += utmStep) {
-        const nSteps = 10;
-        const pts = [];
-        for (let s = 0; s <= nSteps; s++) {
-          const currN = minN + (s / nSteps) * (maxN - minN);
-          const ll = MapManager.utmToLatLon(e, currN, zone, origCenterLat >= 0);
-          pts.push(latLonToPdfMm(ll.lat, ll.lon));
-        }
-
-        doc.setDrawColor(2, 132, 199);
-        doc.setLineWidth(0.18);
-        for (let i = 0; i < pts.length - 1; i++) {
-          const p1 = pts[i];
-          const p2 = pts[i + 1];
-          const x1 = Math.max(mapX, Math.min(mapX + mapW, p1.x));
-          const y1 = Math.max(mapY, Math.min(mapY + mapH, p1.y));
-          const x2 = Math.max(mapX, Math.min(mapX + mapW, p2.x));
-          const y2 = Math.max(mapY, Math.min(mapY + mapH, p2.y));
-          doc.line(x1, y1, x2, y2);
-        }
-
-        const kmE = Math.round(e / 1000);
-        const topLl = MapManager.utmToLatLon(e, maxN, zone, origCenterLat >= 0);
-        const topPt = latLonToPdfMm(topLl.lat, topLl.lon);
-        const botLl = MapManager.utmToLatLon(e, minN, zone, origCenterLat >= 0);
-        const botPt = latLonToPdfMm(botLl.lat, botLl.lon);
-
-        // Bord supérieur
-        if (topPt.x >= mapX + 3 && topPt.x <= mapX + mapW - 3) {
-          doc.setDrawColor(2, 132, 199);
-          doc.setLineWidth(0.4);
-          doc.line(topPt.x, mapY - 2.5, topPt.x, mapY);
-
-          doc.setTextColor(2, 132, 199);
-          doc.text(String(kmE), topPt.x, mapY - 3, { align: 'center' });
-        }
-
-        // Bord inférieur
-        if (botPt.x >= mapX + 3 && botPt.x <= mapX + mapW - 3) {
-          doc.setDrawColor(2, 132, 199);
-          doc.setLineWidth(0.4);
-          doc.line(botPt.x, mapY + mapH, botPt.x, mapY + mapH + 2.5);
-
-          doc.setTextColor(2, 132, 199);
-          doc.text(String(kmE), botPt.x, mapY + mapH + 4.8, { align: 'center' });
-        }
-      }
+      this.drawUtmGridVector(doc, actualBounds, mapX, mapY, mapW, mapH, { isA3 });
     }
 
     // 6.C MENTION VERTICALE DE LA FEUILLE IGN TOP 25 SUR LE CÔTÉ DROIT DE LA CARTE IMPRIMÉE
@@ -2092,13 +2133,39 @@ class PDFExporter {
       });
     }
 
+    // Calcul des coordonnées géographiques réelles englobées par l'image
+    let renderedBounds;
+    if (isExactFit) {
+      renderedBounds = [[minLat, minLon], [maxLat, maxLon]];
+    } else {
+      const tileSpanX = imgWidth / 256;
+      const tileSpanY = imgHeight / 256;
+      const minTx = centerTileX - tileSpanX / 2;
+      const maxTx = centerTileX + tileSpanX / 2;
+      const minTy = centerTileY - tileSpanY / 2;
+      const maxTy = centerTileY + tileSpanY / 2;
+
+      const tileToLon = (tx, z) => (tx / Math.pow(2, z)) * 360 - 180;
+      const tileToLat = (ty, z) => {
+        const n = Math.PI - 2 * Math.PI * (ty / Math.pow(2, z));
+        return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+      };
+
+      const rMinLon = tileToLon(minTx, zoom);
+      const rMaxLon = tileToLon(maxTx, zoom);
+      const rMaxLat = tileToLat(minTy, zoom);
+      const rMinLat = tileToLat(maxTy, zoom);
+      renderedBounds = [[rMinLat, rMinLon], [rMaxLat, rMaxLon]];
+    }
+
     return {
       imgData: canvas.toDataURL('image/jpeg', 0.96),
       zoom,
       centerTileX,
       centerTileY,
       imgWidth,
-      imgHeight
+      imgHeight,
+      renderedBounds
     };
   }
 

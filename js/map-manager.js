@@ -2148,23 +2148,69 @@ class MapManager {
 
 
 
-    // 3. Tracé GPS principal en Bleu Roi Électrique
-
+        // 3. Tracé GPS principal en Bleu Roi Électrique (interactif pour le survol et clic)
     this.activeTrackPolyline = L.polyline(latLngs, {
-
       color: trackColor,
-
       weight: isSelected ? 5 : 4,
-
       opacity: 1,
-
       lineCap: 'round',
-
       lineJoin: 'round',
-
-      interactive: false
-
+      interactive: true
     }).addTo(this.trackLayer);
+
+    const handleTrackHover = (e) => {
+      if (window.App) {
+        if (!window.App.isHikePinned && window.App.selectedHike !== hike) {
+          window.App.showHikePreviewPanel(hike);
+        }
+        window.App.cancelHoverClear();
+      }
+      if (e && e.latlng) {
+        const closest = this.findClosestTrackPoint(e.latlng, hike.points);
+        if (closest) {
+          this.setCursorPosition(closest.point);
+          if (window.ElevationProfileInstance) {
+            window.ElevationProfileInstance.setCursorDist(closest.dist);
+          }
+        }
+      }
+    };
+
+    const handleTrackLeave = () => {
+      if (window.App && !window.App.isHikePinned) {
+        window.App.scheduleHoverClear(250);
+      }
+      if (!window.App || !window.App.isHikePinned) {
+        this.clearCursorPosition();
+        if (window.ElevationProfileInstance) {
+          window.ElevationProfileInstance.clearCursor();
+        }
+      }
+    };
+
+    const handleTrackClick = (e) => {
+      L.DomEvent.stopPropagation(e);
+      if (window.App) {
+        window.App.isHikePinned = true;
+        window.App.selectedHike = hike;
+        window.App.cancelHoverClear();
+        window.App.showHikePreviewPanel(hike);
+      }
+      if (e && e.latlng) {
+        const closest = this.findClosestTrackPoint(e.latlng, hike.points);
+        if (closest) {
+          this.setCursorPosition(closest.point);
+          if (window.ElevationProfileInstance) {
+            window.ElevationProfileInstance.setCursorDist(closest.dist);
+          }
+        }
+      }
+    };
+
+    this.activeTrackPolyline.on('mouseover', handleTrackHover);
+    this.activeTrackPolyline.on('mousemove', handleTrackHover);
+    this.activeTrackPolyline.on('mouseout', handleTrackLeave);
+    this.activeTrackPolyline.on('click', handleTrackClick);
 
 
 
@@ -5990,7 +6036,33 @@ class MapManager {
 
    * ========================================================================= */
 
-  displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
+    findClosestTrackPoint(latlng, points) {
+    if (!latlng || !points || points.length === 0) return null;
+    const lat = latlng.lat;
+    const lng = latlng.lng !== undefined ? latlng.lng : latlng.lon;
+    let closestPt = points[0];
+    let closestDistSq = Infinity;
+    let closestIdx = 0;
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      const pLon = p.lon !== undefined ? p.lon : p.lng;
+      const dLat = p.lat - lat;
+      const dLon = pLon - lng;
+      const distSq = dLat * dLat + dLon * dLon;
+      if (distSq < closestDistSq) {
+        closestDistSq = distSq;
+        closestPt = p;
+        closestIdx = i;
+      }
+    }
+    return {
+      point: closestPt,
+      dist: closestPt.dist !== undefined ? closestPt.dist : (closestIdx / Math.max(1, points.length - 1)) * (points.distanceKm || 0),
+      index: closestIdx
+    };
+  }
+
+displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     if (!this.map || !gpxData) return;
 
@@ -6184,19 +6256,94 @@ class MapManager {
 
 
 
-    // Clic direct sur la trace (trait ou halo blanc) pour changer sa couleur au vol
+        // Calcul systématique des distances cumulées et altitudes pour le profil altimétrique
+    if (pts && pts.length > 0 && typeof pts[0].dist === 'undefined') {
+      let cumulative = 0;
+      pts[0].dist = 0;
+      for (let i = 1; i < pts.length; i++) {
+        const p1 = pts[i - 1];
+        const p2 = pts[i];
+        const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+        const dLon = ((p2.lon - p1.lon) * Math.PI) / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos((p1.lat * Math.PI) / 180) * Math.cos((p2.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+        cumulative += 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        p2.dist = Math.round(cumulative * 100) / 100;
+      }
+      trackItem.distanceKm = Math.round(cumulative * 10) / 10;
+    }
+    if ((!trackItem.minElevation || !trackItem.maxElevation) && pts && pts.length > 0) {
+      let minE = Infinity, maxE = -Infinity;
+      pts.forEach(p => {
+        if (p.ele != null) {
+          if (p.ele < minE) minE = p.ele;
+          if (p.ele > maxE) maxE = p.ele;
+        }
+      });
+      if (minE !== Infinity) {
+        trackItem.minElevation = Math.round(minE);
+        trackItem.maxElevation = Math.round(maxE);
+      }
+    }
 
-    const handleColorClick = (e) => {
-
-      L.DomEvent.stopPropagation(e);
-
-      this.cycleTrackColor(trackItem.id);
-
+    // Gestion du survol et du clic interactif sur la trace (synchronisation profil altimétrique)
+    const handleTrackHover = (e) => {
+      if (window.App) {
+        if (!window.App.isHikePinned && window.App.selectedHike !== trackItem) {
+          window.App.showHikePreviewPanel(trackItem);
+        }
+        window.App.cancelHoverClear();
+      }
+      if (e && e.latlng) {
+        const closest = this.findClosestTrackPoint(e.latlng, pts);
+        if (closest) {
+          this.setCursorPosition(closest.point);
+          if (window.ElevationProfileInstance) {
+            window.ElevationProfileInstance.setCursorDist(closest.dist);
+          }
+        }
+      }
     };
 
-    polyline.on('click', handleColorClick);
+    const handleTrackLeave = () => {
+      if (window.App && !window.App.isHikePinned) {
+        window.App.scheduleHoverClear(250);
+      }
+      if (!window.App || !window.App.isHikePinned) {
+        this.clearCursorPosition();
+        if (window.ElevationProfileInstance) {
+          window.ElevationProfileInstance.clearCursor();
+        }
+      }
+    };
 
-    borderPolyline.on('click', handleColorClick);
+    const handleTrackClick = (e) => {
+      L.DomEvent.stopPropagation(e);
+      if (window.App) {
+        window.App.isHikePinned = true;
+        window.App.selectedHike = trackItem;
+        window.App.cancelHoverClear();
+        window.App.showHikePreviewPanel(trackItem);
+      }
+      if (e && e.latlng) {
+        const closest = this.findClosestTrackPoint(e.latlng, pts);
+        if (closest) {
+          this.setCursorPosition(closest.point);
+          if (window.ElevationProfileInstance) {
+            window.ElevationProfileInstance.setCursorDist(closest.dist);
+          }
+        }
+      }
+    };
+
+    polyline.on('mouseover', handleTrackHover);
+    polyline.on('mousemove', handleTrackHover);
+    polyline.on('mouseout', handleTrackLeave);
+    polyline.on('click', handleTrackClick);
+
+    borderPolyline.on('mouseover', handleTrackHover);
+    borderPolyline.on('mousemove', handleTrackHover);
+    borderPolyline.on('mouseout', handleTrackLeave);
+    borderPolyline.on('click', handleTrackClick);
 
 
 

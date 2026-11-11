@@ -273,6 +273,17 @@ class ElevationProfile {
     }
   }
 
+  setCursorDist(dist) {
+    if (!this.canvas || !this.currentHike) return;
+    this.resizeAndDraw(dist);
+  }
+
+  clearCursor() {
+    if (this.currentHike) {
+      this.resizeAndDraw(null);
+    }
+  }
+
   updateCursorFromX(x, width) {
     const padding = { left: 40, right: 18 };
     const chartW = width - padding.left - padding.right;
