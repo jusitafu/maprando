@@ -2173,13 +2173,15 @@ class MapManager {
       if (window.App) {
         window.App.cancelHoverClear();
         const previewPanel = document.getElementById('hike-preview-panel');
-        if (!previewPanel || previewPanel.classList.contains('hidden') || (!window.App.isHikePinned && window.App.selectedHike !== hike)) {
+        const isAlreadyShowing = previewPanel && !previewPanel.classList.contains('hidden') &&
+          (window.ElevationProfileInstance && window.ElevationProfileInstance.currentHike === hike);
+        if (!isAlreadyShowing) {
           window.App.showHikePreviewPanel(hike);
         }
       }
       if (e && e.latlng) {
         const closest = this.findClosestTrackPoint(e.latlng, hike.points, hike);
-        if (closest) {
+        if (closest && closest.point) {
           this.setCursorPosition(closest.point);
           if (window.ElevationProfileInstance) {
             window.ElevationProfileInstance.setCursorDist(closest.dist);
@@ -2514,7 +2516,6 @@ class MapManager {
 
   handleMapMouseMoveForTrack(e) {
     if (!this.map || !e || !e.latlng) return;
-    if (this._isOverTrackPolyline) return; // Si le pointeur survole directement la trace, handleTrackHover est prioritaire
 
     const activeHike = this.getClosestTrackForCoordinates(e.latlng);
     if (!activeHike || !activeHike.points || activeHike.points.length === 0) return;
@@ -2537,7 +2538,9 @@ class MapManager {
       if (window.App) {
         window.App.cancelHoverClear();
         const previewPanel = document.getElementById('hike-preview-panel');
-        if (!previewPanel || previewPanel.classList.contains('hidden') || (!window.App.isHikePinned && window.App.selectedHike !== activeHike)) {
+        const isAlreadyShowing = previewPanel && !previewPanel.classList.contains('hidden') &&
+          (window.ElevationProfileInstance && window.ElevationProfileInstance.currentHike === activeHike);
+        if (!isAlreadyShowing) {
           window.App.showHikePreviewPanel(activeHike);
         }
       }
@@ -6407,7 +6410,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       if (window.App) {
         window.App.cancelHoverClear();
         const previewPanel = document.getElementById('hike-preview-panel');
-        if (!previewPanel || previewPanel.classList.contains('hidden') || (!window.App.isHikePinned && window.App.selectedHike !== trackItem)) {
+        const isAlreadyShowing = previewPanel && !previewPanel.classList.contains('hidden') &&
+          (window.ElevationProfileInstance && window.ElevationProfileInstance.currentHike === trackItem);
+        if (!isAlreadyShowing) {
           window.App.showHikePreviewPanel(trackItem);
         }
       }

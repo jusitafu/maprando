@@ -122,7 +122,11 @@ class AppController {
         window.MapManagerInstance.onHikeHoverEndCallback = (hike) => this.handleHikeHoverEnd(hike);
         window.MapManagerInstance.onHikeSelectCallback = (hike) => this.handleHikeSelect(hike);
         window.MapManagerInstance.onSearchOriginChangeCallback = (origin) => this.handleOriginChange(origin);
-        window.MapManagerInstance.onMapBackgroundClickCallback = () => this.deselectHike();
+        window.MapManagerInstance.onMapBackgroundClickCallback = () => {
+          // Si le panneau a été épinglé au clic, le maintenir jusqu'à fermeture explicite par la croix ✕
+          if (this.isHikePinned) return;
+          this.deselectHike();
+        };
         window.MapManagerInstance.onBaseLayerChangeCallback = (layerKey) => this.handleBaseLayerChange(layerKey);
 
         // Synchronisation bidirectionnelle : Le zoom/dézoom de la carte à la souris ajuste le curseur de rayon

@@ -105,11 +105,11 @@ class ElevationProfile {
 
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
 
-    this.animationFrameId = requestAnimationFrame(() => {
-      this.resizeAndDraw();
-    });
+    // Rendu synchrone direct préservant le curseur actif
+    this.resizeAndDraw(this.cursorDist);
   }
 
   resizeAndDraw(cursorDist = null) {
@@ -251,9 +251,10 @@ class ElevationProfile {
     if (cursorDist !== null && !isNaN(cursorDist)) {
       const closest = this.findClosestPointByDist(cursorDist);
       if (closest && closest.point) {
-        const ptDist = closest.point.dist !== undefined ? closest.point.dist : cursorDist;
+        // Utilise la distance exacte interpolée pour un déplacement 100% continu et fluide
+        const ptDist = cursorDist;
         const ptEle = closest.point.ele != null ? closest.point.ele : 0;
-        const cx = getX(ptDist);
+        const cx = Math.max(padding.left, Math.min(padding.left + chartW, getX(ptDist)));
         const cy = getY(ptEle);
 
         // Vertical dashed guide line
@@ -324,6 +325,11 @@ class ElevationProfile {
 
   setCursorDist(dist) {
     if (!this.canvas || !this.currentHike) return;
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+    this.cursorDist = dist;
     this.resizeAndDraw(dist);
   }
 
