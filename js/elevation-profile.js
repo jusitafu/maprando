@@ -351,13 +351,16 @@ class ElevationProfile {
   findClosestPointByDist(targetDist) {
     if (!this.currentHike || !this.currentHike.points || this.currentHike.points.length === 0) return null;
     const points = this.currentHike.points;
+    const totalKm = parseFloat(this.currentHike.distanceKm || this.currentHike.distance || 0) || (points[points.length - 1]?.dist || 1);
 
     let closest = points[0];
     let closestIdx = 0;
-    let minDiff = Math.abs(points[0].dist - targetDist);
+    const p0Dist = (points[0].dist != null && !isNaN(points[0].dist)) ? points[0].dist : 0;
+    let minDiff = Math.abs(p0Dist - targetDist);
 
     for (let i = 1; i < points.length; i++) {
-      const diff = Math.abs(points[i].dist - targetDist);
+      const pDist = (points[i].dist != null && !isNaN(points[i].dist)) ? points[i].dist : ((i / Math.max(1, points.length - 1)) * totalKm);
+      const diff = Math.abs(pDist - targetDist);
       if (diff < minDiff) {
         minDiff = diff;
         closest = points[i];

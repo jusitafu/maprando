@@ -1010,19 +1010,14 @@ class MapManager {
 
 
     // Écouteur de position du curseur en direct sur la carte
-
     this.map.on('mousemove', (e) => {
-
       this.updateCursorCoords(e.latlng);
-
+      this.handleMapMouseMoveForTrack(e);
     });
 
-
-
     this.map.on('mouseout', () => {
-
       this.updateCursorCoords(null);
-
+      this.handleMapMouseOutForTrack();
     });
 
 
@@ -2148,6 +2143,25 @@ class MapManager {
       interactive: true
     }).addTo(this.trackLayer);
 
+    // Assurer que le tracé a ses distances cumulées calculées pour le profil altimétrique
+    if (hike.points && hike.points.length > 0 && typeof hike.points[0].dist === 'undefined') {
+      let cumulative = 0;
+      hike.points[0].dist = 0;
+      for (let i = 1; i < hike.points.length; i++) {
+        const p1 = hike.points[i - 1];
+        const p2 = hike.points[i];
+        const p1Lon = p1.lon !== undefined ? p1.lon : p1.lng;
+        const p2Lon = p2.lon !== undefined ? p2.lon : p2.lng;
+        const dLat = ((p2.lat - p1.lat) * Math.PI) / 180;
+        const dLon = ((p2Lon - p1Lon) * Math.PI) / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos((p1.lat * Math.PI) / 180) * Math.cos((p2.lat * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+        cumulative += 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        p2.dist = Math.round(cumulative * 100) / 100;
+      }
+      hike.distanceKm = Math.round(cumulative * 10) / 10;
+    }
+    this.selectedHike = hike;
+
     let trackLeaveTimer = null;
 
     const handleTrackHover = (e) => {
@@ -2178,12 +2192,8 @@ class MapManager {
       trackLeaveTimer = setTimeout(() => {
         if (window.App && !window.App.isHikePinned) {
           window.App.scheduleHoverClear(500);
-          this.clearCursorPosition();
-          if (window.ElevationProfileInstance) {
-            window.ElevationProfileInstance.clearCursor();
-          }
         }
-      }, 150);
+      }, 300);
     };
 
     const handleTrackClick = (e) => {
@@ -2409,6 +2419,7 @@ class MapManager {
         color: '#ffffff',
         weight: 3,
         fillOpacity: 1,
+        interactive: false,
         zIndexOffset: 3000
       }).addTo(this.map);
     } else {
@@ -2428,6 +2439,7 @@ class MapManager {
           permanent: true,
           direction: 'top',
           offset: [0, -10],
+          interactive: false,
           className: 'map-cursor-altitude-tooltip'
         }).openTooltip();
       } else {
@@ -2456,6 +2468,75 @@ class MapManager {
         }
       } catch (e) {}
       this.cursorMarker = null;
+    }
+  }
+
+  getActiveTrackForProximity() {
+    // 1. En mode Cartes & Outils (#carte) : trace importée
+    if (this.standaloneTracks && this.standaloneTracks.length > 0) {
+      if (this.standaloneTracks.length === 1) {
+        return this.standaloneTracks[0];
+      }
+      return this.standaloneHike || this.selectedHike || this.standaloneTracks[this.standaloneTracks.length - 1];
+    }
+    // 2. En mode Randonner (#randonner) : randonnée sélectionnée ou en aperçu
+    if (this.selectedHike && this.selectedHike.points && this.selectedHike.points.length > 0) {
+      return this.selectedHike;
+    }
+    if (window.App && window.App.selectedHike && window.App.selectedHike.points && window.App.selectedHike.points.length > 0) {
+      return window.App.selectedHike;
+    }
+    return null;
+  }
+
+  handleMapMouseMoveForTrack(e) {
+    if (!this.map || !e || !e.latlng) return;
+    const activeHike = this.getActiveTrackForProximity();
+    if (!activeHike || !activeHike.points || activeHike.points.length === 0) return;
+
+    const closest = this.findClosestTrackPoint(e.latlng, activeHike.points, activeHike);
+    if (!closest || !closest.point) return;
+
+    const pMouse = this.map.latLngToContainerPoint(e.latlng);
+    const cLat = closest.point.lat;
+    const cLon = closest.point.lon !== undefined ? closest.point.lon : closest.point.lng;
+    const pTrack = this.map.latLngToContainerPoint([cLat, cLon]);
+    const screenDist = Math.hypot(pMouse.x - pTrack.x, pMouse.y - pTrack.y);
+
+    // Rayon d'accroche magnétique de 45 pixels écran
+    if (screenDist <= 45) {
+      if (this._trackLeaveTimer) {
+        clearTimeout(this._trackLeaveTimer);
+        this._trackLeaveTimer = null;
+      }
+      if (window.App) {
+        window.App.cancelHoverClear();
+        const previewPanel = document.getElementById('hike-preview-panel');
+        if (!previewPanel || previewPanel.classList.contains('hidden') || (!window.App.isHikePinned && window.App.selectedHike !== activeHike)) {
+          window.App.showHikePreviewPanel(activeHike);
+        }
+      }
+      this.setCursorPosition(closest.point);
+      if (window.ElevationProfileInstance) {
+        window.ElevationProfileInstance.setCursorDist(closest.dist);
+      }
+    } else {
+      // La souris s'est éloignée au-delà du rayon d'accroche
+      if (this.cursorMarker) {
+        this.clearCursorPosition();
+        if (window.ElevationProfileInstance) {
+          window.ElevationProfileInstance.clearCursor();
+        }
+      }
+    }
+  }
+
+  handleMapMouseOutForTrack() {
+    if (this.cursorMarker) {
+      this.clearCursorPosition();
+      if (window.ElevationProfileInstance) {
+        window.ElevationProfileInstance.clearCursor();
+      }
     }
   }
 
@@ -6305,12 +6386,8 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       standaloneLeaveTimer = setTimeout(() => {
         if (window.App && !window.App.isHikePinned) {
           window.App.scheduleHoverClear(500);
-          this.clearCursorPosition();
-          if (window.ElevationProfileInstance) {
-            window.ElevationProfileInstance.clearCursor();
-          }
         }
-      }, 150);
+      }, 300);
     };
 
     const handleTrackClick = (e) => {
