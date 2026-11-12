@@ -389,6 +389,20 @@
       if (viewGuides) viewGuides.classList.add('hidden');
 
       if (viewName !== 'accueil') { this.pauseMusic(); }
+
+      // Reset complet et strict de toute trace résiduelle lors du retour à l'accueil, aux guides ou au module randonner
+      if (viewName === 'accueil' || viewName === 'guides' || viewName === 'randonner') {
+        if (window.MapManagerInstance) {
+          window.MapManagerInstance.clearStandaloneGpxTrack();
+          if (viewName !== 'randonner' || !params.get('hike')) {
+            window.MapManagerInstance.deselectHike();
+          }
+        }
+        if (window.App && (viewName !== 'randonner' || !params.get('hike'))) {
+          window.App.deselectHike();
+        }
+      }
+
       if (viewName === 'accueil') {
         const portalActions = document.getElementById('portal-header-actions');
         if (portalActions) portalActions.classList.remove('hidden');

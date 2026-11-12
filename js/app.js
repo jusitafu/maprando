@@ -2230,7 +2230,7 @@ class AppController {
       ibpEl.innerHTML = `<span class="w-3.5 h-3.5 rounded text-[9px] font-black text-white flex items-center justify-center" style="background-color:${ibpInfo.color}">${ibpInfo.level}</span><span>${ibpVal}</span>`;
     }
 
-    const isCarteMode = window.location.hash.startsWith('#carte') || (window.portalRouter && window.portalRouter.currentView === 'carte');
+    const isCarteMode = window.location.hash.startsWith('#carte') || (window.PortalRouterInstance && window.PortalRouterInstance.currentView === 'carte') || (window.portalRouter && window.portalRouter.currentView === 'carte');
     const btnDl = document.getElementById('preview-btn-download');
     if (btnDl) {
       if (isCarteMode) {
@@ -5307,7 +5307,7 @@ class AppController {
       ibpEl.innerHTML = `<span class="w-3.5 h-3.5 rounded text-[9px] font-black text-white flex items-center justify-center" style="background-color:${ibpInfo.color}">${ibpInfo.level}</span><span>${ibpVal}</span>`;
     }
 
-    const isCarteMode = window.location.hash.startsWith('#carte') || (window.portalRouter && window.portalRouter.currentView === 'carte');
+    const isCarteMode = window.location.hash.startsWith('#carte') || (window.PortalRouterInstance && window.PortalRouterInstance.currentView === 'carte') || (window.portalRouter && window.portalRouter.currentView === 'carte');
     const btnDl = document.getElementById('preview-btn-download');
     if (btnDl) {
       if (isCarteMode) {
@@ -8384,7 +8384,7 @@ class AppController {
       ibpEl.innerHTML = `<span class="w-3.5 h-3.5 rounded text-[9px] font-black text-white flex items-center justify-center" style="background-color:${ibpInfo.color}">${ibpInfo.level}</span><span>${ibpVal}</span>`;
     }
 
-    const isCarteMode = window.location.hash.startsWith('#carte') || (window.portalRouter && window.portalRouter.currentView === 'carte');
+    const isCarteMode = window.location.hash.startsWith('#carte') || (window.PortalRouterInstance && window.PortalRouterInstance.currentView === 'carte') || (window.portalRouter && window.portalRouter.currentView === 'carte');
     const btnDl = document.getElementById('preview-btn-download');
     if (btnDl) {
       if (isCarteMode) {
