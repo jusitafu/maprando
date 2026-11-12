@@ -42,6 +42,9 @@ class ElevationProfile {
       this.canvas.addEventListener('mouseleave', () => this.handleMouseLeave(), { passive: true });
       this.canvas.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
       this.canvas.addEventListener('touchend', () => this.handleMouseLeave(), { passive: true });
+      this.canvas.addEventListener('click', () => {
+        if (window.App) window.App.isHikePinned = true;
+      });
     }
 
     return true;
@@ -244,18 +247,20 @@ class ElevationProfile {
     ctx.textAlign = 'center';
     ctx.fillText(`▲ Max ${peakPt.ele}m`, Math.min(width - 35, Math.max(50, peakX)), Math.max(12, peakY - 6));
 
-    // 6. Interactive Cursor Indicator
-    if (cursorDist !== null) {
+    // 6. Interactive Cursor Indicator (Synchronisé avec la carte)
+    if (cursorDist !== null && !isNaN(cursorDist)) {
       const closest = this.findClosestPointByDist(cursorDist);
-      if (closest) {
-        const cx = getX(closest.point.dist);
-        const cy = getY(closest.point.ele);
+      if (closest && closest.point) {
+        const ptDist = closest.point.dist !== undefined ? closest.point.dist : cursorDist;
+        const ptEle = closest.point.ele != null ? closest.point.ele : 0;
+        const cx = getX(ptDist);
+        const cy = getY(ptEle);
 
         // Vertical dashed guide line
         ctx.beginPath();
         ctx.setLineDash([3, 2]);
         ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
         ctx.moveTo(cx, padding.top);
         ctx.lineTo(cx, padding.top + chartH);
         ctx.stroke();
@@ -263,7 +268,7 @@ class ElevationProfile {
 
         // Animated Target Dot
         ctx.beginPath();
-        ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 5, 0, Math.PI * 2);
         ctx.fillStyle = '#ef4444';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
@@ -271,22 +276,24 @@ class ElevationProfile {
         ctx.stroke();
 
         // High-contrast Tooltip Pill
-        const tooltipText = `${closest.point.ele} m • ${closest.point.dist} km`;
-        ctx.font = 'bold 10px Inter, sans-serif';
+        const eleVal = closest.point.ele != null ? `${Math.round(closest.point.ele)} m` : '-- m';
+        const distVal = closest.point.dist != null ? `${closest.point.dist} km` : `${cursorDist.toFixed(1)} km`;
+        const tooltipText = `${eleVal} • ${distVal}`;
+        ctx.font = 'bold 11px Inter, system-ui, sans-serif';
         const textWidth = ctx.measureText(tooltipText).width;
         let tooltipX = cx + 8;
         if (tooltipX + textWidth + 8 > width) tooltipX = cx - textWidth - 12;
         let tooltipY = cy - 8;
-        if (tooltipY < padding.top + 12) tooltipY = padding.top + 12;
+        if (tooltipY < padding.top + 14) tooltipY = padding.top + 14;
 
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
         ctx.beginPath();
-        ctx.roundRect(tooltipX - 4, tooltipY - 12, textWidth + 8, 17, 4);
+        ctx.roundRect(tooltipX - 4, tooltipY - 14, textWidth + 10, 18, 4);
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'left';
-        ctx.fillText(tooltipText, tooltipX, tooltipY);
+        ctx.fillText(tooltipText, tooltipX + 1, tooltipY);
       }
     }
   }

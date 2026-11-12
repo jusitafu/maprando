@@ -1287,3 +1287,23 @@ path.bearing-preview-line {
   transform: translateY(-1px);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
 }
+
+/* Tooltip altitude curseur interactif sur la carte */
+.map-cursor-altitude-tooltip {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: #fbbf24 !important;
+  border: 1.5px solid #fbbf24 !important;
+  border-radius: 8px !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-weight: 900 !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  padding: 2px 7px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+}
+
+.map-cursor-altitude-tooltip::before {
+  border-top-color: #fbbf24 !important;
+}

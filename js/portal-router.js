@@ -498,6 +498,18 @@
       const btnMapManual = document.getElementById('btn-map-manual');
       const outdoorGearBar = document.getElementById('outdoor-gear-header-bar');
 
+      // Dans le module Carte & Outils : masquer strictement le bouton de téléchargement
+      const previewDlBtn = document.getElementById('preview-btn-download');
+      if (previewDlBtn) {
+        if (isFree) {
+          previewDlBtn.classList.add('hidden');
+          previewDlBtn.style.setProperty('display', 'none', 'important');
+        } else {
+          previewDlBtn.classList.remove('hidden');
+          previewDlBtn.style.removeProperty('display');
+        }
+      }
+
       if (isFree) {
         // Supprimer la boîte "Sélection Rando" dans le module Cartes & Outils
         if (outdoorGearBar) {

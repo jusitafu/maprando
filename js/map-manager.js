@@ -2163,7 +2163,7 @@ class MapManager {
         }
       }
       if (e && e.latlng) {
-        const closest = this.findClosestTrackPoint(e.latlng, hike.points);
+        const closest = this.findClosestTrackPoint(e.latlng, hike.points, hike);
         if (closest) {
           this.setCursorPosition(closest.point);
           if (window.ElevationProfileInstance) {
@@ -2199,7 +2199,7 @@ class MapManager {
         window.App.showHikePreviewPanel(hike);
       }
       if (e && e.latlng) {
-        const closest = this.findClosestTrackPoint(e.latlng, hike.points);
+        const closest = this.findClosestTrackPoint(e.latlng, hike.points, hike);
         if (closest) {
           this.setCursorPosition(closest.point);
           if (window.ElevationProfileInstance) {
@@ -2396,7 +2396,7 @@ class MapManager {
 
 
 
-    setCursorPosition(point) {
+  setCursorPosition(point) {
     if (!this.map || !point) return;
     const lat = point.lat;
     const lon = point.lon !== undefined ? point.lon : point.lng;
@@ -2404,7 +2404,7 @@ class MapManager {
 
     if (!this.cursorMarker) {
       this.cursorMarker = L.circleMarker([lat, lon], {
-        radius: 7.5,
+        radius: 8,
         fillColor: '#ef4444',
         color: '#ffffff',
         weight: 3,
@@ -2417,27 +2417,46 @@ class MapManager {
         this.cursorMarker.addTo(this.map);
       }
     }
-  }
 
-  clearCursorPosition() {
-    if (this.cursorMarker && this.map && this.map.hasLayer(this.cursorMarker)) {
-      this.map.removeLayer(this.cursorMarker);
-      this.cursorMarker = null;
+    // Affichage permanent de l'altitude au point du curseur sur la carte
+    const ele = (point.ele != null && !isNaN(point.ele)) ? Math.round(point.ele) : null;
+    const tooltipText = ele != null ? `⛰️ ${ele} m` : null;
+
+    if (tooltipText) {
+      if (!this.cursorMarker.getTooltip()) {
+        this.cursorMarker.bindTooltip(tooltipText, {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -10],
+          className: 'map-cursor-altitude-tooltip'
+        }).openTooltip();
+      } else {
+        this.cursorMarker.setTooltipContent(tooltipText);
+        if (!this.cursorMarker.isTooltipOpen()) {
+          this.cursorMarker.openTooltip();
+        }
+      }
+    } else {
+      this.cursorMarker.unbindTooltip();
+    }
+
+    const hudEle = document.getElementById('map-hud-elevation-val');
+    if (hudEle && ele != null) {
+      hudEle.textContent = `${ele} m`;
     }
   }
 
-
-
   clearCursorPosition() {
-
     if (this.cursorMarker) {
-
-      this.cursorMarker.remove();
-
+      try {
+        if (this.map && this.map.hasLayer(this.cursorMarker)) {
+          this.map.removeLayer(this.cursorMarker);
+        } else if (typeof this.cursorMarker.remove === 'function') {
+          this.cursorMarker.remove();
+        }
+      } catch (e) {}
       this.cursorMarker = null;
-
     }
-
   }
 
 
@@ -6038,7 +6057,7 @@ class MapManager {
 
    * ========================================================================= */
 
-    findClosestTrackPoint(latlng, points) {
+    findClosestTrackPoint(latlng, points, hike = null) {
     if (!latlng || !points || points.length === 0) return null;
     const lat = latlng.lat;
     const lng = latlng.lng !== undefined ? latlng.lng : latlng.lon;
@@ -6057,9 +6076,14 @@ class MapManager {
         closestIdx = i;
       }
     }
+    let distVal = closestPt.dist;
+    if (distVal === undefined) {
+      const totalKm = (hike && (hike.distanceKm || hike.distance)) ? parseFloat(hike.distanceKm || hike.distance) : (points[points.length - 1]?.dist || 0);
+      distVal = totalKm > 0 ? Math.round(((closestIdx / Math.max(1, points.length - 1)) * totalKm) * 100) / 100 : 0;
+    }
     return {
       point: closestPt,
-      dist: closestPt.dist !== undefined ? closestPt.dist : (closestIdx / Math.max(1, points.length - 1)) * (points.distanceKm || 0),
+      dist: distVal,
       index: closestIdx
     };
   }
