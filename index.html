@@ -79,7 +79,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="js/leaflet.polylineoffset.js?v=144"></script>
+  <script src="js/leaflet.polylineoffset.js?v=145"></script>
 
 
 
@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=144">
+  <link rel="stylesheet" href="css/styles.css?v=145">
 
 </head>
 
@@ -1426,49 +1426,92 @@
           </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
-          <a href="Mode_d_emploi_RandoFinder.pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-extrabold transition flex items-center gap-1.5">
-            <span>📥</span> <span>Version PDF</span>
+          <a href="Mode_d_emploi_RandoFinder.pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-extrabold transition flex items-center gap-1.5 shadow-md hover:border-emerald-400">
+            <span>📥</span> <span>mode d'emploi détaillé (PDF)</span>
           </a>
-          <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-base font-bold cursor-pointer">
+          <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-base font-bold cursor-pointer transition">
             ✕
           </button>
         </div>
       </div>
 
       <!-- Bannière Ambiance & Navigation -->
-      <div class="p-3 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
-        <div class="flex items-center gap-2 text-slate-300">
-          <span class="text-xl">🎶</span>
-          <span><strong>Musique d'ambiance :</strong> activez ou coupez la bande sonore relaxante sur la page d'accueil via le bouton haut-parleur dans le bandeau supérieur (icône sobre : barrée = éteinte, pas barrée = en lecture) (pause automatique lors de l'accès à la carte).</span>
+      <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs">
+        <div class="flex items-center gap-2.5 text-slate-300">
+          <span class="text-xl">🎵</span>
+          <span><strong>Musique d'ambiance relaxante :</strong> activez ou coupez la piste sonore apaisante sur la page d'accueil via le bouton haut-parleur dans le bandeau supérieur (icône sobre : barrée = éteinte, sans barre = en lecture sonore). La musique se met automatiquement en pause dès que vous quittez l'accueil pour accéder aux cartes.</span>
         </div>
       </div>
 
-      <!-- Sommaire rapide -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        <a href="#me-section-cartes" onclick="document.getElementById('me-section-cartes').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40 flex items-center gap-3 transition cursor-pointer">
-          <span class="text-2xl">🧭</span>
+      <!-- Sommaire rapide des modules -->
+      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+        <a href="#me-section-accueil" onclick="document.getElementById('me-section-accueil').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 flex items-center gap-2.5 transition cursor-pointer">
+          <span class="text-xl">🏠</span>
           <div>
-            <div class="text-xs font-black text-emerald-300 uppercase">Module 1 &bull; Accès Libre</div>
-            <div class="text-sm font-extrabold text-white">Cartes &amp; Outils</div>
+            <div class="text-[10px] font-black text-slate-400 uppercase">Portail</div>
+            <div class="text-xs font-extrabold text-white">Écran d'Accueil</div>
           </div>
         </a>
-        <a href="#me-section-randonner" onclick="document.getElementById('me-section-randonner').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-500/40 flex items-center gap-3 transition cursor-pointer">
-          <span class="text-2xl">🥾</span>
+        <a href="#me-section-cartes" onclick="document.getElementById('me-section-cartes').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40 flex items-center gap-2.5 transition cursor-pointer">
+          <span class="text-xl">🧭</span>
           <div>
-            <div class="text-xs font-black text-blue-300 uppercase">Module 2 &bull; Catalogue GPX</div>
-            <div class="text-sm font-extrabold text-white">Randonner (GPX &amp; Gestion)</div>
+            <div class="text-[10px] font-black text-emerald-300 uppercase">Module 1 • Accès Libre</div>
+            <div class="text-xs font-extrabold text-white">Cartes &amp; Outils</div>
           </div>
         </a>
-        <a href="#me-section-guides" onclick="document.getElementById('me-section-guides').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-amber-950/50 hover:bg-amber-900/60 border border-amber-500/40 flex items-center gap-3 transition cursor-pointer">
-          <span class="text-2xl">📚</span>
+        <a href="#me-section-randonner" onclick="document.getElementById('me-section-randonner').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-500/40 flex items-center gap-2.5 transition cursor-pointer">
+          <span class="text-xl">🥾</span>
           <div>
-            <div class="text-xs font-black text-amber-300 uppercase">Module 3 &bull; Fiches Techniques</div>
-            <div class="text-sm font-extrabold text-white">Guides &amp; Savoirs</div>
+            <div class="text-[10px] font-black text-blue-300 uppercase">Module 2 • Catalogue GPX</div>
+            <div class="text-xs font-extrabold text-white">Randonner (Club)</div>
+          </div>
+        </a>
+        <a href="#me-section-guides" onclick="document.getElementById('me-section-guides').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-amber-950/50 hover:bg-amber-900/60 border border-amber-500/40 flex items-center gap-2.5 transition cursor-pointer">
+          <span class="text-xl">📚</span>
+          <div>
+            <div class="text-[10px] font-black text-amber-300 uppercase">Module 3 • Savoirs</div>
+            <div class="text-xs font-extrabold text-white">Guides &amp; Fiches</div>
           </div>
         </a>
       </div>
 
       <div class="space-y-6 text-xs sm:text-sm leading-relaxed">
+
+        <!-- =============================================================== -->
+        <!-- SECTION 0 : ÉCRAN D'ACCUEIL                                     -->
+        <!-- =============================================================== -->
+        <section id="me-section-accueil" class="p-5 sm:p-6 rounded-3xl bg-slate-950/80 border-2 border-slate-700/80 space-y-4">
+          <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+            <span class="w-10 h-10 rounded-2xl bg-slate-800 text-slate-200 border border-slate-700 flex items-center justify-center text-xl font-bold">🏠</span>
+            <div>
+              <h4 class="text-base sm:text-lg font-black text-white">Écran d'Accueil / Portail Général</h4>
+              <p class="text-xs text-slate-400">Point d'entrée principal vers l'ensemble des modules, des alertes de sécurité et des réglages sonores.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="font-extrabold text-slate-200 flex items-center gap-1.5"><span>🧭</span> Éléments Visuels du Bandeau Supérieur</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Logo &amp; Titre Map &amp; Rando :</strong> identification claire de la plateforme cartographique officielle du club.</li>
+                <li><strong>Bouton Musique d'ambiance 🎵 :</strong> active/coupe une bande originale relaxante au piano. Icône sobre et élégante : barrée quand le son est coupé, nette sans barre quand la musique joue.</li>
+                <li><strong>Bouton « Mode d'emploi » 📖 :</strong> ouvre instantanément cette documentation détaillée interactive.</li>
+                <li><strong>Bouton « Mentions Légales &amp; CGU » ⚖️ :</strong> conditions d'utilisation, sécurité en montagne, respect des propriétés privées, licences officielles IGN / Swisstopo / BKG et protection des données.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="font-extrabold text-slate-200 flex items-center gap-1.5"><span>🚨</span> Bannières d'Alerte &amp; Accès aux 3 Espaces</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Alerte Sécurité Montagne :</strong> rappels essentiels pour la randonnée (météo, équipement 3 couches, autonomie, numéro d'urgence européen <code>112</code> et SMS sourds/malentendants/zones de faible couverture <code>114</code>).</li>
+                <li><strong>Carte 1 « Cartes &amp; Outils » :</strong> accès direct <em>gratuit et libre</em> à la cartographie topographique mondiale haute définition, à l'étalonnage d'écran, aux outils de mesure d'azimut et à l'impression grand format.</li>
+                <li><strong>Carte 2 « Randonner (le module club de rando) » :</strong> espace authentifié réservé au club pour rechercher, filtrer, analyser, télécharger les parcours GPX et exporter les fiches topos PDF.</li>
+                <li><strong>Carte 3 « Guides &amp; Savoirs » :</strong> fiches techniques approfondies (GNSS, LiDAR HD, IBP Index, check-list, balises satellites) et sauvegarde locale/cloud.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         <!-- =============================================================== -->
         <!-- MODULE 1 : CARTES & OUTILS                                      -->
         <!-- =============================================================== -->
@@ -1477,14 +1520,14 @@
             <span class="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-xl font-bold">🧭</span>
             <div>
               <h4 class="text-base sm:text-lg font-black text-white">1. Module « Cartes &amp; Outils » (Accès Libre Pleine Page)</h4>
-              <p class="text-xs text-emerald-300">Cartographie topographique mondiale, étalonnage d'écran, réseau GR®, mesures et impression PDF haute définition.</p>
+              <p class="text-xs text-emerald-300">Cartographie topographique mondiale, étalonnage d'écran, réseau GR®, mesures de cap et impression PDF haute définition.</p>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🗺️</span> Fonds de Carte Nationaux &amp; Mondiaux (Bouton Calques en haut à droite)</div>
-              <p class="text-[11px] text-emerald-200/90 mb-1">Fonds officiels présentés avec leurs <strong>drapeaux nationaux</strong> : 🇫🇷 France en 1<sup>er</sup>, puis par <strong>ordre alphabétique</strong> (🇩🇪, 🇦🇹, 🇧🇪, 🇪🇸, 🇮🇹, 🇱🇺, 🇳🇴, 🇨🇭), suivis des fonds mondiaux et satellites.</p>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🗺️</span> Cartothèque &amp; Fonds Officiels (Bouton Calques 🥞)</div>
+              <p class="text-[11px] text-emerald-200/90 mb-1">Fonds présentés avec leurs <strong>drapeaux nationaux</strong> : 🇫🇷 France en 1<sup>er</sup>, puis par <strong>ordre alphabétique</strong> (🇩🇪, 🇦🇹, 🇧🇪, 🇪🇸, 🇮🇹, 🇱🇺, 🇳🇴, 🇨🇭), suivis des fonds mondiaux et satellites.</p>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>🇫🇷 France – IGN TOP 25 &amp; Plan v2 :</strong> carte officielle de randonnée IGN au 1:25 000 (SCAN 25) avec courbes de niveau, sentiers balisés, rochers, limites des feuilles papier avec année de dernière édition et carroyage kilométrique UTM universel.</li>
                 <li><strong>🇫🇷 France – Carte des GR® (Fond épuré) :</strong> fond topographique clair avec réseau national des GR®, GRP® et PR, liste déroulante et filtrage par couleur.</li>
@@ -1496,7 +1539,7 @@
                 <li><strong>🇱🇺 Luxembourg – ACT Topo 1:20 000 :</strong> cartographie officielle du Grand-Duché (Mullerthal, sentiers transfrontaliers).</li>
                 <li><strong>🇳🇴 Norvège – Kartverket Topo :</strong> cartographie officielle d'État de référence pour les treks nordiques (fjords, Lofoten).</li>
                 <li><strong>🇨🇭 Suisse – Swisstopo 1:25 000 :</strong> la référence mondiale des cartes fédérales suisses en Open Data officiel.</li>
-                <li><strong>🌊 Carte spéciale IGN 89035 – Calanques (1:15 000) :</strong> détection automatique du Parc National des Calanques (Marseille, Cassis). Une alerte discrète vous propose de basculer en 1 clic vers cette échelle ultra-détaillée (1:15 000), avec affichage de l'emprise officielle en <strong>pointillés Bordeaux</strong> (distincts des contours TOP 25) et <strong>bouton croix ✕ sur le bandeau IGN 89035</strong> pour revenir instantanément à la carte TOP 25 Standard.</li>
+                <li><strong>🌊 Carte spéciale IGN 89035 – Calanques (1:15 000) :</strong> détection automatique du Parc National des Calanques. Une alerte discrète vous propose de basculer en 1 clic vers cette échelle ultra-détaillée (1:15 000), avec affichage de l'emprise officielle en <strong>pointillés Bordeaux</strong> et <strong>bouton croix ✕ sur le bandeau IGN 89035</strong> pour revenir instantanément à la carte TOP 25 Standard.</li>
                 <li><strong>🔄 Bascule automatique intelligente :</strong> lors d'une recherche de lieu, de la sélection d'une randonnée ou du déplacement de la carte d'un pays à l'autre, Map &amp; Rando bascule automatiquement sur la carte de randonnée officielle du pays correspondant.</li>
                 <li><strong>🌍 Couverture Mondiale :</strong> OpenTopoMap (relief mondial avec courbes de niveau) &amp; OpenStreetMap France (sentiers).</li>
                 <li><strong>🛰️ Satellite HD :</strong> Esri World Imagery mondial &amp; IGN Orthophotos HR France avec <strong>date de prise de vue automatique</strong>.</li>
@@ -1504,31 +1547,39 @@
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📐</span> Cartes IGN TOP 25 Dernière Édition &amp; Carroyage UTM</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📏</span> Échelle Saisissable, « 1 cm vrai », Altitude &amp; Coordonnées</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Limites des cartes papier IGN TOP 25 (dernière édition) :</strong> en cochant cette option dans le sélecteur de calques, la carte affiche les contours exacts des feuilles papier IGN TOP 25 avec <strong>mention du numéro de référence officiel</strong> (ex. <code>3245 ET</code>, <code>3346 OT</code>), du titre de la feuille et de <strong>l'année de dernière édition</strong> (ex. <code>Éd. 2023</code>).</li>
-                <li><strong>Carroyage UTM kilométrique (1 km × 1 km) :</strong> grille universelle WGS84 (fuseaux UTM 30T, 31T, 32T et monde entier) disponible sur <strong>tous les fonds de carte</strong> dès le niveau de zoom 12, avec coordonnées kilométriques bleues affichées sur les bords de l'écran.</li>
-                <li><strong>Recherche universelle (barre en haut à gauche) :</strong> cherchez un lieu, un sommet, une adresse, un <strong>GR par numéro</strong> (ex. <code>GR 20</code>, <code>GR 34</code>) ou un <strong>chemin réputé</strong> (<code>Francigena</code>, <code>West Highland Way</code>, <code>Stevenson</code>) pour l'afficher en surbrillance clignotante avec son nom sur le tracé.</li>
-              </ul>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📏</span> Échelle Dynamique, « 1 cm vrai », Altitude &amp; Coordonnées</div>
-              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Échelle saisissable (en bas à gauche) :</strong> tapez directement <code>25000</code> ou <code>50000</code> dans la case <code>Échelle ~ 1 :</code> et validez par Entrée.</li>
+                <li><strong>Échelle saisissable (en bas à gauche) :</strong> saisissez n'importe quel format courant : <code>1/25000</code>, <code>1/25 000</code>, <code>1:25000</code>, <code>25000</code>, <code>25 000</code> ou <code>25k</code> dans la case <code>Échelle ~ 1 :</code> et appuyez sur Entrée. Le moteur ajuste le zoom à la précision chirurgicale sans à-coups ni saut de palier.</li>
                 <li><strong>Bouton « 📏 1 cm vrai » :</strong> étalonnez votre écran à l'aide d'une règle physique graduée pour qu'à l'échelle <code>1 : 25 000</code>, <strong>1 centimètre mesuré sur votre écran représente exactement 250 mètres sur le terrain</strong> (comme sur une carte papier IGN TOP 25).</li>
                 <li><strong>Altitude temps réel (⛰️) &amp; Détection France (LiDAR HD) :</strong> en France, affiche sous le curseur l'altitude exacte issue du modèle numérique haute précision <strong>IGN LiDAR HD / RGE Alti®</strong> ainsi que le nom de la commune. Hors des frontières françaises, l'indicateur d'altitude est automatiquement masqué pour garantir une fiabilité stricte des données affichées.</li>
-                <li><strong>Coordonnées GPS WGS84 &amp; UTM :</strong> affichées en direct en bas à gauche ; cliquez sur le bandeau pour les copier dans le presse-papier.</li>
+                <li><strong>Coordonnées GPS WGS84 &amp; UTM (au centre du bandeau) :</strong> affichez en permanence les coordonnées géographiques (degrés décimaux) et la projection kilométrique UTM (fuseau, Easting, Northing). Cliquez sur le bandeau pour les copier dans le presse-papier.</li>
+                <li><strong>Recherche universelle (en haut à gauche) :</strong> cherchez un lieu, un sommet, une adresse, un <strong>GR par numéro</strong> (ex. <code>GR 20</code>, <code>GR 34</code>) ou un <strong>chemin réputé</strong> (<code>Francigena</code>, <code>Stevenson</code>) pour l'afficher en surbrillance clignotante avec son nom sur le tracé.</li>
+                <li><strong>Limites des cartes papier IGN TOP 25 :</strong> contours bleus avec numéro de coupure (ex. <code>3245 ET</code>), titre et <strong>année de dernière édition</strong> (ex. <code>Éd. 2023</code>).</li>
+                <li><strong>Carroyage UTM kilométrique (1 km × 1 km) :</strong> grille universelle WGS84 disponible sur tous les fonds de carte dès le zoom 12, avec coordonnées kilométriques en périphérie de carte.</li>
               </ul>
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🖨️</span> Cap (Azimut), Mesure, GPX Libre &amp; Impression d'une Zone</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📈</span> Profil Altimétrique Interactif &amp; Synchronisé (Trace ↔ Profil)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>🧭 Outil Cap (Azimut) :</strong> cliquez sur <em>Cap</em> puis cliquez un Point A (départ) et un Point B (cible) sur la carte (sans aucun changement intempestif de zoom) pour obtenir le <strong>cap géographique Nord Vrai (0°–360°)</strong>, le cap retour, le point cardinal et la distance.</li>
-                <li><strong>📏 Outil Mesurer :</strong> cliquez plusieurs points successifs pour mesurer la distance totale d'un itinéraire, la longueur et le cap du dernier tronçon.</li>
-                <li><strong>📂 Charger une trace GPX :</strong> bouton orange en haut permettant d'afficher librement un fichier <code>.gpx</code> depuis votre PC avec calcul immédiat de sa distance et de son D+.</li>
-                <li><strong>🖨️ Imprimer une zone (PDF A4 / A3 Haute Définition) :</strong> cliquez 2 coins opposés sur la carte pour générer un extrait PDF à l'échelle exacte (ex. <code>1:25 000</code>), sans chevauchement d'étiquettes, avec carroyage UTM kilométrique et <strong>mention automatique de la référence et de l'année d'édition de la carte IGN TOP 25</strong> dans le cartouche inférieur.</li>
+                <li><strong>Réciprocité complète et bidirectionnelle :</strong>
+                  <ul class="list-disc list-inside pl-3 mt-1 space-y-0.5 text-slate-300">
+                    <li>Déplacement sur le profil altimétrique : un repère rouge mobile se déplace en temps réel sur la trace cartographique avec affichage de l'altitude au point exact.</li>
+                    <li>Déplacement sur la trace de la carte : le curseur et la valeur d'altitude s'animent instantanément en miroir sur le graphique altimétrique.</li>
+                  </ul>
+                </li>
+                <li><strong>Maintien au clic :</strong> cliquez sur la trace pour maintenir le profil altimétrique épinglé à l'écran, et fermez-le à tout moment d'un clic sur la croix ✕.</li>
+                <li><strong>Réinitialisation automatique (Reset) :</strong> chaque ouverture du module Randonner repart d'une carte vierge de toute trace antérieure pour une clarté optimale.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📦</span> Gestionnaire Multi-traces GPX (jusqu'à 3 parcours) &amp; Impression</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Boîte flottante « TRACES GPX (X/3) » :</strong> chargez jusqu'à 3 fichiers GPX en glisser-déposer. Chaque trace dispose d'une pastille de couleur personnalisable (palette de 6 teintes contrastées), de sa distance, de son dénivelé D+ et de son <strong>Indice IBP Index officiel</strong>.</li>
+                <li><strong>Recentrage &amp; Suppression individuelle :</strong> bouton cible 🎯 pour centrer la carte sur une trace, et <strong>bouton croix ✕ en regard de chaque trace</strong> pour la retirer individuellement sans effacer les autres.</li>
+                <li><strong>Mesure de Cap (Azimut) &amp; Distance :</strong> cliquez sur l'outil Règle 🧭 puis sur deux points de la carte pour obtenir l'azimut boussole (en degrés °) et la distance exacte en mètres/kilomètres.</li>
+                <li><strong>Imprimer une zone (PDF A4 / A3 Haute Définition) :</strong> cliquez 2 coins opposés pour générer un extrait PDF à l'échelle exacte (ex. <code>1:25 000</code>), avec carroyage UTM kilométrique et valeurs en périphérie, déclinaison magnétique et <strong>mention automatique de la référence et de l'année d'édition de la carte IGN TOP 25</strong> dans le cartouche inférieur.</li>
               </ul>
             </div>
           </div>
@@ -1556,7 +1607,7 @@
                 <li><strong>Point de départ (Référence) :</strong> choisissez une ville, un sommet ou une adresse dans la barre de recherche, utilisez le bouton <strong>📍 Ma position GPS</strong>, ou <strong>cliquez directement sur un endroit de la carte</strong>.</li>
                 <li><strong>Curseur de rayon (10 km ➔ Monde entier 🌍) :</strong> filtre instantanément les randonnées situées dans le rayon choisi autour du point de référence.</li>
                 <li><strong>Tableau interactif triable :</strong> cliquez sur n'importe quel en-tête de colonne pour trier par <em>Proximité</em>, <em>Nom &amp; Notes</em>, <em>Longueur</em>, <em>Dénivelé D+</em>, <strong>IBP Index (Niveaux 1 à 5 FFRandonnée)</strong>, <em>Dernière rando (JJ/MM/AA)</em> ou <strong>👤 Ajoutée par (nom de l'utilisateur ayant chargé la trace)</strong>.</li>
-                <li><strong>Aperçu, Profil Altimétrique &amp; Téléchargement :</strong> survolez ou cliquez sur une ligne pour afficher son tracé sur la carte, parcourir son profil altimétrique interactif et télécharger soit le <strong>fichier .GPX</strong>, soit la <strong>Fiche Topo PDF complète</strong>.</li>
+                <li><strong>Aperçu, Profil Altimétrique &amp; Téléchargement :</strong> survolez ou cliquez sur une ligne pour afficher son tracé sur la carte, parcourir son profil altimétrique interactif synchronisé bidirectionnel et télécharger soit le <strong>fichier .GPX</strong>, soit la <strong>Fiche Topo PDF complète</strong>.</li>
               </ul>
             </div>
 
@@ -1564,8 +1615,8 @@
               <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>📤</span> Chargement de GPX, Nom de l'Utilisateur &amp; Gestion</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>👤 Nom de l'utilisateur au chargement d'un GPX :</strong> dans l'onglet <em>« Charger une randonnée »</em>, renseignez ou confirmez le <strong>nom de l'utilisateur qui charge la trace GPX</strong> (pré-rempli automatiquement avec votre identifiant). Ce nom est enregistré avec la trace et <strong>figure directement dans la colonne « Ajoutée par » du tableau des randonnées</strong>.</li>
-                <li><strong>Analyse automatique &amp; Anti-doublons :</strong> glissez-déposez un ou plusieurs fichiers <code>.gpx</code> (ou collez le texte XML) : l'application calcule la distance, le dénivelé D+ lissé, l'<strong>Indice IBP Index</strong>, extrait la date de la trace et vérifie l'absence de doublon.</li>
-                <li><strong>✏️ Modification &amp; 📁 Gestion :</strong> modifiez à tout moment le nom d'une randonnée, son IBP Index, sa date de dernière sortie, le <strong>nom de l'utilisateur (Ajoutée par)</strong> ou ses notes pratiques, et utilisez le détecteur automatique de doublons.</li>
+                <li><strong>Analyse automatique &amp; Anti-doublons :</strong> glissez-déposez un ou plusieurs fichiers <code>.gpx</code> (ou collez le texte XML) : l'application calcule la distance, le dénivelé D+ lissé, l'<strong>Indice IBP Index officiel</strong>, extrait la date de la trace et vérifie l'absence de doublon.</li>
+                <li><strong>✏️ Modification &amp; 🗑️ Gestion :</strong> modifiez à tout moment le nom d'une randonnée, son IBP Index, sa date de dernière sortie, le <strong>nom de l'utilisateur (Ajoutée par)</strong> ou ses notes pratiques, et utilisez le détecteur automatique de doublons.</li>
               </ul>
             </div>
           </div>
@@ -1594,14 +1645,14 @@
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
               <div class="font-extrabold text-indigo-300 mb-1 flex items-center gap-1.5"><span>📊</span> Fiche 3 : IBP Index &amp; Effort Physique</div>
-              <p>Algorithme IBP Index officiel, grille de lecture croisant le score IBP avec les 5 niveaux de condition physique et limites face à la technicité du terrain.</p>
+              <p>Algorithme IBP Index officiel FFRandonnée, grille de lecture croisant le score IBP avec les 5 niveaux de condition physique et limites face à la technicité du terrain.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
               <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5"><span>✅</span> Fiche 4 : Check-list Départ Randonnée</div>
               <p>Toutes les vérifications de J-1 à H-0 (Météo, Carte IGN, Boussole, Powerbank, Fond de sac, 3 Couches, Eau, Fix GPS) avec liens directs vers chaque équipement sur Amazon.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 sm:col-span-2 lg:col-span-2">
-              <div class="font-extrabold text-rose-300 mb-1 flex items-center gap-1.5"><span>🚨</span> Fiche 5 : Secours en Randonnée &bull; Zone Blanche &amp; SOS Satellite</div>
+              <div class="font-extrabold text-rose-300 mb-1 flex items-center gap-1.5"><span>🚨</span> Fiche 5 : Secours en Randonnée • Zone Blanche &amp; SOS Satellite</div>
               <p>Procédures d'urgence en montagne (112 en itinérance multi-opérateurs sans réseau propre, SMS 114 pour signal très faible), balises de détresse autonomes (Garmin inReach, ACR Bivy Stick via réseau Iridium) et nouveaux smartphones avec SOS satellite intégré (Apple iPhone 14/15/16 et Google Pixel / Android).</p>
             </div>
           </div>
@@ -1977,7 +2028,7 @@
 
             <a id="btn-menu-manual" href="Mode_d_emploi_RandoFinder.pdf" target="_blank" onclick="App.closeUserDropdown();" class="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 flex items-center gap-2 text-slate-700">
 
-              <span>📖</span> <span>Mode d'emploi officiel (PDF)</span>
+              <span>📖</span> <span>mode d'emploi détaillé (PDF)</span>
 
             </a>
 
@@ -2178,7 +2229,7 @@
 
               <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
 
-                <img src="favicon-32x32.png?v=144" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
+                <img src="favicon-32x32.png?v=145" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
 
               </div>
 
@@ -2426,8 +2477,8 @@
               <input type="text" id="map-hud-scale-input" 
                 value="25 000" 
                 class="bg-slate-800 text-emerald-300 font-mono font-black px-2 py-1 rounded-xl border border-slate-600 hover:border-emerald-400 focus:border-emerald-400 focus:bg-slate-950 focus:text-white focus:outline-none w-20 sm:w-24 text-center text-xs sm:text-sm transition-all cursor-text shadow-inner"
-                title="Saisissez la valeur après 1 : (ex : 25000) et appuyez sur Entrée pour ajuster la carte"
-                placeholder="25000">
+                title="Saisissez 1/25000, 25000 ou une autre échelle et appuyez sur Entrée pour ajuster la carte"
+                placeholder="1/25000">
               <button id="btn-open-screen-calib" type="button" class="ml-1 px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 hover:text-emerald-300 text-slate-300 border border-slate-600 text-xs font-bold transition cursor-pointer flex items-center gap-1" title="Étalonner mon écran pour avoir 1 cm vrai sur la vitre (Règle physique)">
                 <span>📏</span>
                 <span class="hidden sm:inline font-bold">1 cm vrai</span>
@@ -2472,7 +2523,7 @@
 
               class="hidden 2xl:inline-flex map-floating-tool-btn px-5 py-3 bg-white/95 hover:bg-white text-slate-900 hover:text-emerald-700 rounded-2xl shadow-xl hover:shadow-2xl border-2 border-slate-400 text-sm sm:text-base font-black transition-all flex items-center gap-2.5 cursor-pointer backdrop-blur-md active:scale-95 group" 
 
-              title="Consulter ou télécharger le mode d'emploi officiel complet en PDF">
+              title="Consulter ou télécharger le mode d'emploi détaillé (PDF)">
 
               <span class="tool-icon text-lg sm:text-xl group-hover:scale-110 transition-transform">📖</span>
 
@@ -3431,7 +3482,7 @@
 
               <a href="Mode_d_emploi_RandoFinder.pdf" target="_blank" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-sm">
 
-                <span>📖</span> Mode d'emploi (PDF)
+                <span>📖</span> mode d'emploi détaillé (PDF)
 
               </a>
 
@@ -7028,27 +7079,27 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <!-- Scripts -->
 
-  <script src="js/config.js?v=144"></script>
+  <script src="js/config.js?v=145"></script>
 
-  <script src="js/auth-manager.js?v=144"></script>
+  <script src="js/auth-manager.js?v=145"></script>
 
-  <script src="js/gpx-parser.js?v=144"></script>
+  <script src="js/gpx-parser.js?v=145"></script>
 
-  <script src="js/sample-data.js?v=144"></script>
+  <script src="js/sample-data.js?v=145"></script>
 
-  <script src="js/storage.js?v=144"></script>
+  <script src="js/storage.js?v=145"></script>
 
-  <script src="js/elevation-profile.js?v=144"></script>
+  <script src="js/elevation-profile.js?v=145"></script>
 
-  <script src="js/screen-calib-manager.js?v=144"></script>
-  <script src="js/ign-top25-sheets.js?v=144"></script>
-  <script src="js/map-manager.js?v=144"></script>
+  <script src="js/screen-calib-manager.js?v=145"></script>
+  <script src="js/ign-top25-sheets.js?v=145"></script>
+  <script src="js/map-manager.js?v=145"></script>
 
-  <script src="js/pdf-exporter.js?v=144"></script>
-  <script src="js/gr-manager.js?v=144"></script>
+  <script src="js/pdf-exporter.js?v=145"></script>
+  <script src="js/gr-manager.js?v=145"></script>
 
-  <script src="js/portal-router.js?v=144"></script>
-    <script src="js/app.js?v=144"></script>
+  <script src="js/portal-router.js?v=145"></script>
+    <script src="js/app.js?v=145"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->

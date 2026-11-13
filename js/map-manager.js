@@ -618,7 +618,7 @@ class MapManager {
 
       zoomControl: true,
 
-      zoomSnap: 0.25,
+      zoomSnap: 0,
 
       zoomDelta: 0.25,
 
@@ -3460,33 +3460,39 @@ class MapManager {
    */
 
   applyScaleFromInput() {
-
     const scaleInput = document.getElementById('map-hud-scale-input');
-
     if (!scaleInput || !this.map) return;
-
     let raw = (scaleInput.value || '').trim();
-
-    if (raw.includes(':')) {
-
-      raw = raw.split(':')[1];
-
-    }
-
-    const cleaned = raw.replace(/\s+/g, '').replace(/\./g, '').replace(/,/g, '');
-
-    const val = parseInt(cleaned, 10);
-
-    if (isNaN(val) || val < 500 || val > 50000000) {
-
+    if (!raw) {
       this.updateMapHud();
-
       return;
-
     }
 
-    this.setScaleRatio(val);
+    // Accepte tous les formats : "1/25000", "1/25 000", "1 / 25000", "1:25000", "1 : 25 000", "25000", "25 000", "25k"
+    if (raw.includes('/')) {
+      const parts = raw.split('/');
+      raw = parts[parts.length - 1];
+    } else if (raw.includes(':')) {
+      const parts = raw.split(':');
+      raw = parts[parts.length - 1];
+    }
+    raw = raw.trim();
 
+    if (/k$/i.test(raw)) {
+      const numPart = raw.replace(/k$/i, '').replace(',', '.').trim();
+      const kVal = parseFloat(numPart);
+      if (!isNaN(kVal)) {
+        raw = String(Math.round(kVal * 1000));
+      }
+    }
+
+    const cleaned = raw.replace(/[\s\u00A0\u202F\.]+/g, '').replace(/,/g, '');
+    const val = parseInt(cleaned, 10);
+    if (isNaN(val) || val < 500 || val > 50000000) {
+      this.updateMapHud();
+      return;
+    }
+    this.setScaleRatio(val);
   }
 
 
@@ -3526,7 +3532,7 @@ class MapManager {
 
 
     this._isProgrammaticZoom = true;
-
+    if (this.map.options) { this.map.options.zoomSnap = 0; }
     this.map.setZoom(clampedZoom, { animate: false });
 
     this.updateMapHud();
