@@ -79,7 +79,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="js/leaflet.polylineoffset.js?v=145"></script>
+  <script src="js/leaflet.polylineoffset.js?v=146"></script>
 
 
 
@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=145">
+  <link rel="stylesheet" href="css/styles.css?v=146">
 
 </head>
 
@@ -1414,6 +1414,9 @@
   <!-- ========================================================================= -->
   <!-- MODAL : MODE D'EMPLOI DÉTAILLÉ (Cartes & Outils • Randonner • Guides)     -->
   <!-- ========================================================================= -->
+  <!-- ========================================================================= -->
+  <!-- MODAL : MODE D'EMPLOI DÉTAILLÉ (Cartes & Outils • Randonner • Guides)     -->
+  <!-- ========================================================================= -->
   <div id="modal-mode-emploi" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
     <div class="bg-slate-900 border-2 border-emerald-500/60 rounded-3xl max-w-5xl w-full p-5 sm:p-8 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto text-slate-200">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -1494,7 +1497,7 @@
               <div class="font-extrabold text-slate-200 flex items-center gap-1.5"><span>🧭</span> Éléments Visuels du Bandeau Supérieur</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>Logo &amp; Titre Map &amp; Rando :</strong> identification claire de la plateforme cartographique officielle du club.</li>
-                <li><strong>Bouton Musique d'ambiance 🎵 :</strong> active/coupe une bande originale relaxante au piano. Icône sobre et élégante : barrée quand le son est coupé, nette sans barre quand la musique joue.</li>
+                <li><strong>Bouton Musique d'ambiance 🎵 :</strong> active/coupe une bande originale relaxante au piano. Icône sobre et élégante : barrée quand le son est coupé, nette sans barre quand la musique joue. Pause automatique dès l'accès aux cartes.</li>
                 <li><strong>Bouton « Mode d'emploi » 📖 :</strong> ouvre instantanément cette documentation détaillée interactive.</li>
                 <li><strong>Bouton « Mentions Légales &amp; CGU » ⚖️ :</strong> conditions d'utilisation, sécurité en montagne, respect des propriétés privées, licences officielles IGN / Swisstopo / BKG et protection des données.</li>
               </ul>
@@ -1503,8 +1506,8 @@
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div class="font-extrabold text-slate-200 flex items-center gap-1.5"><span>🚨</span> Bannières d'Alerte &amp; Accès aux 3 Espaces</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Alerte Sécurité Montagne :</strong> rappels essentiels pour la randonnée (météo, équipement 3 couches, autonomie, numéro d'urgence européen <code>112</code> et SMS sourds/malentendants/zones de faible couverture <code>114</code>).</li>
-                <li><strong>Carte 1 « Cartes &amp; Outils » :</strong> accès direct <em>gratuit et libre</em> à la cartographie topographique mondiale haute définition, à l'étalonnage d'écran, aux outils de mesure d'azimut et à l'impression grand format.</li>
+                <li><strong>Alerte Sécurité Montagne :</strong> rappels essentiels pour la randonnée (météo, équipement 3 couches, autonomie, numéro d'urgence européen <code>112</code> et SMS <code>114</code> en cas de mauvaise couverture).</li>
+                <li><strong>Carte 1 « Cartes &amp; Outils » :</strong> accès direct <em>gratuit et libre</em> à la cartographie topographique mondiale haute définition, à l'étalonnage d'écran, aux outils de mesure et à l'impression grand format.</li>
                 <li><strong>Carte 2 « Randonner (le module club de rando) » :</strong> espace authentifié réservé au club pour rechercher, filtrer, analyser, télécharger les parcours GPX et exporter les fiches topos PDF.</li>
                 <li><strong>Carte 3 « Guides &amp; Savoirs » :</strong> fiches techniques approfondies (GNSS, LiDAR HD, IBP Index, check-list, balises satellites) et sauvegarde locale/cloud.</li>
               </ul>
@@ -1531,41 +1534,59 @@
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>🇫🇷 France – IGN TOP 25 &amp; Plan v2 :</strong> carte officielle de randonnée IGN au 1:25 000 (SCAN 25) avec courbes de niveau, sentiers balisés, rochers, limites des feuilles papier avec année de dernière édition et carroyage kilométrique UTM universel.</li>
                 <li><strong>🇫🇷 France – Carte des GR® (Fond épuré) :</strong> fond topographique clair avec réseau national des GR®, GRP® et PR, liste déroulante et filtrage par couleur.</li>
-                <li><strong>🇩🇪 Allemagne – BKG basemap.de Topo :</strong> cartographie officielle de précision de l'Agence fédérale de cartographie allemande (relief et sentiers).</li>
-                <li><strong>🇦🇹 Autriche – Topographie alpine &amp; Sentiers ÖAV :</strong> relief alpin haute précision (Tyrol, Tauern) combiné à tous les sentiers de randonnée balisés du Club Alpin Autrichien (Alpenverein).</li>
-                <li><strong>🇧🇪 Belgique – IGN CartoWeb 1:25 000 :</strong> cartographie topographique officielle de l'Institut Géographique National belge (Ardennes, Fagnes).</li>
-                <li><strong>🇪🇸 Espagne – IGN España MTN 1:25 000 :</strong> Mapa Topográfico Nacional officiel du CNIG (Pyrénées espagnoles, Picos de Europa, sierras).</li>
-                <li><strong>🇮🇹 Italie – Topographie &amp; Sentiers CAI :</strong> relief alpin complet et réseau de sentiers de randonnée officiels balisés du Club Alpino Italiano (Val d'Aoste, Dolomites, Piémont, Apennins).</li>
-                <li><strong>🇱🇺 Luxembourg – ACT Topo 1:20 000 :</strong> cartographie officielle du Grand-Duché (Mullerthal, sentiers transfrontaliers).</li>
-                <li><strong>🇳🇴 Norvège – Kartverket Topo :</strong> cartographie officielle d'État de référence pour les treks nordiques (fjords, Lofoten).</li>
+                <li><strong>🇩🇪 Allemagne – BKG basemap.de :</strong> cartographie officielle de précision de l'Agence fédérale allemande.</li>
+                <li><strong>🇦🇹 Autriche – Topographie alpine &amp; Sentiers ÖAV :</strong> relief alpin haute précision et sentiers du Club Alpin Autrichien.</li>
+                <li><strong>🇧🇪 Belgique – IGN CartoWeb 1:25 000 :</strong> cartographie officielle de l'IGN belge (Ardennes, Fagnes).</li>
+                <li><strong>🇪🇸 Espagne – IGN España MTN 1:25 000 :</strong> Mapa Topográfico Nacional officiel du CNIG (Pyrénées, Picos de Europa).</li>
+                <li><strong>🇮🇹 Italie – Topographie &amp; Sentiers CAI :</strong> relief et réseau officiel balisé du Club Alpino Italiano (Dolomites, Alpes).</li>
+                <li><strong>🇱🇺 Luxembourg – ACT Topo 1:20 000 :</strong> carte d'État du Grand-Duché (région du Mullerthal).</li>
+                <li><strong>🇳🇴 Norvège – Kartverket Topo :</strong> cartographie officielle d'État de référence pour les fjords et les îles Lofoten.</li>
                 <li><strong>🇨🇭 Suisse – Swisstopo 1:25 000 :</strong> la référence mondiale des cartes fédérales suisses en Open Data officiel.</li>
-                <li><strong>🌊 Carte spéciale IGN 89035 – Calanques (1:15 000) :</strong> détection automatique du Parc National des Calanques. Une alerte discrète vous propose de basculer en 1 clic vers cette échelle ultra-détaillée (1:15 000), avec affichage de l'emprise officielle en <strong>pointillés Bordeaux</strong> et <strong>bouton croix ✕ sur le bandeau IGN 89035</strong> pour revenir instantanément à la carte TOP 25 Standard.</li>
-                <li><strong>🔄 Bascule automatique intelligente :</strong> lors d'une recherche de lieu, de la sélection d'une randonnée ou du déplacement de la carte d'un pays à l'autre, Map &amp; Rando bascule automatiquement sur la carte de randonnée officielle du pays correspondant.</li>
-                <li><strong>🌍 Couverture Mondiale :</strong> OpenTopoMap (relief mondial avec courbes de niveau) &amp; OpenStreetMap France (sentiers).</li>
-                <li><strong>🛰️ Satellite HD :</strong> Esri World Imagery mondial &amp; IGN Orthophotos HR France avec <strong>date de prise de vue automatique</strong>.</li>
+                <li><strong>🌊 Carte spéciale IGN 89035 – Calanques (1:15 000) :</strong> détection automatique du Parc National des Calanques. Une alerte discrète propose de basculer en 1 clic vers cette échelle ultra-détaillée (1:15 000), avec affichage de l'emprise officielle en <strong>pointillés Bordeaux</strong> et <strong>bouton croix ✕ sur le bandeau IGN 89035</strong> pour revenir instantanément à la carte standard. Bouton dédié <strong>« Légende IGN 89035 »</strong> en bas à droite.</li>
+                <li><strong>🔄 Bascule automatique intelligente :</strong> bascule automatique sur la carte de randonnée officielle du pays survolé lors de vos déplacements ou recherches.</li>
+                <li><strong>🌍 Couverture Mondiale &amp; Satellites HD :</strong> OpenTopoMap, OpenStreetMap et imagerie satellite Esri / IGN avec <strong>date de prise de vue automatique</strong>.</li>
               </ul>
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📏</span> Échelle Saisissable, « 1 cm vrai », Altitude &amp; Coordonnées</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📏</span> Échelle Saisissable, « 1 cm vrai », Commune &amp; Altitude LiDAR HD</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Échelle saisissable (en bas à gauche) :</strong> saisissez n'importe quel format courant : <code>1/25000</code>, <code>1/25 000</code>, <code>1:25000</code>, <code>25000</code>, <code>25 000</code> ou <code>25k</code> dans la case <code>Échelle ~ 1 :</code> et appuyez sur Entrée. Le moteur ajuste le zoom à la précision chirurgicale sans à-coups ni saut de palier.</li>
-                <li><strong>Bouton « 📏 1 cm vrai » :</strong> étalonnez votre écran à l'aide d'une règle physique graduée pour qu'à l'échelle <code>1 : 25 000</code>, <strong>1 centimètre mesuré sur votre écran représente exactement 250 mètres sur le terrain</strong> (comme sur une carte papier IGN TOP 25).</li>
-                <li><strong>Altitude temps réel (⛰️) &amp; Détection France (LiDAR HD) :</strong> en France, affiche sous le curseur l'altitude exacte issue du modèle numérique haute précision <strong>IGN LiDAR HD / RGE Alti®</strong> ainsi que le nom de la commune. Hors des frontières françaises, l'indicateur d'altitude est automatiquement masqué pour garantir une fiabilité stricte des données affichées.</li>
-                <li><strong>Coordonnées GPS WGS84 &amp; UTM (au centre du bandeau) :</strong> affichez en permanence les coordonnées géographiques (degrés décimaux) et la projection kilométrique UTM (fuseau, Easting, Northing). Cliquez sur le bandeau pour les copier dans le presse-papier.</li>
-                <li><strong>Recherche universelle (en haut à gauche) :</strong> cherchez un lieu, un sommet, une adresse, un <strong>GR par numéro</strong> (ex. <code>GR 20</code>, <code>GR 34</code>) ou un <strong>chemin réputé</strong> (<code>Francigena</code>, <code>Stevenson</code>) pour l'afficher en surbrillance clignotante avec son nom sur le tracé.</li>
-                <li><strong>Limites des cartes papier IGN TOP 25 :</strong> contours bleus avec numéro de coupure (ex. <code>3245 ET</code>), titre et <strong>année de dernière édition</strong> (ex. <code>Éd. 2023</code>).</li>
-                <li><strong>Carroyage UTM kilométrique (1 km × 1 km) :</strong> grille universelle WGS84 disponible sur tous les fonds de carte dès le zoom 12, avec coordonnées kilométriques en périphérie de carte.</li>
+                <li><strong>Échelle saisissable (en bas à gauche) :</strong> saisissez n'importe quel format courant : <code>1/25000</code>, <code>1/25 000</code>, <code>1:25000</code>, <code>25000</code>, <code>25 000</code> ou <code>25k</code> dans la case <code>Échelle ~ 1 :</code> et appuyez sur Entrée. Le moteur ajuste le zoom à la précision chirurgicale sans à-coups (zoom continu <code>zoomSnap: 0</code>).</li>
+                <li><strong>Bouton « 📏 1 cm vrai » :</strong> étalonnez votre écran à l'aide d'une règle physique graduée pour qu'à l'échelle <code>1 : 25 000</code>, <strong>1 centimètre mesuré sur votre vitre représente exactement 250 mètres sur le terrain</strong>.</li>
+                <li><strong>Altitude temps réel (⛰️) issue d'IGN LiDAR HD :</strong> altitude de haute précision calculée par le modèle numérique de terrain 3D de l'IGN (résolution 50 cm).</li>
+                <li><strong>Commune au curseur (🏛️) :</strong> affiche en continu le nom de la ville ou commune survolée ainsi que son département (ex. <code>🏛️ Sanary-sur-Mer (83)</code>). Hors de France, l'indicateur d'altitude se masque automatiquement pour garantir une rigueur stricte.</li>
+                <li><strong>Coordonnées GPS WGS84 &amp; UTM :</strong> coordonnées en degrés décimaux et carroyage kilométrique UTM. Cliquez sur le bandeau pour tout copier dans le presse-papier.</li>
+                <li><strong>Limites des coupures papier IGN TOP 25 :</strong> contours bleus avec numéro officiel (ex. <code>3245 ET</code>), titre et <strong>année de dernière édition</strong> (ex. <code>Éd. 2023</code>).</li>
+                <li><strong>Carroyage UTM kilométrique (1 km × 1 km) :</strong> grille universelle WGS84 avec coordonnées kilométriques en périphérie d'écran.</li>
               </ul>
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📈</span> Profil Altimétrique Interactif &amp; Synchronisé (Trace ↔ Profil)</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🔍</span> Recherche Universelle &amp; Sentiers Clignotants (GR® &amp; Chemins)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Recherche de Lieux &amp; Sommets :</strong> tapez une ville, une adresse, un sommet, un col ou des coordonnées géographiques.</li>
+                <li><strong>Recherche de GR® par numéro :</strong> tapez <code>GR 20</code>, <code>GR 34</code>, <code>GR 5</code>, <code>GR 51</code> pour centrer la carte et surligner le parcours officiel.</li>
+                <li><strong>Recherche de sentiers réputés par leur nom :</strong> tapez <code>Chemin de Stevenson (GR 70)</code>, <code>Via Francigena</code>, <code>West Highland Way</code>, <code>Tour du Mont-Blanc</code> ou <code>Saint-Jacques-de-Compostelle</code>.</li>
+                <li><strong>✨ Affichage clignotant animé :</strong> le sentier trouvé s'affiche en <strong>surbrillance clignotante animée</strong> sur la carte pour une identification instantanée parmi le réseau cartographique.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🧭</span> Outils de Mesure : Cap (Azimut) &amp; Distance</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Outil Boussole (🧭 Cap) :</strong> cliquez deux points successifs sur la carte pour mesurer <strong>l'azimut boussole en degrés (0° à 360°) par rapport au Nord</strong> (ex. <code>Cap : 124° SE</code>) directement reportable sur votre boussole de terrain, ainsi que la distance exacte en mètres/km.</li>
+                <li><strong>Outil Règle (📐 Mesurer) :</strong> mesure précise de la distance à vol d'oiseau entre deux points ou sur plusieurs segments cumulés.</li>
+                <li><strong>Bouton « 📖 Légende » :</strong> consultation immédiate de la légende complète des cartes IGN TOP 25 et Calanques.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📈</span> Profil Altimétrique Interactif &amp; Synchronisé Bidirectionnel</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>Réciprocité complète et bidirectionnelle :</strong>
                   <ul class="list-disc list-inside pl-3 mt-1 space-y-0.5 text-slate-300">
-                    <li>Déplacement sur le profil altimétrique : un repère rouge mobile se déplace en temps réel sur la trace cartographique avec affichage de l'altitude au point exact.</li>
-                    <li>Déplacement sur la trace de la carte : le curseur et la valeur d'altitude s'animent instantanément en miroir sur le graphique altimétrique.</li>
+                    <li>Déplacement sur le profil altimétrique : un repère rouge mobile et une infobulle d'altitude parcourent exactement la trace sur la carte en temps réel.</li>
+                    <li>Déplacement sur la trace de la carte : le curseur vertical et la valeur d'altitude s'animent instantanément en miroir sur le graphique altimétrique.</li>
                   </ul>
                 </li>
                 <li><strong>Maintien au clic :</strong> cliquez sur la trace pour maintenir le profil altimétrique épinglé à l'écran, et fermez-le à tout moment d'un clic sur la croix ✕.</li>
@@ -1574,11 +1595,10 @@
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📦</span> Gestionnaire Multi-traces GPX (jusqu'à 3 parcours) &amp; Impression</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📦</span> Gestion Multi-traces GPX (jusqu'à 3 parcours) &amp; Impression</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>Boîte flottante « TRACES GPX (X/3) » :</strong> chargez jusqu'à 3 fichiers GPX en glisser-déposer. Chaque trace dispose d'une pastille de couleur personnalisable (palette de 6 teintes contrastées), de sa distance, de son dénivelé D+ et de son <strong>Indice IBP Index officiel</strong>.</li>
-                <li><strong>Recentrage &amp; Suppression individuelle :</strong> bouton cible 🎯 pour centrer la carte sur une trace, et <strong>bouton croix ✕ en regard de chaque trace</strong> pour la retirer individuellement sans effacer les autres.</li>
-                <li><strong>Mesure de Cap (Azimut) &amp; Distance :</strong> cliquez sur l'outil Règle 🧭 puis sur deux points de la carte pour obtenir l'azimut boussole (en degrés °) et la distance exacte en mètres/kilomètres.</li>
+                <li><strong>Recentrage &amp; Suppression individuelle :</strong> bouton cible 🎯 pour centrer la carte sur une trace, et <strong>bouton croix ✕ en regard de chaque trace</strong> pour la retirer individuellement sans effacer les autres. Bouton « Tout effacer » pour vider la carte.</li>
                 <li><strong>Imprimer une zone (PDF A4 / A3 Haute Définition) :</strong> cliquez 2 coins opposés pour générer un extrait PDF à l'échelle exacte (ex. <code>1:25 000</code>), avec carroyage UTM kilométrique et valeurs en périphérie, déclinaison magnétique et <strong>mention automatique de la référence et de l'année d'édition de la carte IGN TOP 25</strong> dans le cartouche inférieur.</li>
               </ul>
             </div>
@@ -1596,7 +1616,7 @@
                 <span>2. Module « Randonner : Trouver des traces GPX et les gérer »</span>
                 <span class="me-club-rando-blink">le module club de rando</span>
               </h4>
-              <p class="text-xs text-blue-300">Recherche géographique, indice d'effort IBP Index, chargement GPX avec nom de l'utilisateur et gestion complète du catalogue.</p>
+              <p class="text-xs text-blue-300">Recherche géographique, indice d'effort IBP Index, chargement GPX avec nom de l'utilisateur et consultation des fiches descriptives.</p>
             </div>
           </div>
 
@@ -1606,17 +1626,17 @@
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>Point de départ (Référence) :</strong> choisissez une ville, un sommet ou une adresse dans la barre de recherche, utilisez le bouton <strong>📍 Ma position GPS</strong>, ou <strong>cliquez directement sur un endroit de la carte</strong>.</li>
                 <li><strong>Curseur de rayon (10 km ➔ Monde entier 🌍) :</strong> filtre instantanément les randonnées situées dans le rayon choisi autour du point de référence.</li>
-                <li><strong>Tableau interactif triable :</strong> cliquez sur n'importe quel en-tête de colonne pour trier par <em>Proximité</em>, <em>Nom &amp; Notes</em>, <em>Longueur</em>, <em>Dénivelé D+</em>, <strong>IBP Index (Niveaux 1 à 5 FFRandonnée)</strong>, <em>Dernière rando (JJ/MM/AA)</em> ou <strong>👤 Ajoutée par (nom de l'utilisateur ayant chargé la trace)</strong>.</li>
+                <li><strong>Tableau interactif triable :</strong> cliquez sur n'importe quel en-tête de colonne pour trier par <em>Proximité</em>, <em>Nom &amp; Notes</em>, <em>Longueur</em>, <em>Dénivelé D+</em>, <strong>IBP Index (Niveaux 1 à 5 FFRandonnée)</strong>, <em>Dernière rando (JJ/MM/AA)</em> ou <strong>👤 Ajoutée par (nom de l'adhérent ayant chargé la trace)</strong>.</li>
                 <li><strong>Aperçu, Profil Altimétrique &amp; Téléchargement :</strong> survolez ou cliquez sur une ligne pour afficher son tracé sur la carte, parcourir son profil altimétrique interactif synchronisé bidirectionnel et télécharger soit le <strong>fichier .GPX</strong>, soit la <strong>Fiche Topo PDF complète</strong>.</li>
               </ul>
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>📤</span> Chargement de GPX, Nom de l'Utilisateur &amp; Gestion</div>
+              <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>📤</span> Chargement de GPX &amp; Nom de l'Adhérent</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>👤 Nom de l'utilisateur au chargement d'un GPX :</strong> dans l'onglet <em>« Charger une randonnée »</em>, renseignez ou confirmez le <strong>nom de l'utilisateur qui charge la trace GPX</strong> (pré-rempli automatiquement avec votre identifiant). Ce nom est enregistré avec la trace et <strong>figure directement dans la colonne « Ajoutée par » du tableau des randonnées</strong>.</li>
-                <li><strong>Analyse automatique &amp; Anti-doublons :</strong> glissez-déposez un ou plusieurs fichiers <code>.gpx</code> (ou collez le texte XML) : l'application calcule la distance, le dénivelé D+ lissé, l'<strong>Indice IBP Index officiel</strong>, extrait la date de la trace et vérifie l'absence de doublon.</li>
-                <li><strong>✏️ Modification &amp; 🗑️ Gestion :</strong> modifiez à tout moment le nom d'une randonnée, son IBP Index, sa date de dernière sortie, le <strong>nom de l'utilisateur (Ajoutée par)</strong> ou ses notes pratiques, et utilisez le détecteur automatique de doublons.</li>
+                <li><strong>Analyse automatique &amp; Anti-doublons :</strong> glissez-déposez un ou plusieurs fichiers <code>.gpx</code> (ou collez le texte XML) : l'application calcule la distance, le dénivelé D+ lissé, l'<strong>Indice IBP Index officiel</strong>, extrait la date de la trace et vérifie l'absence de doublon géographique.</li>
+                <li><strong>Fiche Descriptive de Randonnée :</strong> consultation instantanée du résumé technique, du temps estimé, de la difficulté et des points d'intérêt du parcours.</li>
               </ul>
             </div>
           </div>
@@ -1669,7 +1689,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MODAL : MENTIONS LÉGALES & CGU (Accessible depuis l'accueil et le footer) -->
+  <!-- MODAL : MENTIONS LÉGALES & CGU                                            -->
   <!-- ========================================================================= -->
   <div id="modal-cgu" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
@@ -2229,7 +2249,7 @@
 
               <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
 
-                <img src="favicon-32x32.png?v=145" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
+                <img src="favicon-32x32.png?v=146" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
 
               </div>
 
@@ -7079,27 +7099,27 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <!-- Scripts -->
 
-  <script src="js/config.js?v=145"></script>
+  <script src="js/config.js?v=146"></script>
 
-  <script src="js/auth-manager.js?v=145"></script>
+  <script src="js/auth-manager.js?v=146"></script>
 
-  <script src="js/gpx-parser.js?v=145"></script>
+  <script src="js/gpx-parser.js?v=146"></script>
 
-  <script src="js/sample-data.js?v=145"></script>
+  <script src="js/sample-data.js?v=146"></script>
 
-  <script src="js/storage.js?v=145"></script>
+  <script src="js/storage.js?v=146"></script>
 
-  <script src="js/elevation-profile.js?v=145"></script>
+  <script src="js/elevation-profile.js?v=146"></script>
 
-  <script src="js/screen-calib-manager.js?v=145"></script>
-  <script src="js/ign-top25-sheets.js?v=145"></script>
-  <script src="js/map-manager.js?v=145"></script>
+  <script src="js/screen-calib-manager.js?v=146"></script>
+  <script src="js/ign-top25-sheets.js?v=146"></script>
+  <script src="js/map-manager.js?v=146"></script>
 
-  <script src="js/pdf-exporter.js?v=145"></script>
-  <script src="js/gr-manager.js?v=145"></script>
+  <script src="js/pdf-exporter.js?v=146"></script>
+  <script src="js/gr-manager.js?v=146"></script>
 
-  <script src="js/portal-router.js?v=145"></script>
-    <script src="js/app.js?v=145"></script>
+  <script src="js/portal-router.js?v=146"></script>
+    <script src="js/app.js?v=146"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->
