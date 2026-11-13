@@ -79,7 +79,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="js/leaflet.polylineoffset.js?v=147"></script>
+  <script src="js/leaflet.polylineoffset.js?v=148"></script>
 
 
 
@@ -91,7 +91,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=147">
+  <link rel="stylesheet" href="css/styles.css?v=148">
 
 </head>
 
@@ -365,9 +365,242 @@
       <!-- DISPOSITION 2 COLONNES : FICHES À GAUCHE + CADRE PUBS ALIGNÉ EN HAUT ET EN BAS À DROITE -->
       <div id="guides-main-grid" class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch">
         <div id="guides-fiches-col" class="lg:col-span-7 flex flex-col justify-between gap-2.5">
-        
+
         <!-- ================================================================= -->
-        <!-- FICHE 1 : GPS DIFFÉRENTIEL, SBAS & RÉGLAGES MONTRES DE SPORT -->
+        <!-- FICHE 1 : RANDONNER AVEC UN FICHIER GPX & MONTRES CONNECTÉES      -->
+        <!-- ================================================================= -->
+        <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-teal-500/70 transition-all shadow-2xl overflow-hidden">
+          <!-- Entête cliquable (Titre seul) -->
+          <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gpx-navigation-content', this)" 
+                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-2xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
+                ⌚
+              </div>
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
+                  <span>NAVIGATION NUMÉRIQUE &bull; ORIENTATION &amp; MONTRES GPS</span>
+                </div>
+                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
+                  Randonner avec un Fichier GPX : Comprendre, Obtenir et Charger une Trace
+                </h2>
+                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
+                  Intérêts opérationnels, anatomie du format GPS, plateformes de téléchargement et transfert pas-à-pas sur montre connectée (Garmin, Coros, Suunto, Polar, Apple Watch).
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3 flex-shrink-0">
+              <span class="guide-toggle-icon text-sm px-3.5 py-2 rounded-xl bg-teal-600/30 text-teal-300 font-extrabold border border-teal-500/40">
+                Déplier ▾
+              </span>
+            </div>
+          </button>
+
+          <!-- Contenu dépliable de la Fiche 6 -->
+          <div id="fiche-gpx-navigation-content" class="hidden border-t border-slate-800 p-6 sm:p-10 bg-slate-950/60 space-y-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-teal-950/30 p-4 rounded-2xl border border-teal-800/50">
+              <div class="text-xs text-teal-200">
+                📄 <strong>Fiche Pratique &bull; Navigation Numérique &amp; Orientation</strong> &bull; JLDApps 2026 &bull; Document PDF imprimable (2 pages)
+              </div>
+              <a href="docs/Fiche_Pratique_Randonner_avec_Fichier_GPX.pdf" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex-shrink-0">
+                <span>📥</span> <span>Télécharger le PDF (217 Ko)</span>
+              </a>
+            </div>
+
+            <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
+              <!-- SECTION 1 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-teal-400">1.</span> Pourquoi Randonner avec un Fichier GPX ? Ce que cela Apporte
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300">
+                  Bien plus qu'un simple tracé sur un écran, le fichier GPX agit comme un véritable <strong>fil d'Ariane numérique</strong> au service de l'orientation, de la sécurité et de la conduite de groupe :
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <strong class="text-white text-xs sm:text-sm block mb-1">🎯 Suivi d'itinéraire précis &amp; Alerte de déviation</strong>
+                    <p class="text-xs text-slate-300">
+                      Permet d'emprunter des sentes non balisées sans hésitation. La montre vibre dès un écart de 15 à 30 m, évitant les erreurs d'aiguillage.
+                    </p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <strong class="text-white text-xs sm:text-sm block mb-1">🛰️ Autonomie totale hors réseau mobile</strong>
+                    <p class="text-xs text-slate-300">
+                      Fonctionne exclusivement par satellites GNSS, sans couverture téléphonique ni forfait data, au fond des gorges comme en haute montagne.
+                    </p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <strong class="text-white text-xs sm:text-sm block mb-1">⛰️ Maîtrise de l'effort &amp; Fonction Retour (TracBack)</strong>
+                    <p class="text-xs text-slate-300">
+                      Visualisation en direct du profil altimétrique restant, repérage des points d'intérêt (sources, abris, échappatoires) et fonction Retour au départ en cas de brouillard ou de nuit imprévue.
+                    </p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <strong class="text-white text-xs sm:text-sm block mb-1">📊 Évaluation objective préalable (IBP Index)</strong>
+                    <p class="text-xs text-slate-300">
+                      Constitue la base indispensable pour calculer la difficulté physique réelle via l'IBP Index avant de valider une sortie au programme club.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- SECTION 2 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-teal-400">2.</span> Qu'est-ce qu'un Fichier GPX et que Contient-il ?
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300">
+                  Le format GPX (<em>GPS eXchange Format</em>) est le standard international ouvert permettant d'échanger des données géographiques entre logiciels, smartphones et montres GPS. C'est un fichier texte structuré en langage XML dans le référentiel mondial <strong>WGS84</strong> :
+                </p>
+                <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-teal-300 overflow-x-auto">
+                  &lt;trkpt lat="43.12045" lon="5.79812"&gt;&lt;ele&gt;342.5&lt;/ele&gt;&lt;time&gt;2026-11-08T09:15:00Z&lt;/time&gt;&lt;/trkpt&gt;
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <span class="font-bold text-white text-xs block mb-1">📍 La Trace (Track / &lt;trk&gt;)</span>
+                    <p class="text-xs text-slate-300">Tracé exact composé de centaines ou milliers de points rapprochés (lat, lon, altitude, heure). C'est l'élément clé pour suivre un sentier au mètre près.</p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <span class="font-bold text-white text-xs block mb-1">🛣️ La Route (Route / &lt;rte&gt;)</span>
+                    <p class="text-xs text-slate-300">Succession simplifiée de points de passage clés reliés par des segments droits (utilisée pour la navigation par étapes).</p>
+                  </div>
+                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                    <span class="font-bold text-white text-xs block mb-1">🚩 Les Points d'Intérêt (&lt;wpt&gt;)</span>
+                    <p class="text-xs text-slate-300">Repères isolés et nommés sur le parcours (parking, source d'eau potable, col, refuge, bifurcation délicate).</p>
+                  </div>
+                </div>
+              </section>
+
+              <!-- SECTION 3 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-teal-400">3.</span> Où Obtenir ou Créer ses Propres Fichiers GPX ?
+                </h3>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                        <th class="p-2.5 font-bold">Plateforme</th>
+                        <th class="p-2.5 font-bold">Spécificités &amp; Catalogue</th>
+                        <th class="p-2.5 font-bold">Export GPX &amp; Accès</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Visorando</td>
+                        <td class="p-2.5 text-slate-300">Référence en France : fiches descriptives détaillées, traces vérifiées par modérateurs et fond IGN.</td>
+                        <td class="p-2.5 text-slate-300">Téléchargement GPX gratuit sur fiche circuit (compte gratuit requis).</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">AllTrails</td>
+                        <td class="p-2.5 text-slate-300">Immense base mondiale, avis récents de randonneurs sur l'état du terrain et photos géolocalisées.</td>
+                        <td class="p-2.5 text-slate-300">Bouton Plus (…) &gt; Télécharger l'itinéraire (format GPX Track).</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Komoot</td>
+                        <td class="p-2.5 text-slate-300">Planificateur intelligent par type de pratique avec profils de revêtement (sentier, piste, route).</td>
+                        <td class="p-2.5 text-slate-300">Export GPX direct depuis l'itinéraire planifié (Exporter en GPX).</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">IGNrando' / FFRP</td>
+                        <td class="p-2.5 text-slate-300">Itinéraires officiels FFRandonnée (GR&reg;, GRP&reg;, PR) et parcs naturels régionaux ou nationaux.</td>
+                        <td class="p-2.5 text-slate-300">Téléchargement GPX gratuit directement sur les fiches circuits.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-300 mt-2">
+                  ✏️ <strong>Créer et éditer ses propres traces sur mesure :</strong> Un animateur peut dessiner un parcours point par point avec routage automatique sur sentiers (<em>snap-to-trail</em>), fusionner deux tracés ou corriger une dérive GPS grâce aux meilleurs éditeurs dédiés : <strong>VisuGPX (EditGPX)</strong> (référence française avec cartes IGN), <strong>OpenRunner</strong> (très prisé des clubs pour sa précision altimétrique), <strong>BRouter Web</strong> (routage pédestre libre et ultra-rapide sur OpenStreetMap) et <strong>gpx.studio</strong> (éditeur en ligne fluide pour découper ou nettoyer un fichier).
+                </div>
+              </section>
+
+              <!-- SECTION 4 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-teal-400">4.</span> Comment Charger le Fichier GPX sur sa Montre GPS ?
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300">
+                  La méthode la plus fluide consiste à télécharger le fichier <code>.gpx</code> sur votre smartphone, puis à l'ouvrir avec l'application compagnon de votre montre :
+                </p>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                        <th class="p-2.5 font-bold">Marque</th>
+                        <th class="p-2.5 font-bold">Application Mobile</th>
+                        <th class="p-2.5 font-bold">Procédure d'Importation &amp; Synchronisation</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Garmin</td>
+                        <td class="p-2.5 text-slate-300">Garmin Connect (ou Garmin Explore)</td>
+                        <td class="p-2.5 text-slate-300">Ouvrir le fichier .gpx &gt; Partager vers Garmin Connect &gt; Choisir type Randonnée &gt; Enregistrer &gt; Appuyer sur l'icône Envoyer vers l'appareil puis synchroniser en Bluetooth.</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Coros</td>
+                        <td class="p-2.5 text-slate-300">Application COROS</td>
+                        <td class="p-2.5 text-slate-300">Ouvrir le fichier .gpx &gt; Partager vers COROS &gt; Le parcours s'ajoute dans l'onglet Explorer (Bibliothèque d'itinéraires) &gt; Cliquer sur Synchroniser avec votre montre.</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Suunto</td>
+                        <td class="p-2.5 text-slate-300">Suunto App</td>
+                        <td class="p-2.5 text-slate-300">Ouvrir le fichier .gpx &gt; Partager avec Suunto (ou via onglet Carte &gt; Importer un itinéraire) &gt; Enregistrer &gt; Activer le bouton Utiliser sur la montre et synchroniser.</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Polar</td>
+                        <td class="p-2.5 text-slate-300">Polar Flow (Web + Mobile)</td>
+                        <td class="p-2.5 text-slate-300">Sur l'espace web flow.polar.com &gt; Onglet Favoris &gt; Importer l'itinéraire GPX &gt; Sur l'application mobile Polar Flow, lancer la synchronisation de la montre.</td>
+                      </tr>
+                      <tr>
+                        <td class="p-2.5 font-bold text-white">Apple Watch</td>
+                        <td class="p-2.5 text-slate-300">Plans (iOS 18+) ou WorkOutDoors</td>
+                        <td class="p-2.5 text-slate-300"><strong>Nativement :</strong> Créer/importer dans Apple Plans (iOS 18+) et enregistrer hors-ligne. <strong>Pro :</strong> Importer le .gpx dans l'app WorkOutDoors puis cliquer sur Send to Watch.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <!-- SECTION 5 -->
+              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
+                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
+                  <span class="text-teal-400">5.</span> Bonnes Pratiques et Précautions d'Utilisation sur le Terrain
+                </h3>
+                <ul class="space-y-2.5 text-xs sm:text-sm pl-2">
+                  <li class="flex items-start gap-2">
+                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
+                    <div><strong>Vérification préalable :</strong> Une trace GPX téléchargée sur Internet peut contenir des erreurs (chemin privé fermé, éboulement récent ou dérive GPS). Contrôlez toujours le tracé sur une carte TOP 25 avant le départ.</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
+                    <div><strong>Lancer la navigation au départ :</strong> Sur la montre, démarrer l'activité Randonnée, ouvrir le menu Navigation / Parcours, sélectionner la trace importée puis valider <em>Suivre le parcours</em> (et non l'itinéraire inversé).</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
+                    <div><strong>Autonomie de batterie :</strong> Le suivi d'une trace avec affichage permanent de la carte consomme davantage d'énergie. Désactivez les notifications inutiles et activez la gestion d'alimentation adaptée sur les longues étapes.</div>
+                  </li>
+                  <li class="flex items-start gap-2">
+                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
+                    <div><strong>La montre ne remplace pas la carte :</strong> Le petit écran de poignet offre une excellente vision immédiate aux bifurcations, mais ne permet pas d'apprécier l'environnement global. Conservez systématiquement votre smartphone (cartes hors-ligne) et une carte papier IGN en secours.</div>
+                  </li>
+                </ul>
+              </section>
+            </div>
+
+            <!-- Bouton replier -->
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gpx-navigation-content')" 
+                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+                ▴ Replier la fiche
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- FICHE 2 : GPS DIFFÉRENTIEL, SBAS & RÉGLAGES MONTRES DE SPORT -->
         <!-- ================================================================= -->
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-sky-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
@@ -493,7 +726,7 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- FICHE 2 : LE PROGRAMME NATIONAL LIDAR HD DE L'IGN -->
+        <!-- FICHE 3 : LE PROGRAMME NATIONAL LIDAR HD DE L'IGN -->
         <!-- ================================================================= -->
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-emerald-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
@@ -584,7 +817,7 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- FICHE 3 : IBP INDEX - ÉVALUATION OBJECTIVE DE LA DIFFICULTÉ       -->
+        <!-- FICHE 4 : IBP INDEX - ÉVALUATION OBJECTIVE DE LA DIFFICULTÉ       -->
         <!-- ================================================================= -->
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-indigo-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
@@ -744,7 +977,7 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- FICHE 4 : CHECK-LIST ESSENTIELLE AVANT DE PARTIR EN RANDONNÉE     -->
+        <!-- FICHE 5 : CHECK-LIST ESSENTIELLE AVANT DE PARTIR EN RANDONNÉE     -->
         <!-- ================================================================= -->
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-amber-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
@@ -1045,7 +1278,7 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- FICHE 5 : GESTION DES SECOURS EN ZONE BLANCHE & SOS SATELLITE     -->
+        <!-- FICHE 6 : GESTION DES SECOURS EN ZONE BLANCHE & SOS SATELLITE     -->
         <!-- ================================================================= -->
         <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-rose-500/70 transition-all shadow-2xl overflow-hidden">
           <!-- Entête cliquable (Titre seul) -->
@@ -1289,238 +1522,7 @@
           </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- FICHE 6 : RANDONNER AVEC UN FICHIER GPX & MONTRES CONNECTÉES      -->
-        <!-- ================================================================= -->
-        <div class="rounded-3xl bg-slate-900/90 border-2 border-slate-800 hover:border-teal-500/70 transition-all shadow-2xl overflow-hidden">
-          <!-- Entête cliquable (Titre seul) -->
-          <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gpx-navigation-content', this)" 
-                  class="w-full p-3.5 sm:p-4 text-left flex items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-800/40 transition">
-            <div class="flex items-start sm:items-center gap-3.5">
-              <div class="w-11 h-11 rounded-2xl bg-teal-500/20 text-teal-400 border border-teal-500/30 flex items-center justify-center text-xl flex-shrink-0 shadow-inner">
-                ⌚
-              </div>
-              <div>
-                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
-                  <span>NAVIGATION NUMÉRIQUE &bull; ORIENTATION &amp; MONTRES GPS</span>
-                </div>
-                <h2 class="text-base sm:text-lg font-black text-white leading-snug">
-                  Randonner avec un Fichier GPX : Comprendre, Obtenir et Charger une Trace
-                </h2>
-                <p class="text-xs text-slate-300 mt-0.5 font-light line-clamp-2">
-                  Intérêts opérationnels, anatomie du format GPS, plateformes de téléchargement et transfert pas-à-pas sur montre connectée (Garmin, Coros, Suunto, Polar, Apple Watch).
-                </p>
-              </div>
-            </div>
-            
-            <div class="flex items-center gap-3 flex-shrink-0">
-              <span class="guide-toggle-icon text-sm px-3.5 py-2 rounded-xl bg-teal-600/30 text-teal-300 font-extrabold border border-teal-500/40">
-                Déplier ▾
-              </span>
-            </div>
-          </button>
-
-          <!-- Contenu dépliable de la Fiche 6 -->
-          <div id="fiche-gpx-navigation-content" class="hidden border-t border-slate-800 p-6 sm:p-10 bg-slate-950/60 space-y-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-teal-950/30 p-4 rounded-2xl border border-teal-800/50">
-              <div class="text-xs text-teal-200">
-                📄 <strong>Fiche Pratique &bull; Navigation Numérique &amp; Orientation</strong> &bull; JLDApps 2026 &bull; Document PDF imprimable (2 pages)
-              </div>
-              <a href="docs/Fiche_Pratique_Randonner_avec_Fichier_GPX.pdf" target="_blank" download class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex-shrink-0">
-                <span>📥</span> <span>Télécharger le PDF (217 Ko)</span>
-              </a>
-            </div>
-
-            <div class="space-y-6 text-sm text-slate-300 leading-relaxed">
-              <!-- SECTION 1 -->
-              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
-                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <span class="text-teal-400">1.</span> Pourquoi Randonner avec un Fichier GPX ? Ce que cela Apporte
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-300">
-                  Bien plus qu'un simple tracé sur un écran, le fichier GPX agit comme un véritable <strong>fil d'Ariane numérique</strong> au service de l'orientation, de la sécurité et de la conduite de groupe :
-                </p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <strong class="text-white text-xs sm:text-sm block mb-1">🎯 Suivi d'itinéraire précis &amp; Alerte de déviation</strong>
-                    <p class="text-xs text-slate-300">
-                      Permet d'emprunter des sentes non balisées sans hésitation. La montre vibre dès un écart de 15 à 30 m, évitant les erreurs d'aiguillage.
-                    </p>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <strong class="text-white text-xs sm:text-sm block mb-1">🛰️ Autonomie totale hors réseau mobile</strong>
-                    <p class="text-xs text-slate-300">
-                      Fonctionne exclusivement par satellites GNSS, sans couverture téléphonique ni forfait data, au fond des gorges comme en haute montagne.
-                    </p>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <strong class="text-white text-xs sm:text-sm block mb-1">⛰️ Maîtrise de l'effort &amp; Fonction Retour (TracBack)</strong>
-                    <p class="text-xs text-slate-300">
-                      Visualisation en direct du profil altimétrique restant, repérage des points d'intérêt (sources, abris, échappatoires) et fonction Retour au départ en cas de brouillard ou de nuit imprévue.
-                    </p>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <strong class="text-white text-xs sm:text-sm block mb-1">📊 Évaluation objective préalable (IBP Index)</strong>
-                    <p class="text-xs text-slate-300">
-                      Constitue la base indispensable pour calculer la difficulté physique réelle via l'IBP Index avant de valider une sortie au programme club.
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <!-- SECTION 2 -->
-              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
-                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <span class="text-teal-400">2.</span> Qu'est-ce qu'un Fichier GPX et que Contient-il ?
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-300">
-                  Le format GPX (<em>GPS eXchange Format</em>) est le standard international ouvert permettant d'échanger des données géographiques entre logiciels, smartphones et montres GPS. C'est un fichier texte structuré en langage XML dans le référentiel mondial <strong>WGS84</strong> :
-                </p>
-                <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-teal-300 overflow-x-auto">
-                  &lt;trkpt lat="43.12045" lon="5.79812"&gt;&lt;ele&gt;342.5&lt;/ele&gt;&lt;time&gt;2026-11-08T09:15:00Z&lt;/time&gt;&lt;/trkpt&gt;
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <span class="font-bold text-white text-xs block mb-1">📍 La Trace (Track / &lt;trk&gt;)</span>
-                    <p class="text-xs text-slate-300">Tracé exact composé de centaines ou milliers de points rapprochés (lat, lon, altitude, heure). C'est l'élément clé pour suivre un sentier au mètre près.</p>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <span class="font-bold text-white text-xs block mb-1">🛣️ La Route (Route / &lt;rte&gt;)</span>
-                    <p class="text-xs text-slate-300">Succession simplifiée de points de passage clés reliés par des segments droits (utilisée pour la navigation par étapes).</p>
-                  </div>
-                  <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800">
-                    <span class="font-bold text-white text-xs block mb-1">🚩 Les Points d'Intérêt (&lt;wpt&gt;)</span>
-                    <p class="text-xs text-slate-300">Repères isolés et nommés sur le parcours (parking, source d'eau potable, col, refuge, bifurcation délicate).</p>
-                  </div>
-                </div>
-              </section>
-
-              <!-- SECTION 3 -->
-              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
-                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <span class="text-teal-400">3.</span> Où Obtenir ou Créer ses Propres Fichiers GPX ?
-                </h3>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-xs text-left border-collapse">
-                    <thead>
-                      <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
-                        <th class="p-2.5 font-bold">Plateforme</th>
-                        <th class="p-2.5 font-bold">Spécificités &amp; Catalogue</th>
-                        <th class="p-2.5 font-bold">Export GPX &amp; Accès</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Visorando</td>
-                        <td class="p-2.5 text-slate-300">Référence en France : fiches descriptives détaillées, traces vérifiées par modérateurs et fond IGN.</td>
-                        <td class="p-2.5 text-slate-300">Téléchargement GPX gratuit sur fiche circuit (compte gratuit requis).</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">AllTrails</td>
-                        <td class="p-2.5 text-slate-300">Immense base mondiale, avis récents de randonneurs sur l'état du terrain et photos géolocalisées.</td>
-                        <td class="p-2.5 text-slate-300">Bouton Plus (…) &gt; Télécharger l'itinéraire (format GPX Track).</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Komoot</td>
-                        <td class="p-2.5 text-slate-300">Planificateur intelligent par type de pratique avec profils de revêtement (sentier, piste, route).</td>
-                        <td class="p-2.5 text-slate-300">Export GPX direct depuis l'itinéraire planifié (Exporter en GPX).</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">IGNrando' / FFRP</td>
-                        <td class="p-2.5 text-slate-300">Itinéraires officiels FFRandonnée (GR&reg;, GRP&reg;, PR) et parcs naturels régionaux ou nationaux.</td>
-                        <td class="p-2.5 text-slate-300">Téléchargement GPX gratuit directement sur les fiches circuits.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-300 mt-2">
-                  ✏️ <strong>Créer et éditer ses propres traces sur mesure :</strong> Un animateur peut dessiner un parcours point par point avec routage automatique sur sentiers (<em>snap-to-trail</em>), fusionner deux tracés ou corriger une dérive GPS grâce aux meilleurs éditeurs dédiés : <strong>VisuGPX (EditGPX)</strong> (référence française avec cartes IGN), <strong>OpenRunner</strong> (très prisé des clubs pour sa précision altimétrique), <strong>BRouter Web</strong> (routage pédestre libre et ultra-rapide sur OpenStreetMap) et <strong>gpx.studio</strong> (éditeur en ligne fluide pour découper ou nettoyer un fichier).
-                </div>
-              </section>
-
-              <!-- SECTION 4 -->
-              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
-                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <span class="text-teal-400">4.</span> Comment Charger le Fichier GPX sur sa Montre GPS ?
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-300">
-                  La méthode la plus fluide consiste à télécharger le fichier <code>.gpx</code> sur votre smartphone, puis à l'ouvrir avec l'application compagnon de votre montre :
-                </p>
-                <div class="overflow-x-auto">
-                  <table class="w-full text-xs text-left border-collapse">
-                    <thead>
-                      <tr class="bg-slate-950 text-slate-400 border-b border-slate-800">
-                        <th class="p-2.5 font-bold">Marque</th>
-                        <th class="p-2.5 font-bold">Application Mobile</th>
-                        <th class="p-2.5 font-bold">Procédure d'Importation &amp; Synchronisation</th>
-                      </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-800/60">
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Garmin</td>
-                        <td class="p-2.5 text-slate-300">Garmin Connect (ou Garmin Explore)</td>
-                        <td class="p-2.5 text-slate-300">Ouvrir le fichier .gpx &gt; Partager vers Garmin Connect &gt; Choisir type Randonnée &gt; Enregistrer &gt; Appuyer sur l'icône Envoyer vers l'appareil puis synchroniser en Bluetooth.</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Coros</td>
-                        <td class="p-2.5 text-slate-300">Application COROS</td>
-                        <td class="p-2.5 text-slate-300">Ouvrir le fichier .gpx &gt; Partager vers COROS &gt; Le parcours s'ajoute dans l'onglet Explorer (Bibliothèque d'itinéraires) &gt; Cliquer sur Synchroniser avec votre montre.</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Suunto</td>
-                        <td class="p-2.5 text-slate-300">Suunto App</td>
-                        <td class="p-2.5 text-slate-300">Ouvrir le fichier .gpx &gt; Partager avec Suunto (ou via onglet Carte &gt; Importer un itinéraire) &gt; Enregistrer &gt; Activer le bouton Utiliser sur la montre et synchroniser.</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Polar</td>
-                        <td class="p-2.5 text-slate-300">Polar Flow (Web + Mobile)</td>
-                        <td class="p-2.5 text-slate-300">Sur l'espace web flow.polar.com &gt; Onglet Favoris &gt; Importer l'itinéraire GPX &gt; Sur l'application mobile Polar Flow, lancer la synchronisation de la montre.</td>
-                      </tr>
-                      <tr>
-                        <td class="p-2.5 font-bold text-white">Apple Watch</td>
-                        <td class="p-2.5 text-slate-300">Plans (iOS 18+) ou WorkOutDoors</td>
-                        <td class="p-2.5 text-slate-300"><strong>Nativement :</strong> Créer/importer dans Apple Plans (iOS 18+) et enregistrer hors-ligne. <strong>Pro :</strong> Importer le .gpx dans l'app WorkOutDoors puis cliquer sur Send to Watch.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <!-- SECTION 5 -->
-              <section class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-3">
-                <h3 class="text-base sm:text-lg font-black text-white flex items-center gap-2">
-                  <span class="text-teal-400">5.</span> Bonnes Pratiques et Précautions d'Utilisation sur le Terrain
-                </h3>
-                <ul class="space-y-2.5 text-xs sm:text-sm pl-2">
-                  <li class="flex items-start gap-2">
-                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
-                    <div><strong>Vérification préalable :</strong> Une trace GPX téléchargée sur Internet peut contenir des erreurs (chemin privé fermé, éboulement récent ou dérive GPS). Contrôlez toujours le tracé sur une carte TOP 25 avant le départ.</div>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
-                    <div><strong>Lancer la navigation au départ :</strong> Sur la montre, démarrer l'activité Randonnée, ouvrir le menu Navigation / Parcours, sélectionner la trace importée puis valider <em>Suivre le parcours</em> (et non l'itinéraire inversé).</div>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
-                    <div><strong>Autonomie de batterie :</strong> Le suivi d'une trace avec affichage permanent de la carte consomme davantage d'énergie. Désactivez les notifications inutiles et activez la gestion d'alimentation adaptée sur les longues étapes.</div>
-                  </li>
-                  <li class="flex items-start gap-2">
-                    <span class="text-teal-400 font-bold flex-shrink-0">✓</span>
-                    <div><strong>La montre ne remplace pas la carte :</strong> Le petit écran de poignet offre une excellente vision immédiate aux bifurcations, mais ne permet pas d'apprécier l'environnement global. Conservez systématiquement votre smartphone (cartes hors-ligne) et une carte papier IGN en secours.</div>
-                  </li>
-                </ul>
-              </section>
-            </div>
-
-            <!-- Bouton replier -->
-            <div class="pt-4 border-t border-slate-800 flex justify-end">
-              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-gpx-navigation-content')" 
-                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
-                ▴ Replier la fiche
-              </button>
-            </div>
-          </div>
-        </div>
+        
 
 
 
@@ -1530,6 +1532,9 @@
       <!-- ================================================================= -->
       <!-- COLONNE DROITE STICKY : ÉQUIPEMENTS AMAZON TOUJOURS VISIBLES      -->
       <!-- ================================================================= -->
+
+      </div>
+
       <aside id="outdoor-gear-panel" class="lg:col-span-5 rounded-3xl bg-slate-900/95 border-2 border-amber-500/60 p-4 sm:p-5 shadow-2xl flex flex-col justify-between h-full">
         
         <div class="border-b border-slate-800 pb-2.5 flex-shrink-0">
@@ -1890,28 +1895,28 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs text-slate-300">
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5"><span>🛰️</span> Fiche 1 : GPS, SBAS &amp; Montres de Sport</div>
+              <div class="font-extrabold text-teal-300 mb-1 flex items-center gap-1.5"><span>⌚</span> Fiche 1 : Randonner avec un Fichier GPX</div>
+              <p>Anatomie XML/WGS84 (&lt;trk&gt;, &lt;rte&gt;, &lt;wpt&gt;), plateformes fiables (Visorando, AllTrails, Komoot, IGNrando') et éditeurs (VisuGPX, OpenRunner), lecture smartphone (GPX Viewer Pro, Organic Maps) et transfert Bluetooth montres (Garmin, Coros, Suunto, Polar, Apple Watch).</p>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
+              <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5"><span>🛰️</span> Fiche 2 : GPS, SBAS &amp; Montres de Sport</div>
               <p>Comprendre la précision GNSS, le rôle des satellites géostationnaires SBAS (EGNOS), le mode Multi-bandes double fréquence (L1+L5) et l'enregistrement 1s.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-emerald-300 mb-1 flex items-center gap-1.5"><span>🌲</span> Fiche 2 : Programme National LiDAR HD IGN</div>
+              <div class="font-extrabold text-emerald-300 mb-1 flex items-center gap-1.5"><span>🌲</span> Fiche 3 : Programme National LiDAR HD IGN</div>
               <p>Modélisation laser 3D haute densité (10 pts/m²) traversant la canopée forestière pour produire des Modèles Numériques de Terrain (MNT) d'une précision de 50 cm.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-indigo-300 mb-1 flex items-center gap-1.5"><span>📊</span> Fiche 3 : IBP Index &amp; Effort Physique</div>
+              <div class="font-extrabold text-indigo-300 mb-1 flex items-center gap-1.5"><span>📊</span> Fiche 4 : IBP Index &amp; Effort Physique</div>
               <p>Algorithme IBP Index officiel FFRandonnée, grille de lecture croisant le score IBP avec les 5 niveaux de condition physique et limites face à la technicité du terrain.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5"><span>✅</span> Fiche 4 : Check-list Départ Randonnée</div>
+              <div class="font-extrabold text-sky-300 mb-1 flex items-center gap-1.5"><span>✅</span> Fiche 5 : Check-list Départ Randonnée</div>
               <p>Toutes les vérifications de J-1 à H-0 (Météo, Carte IGN, Boussole, Powerbank, Fond de sac, 3 Couches, Eau, Fix GPS) avec liens directs vers chaque équipement sur Amazon.</p>
             </div>
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-rose-300 mb-1 flex items-center gap-1.5"><span>🚨</span> Fiche 5 : Secours en Randonnée • Zone Blanche &amp; SOS Satellite</div>
-              <p>Procédures d'urgence en montagne (112 en itinérance multi-opérateurs, SMS 114 pour signal faible), balises de détresse autonomes (Garmin inReach, ACR Iridium) et smartphones avec SOS satellite intégré.</p>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
-              <div class="font-extrabold text-teal-300 mb-1 flex items-center gap-1.5"><span>⌚</span> Fiche 6 : Randonner avec un Fichier GPX &amp; Montres GPS</div>
-              <p>Anatomie XML/WGS84 (&lt;trk&gt;, &lt;rte&gt;, &lt;wpt&gt;), plateformes fiables (Visorando, AllTrails, Komoot, IGNrando') et éditeurs (VisuGPX, OpenRunner), transfert Bluetooth sur Garmin, Coros, Suunto, Polar, Apple Watch et alertes de dérive.</p>
+              <div class="font-extrabold text-rose-300 mb-1 flex items-center gap-1.5"><span>🚨</span> Fiche 6 : Secours en Randonnée • Zone Blanche &amp; SOS Satellite</div>
+              <p>Procédures d'urgence en montagne (112 en itinérance multi-opérateurs, SMS 114 pour signal faible), balises de détresse autonomes (Garmin inReach, ACR Iridium) et smartphones avec SOS satellite direct.</p>
             </div>
           </div>
         </section>
@@ -2487,7 +2492,7 @@
 
               <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
 
-                <img src="favicon-32x32.png?v=147" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
+                <img src="favicon-32x32.png?v=148" alt="Randonneur" class="w-3.5 h-3.5 object-contain">
 
               </div>
 
@@ -7337,27 +7342,27 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <!-- Scripts -->
 
-  <script src="js/config.js?v=147"></script>
+  <script src="js/config.js?v=148"></script>
 
-  <script src="js/auth-manager.js?v=147"></script>
+  <script src="js/auth-manager.js?v=148"></script>
 
-  <script src="js/gpx-parser.js?v=147"></script>
+  <script src="js/gpx-parser.js?v=148"></script>
 
-  <script src="js/sample-data.js?v=147"></script>
+  <script src="js/sample-data.js?v=148"></script>
 
-  <script src="js/storage.js?v=147"></script>
+  <script src="js/storage.js?v=148"></script>
 
-  <script src="js/elevation-profile.js?v=147"></script>
+  <script src="js/elevation-profile.js?v=148"></script>
 
-  <script src="js/screen-calib-manager.js?v=147"></script>
-  <script src="js/ign-top25-sheets.js?v=147"></script>
-  <script src="js/map-manager.js?v=147"></script>
+  <script src="js/screen-calib-manager.js?v=148"></script>
+  <script src="js/ign-top25-sheets.js?v=148"></script>
+  <script src="js/map-manager.js?v=148"></script>
 
-  <script src="js/pdf-exporter.js?v=147"></script>
-  <script src="js/gr-manager.js?v=147"></script>
+  <script src="js/pdf-exporter.js?v=148"></script>
+  <script src="js/gr-manager.js?v=148"></script>
 
-  <script src="js/portal-router.js?v=147"></script>
-    <script src="js/app.js?v=147"></script>
+  <script src="js/portal-router.js?v=148"></script>
+    <script src="js/app.js?v=148"></script>
 
 
   <!-- SCREEN CALIBRATION MODAL (Mesure 1 cm vrai sur écran) -->
