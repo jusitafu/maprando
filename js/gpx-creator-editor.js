@@ -405,6 +405,7 @@ class GpxCreatorEditor {
         <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg border ${colorClass} text-[11px] font-bold shadow-sm select-none" title="Waypoint ${letter} (${roleLabel})">
           <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white">${letter}</span>
           <span class="text-[10px] opacity-80 font-medium">${roleLabel}</span>
+          ${wp.isBacktrack ? `<span class="px-1 py-0.5 rounded bg-amber-500/30 text-amber-300 text-[9px] border border-amber-500/50 font-bold" title="Demi-tour forcé : supprimez ou déplacez l'étape suivante (${wp.backtrackNext}) pour filer tout droit">↩️ Demi-tour</span>` : ''}
           ${total > 1 ? `
             <button type="button" class="btn-delete-wp ml-1 text-slate-400 hover:text-white hover:bg-rose-600 rounded px-1.5 py-0.5 transition-colors font-black text-xs leading-none" data-idx="${idx}" title="Supprimer l'étape ${letter}">✕</button>
           ` : ''}
@@ -477,15 +478,24 @@ class GpxCreatorEditor {
 
     let coords = [];
     if (this.createAutoRoute) {
-      // Routage automatique via BRouter
+      // Routage automatique via BRouter / IGN
       coords = await this.queryBRouter(pts);
-      // Fallback ligne droite si BRouter renvoie vide
+      // Fallback ligne droite si renvoie vide
       if (!coords || coords.length === 0) {
         coords = pts.map(p => [p.lat, p.lon, 0]);
       }
     } else {
       // Ligne droite point à point
       coords = pts.map(p => [p.lat, p.lon, 0]);
+    }
+
+    // Actualiser le ruban d'étapes (affiche d'éventuels badges [↩️ Demi-tour])
+    this.updateWaypointsListUI();
+
+    // Message d'alerte pédagogique si un demi-tour / antenne est détecté
+    const backtrackWp = pts.find(p => p.isBacktrack);
+    if (backtrackWp && tipEl) {
+      tipEl.innerHTML = `⚠️ <strong class="text-amber-300">Demi-tour forcé au point ${backtrackWp.letter}</strong> : l'étape suivante (<strong>${backtrackWp.backtrackNext}</strong>) est restée sur l'autre chemin. Supprimez-la (bouton ✕) ou déplacez-la.`;
     }
 
     this.createRouteCoords = coords;
@@ -978,9 +988,16 @@ class GpxCreatorEditor {
   async queryRoute(waypoints) {
     if (!waypoints || waypoints.length < 2) return null;
 
+    // Réinitialiser les indicateurs de demi-tour
+    waypoints.forEach(wp => {
+      delete wp.isBacktrack;
+      delete wp.backtrackNext;
+    });
+
     // Calcul tronçon par tronçon (leg-by-leg)
     // Garantit que CHAQUE waypoint posé ou déplacé est relié sans embranchement orphelin
     const fullRoute = [];
+    const legs = [];
 
     for (let i = 0; i < waypoints.length - 1; i++) {
       const p1 = waypoints[i];
@@ -1012,10 +1029,35 @@ class GpxCreatorEditor {
         legCoords[legCoords.length - 1] = [Number(p2.lat), Number(p2.lon), legCoords[legCoords.length - 1][2] || p2.ele || 0];
       }
 
+      legs.push(legCoords);
+
       if (fullRoute.length > 0) {
         fullRoute.push(...legCoords.slice(1));
       } else {
         fullRoute.push(...legCoords);
+      }
+    }
+
+    // Détection automatique des demi-tours / antennes parasites
+    // Se produit quand un waypoint intermédiaire i mène sur une voie sans issue ou déviée,
+    // et que l'étape suivante i+1 oblige à rebrousser chemin par le même tracé
+    for (let i = 1; i < waypoints.length - 1; i++) {
+      const legIn = legs[i - 1]; // Arrivée vers waypoint i
+      const legOut = legs[i];    // Départ depuis waypoint i vers i+1
+      if (legIn && legIn.length >= 2 && legOut && legOut.length >= 2) {
+        // Observer les points proches du waypoint i (à ~10-40m)
+        const inLast = legIn[legIn.length - 1];
+        const inPrev = legIn[Math.max(0, legIn.length - Math.min(5, legIn.length - 1))];
+        const outNext = legOut[Math.min(legOut.length - 1, Math.min(4, legOut.length - 1))];
+
+        const distOpposite = this.haversineDistance(inPrev[0], inPrev[1], outNext[0], outNext[1]);
+        const distArm = this.haversineDistance(inLast[0], inLast[1], inPrev[0], inPrev[1]);
+
+        // Si le chemin retour calque le chemin aller (antenne < 25m d'écart)
+        if (distArm > 8 && distOpposite < 25) {
+          waypoints[i].isBacktrack = true;
+          waypoints[i].backtrackNext = waypoints[i + 1].letter;
+        }
       }
     }
 
