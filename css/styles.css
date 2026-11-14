@@ -1334,7 +1334,7 @@ path.bearing-preview-line {
   top: 0;
   left: 0;
   right: 0;
-  height: 8px;
+  height: 6px;
   cursor: ns-resize !important;
   z-index: 60;
   background: transparent;
@@ -1346,6 +1346,44 @@ path.bearing-preview-line {
 .window-top-resize-handle.is-resizing {
   background: rgba(56, 189, 248, 0.45);
   box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+}
+
+/* Bord inférieur actif pour redimensionnement vertical vers le bas (ns-resize) */
+.window-bottom-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  cursor: ns-resize !important;
+  z-index: 60;
+  background: transparent;
+  transition: all 0.15s ease;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.window-bottom-resize-handle::after {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all 0.15s ease;
+}
+.window-bottom-resize-handle:hover,
+.window-bottom-resize-handle.is-resizing {
+  background: rgba(56, 189, 248, 0.25);
+}
+.window-bottom-resize-handle:hover::after,
+.window-bottom-resize-handle.is-resizing::after {
+  width: 68px;
+  height: 4px;
+  background: rgba(56, 189, 248, 0.95);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.85);
 }
 
 /* Barre de titre / contour haut pour déplacement de la fenêtre */
@@ -1364,13 +1402,13 @@ path.bearing-preview-line {
   position: absolute;
   bottom: 2px;
   right: 2px;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   cursor: se-resize !important;
   z-index: 60;
-  opacity: 0.4;
+  opacity: 0.45;
   transition: opacity 0.15s ease;
-  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.7) 50%);
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.75) 50%);
   border-bottom-right-radius: 8px;
   touch-action: none;
 }
@@ -1378,6 +1416,26 @@ path.bearing-preview-line {
 .window-corner-resize-handle.is-resizing {
   opacity: 1;
   background: linear-gradient(135deg, transparent 50%, #38bdf8 50%);
+}
+
+/* Conteneur des traces GPX auto-adaptatif avec défilement fluide */
+.gpx-tracks-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.5) rgba(15, 23, 42, 0.3);
+}
+.gpx-tracks-container::-webkit-scrollbar {
+  width: 6px;
+}
+.gpx-tracks-container::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 8px;
+}
+.gpx-tracks-container::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.5);
+  border-radius: 8px;
+}
+.gpx-tracks-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.8);
 }
 
 /* Style des waypoints interactifs déplaçables */

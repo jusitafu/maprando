@@ -1,9 +1,13 @@
 /**
- * FLOATING WINDOW MANAGER (JLDApps 2026)
- * Gestionnaire universel de déplacement et redimensionnement des fenêtres flottantes
- * Permet de déplacer n'importe quelle petite fenêtre en tirant son contour haut / barre de titre,
- * et d'ajuster sa hauteur en tirant sur la bordure supérieure (ou son coin inférieur droit).
- * Fonctionne sur toutes les fenêtres des 2 cartes (Carte & Outils et Espace Randonner).
+ * FLOATING WINDOW MANAGER (JLDApps 2026 - v157)
+ * Gestionnaire universel de déplacement fluide et de redimensionnement des fenêtres flottantes
+ * Permet de :
+ * 1. Déplacer n'importe quelle fenêtre en tirant son contour haut / bandeau de titre (ultra-fluide 60-120 FPS).
+ * 2. Redimensionner la hauteur par le bas (tirer sur le contour bas) pour afficher facilement toutes les traces (1, 2 ou 3).
+ * 3. Redimensionner la hauteur par le haut (tirer sur la fine bordure supérieure).
+ * 4. Redimensionner librement largeur et hauteur par le coin inférieur droit.
+ * 5. Ajuster automatiquement la fenêtre au contenu (double-clic sur l'en-tête ou bouton Agrandir □).
+ * Fonctionne sur toutes les fenêtres (Cartes & Outils, Visualiseur GPX, Créateur, Éditeur, Espace Randonner, Profil alti).
  */
 class FloatingWindowManager {
   constructor() {
@@ -48,14 +52,14 @@ class FloatingWindowManager {
   scanAndEnhanceAll() {
     const selectors = [
       '#standalone-gpx-hud',
-      '#map-bearing-panel',
-      '#map-measure-panel',
+      '#hike-preview-panel',
       '#gpx-creator-floating-panel',
       '#gpx-editor-floating-panel',
+      '#map-bearing-panel',
+      '#map-measure-panel',
       '#gr-floating-banner',
       '#gr-color-filter-panel',
       '#map-selection-banner',
-      '#hike-preview-panel',
       '#screen-calib-modal > div',
       '#map-area-export-modal > div',
       '#map-legend-modal > div'
@@ -67,8 +71,7 @@ class FloatingWindowManager {
   }
 
   enhance(el) {
-    if (!el || this.enhancedElements.has(el)) return;
-    this.enhancedElements.add(el);
+    if (!el) return;
 
     el.classList.add('movable-floating-window');
 
@@ -78,35 +81,32 @@ class FloatingWindowManager {
       L.DomEvent.disableScrollPropagation(el);
     }
 
-    // 1. Bordure supérieure active pour le redimensionnement vertical (contour haut)
-    if (!el.querySelector('.window-top-resize-handle')) {
-      const topResize = document.createElement('div');
+    // 1. Bordure supérieure active pour le redimensionnement vertical par le haut
+    let topResize = el.querySelector('.window-top-resize-handle');
+    if (!topResize) {
+      topResize = document.createElement('div');
       topResize.className = 'window-top-resize-handle';
-      topResize.title = 'Tirer vers le haut ou le bas pour ajuster la hauteur de la fenêtre';
+      topResize.title = 'Tirer vers le haut pour agrandir la fenêtre';
+      topResize.addEventListener('mousedown', (e) => this.startTopResize(e, el));
+      topResize.addEventListener('touchstart', (e) => this.startTopResize(e, el), { passive: false });
       el.prepend(topResize);
     }
 
-    // 2. Identifier ou équiper la barre de titre
-    let header = el.querySelector('.window-drag-header') ||
-                 el.querySelector('#preview-drag-handle') ||
-                 el.querySelector('.flex.items-center.justify-between');
-
-    if (header) {
-      header.classList.add('window-drag-header');
-      header.setAttribute('title', 'Maintenir et tirer avec la souris pour déplacer cette fenêtre sur la carte');
-
-      if (!header.querySelector('.window-drag-grip') && !header.querySelector('#preview-drag-handle')) {
-        const grip = document.createElement('span');
-        grip.className = 'window-drag-grip text-slate-400 hover:text-white mr-1 text-xs opacity-70 select-none cursor-grab';
-        grip.innerText = '⠿';
-        grip.title = 'Déplacer';
-        header.prepend(grip);
-      }
+    // 2. Bordure inférieure active pour le redimensionnement vertical par le bas (Traces & Hauteur)
+    let bottomResize = el.querySelector('.window-bottom-resize-handle');
+    if (!bottomResize) {
+      bottomResize = document.createElement('div');
+      bottomResize.className = 'window-bottom-resize-handle';
+      bottomResize.title = 'Tirer vers le bas pour agrandir la fenêtre et voir toutes les randonnées';
+      bottomResize.addEventListener('mousedown', (e) => this.startBottomResize(e, el));
+      bottomResize.addEventListener('touchstart', (e) => this.startBottomResize(e, el), { passive: false });
+      el.appendChild(bottomResize);
     }
 
     // 3. Poignée de redimensionnement en coin inférieur droit
-    if (!el.querySelector('.window-corner-resize-handle')) {
-      const cornerResize = document.createElement('div');
+    let cornerResize = el.querySelector('.window-corner-resize-handle');
+    if (!cornerResize) {
+      cornerResize = document.createElement('div');
       cornerResize.className = 'window-corner-resize-handle';
       cornerResize.title = 'Tirer pour redimensionner la fenêtre';
       cornerResize.addEventListener('mousedown', (e) => this.startCornerResize(e, el));
@@ -114,30 +114,59 @@ class FloatingWindowManager {
       el.appendChild(cornerResize);
     }
 
-    // 4. Écouteur unifié sur le contour haut de la fenêtre (zone de 0 à 55px depuis le haut)
-    el.addEventListener('mousedown', (e) => this.handlePanelMouseDown(e, el));
-    el.addEventListener('touchstart', (e) => this.handlePanelMouseDown(e, el), { passive: false });
-  }
+    // 4. Identifier ou équiper la barre de titre pour le déplacement
+    let header = el.querySelector('.window-drag-header') ||
+                 el.querySelector('#preview-drag-handle') ||
+                 el.querySelector('.flex.items-center.justify-between') ||
+                 el.querySelector('.flex.items-start');
 
-  getContainer(el) {
-    return el.offsetParent || document.getElementById('map-column') || document.getElementById('main-map-app-container') || document.body;
+    if (header) {
+      header.classList.add('window-drag-header');
+      header.setAttribute('title', 'Maintenir et tirer avec la souris pour déplacer cette fenêtre sur la carte (double-clic pour ajuster la taille)');
+
+      if (!header.querySelector('.window-drag-grip') && !header.querySelector('#preview-drag-handle')) {
+        const grip = document.createElement('span');
+        grip.className = 'window-drag-grip text-slate-400 hover:text-white mr-1.5 text-xs opacity-75 select-none cursor-grab';
+        grip.innerText = '⠿';
+        grip.title = 'Déplacer';
+        header.prepend(grip);
+      }
+
+      // Double-clic sur l'en-tête pour auto-ajustement de la taille
+      if (!header.dataset.hasDblClick) {
+        header.dataset.hasDblClick = 'true';
+        header.addEventListener('dblclick', (e) => {
+          if (e.target.closest('button, a, input, select, [type="button"], .hud-win-btn')) return;
+          this.autoFit(el);
+        });
+      }
+    }
+
+    // 5. Écouteur principal de déplacement par le contour haut
+    if (!el.dataset.dragListening) {
+      el.dataset.dragListening = 'true';
+      el.addEventListener('mousedown', (e) => this.handlePanelMouseDown(e, el));
+      el.addEventListener('touchstart', (e) => this.handlePanelMouseDown(e, el), { passive: false });
+    }
   }
 
   handlePanelMouseDown(e, el) {
-    // Ignorer clics sur boutons, inputs, liens, cases à cocher, etc.
-    if (e.target.closest('button, input, select, a, [type="button"], .hud-win-btn, .custom-edit-handle, .window-corner-resize-handle')) return;
+    // Ignorer clics sur boutons, inputs, liens, cases à cocher, pastilles de couleur, fermetures
+    const ignored = e.target.closest('button, input, select, a, [type="button"], .hud-win-btn, .custom-edit-handle, .window-corner-resize-handle, .window-bottom-resize-handle, .window-top-resize-handle');
+    if (ignored) return;
 
     const panelRect = el.getBoundingClientRect();
     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
     const relY = clientY - panelRect.top;
+    const relBottom = panelRect.bottom - clientY;
 
-    // Zone 1 : Bordure supérieure (0 à 8px) -> Redimensionnement hauteur par le haut
-    if (relY <= 8 || e.target.classList.contains('window-top-resize-handle')) {
-      this.startTopResize(e, el);
+    // Si clic très proche du bas (0-8px) -> redimensionnement par le bas
+    if (relBottom <= 8) {
+      this.startBottomResize(e, el);
       return;
     }
 
-    // Zone 2 : Bandeau / contour supérieur (8 à 55px) -> Déplacement de la fenêtre
+    // Si clic dans les 55 premiers pixels ou en-tête -> DÉPLACEMENT
     if (relY <= 55 || e.target.closest('.window-drag-header')) {
       this.startDrag(e, el);
     }
@@ -148,15 +177,15 @@ class FloatingWindowManager {
     const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
 
-    const container = this.getContainer(el);
-    const containerRect = container.getBoundingClientRect();
+    const offsetParent = el.offsetParent || document.body;
+    const parentRect = offsetParent.getBoundingClientRect();
     const panelRect = el.getBoundingClientRect();
 
-    const initialLeft = panelRect.left - containerRect.left;
-    const initialTop = panelRect.top - containerRect.top;
+    const initialLeft = panelRect.left - parentRect.left;
+    const initialTop = panelRect.top - parentRect.top;
 
-    // Retirer toutes les classes de transition/animation Tailwind provoquant des saccades
-    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2', 'transition-all', 'transition', 'duration-200', 'duration-300');
+    // Retirer toutes les classes Tailwind de positionnement relatif pour éviter les conflits
+    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2', 'top-4', 'bottom-11', 'sm:bottom-12', 'transition-all', 'transition', 'duration-200', 'duration-300');
 
     el.style.setProperty('transition', 'none', 'important');
     el.style.setProperty('transform', 'none', 'important');
@@ -166,18 +195,16 @@ class FloatingWindowManager {
     el.style.setProperty('top', `${initialTop}px`, 'important');
     el.style.setProperty('width', `${panelRect.width}px`, 'important');
 
+    el.dataset.userMoved = 'true';
+    el.dataset.userLeft = String(initialLeft);
+    el.dataset.userTop = String(initialTop);
+
     el.classList.add('window-is-moving');
     const header = el.querySelector('.window-drag-header') || el;
     header.classList.add('is-dragging');
 
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'grabbing';
-
-    // Précaculer les bornes pour éviter tout getBoundingClientRect() pendant le drag
-    const minX = 4;
-    const maxX = Math.max(minX, containerRect.width - panelRect.width - 4);
-    const minY = 4;
-    const maxY = Math.max(minY, containerRect.height - panelRect.height - 4);
 
     this.activeDrag = {
       el,
@@ -186,12 +213,53 @@ class FloatingWindowManager {
       startY: clientY,
       initialLeft,
       initialTop,
-      minX,
-      maxX,
-      minY,
-      maxY,
+      parentLeft: parentRect.left,
+      parentTop: parentRect.top,
+      panelWidth: panelRect.width,
+      panelHeight: panelRect.height,
       targetX: initialLeft,
       targetY: initialTop
+    };
+
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  // --- REDIMENSIONNEMENT PAR LA BORDURE BASSE (TRACES & HAUTEUR) ---
+  startBottomResize(e, el) {
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+    const offsetParent = el.offsetParent || document.body;
+    const parentRect = offsetParent.getBoundingClientRect();
+    const panelRect = el.getBoundingClientRect();
+
+    const initialTop = panelRect.top - parentRect.top;
+    const initialHeight = panelRect.height;
+
+    el.classList.remove('transition-all', 'transition', 'duration-200', 'duration-300', 'bottom-11', 'sm:bottom-12');
+    el.style.setProperty('transition', 'none', 'important');
+    el.style.setProperty('bottom', 'auto', 'important');
+    el.style.setProperty('top', `${initialTop}px`, 'important');
+    el.style.setProperty('left', `${panelRect.left - parentRect.left}px`, 'important');
+    el.style.setProperty('width', `${panelRect.width}px`, 'important');
+    el.style.setProperty('height', `${initialHeight}px`, 'important');
+
+    el.dataset.userResized = 'true';
+
+    el.classList.add('window-is-moving');
+    const handle = el.querySelector('.window-bottom-resize-handle');
+    if (handle) handle.classList.add('is-resizing');
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ns-resize';
+
+    this.activeResize = {
+      type: 'bottom',
+      el,
+      handle,
+      startY: clientY,
+      initialHeight,
+      minHeight: 80,
+      targetHeight: initialHeight
     };
 
     e.preventDefault();
@@ -201,24 +269,25 @@ class FloatingWindowManager {
   // --- REDIMENSIONNEMENT PAR LA BORDURE HAUTE ---
   startTopResize(e, el) {
     const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
-    const container = this.getContainer(el);
-    const containerRect = container.getBoundingClientRect();
+    const offsetParent = el.offsetParent || document.body;
+    const parentRect = offsetParent.getBoundingClientRect();
     const panelRect = el.getBoundingClientRect();
 
-    const initialTop = panelRect.top - containerRect.top;
+    const initialTop = panelRect.top - parentRect.top;
     const initialHeight = panelRect.height;
 
-    // Retirer classes conflictuelles
-    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2', 'transition-all', 'transition', 'duration-200', 'duration-300');
+    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2', 'top-4', 'bottom-11', 'sm:bottom-12', 'transition-all', 'transition', 'duration-200', 'duration-300');
 
     el.style.setProperty('transition', 'none', 'important');
     el.style.setProperty('transform', 'none', 'important');
     el.style.setProperty('bottom', 'auto', 'important');
     el.style.setProperty('right', 'auto', 'important');
-    el.style.setProperty('left', `${panelRect.left - containerRect.left}px`, 'important');
+    el.style.setProperty('left', `${panelRect.left - parentRect.left}px`, 'important');
     el.style.setProperty('top', `${initialTop}px`, 'important');
     el.style.setProperty('width', `${panelRect.width}px`, 'important');
     el.style.setProperty('height', `${initialHeight}px`, 'important');
+
+    el.dataset.userResized = 'true';
 
     el.classList.add('window-is-moving');
     const handle = el.querySelector('.window-top-resize-handle');
@@ -234,7 +303,7 @@ class FloatingWindowManager {
       startY: clientY,
       initialTop,
       initialHeight,
-      minHeight: 60,
+      minHeight: 80,
       targetTop: initialTop,
       targetHeight: initialHeight
     };
@@ -252,6 +321,8 @@ class FloatingWindowManager {
     el.classList.remove('transition-all', 'transition', 'duration-200', 'duration-300');
     el.style.setProperty('transition', 'none', 'important');
 
+    el.dataset.userResized = 'true';
+
     const handle = el.querySelector('.window-corner-resize-handle');
     if (handle) handle.classList.add('is-resizing');
     el.classList.add('window-is-moving');
@@ -267,8 +338,8 @@ class FloatingWindowManager {
       startY: clientY,
       initialWidth: panelRect.width,
       initialHeight: panelRect.height,
-      minWidth: 180,
-      minHeight: 60,
+      minWidth: 200,
+      minHeight: 80,
       targetWidth: panelRect.width,
       targetHeight: panelRect.height
     };
@@ -288,19 +359,26 @@ class FloatingWindowManager {
       const dx = clientX - d.startX;
       const dy = clientY - d.startY;
 
-      d.targetX = Math.max(d.minX, Math.min(d.maxX, d.initialLeft + dx));
-      d.targetY = Math.max(d.minY, Math.min(d.maxY, d.initialTop + dy));
+      // Position absolue par rapport à l'offsetParent
+      let newX = d.initialLeft + dx;
+      let newY = d.initialTop + dy;
 
-      if (!this.rafPending) {
-        this.rafPending = true;
-        requestAnimationFrame(() => {
-          this.rafPending = false;
-          if (this.activeDrag) {
-            this.activeDrag.el.style.setProperty('left', `${this.activeDrag.targetX}px`, 'important');
-            this.activeDrag.el.style.setProperty('top', `${this.activeDrag.targetY}px`, 'important');
-          }
-        });
-      }
+      // Vérifier que la fenêtre reste visible dans le viewport
+      const viewportX = newX + d.parentLeft;
+      const viewportY = newY + d.parentTop;
+
+      if (viewportX < -d.panelWidth + 60) newX = -d.parentLeft - d.panelWidth + 60;
+      if (viewportX > window.innerWidth - 60) newX = window.innerWidth - 60 - d.parentLeft;
+      if (viewportY < 4) newY = 4 - d.parentTop;
+      if (viewportY > window.innerHeight - 50) newY = window.innerHeight - 50 - d.parentTop;
+
+      d.targetX = newX;
+      d.targetY = newY;
+
+      d.el.style.setProperty('left', `${newX}px`, 'important');
+      d.el.style.setProperty('top', `${newY}px`, 'important');
+      d.el.dataset.userLeft = String(newX);
+      d.el.dataset.userTop = String(newY);
 
       e.preventDefault();
       e.stopPropagation();
@@ -312,31 +390,27 @@ class FloatingWindowManager {
       if (r.type === 'top') {
         const dy = clientY - r.startY;
         r.targetTop = r.initialTop + dy;
-        r.targetHeight = r.initialHeight - dy;
+        r.targetHeight = Math.max(r.minHeight, r.initialHeight - dy);
+        if (r.targetHeight >= r.minHeight && r.targetTop >= 4) {
+          r.el.style.setProperty('top', `${r.targetTop}px`, 'important');
+          r.el.style.setProperty('height', `${r.targetHeight}px`, 'important');
+          r.el.dataset.userTop = String(r.targetTop);
+        }
+      } else if (r.type === 'bottom') {
+        const dy = clientY - r.startY;
+        r.targetHeight = Math.max(r.minHeight, r.initialHeight + dy);
+        r.el.style.setProperty('height', `${r.targetHeight}px`, 'important');
       } else if (r.type === 'corner') {
         const dx = clientX - r.startX;
         const dy = clientY - r.startY;
         r.targetWidth = Math.max(r.minWidth, r.initialWidth + dx);
         r.targetHeight = Math.max(r.minHeight, r.initialHeight + dy);
+        r.el.style.setProperty('width', `${r.targetWidth}px`, 'important');
+        r.el.style.setProperty('height', `${r.targetHeight}px`, 'important');
       }
 
-      if (!this.rafPending) {
-        this.rafPending = true;
-        requestAnimationFrame(() => {
-          this.rafPending = false;
-          if (this.activeResize) {
-            const cur = this.activeResize;
-            if (cur.type === 'top') {
-              if (cur.targetHeight >= cur.minHeight && cur.targetTop >= 4) {
-                cur.el.style.setProperty('top', `${cur.targetTop}px`, 'important');
-                cur.el.style.setProperty('height', `${cur.targetHeight}px`, 'important');
-              }
-            } else if (cur.type === 'corner') {
-              cur.el.style.setProperty('width', `${cur.targetWidth}px`, 'important');
-              cur.el.style.setProperty('height', `${cur.targetHeight}px`, 'important');
-            }
-          }
-        });
+      if (r.el.id === 'hike-preview-panel' && window.ElevationProfileInstance) {
+        window.ElevationProfileInstance.resizeAndDraw();
       }
 
       e.preventDefault();
@@ -349,14 +423,46 @@ class FloatingWindowManager {
     document.body.style.cursor = '';
 
     if (this.activeDrag) {
-      this.activeDrag.el.classList.remove('window-is-moving');
-      if (this.activeDrag.header) this.activeDrag.header.classList.remove('is-dragging');
+      const d = this.activeDrag;
+      d.el.style.setProperty('left', `${d.targetX}px`, 'important');
+      d.el.style.setProperty('top', `${d.targetY}px`, 'important');
+      d.el.dataset.userLeft = String(d.targetX);
+      d.el.dataset.userTop = String(d.targetY);
+      d.el.classList.remove('window-is-moving');
+      if (d.header) d.header.classList.remove('is-dragging');
       this.activeDrag = null;
     }
     if (this.activeResize) {
-      this.activeResize.el.classList.remove('window-is-moving');
-      if (this.activeResize.handle) this.activeResize.handle.classList.remove('is-resizing');
+      const r = this.activeResize;
+      r.el.classList.remove('window-is-moving');
+      if (r.handle) r.handle.classList.remove('is-resizing');
+      if (r.el.id === 'hike-preview-panel' && window.ElevationProfileInstance) {
+        window.ElevationProfileInstance.resizeAndDraw();
+      }
       this.activeResize = null;
+    }
+  }
+
+  /**
+   * Ajuste automatiquement la taille de la fenêtre à son contenu complet
+   */
+  autoFit(el) {
+    if (!el) return;
+    delete el.dataset.userResized;
+    el.style.removeProperty('height');
+    el.style.height = '';
+
+    const tracksContainer = el.querySelector('.gpx-tracks-container');
+    if (tracksContainer) {
+      tracksContainer.style.removeProperty('max-height');
+    }
+
+    if (el.id === 'hike-preview-panel' && window.ElevationProfileInstance) {
+      window.ElevationProfileInstance.resizeAndDraw();
+    }
+
+    if (typeof window.App?.showToast === 'function') {
+      window.App.showToast('Fenêtre ajustée automatiquement à son contenu', 'info');
     }
   }
 }

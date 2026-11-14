@@ -2205,6 +2205,13 @@ class AppController {
     }
 
     previewPanel.classList.remove('hidden');
+    window.FloatingWindowManagerInstance?.enhance(previewPanel);
+    if (previewPanel.dataset.userMoved === 'true') {
+      if (previewPanel.dataset.userLeft) previewPanel.style.setProperty('left', previewPanel.dataset.userLeft + 'px', 'important');
+      if (previewPanel.dataset.userTop) previewPanel.style.setProperty('top', previewPanel.dataset.userTop + 'px', 'important');
+      const rBtn = document.getElementById('btn-reset-preview-pos');
+      if (rBtn) rBtn.classList.remove('hidden');
+    }
 
     // Détection immédiate si la souris se trouve déjà sous la zone d'apparition du panneau
     if (previewPanel.matches && previewPanel.matches(':hover')) {
@@ -2279,138 +2286,29 @@ class AppController {
    */
   setupDraggablePreviewPanel() {
     const panel = document.getElementById('hike-preview-panel');
-    const container = document.getElementById('map-column');
-    if (!panel || !container) return;
+    if (!panel) return;
+    window.FloatingWindowManagerInstance?.enhance(panel);
 
-    // Empêcher Leaflet de capter les clics et le défilement sur le panneau
-    if (typeof L !== 'undefined' && L.DomEvent) {
-      L.DomEvent.disableClickPropagation(panel);
-      L.DomEvent.disableScrollPropagation(panel);
-    }
-
-    const dragHandle = document.getElementById('preview-drag-handle');
-    const titleHeader = panel.querySelector('.flex.items-start');
     const resetBtn = document.getElementById('btn-reset-preview-pos');
-
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let initialLeft = 0;
-    let initialTop = 0;
-    let userMoved = false;
-
-    // Bouton de réinitialisation vers le coin bas-gauche d'origine
-    if (resetBtn) {
+    if (resetBtn && !resetBtn.dataset.hasResetListener) {
+      resetBtn.dataset.hasResetListener = 'true';
       resetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        userMoved = false;
-        panel.style.left = '';
-        panel.style.top = '';
-        panel.style.bottom = '';
-        panel.style.right = '';
-        panel.style.width = '';
+        delete panel.dataset.userMoved;
+        delete panel.dataset.userResized;
+        panel.style.removeProperty('left');
+        panel.style.removeProperty('top');
+        panel.style.removeProperty('bottom');
+        panel.style.removeProperty('right');
+        panel.style.removeProperty('width');
+        panel.style.removeProperty('height');
         resetBtn.classList.add('hidden');
+        if (window.ElevationProfileInstance) {
+          window.ElevationProfileInstance.resizeAndDraw();
+        }
       });
     }
-
-    const onStart = (e) => {
-      // Ignorer si clic sur un bouton, champ de saisie, canvas ou lien
-      if (e.target.closest('button, input, select, a, canvas, #elevation-chart-container')) return;
-
-      const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      if (!userMoved) {
-        initialLeft = panelRect.left - containerRect.left;
-        initialTop = panelRect.top - containerRect.top;
-        panel.style.bottom = 'auto';
-        panel.style.right = 'auto';
-        panel.style.left = `${initialLeft}px`;
-        panel.style.top = `${initialTop}px`;
-        panel.style.width = `${panelRect.width}px`;
-      } else {
-        initialLeft = panel.offsetLeft;
-        initialTop = panel.offsetTop;
-      }
-
-      startX = clientX;
-      startY = clientY;
-      isDragging = true;
-      userMoved = true;
-
-      panel.style.transition = 'none';
-      panel.classList.add('ring-2', 'ring-emerald-500/70', 'shadow-2xl');
-      if (dragHandle) dragHandle.classList.add('cursor-grabbing');
-      if (resetBtn) resetBtn.classList.remove('hidden');
-
-      e.stopPropagation();
-    };
-
-    const onMove = (e) => {
-      if (!isDragging) return;
-
-      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      const minX = 4;
-      const maxX = Math.max(minX, containerRect.width - panelRect.width - 4);
-      const minY = 4;
-      const maxY = Math.max(minY, containerRect.height - panelRect.height - 4);
-
-      const targetX = Math.max(minX, Math.min(maxX, initialLeft + dx));
-      const targetY = Math.max(minY, Math.min(maxY, initialTop + dy));
-
-      panel.style.left = `${targetX}px`;
-      panel.style.top = `${targetY}px`;
-
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const onEnd = () => {
-      if (!isDragging) return;
-      isDragging = false;
-      panel.style.transition = '';
-      panel.classList.remove('ring-2', 'ring-emerald-500/70');
-      if (dragHandle) dragHandle.classList.remove('cursor-grabbing');
-    };
-
-    // Attacher aux poignées de glissement (handle supérieur et barre de titre)
-    if (dragHandle) {
-      dragHandle.addEventListener('mousedown', onStart);
-      dragHandle.addEventListener('touchstart', onStart, { passive: false });
-    }
-    if (titleHeader) {
-      titleHeader.addEventListener('mousedown', onStart);
-      titleHeader.addEventListener('touchstart', onStart, { passive: false });
-    }
-
-    window.addEventListener('mousemove', onMove, { passive: false });
-    window.addEventListener('mouseup', onEnd);
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', onEnd);
-    window.addEventListener('touchcancel', onEnd);
-
-    // Ajuster si redimensionnement de l'écran pour rester dans la carte
-    window.addEventListener('resize', () => {
-      if (!userMoved || panel.classList.contains('hidden')) return;
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-      const maxX = Math.max(4, containerRect.width - panelRect.width - 4);
-      const maxY = Math.max(4, containerRect.height - panelRect.height - 4);
-      if (panel.offsetLeft > maxX) panel.style.left = `${maxX}px`;
-      if (panel.offsetTop > maxY) panel.style.top = `${maxY}px`;
-    });
   }
 
   getLocalPlaceMatches(query) {
@@ -5282,6 +5180,13 @@ class AppController {
     }
 
     previewPanel.classList.remove('hidden');
+    window.FloatingWindowManagerInstance?.enhance(previewPanel);
+    if (previewPanel.dataset.userMoved === 'true') {
+      if (previewPanel.dataset.userLeft) previewPanel.style.setProperty('left', previewPanel.dataset.userLeft + 'px', 'important');
+      if (previewPanel.dataset.userTop) previewPanel.style.setProperty('top', previewPanel.dataset.userTop + 'px', 'important');
+      const rBtn = document.getElementById('btn-reset-preview-pos');
+      if (rBtn) rBtn.classList.remove('hidden');
+    }
 
     // Détection immédiate si la souris se trouve déjà sous la zone d'apparition du panneau
     if (previewPanel.matches && previewPanel.matches(':hover')) {
@@ -5356,138 +5261,29 @@ class AppController {
    */
   setupDraggablePreviewPanel() {
     const panel = document.getElementById('hike-preview-panel');
-    const container = document.getElementById('map-column');
-    if (!panel || !container) return;
+    if (!panel) return;
+    window.FloatingWindowManagerInstance?.enhance(panel);
 
-    // Empêcher Leaflet de capter les clics et le défilement sur le panneau
-    if (typeof L !== 'undefined' && L.DomEvent) {
-      L.DomEvent.disableClickPropagation(panel);
-      L.DomEvent.disableScrollPropagation(panel);
-    }
-
-    const dragHandle = document.getElementById('preview-drag-handle');
-    const titleHeader = panel.querySelector('.flex.items-start');
     const resetBtn = document.getElementById('btn-reset-preview-pos');
-
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let initialLeft = 0;
-    let initialTop = 0;
-    let userMoved = false;
-
-    // Bouton de réinitialisation vers le coin bas-gauche d'origine
-    if (resetBtn) {
+    if (resetBtn && !resetBtn.dataset.hasResetListener) {
+      resetBtn.dataset.hasResetListener = 'true';
       resetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        userMoved = false;
-        panel.style.left = '';
-        panel.style.top = '';
-        panel.style.bottom = '';
-        panel.style.right = '';
-        panel.style.width = '';
+        delete panel.dataset.userMoved;
+        delete panel.dataset.userResized;
+        panel.style.removeProperty('left');
+        panel.style.removeProperty('top');
+        panel.style.removeProperty('bottom');
+        panel.style.removeProperty('right');
+        panel.style.removeProperty('width');
+        panel.style.removeProperty('height');
         resetBtn.classList.add('hidden');
+        if (window.ElevationProfileInstance) {
+          window.ElevationProfileInstance.resizeAndDraw();
+        }
       });
     }
-
-    const onStart = (e) => {
-      // Ignorer si clic sur un bouton, champ de saisie, canvas ou lien
-      if (e.target.closest('button, input, select, a, canvas, #elevation-chart-container')) return;
-
-      const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      if (!userMoved) {
-        initialLeft = panelRect.left - containerRect.left;
-        initialTop = panelRect.top - containerRect.top;
-        panel.style.bottom = 'auto';
-        panel.style.right = 'auto';
-        panel.style.left = `${initialLeft}px`;
-        panel.style.top = `${initialTop}px`;
-        panel.style.width = `${panelRect.width}px`;
-      } else {
-        initialLeft = panel.offsetLeft;
-        initialTop = panel.offsetTop;
-      }
-
-      startX = clientX;
-      startY = clientY;
-      isDragging = true;
-      userMoved = true;
-
-      panel.style.transition = 'none';
-      panel.classList.add('ring-2', 'ring-emerald-500/70', 'shadow-2xl');
-      if (dragHandle) dragHandle.classList.add('cursor-grabbing');
-      if (resetBtn) resetBtn.classList.remove('hidden');
-
-      e.stopPropagation();
-    };
-
-    const onMove = (e) => {
-      if (!isDragging) return;
-
-      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      const minX = 4;
-      const maxX = Math.max(minX, containerRect.width - panelRect.width - 4);
-      const minY = 4;
-      const maxY = Math.max(minY, containerRect.height - panelRect.height - 4);
-
-      const targetX = Math.max(minX, Math.min(maxX, initialLeft + dx));
-      const targetY = Math.max(minY, Math.min(maxY, initialTop + dy));
-
-      panel.style.left = `${targetX}px`;
-      panel.style.top = `${targetY}px`;
-
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const onEnd = () => {
-      if (!isDragging) return;
-      isDragging = false;
-      panel.style.transition = '';
-      panel.classList.remove('ring-2', 'ring-emerald-500/70');
-      if (dragHandle) dragHandle.classList.remove('cursor-grabbing');
-    };
-
-    // Attacher aux poignées de glissement (handle supérieur et barre de titre)
-    if (dragHandle) {
-      dragHandle.addEventListener('mousedown', onStart);
-      dragHandle.addEventListener('touchstart', onStart, { passive: false });
-    }
-    if (titleHeader) {
-      titleHeader.addEventListener('mousedown', onStart);
-      titleHeader.addEventListener('touchstart', onStart, { passive: false });
-    }
-
-    window.addEventListener('mousemove', onMove, { passive: false });
-    window.addEventListener('mouseup', onEnd);
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', onEnd);
-    window.addEventListener('touchcancel', onEnd);
-
-    // Ajuster si redimensionnement de l'écran pour rester dans la carte
-    window.addEventListener('resize', () => {
-      if (!userMoved || panel.classList.contains('hidden')) return;
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-      const maxX = Math.max(4, containerRect.width - panelRect.width - 4);
-      const maxY = Math.max(4, containerRect.height - panelRect.height - 4);
-      if (panel.offsetLeft > maxX) panel.style.left = `${maxX}px`;
-      if (panel.offsetTop > maxY) panel.style.top = `${maxY}px`;
-    });
   }
 
   getLocalPlaceMatches(query) {
@@ -8359,6 +8155,13 @@ class AppController {
     }
 
     previewPanel.classList.remove('hidden');
+    window.FloatingWindowManagerInstance?.enhance(previewPanel);
+    if (previewPanel.dataset.userMoved === 'true') {
+      if (previewPanel.dataset.userLeft) previewPanel.style.setProperty('left', previewPanel.dataset.userLeft + 'px', 'important');
+      if (previewPanel.dataset.userTop) previewPanel.style.setProperty('top', previewPanel.dataset.userTop + 'px', 'important');
+      const rBtn = document.getElementById('btn-reset-preview-pos');
+      if (rBtn) rBtn.classList.remove('hidden');
+    }
 
     // Détection immédiate si la souris se trouve déjà sous la zone d'apparition du panneau
     if (previewPanel.matches && previewPanel.matches(':hover')) {
@@ -8433,138 +8236,29 @@ class AppController {
    */
   setupDraggablePreviewPanel() {
     const panel = document.getElementById('hike-preview-panel');
-    const container = document.getElementById('map-column');
-    if (!panel || !container) return;
+    if (!panel) return;
+    window.FloatingWindowManagerInstance?.enhance(panel);
 
-    // Empêcher Leaflet de capter les clics et le défilement sur le panneau
-    if (typeof L !== 'undefined' && L.DomEvent) {
-      L.DomEvent.disableClickPropagation(panel);
-      L.DomEvent.disableScrollPropagation(panel);
-    }
-
-    const dragHandle = document.getElementById('preview-drag-handle');
-    const titleHeader = panel.querySelector('.flex.items-start');
     const resetBtn = document.getElementById('btn-reset-preview-pos');
-
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let initialLeft = 0;
-    let initialTop = 0;
-    let userMoved = false;
-
-    // Bouton de réinitialisation vers le coin bas-gauche d'origine
-    if (resetBtn) {
+    if (resetBtn && !resetBtn.dataset.hasResetListener) {
+      resetBtn.dataset.hasResetListener = 'true';
       resetBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        userMoved = false;
-        panel.style.left = '';
-        panel.style.top = '';
-        panel.style.bottom = '';
-        panel.style.right = '';
-        panel.style.width = '';
+        delete panel.dataset.userMoved;
+        delete panel.dataset.userResized;
+        panel.style.removeProperty('left');
+        panel.style.removeProperty('top');
+        panel.style.removeProperty('bottom');
+        panel.style.removeProperty('right');
+        panel.style.removeProperty('width');
+        panel.style.removeProperty('height');
         resetBtn.classList.add('hidden');
+        if (window.ElevationProfileInstance) {
+          window.ElevationProfileInstance.resizeAndDraw();
+        }
       });
     }
-
-    const onStart = (e) => {
-      // Ignorer si clic sur un bouton, champ de saisie, canvas ou lien
-      if (e.target.closest('button, input, select, a, canvas, #elevation-chart-container')) return;
-
-      const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      if (!userMoved) {
-        initialLeft = panelRect.left - containerRect.left;
-        initialTop = panelRect.top - containerRect.top;
-        panel.style.bottom = 'auto';
-        panel.style.right = 'auto';
-        panel.style.left = `${initialLeft}px`;
-        panel.style.top = `${initialTop}px`;
-        panel.style.width = `${panelRect.width}px`;
-      } else {
-        initialLeft = panel.offsetLeft;
-        initialTop = panel.offsetTop;
-      }
-
-      startX = clientX;
-      startY = clientY;
-      isDragging = true;
-      userMoved = true;
-
-      panel.style.transition = 'none';
-      panel.classList.add('ring-2', 'ring-emerald-500/70', 'shadow-2xl');
-      if (dragHandle) dragHandle.classList.add('cursor-grabbing');
-      if (resetBtn) resetBtn.classList.remove('hidden');
-
-      e.stopPropagation();
-    };
-
-    const onMove = (e) => {
-      if (!isDragging) return;
-
-      const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-      const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-
-      const dx = clientX - startX;
-      const dy = clientY - startY;
-
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-
-      const minX = 4;
-      const maxX = Math.max(minX, containerRect.width - panelRect.width - 4);
-      const minY = 4;
-      const maxY = Math.max(minY, containerRect.height - panelRect.height - 4);
-
-      const targetX = Math.max(minX, Math.min(maxX, initialLeft + dx));
-      const targetY = Math.max(minY, Math.min(maxY, initialTop + dy));
-
-      panel.style.left = `${targetX}px`;
-      panel.style.top = `${targetY}px`;
-
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const onEnd = () => {
-      if (!isDragging) return;
-      isDragging = false;
-      panel.style.transition = '';
-      panel.classList.remove('ring-2', 'ring-emerald-500/70');
-      if (dragHandle) dragHandle.classList.remove('cursor-grabbing');
-    };
-
-    // Attacher aux poignées de glissement (handle supérieur et barre de titre)
-    if (dragHandle) {
-      dragHandle.addEventListener('mousedown', onStart);
-      dragHandle.addEventListener('touchstart', onStart, { passive: false });
-    }
-    if (titleHeader) {
-      titleHeader.addEventListener('mousedown', onStart);
-      titleHeader.addEventListener('touchstart', onStart, { passive: false });
-    }
-
-    window.addEventListener('mousemove', onMove, { passive: false });
-    window.addEventListener('mouseup', onEnd);
-    window.addEventListener('touchmove', onMove, { passive: false });
-    window.addEventListener('touchend', onEnd);
-    window.addEventListener('touchcancel', onEnd);
-
-    // Ajuster si redimensionnement de l'écran pour rester dans la carte
-    window.addEventListener('resize', () => {
-      if (!userMoved || panel.classList.contains('hidden')) return;
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = panel.getBoundingClientRect();
-      const maxX = Math.max(4, containerRect.width - panelRect.width - 4);
-      const maxY = Math.max(4, containerRect.height - panelRect.height - 4);
-      if (panel.offsetLeft > maxX) panel.style.left = `${maxX}px`;
-      if (panel.offsetTop > maxY) panel.style.top = `${maxY}px`;
-    });
   }
 
   getLocalPlaceMatches(query) {

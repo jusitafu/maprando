@@ -6510,20 +6510,25 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
 
 
-    toggleMinimizeHud(forceState = null) {
-
+  toggleMinimizeHud(forceState = null) {
     if (typeof forceState === 'boolean') {
-
       this.isHudMinimized = forceState;
-
     } else {
-
       this.isHudMinimized = !this.isHudMinimized;
-
     }
-
     this.showStandaloneGpxHud();
+  }
 
+  autoFitHud() {
+    const hud = document.getElementById('standalone-gpx-hud');
+    if (hud) {
+      delete hud.dataset.userResized;
+      hud.style.removeProperty('height');
+      hud.style.height = '';
+      this.isHudMinimized = false;
+      this.showStandaloneGpxHud();
+      window.FloatingWindowManagerInstance?.autoFit(hud);
+    }
   }
 
 
@@ -6591,7 +6596,21 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     }
 
     // MODE NORMAL AGRANDI (Conforme aux standards ergonomiques 16px)
-    hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95%] sm:max-w-3xl';
+    const isMoved = hud.dataset.userMoved === 'true';
+    if (!isMoved) {
+      hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95%] sm:max-w-3xl';
+    } else {
+      hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95%] sm:max-w-3xl';
+      if (hud.dataset.userLeft) hud.style.setProperty('left', `${hud.dataset.userLeft}px`, 'important');
+      if (hud.dataset.userTop) hud.style.setProperty('top', `${hud.dataset.userTop}px`, 'important');
+    }
+
+    // Si la fenêtre n'a pas été explicitement redimensionnée à la main par l'utilisateur,
+    // on retire toute contrainte de hauteur pour afficher TOUTES les randonnées (1, 2 ou 3) sans scrollbar !
+    if (hud.dataset.userResized !== 'true') {
+      hud.style.removeProperty('height');
+      hud.style.height = '';
+    }
 
 
 
@@ -6720,28 +6739,17 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
             </button>
 
-            <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Agrandir / Pleine taille" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
-
+            <button type="button" onclick="window.MapManagerInstance.autoFitHud()" title="Ajuster la taille / Afficher toutes les randonnées (ou double-clic sur l'en-tête)" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
               &#x25A1;
-
             </button>
-
             <button type="button" onclick="window.MapManagerInstance.clearStandaloneGpxTrack()" title="Fermer et effacer les traces GPX" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
-
               &#x2715;
-
             </button>
-
           </div>
-
         </div>
-
       </div>
-
-      <div class="flex flex-col gap-2 max-h-64 overflow-y-auto">
-
+      <div class="gpx-tracks-container flex-1 min-h-0 flex flex-col gap-2.5 overflow-y-auto pr-1">
         ${tracksHtml}
-
       </div>
 
     `;
