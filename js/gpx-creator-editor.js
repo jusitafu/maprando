@@ -566,19 +566,23 @@ class GpxCreatorEditor {
     this.showUndoFeedback("Tous les points ont été effacés (Ctrl+Z pour restaurer)");
   }
 
-  exportCreatedGpx() {
+  async exportCreatedGpx() {
     if (this.createRouteCoords.length < 2) return;
-    const now = new Date().toISOString();
-    const name = `Itineraire_MapRando_${new Date().toISOString().slice(0, 10)}`;
+    const defaultName = await this.buildProposedGpxName(this.createRouteCoords);
 
-    const gpx = this.generateGpxXml(name, this.createRouteCoords, this.createWaypoints);
-    this.downloadGpxFile(`${name}.gpx`, gpx);
+    // Boîte de dialogue pour valider ou personnaliser le nom avant l'export
+    const chosenName = await this.promptGpxFilename(defaultName, 'sky');
+    if (!chosenName) return;
+
+    const gpx = this.generateGpxXml(chosenName, this.createRouteCoords, this.createWaypoints);
+    this.downloadGpxFile(`${chosenName}.gpx`, gpx);
 
     // Charger immédiatement le parcours créé dans MapManager pour qu'il soit affiché
     if (this.mapManager && typeof this.mapManager.loadStandaloneGpxContent === 'function') {
-      this.mapManager.loadStandaloneGpxContent(gpx, `${name}.gpx`);
+      this.mapManager.loadStandaloneGpxContent(gpx, `${chosenName}.gpx`);
     }
 
+    this.showUndoFeedback(`Trace exportée : ${chosenName}.gpx`);
     this.stopCreateMode();
   }
 
@@ -973,11 +977,17 @@ class GpxCreatorEditor {
     }, 1600);
   }
 
-  exportEditedGpx() {
+  async exportEditedGpx() {
     if (!this.editingTrack || !this.currentEditCoords || this.currentEditCoords.length < 2) return;
-    const name = `${this.editingTrack.name || 'Trace'}_modifiee`;
-    const gpx = this.generateGpxXml(name, this.currentEditCoords, []);
-    this.downloadGpxFile(`${name}.gpx`, gpx);
+    const defaultName = await this.buildProposedGpxName(this.currentEditCoords);
+
+    // Boîte de dialogue pour valider ou personnaliser le nom avant l'export
+    const chosenName = await this.promptGpxFilename(defaultName, 'violet');
+    if (!chosenName) return;
+
+    const gpx = this.generateGpxXml(chosenName, this.currentEditCoords, []);
+    this.downloadGpxFile(`${chosenName}.gpx`, gpx);
+    this.showUndoFeedback(`Trace modifiée exportée : ${chosenName}.gpx`);
     this.stopEditMode();
   }
 
@@ -1202,8 +1212,172 @@ class GpxCreatorEditor {
     return R * c;
   }
 
+  /**
+   * Identifie la commune de départ d'une trace pour le nommage automatique
+   */
+  async getStartCity(coords) {
+    if (coords && coords.length > 0) {
+      const lat = Number(coords[0][0]);
+      const lon = Number(coords[0][1]);
+      try {
+        const ctrl = new AbortController();
+        const timeoutId = setTimeout(() => ctrl.abort(), 750);
+        const resp = await fetch(`https://geo.api.gouv.fr/communes?lat=${lat.toFixed(5)}&lon=${lon.toFixed(5)}&fields=nom`, {
+          signal: ctrl.signal,
+          headers: { 'Accept': 'application/json' }
+        });
+        clearTimeout(timeoutId);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data) && data.length > 0 && data[0].nom) {
+            return data[0].nom.trim();
+          }
+        }
+      } catch (e) {
+        // Fallback silencieux vers le cache ou le HUD
+      }
+    }
+
+    // Fallback vers la commune actuellement affichée sur le bandeau bas
+    const rawCity = this.mapManager?.currentCity || document.getElementById('map-hud-city-val')?.innerText || '';
+    if (rawCity) {
+      const cleaned = rawCity.replace(/\s*\(\d+\)$/, '').trim();
+      if (cleaned) return cleaned;
+    }
+
+    return 'Randonnée';
+  }
+
+  /**
+   * Construit le nom de fichier GPX recommandé selon la nomenclature :
+   * ville - kilométrage - dénivelé positif total (format D+XXX m)
+   */
+  async buildProposedGpxName(coords) {
+    const stats = this.computeTrackStats(coords);
+    const city = await this.getStartCity(coords);
+    const distStr = `${stats.distanceKm.toFixed(1)} km`;
+    const eleStr = `D+${Math.round(stats.elevationGain)} m`;
+    return `${city} - ${distStr} - ${eleStr}`;
+  }
+
+  /**
+   * Affiche une boîte de dialogue interactive pour proposer le nom du GPX,
+   * permettant à l'utilisateur de valider immédiatement (Touche Entrée / OK)
+   * ou de modifier le texte avant l'export vers le disque.
+   */
+  promptGpxFilename(defaultName, theme = 'sky') {
+    return new Promise((resolve) => {
+      // Nettoyer toute boîte précédente
+      const oldModal = document.getElementById('modal-gpx-export-filename');
+      if (oldModal) oldModal.remove();
+
+      const accentBorder = (theme === 'violet') ? 'border-violet-400' : 'border-sky-400';
+      const accentText = (theme === 'violet') ? 'text-violet-300' : 'text-sky-300';
+      const accentFocus = (theme === 'violet') ? 'focus-within:border-violet-400 focus-within:ring-violet-400/40' : 'focus-within:border-sky-400 focus-within:ring-sky-400/40';
+      const badgeBg = (theme === 'violet') ? 'bg-violet-950 border-violet-800 text-violet-300' : 'bg-sky-950 border-sky-800 text-sky-400';
+
+      const modal = document.createElement('div');
+      modal.id = 'modal-gpx-export-filename';
+      modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150 select-none';
+      modal.innerHTML = `
+        <div class="bg-slate-900 border-2 ${accentBorder} text-white rounded-2xl p-5 sm:p-6 shadow-2xl max-w-md w-full relative">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">💾</span>
+              <h3 class="font-extrabold text-base ${accentText}">Exporter la trace GPX</h3>
+            </div>
+            <button id="btn-modal-gpx-close" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-800 transition" title="Annuler">✕</button>
+          </div>
+
+          <div class="mb-5">
+            <label for="input-gpx-filename" class="block text-xs font-semibold text-slate-300 mb-2">
+              Nom du fichier GPX (modifiable) :
+            </label>
+            <div class="flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-700 ${accentFocus} transition">
+              <input id="input-gpx-filename" type="text" value="${defaultName}" class="bg-transparent flex-1 text-white text-sm font-bold focus:outline-none placeholder-slate-500" placeholder="Nom de la trace..." autocomplete="off" spellcheck="false" />
+              <span class="text-xs font-mono font-bold select-none px-2 py-0.5 rounded border ${badgeBg}">.gpx</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1.5">
+              <span>💡</span> <span>Format automatique : <strong>Ville - Distance - D+</strong> (modifiable avant enregistrement).</span>
+            </p>
+          </div>
+
+          <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800/80">
+            <button id="btn-modal-gpx-cancel" type="button" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition cursor-pointer">
+              Annuler
+            </button>
+            <button id="btn-modal-gpx-ok" type="button" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black rounded-xl shadow-lg transition flex items-center gap-1.5 cursor-pointer">
+              <span>✓</span> <span>OK</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      const input = modal.querySelector('#input-gpx-filename');
+      const btnOk = modal.querySelector('#btn-modal-gpx-ok');
+      const btnCancel = modal.querySelector('#btn-modal-gpx-cancel');
+      const btnClose = modal.querySelector('#btn-modal-gpx-close');
+
+      const cleanup = () => {
+        window.removeEventListener('keydown', handleKey, { capture: true });
+        modal.remove();
+      };
+
+      const confirm = () => {
+        let val = (input ? input.value : '').trim();
+        val = val.replace(/\.gpx$/i, '').trim();
+        val = val.replace(/[/\\?%*:|"<>]/g, '-');
+        if (!val) val = defaultName.replace(/[/\\?%*:|"<>]/g, '-');
+        cleanup();
+        resolve(val);
+      };
+
+      const cancel = () => {
+        cleanup();
+        resolve(null);
+      };
+
+      const handleKey = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+          confirm();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          cancel();
+        }
+      };
+
+      window.addEventListener('keydown', handleKey, { capture: true });
+      btnOk?.addEventListener('click', confirm);
+      btnCancel?.addEventListener('click', cancel);
+      btnClose?.addEventListener('click', cancel);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) cancel();
+      });
+
+      setTimeout(() => {
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }, 50);
+    });
+  }
+
   generateGpxXml(trackName, coords, waypoints) {
     const now = new Date().toISOString();
+    const safeTrackName = (trackName || 'Randonnee')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+
     let wptXml = '';
     if (waypoints && waypoints.length > 0) {
       wptXml = waypoints.map(wp => `
@@ -1221,14 +1395,14 @@ class GpxCreatorEditor {
     return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="Map &amp; Rando by JLDApps 2026" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
   <metadata>
-    <name>${trackName}</name>
+    <name>${safeTrackName}</name>
     <author>
       <name>JLDApps - Map &amp; Rando</name>
     </author>
     <time>${now}</time>
   </metadata>${wptXml}
   <trk>
-    <name>${trackName}</name>
+    <name>${safeTrackName}</name>
     <trkseg>${trkptXml}
     </trkseg>
   </trk>
