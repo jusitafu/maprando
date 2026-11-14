@@ -760,13 +760,84 @@ class GpxCreatorEditor {
   }
 
   // =========================================================================
-  // 3. UTILITAIRES : BRouter, Calculs Métriques & XML GPX
+  // 3. UTILITAIRES : Routage Hybride IGN GeoPF & BRouter, Calculs Métriques & XML GPX
   // =========================================================================
 
-  async queryBRouter(waypoints) {
+  async queryRoute(waypoints) {
     if (!waypoints || waypoints.length < 2) return null;
-    const lonlats = waypoints.map(wp => `${Number(wp.lon).toFixed(6)},${Number(wp.lat).toFixed(6)}`).join('|');
+
+    // Calcul tronçon par tronçon (leg-by-leg)
+    // Garantit que CHAQUE waypoint posé ou déplacé est relié sans embranchement orphelin
+    const fullRoute = [];
+
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const p1 = waypoints[i];
+      const p2 = waypoints[i + 1];
+
+      let legCoords = await this.querySingleLeg(p1, p2);
+
+      // Si le routage automatique échoue pour ce tronçon, fallback ligne droite
+      if (!legCoords || legCoords.length === 0) {
+        legCoords = [
+          [Number(p1.lat), Number(p1.lon), p1.ele || 0],
+          [Number(p2.lat), Number(p2.lon), p2.ele || 0]
+        ];
+      }
+
+      // S'assurer de la connexion exacte au point de départ du tronçon
+      const dStart = this.haversineDistance(legCoords[0][0], legCoords[0][1], p1.lat, p1.lon);
+      if (dStart > 5) {
+        legCoords.unshift([Number(p1.lat), Number(p1.lon), p1.ele || 0]);
+      } else {
+        legCoords[0] = [Number(p1.lat), Number(p1.lon), legCoords[0][2] || p1.ele || 0];
+      }
+
+      // S'assurer de la connexion exacte au point d'arrivée du tronçon
+      const dEnd = this.haversineDistance(legCoords[legCoords.length - 1][0], legCoords[legCoords.length - 1][1], p2.lat, p2.lon);
+      if (dEnd > 5) {
+        legCoords.push([Number(p2.lat), Number(p2.lon), p2.ele || 0]);
+      } else {
+        legCoords[legCoords.length - 1] = [Number(p2.lat), Number(p2.lon), legCoords[legCoords.length - 1][2] || p2.ele || 0];
+      }
+
+      if (fullRoute.length > 0) {
+        fullRoute.push(...legCoords.slice(1));
+      } else {
+        fullRoute.push(...legCoords);
+      }
+    }
+
+    // Enrichir avec le profil altimétrique IGN RGE ALTI si nécessaire
+    return await this.enrichElevations(fullRoute);
+  }
+
+  async querySingleLeg(p1, p2) {
+    const lat1 = Number(p1.lat);
+    const lon1 = Number(p1.lon);
+    const lat2 = Number(p2.lat);
+    const lon2 = Number(p2.lon);
+
+    // 1. Priorité IGN Géoplateforme (BD TOPO Piéton) en France
+    // Traite fidèlement les impasses, cours, sentiers et chemins même étiquetés privés sur OSM
+    const isInFrance = (lat1 >= -22 && lat1 <= 52 && lon1 >= -63 && lon1 <= 56);
+    if (isInFrance) {
+      try {
+        const ignUrl = `https://data.geopf.fr/navigation/itineraire?resource=bdtopo-osrm&start=${lon1.toFixed(6)},${lat1.toFixed(6)}&end=${lon2.toFixed(6)},${lat2.toFixed(6)}&profile=pedestrian&optimization=shortest`;
+        const resp = await fetch(ignUrl, { headers: { 'Accept': 'application/json' } });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.geometry && data.geometry.coordinates && data.geometry.coordinates.length > 0) {
+            return data.geometry.coordinates.map(pt => [pt[1], pt[0], 0]);
+          }
+        }
+      } catch (err) {
+        console.warn("IGN GeoPF routing fallback to BRouter:", err);
+      }
+    }
+
+    // 2. Fallback BRouter multi-profils (sentiers de montagne, trekking, routes)
     const profiles = [this.routingProfile || 'hiking-mountain', 'trekking', 'safety'];
+    const lonlats = `${lon1.toFixed(6)},${lat1.toFixed(6)}|${lon2.toFixed(6)},${lat2.toFixed(6)}`;
 
     for (const profile of profiles) {
       const url = `${this.brouterBase}?lonlats=${lonlats}&profile=${profile}&alternativeidx=0&format=geojson`;
@@ -777,15 +848,67 @@ class GpxCreatorEditor {
         if (data && data.features && data.features[0] && data.features[0].geometry) {
           const coords = data.features[0].geometry.coordinates;
           if (coords && coords.length > 0) {
-            // BRouter renvoie [lon, lat, ele] -> convertir en [lat, lon, ele]
             return coords.map(pt => [pt[1], pt[0], pt[2] || 0]);
           }
         }
       } catch (err) {
-        console.warn(`BRouter ${profile} warning:`, err);
+        // profil suivant
       }
     }
+
     return null;
+  }
+
+  async enrichElevations(coords) {
+    if (!coords || coords.length < 2) return coords;
+    // Vérifier si des altitudes sont déjà présentes
+    const hasEle = coords.some(c => (c[2] || 0) > 0);
+    if (hasEle) return coords;
+
+    try {
+      // Échantillonner au maximum 50 points pour l'API alti IGN
+      const sampleStep = Math.max(1, Math.floor(coords.length / 50));
+      const sampleIndices = [];
+      for (let i = 0; i < coords.length; i += sampleStep) sampleIndices.push(i);
+      if (sampleIndices[sampleIndices.length - 1] !== coords.length - 1) {
+        sampleIndices.push(coords.length - 1);
+      }
+
+      const lons = sampleIndices.map(i => coords[i][1].toFixed(6)).join('|');
+      const lats = sampleIndices.map(i => coords[i][0].toFixed(6)).join('|');
+      const url = `https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevationLine.json?lon=${lons}&lat=${lats}&resource=ign_rge_alti_wld&sampling=${sampleIndices.length}`;
+
+      const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (resp.ok) {
+        const data = await resp.json();
+        const eles = data.elevations || [];
+        if (eles.length === sampleIndices.length) {
+          for (let k = 0; k < sampleIndices.length; k++) {
+            const idx = sampleIndices[k];
+            coords[idx][2] = Math.round((eles[k].z || 0) * 10) / 10;
+          }
+          // Remplir les points intermédiaires par interpolation
+          for (let k = 0; k < sampleIndices.length - 1; k++) {
+            const i1 = sampleIndices[k];
+            const i2 = sampleIndices[k + 1];
+            const z1 = coords[i1][2];
+            const z2 = coords[i2][2];
+            for (let j = i1 + 1; j < i2; j++) {
+              const ratio = (j - i1) / (i2 - i1);
+              coords[j][2] = Math.round((z1 + ratio * (z2 - z1)) * 10) / 10;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignorer silencieusement si hors-ligne
+    }
+    return coords;
+  }
+
+  // Alias rétro-compatible
+  async queryBRouter(waypoints) {
+    return await this.queryRoute(waypoints);
   }
 
   computeTrackStats(coords) {
