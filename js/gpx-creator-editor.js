@@ -24,6 +24,7 @@ class GpxCreatorEditor {
     this.editPolyline = null;
     this.editAutoRoute = true;
     this.editFloatingCard = null;
+    this.isProcessingEdit = false;
 
     // Service BRouter
     this.brouterBase = 'https://brouter.de/brouter';
@@ -560,56 +561,106 @@ class GpxCreatorEditor {
   }
 
   async handleEditHandleMoved(handleIndex, newCoord, handleOrder, handleIndices) {
-    if (!this.currentEditCoords || !this.editingTrack) return;
+    if (!this.currentEditCoords || !this.editingTrack || this.isProcessingEdit) return;
 
-    // Identifier les poignées adjacentes pour recalculer la portion
-    const prevHandle = handleOrder > 0 ? this.editHandles[handleOrder - 1] : null;
-    const nextHandle = handleOrder < this.editHandles.length - 1 ? this.editHandles[handleOrder + 1] : null;
+    this.isProcessingEdit = true;
+    const statusEl = document.getElementById('gpx-edit-status');
+    if (statusEl) statusEl.classList.remove('hidden');
 
-    if (this.editAutoRoute && prevHandle && nextHandle) {
-      // Auto-routage entre [prevHandle -> newCoord -> nextHandle]
-      const intermediatePts = [
-        { lat: prevHandle.lat, lon: prevHandle.lon },
-        { lat: newCoord[0], lon: newCoord[1] },
-        { lat: nextHandle.lat, lon: nextHandle.lon }
-      ];
+    try {
+      // Identifier les poignées adjacentes pour recalculer la portion
+      const prevHandle = handleOrder > 0 ? this.editHandles[handleOrder - 1] : null;
+      const nextHandle = handleOrder < this.editHandles.length - 1 ? this.editHandles[handleOrder + 1] : null;
 
-      const reroutedSegment = await this.queryBRouter(intermediatePts);
-      if (reroutedSegment && reroutedSegment.length > 0) {
-        // Remplacer le segment existant dans currentEditCoords
-        const startSlice = this.currentEditCoords.slice(0, prevHandle.index);
-        const endSlice = this.currentEditCoords.slice(nextHandle.index + 1);
-        this.currentEditCoords = [...startSlice, ...reroutedSegment, ...endSlice];
-      } else {
-        // Fallback déplacement direct du point
-        this.currentEditCoords[handleIndex] = [newCoord[0], newCoord[1], 0];
+      let routeSuccess = false;
+
+      if (this.editAutoRoute && (prevHandle || nextHandle)) {
+        let intermediatePts = [];
+        let isStart = false;
+        let isEnd = false;
+
+        if (prevHandle && nextHandle) {
+          // Point intermédiaire : relier [prevHandle -> newCoord -> nextHandle]
+          intermediatePts = [
+            { lat: prevHandle.lat, lon: prevHandle.lon },
+            { lat: newCoord[0], lon: newCoord[1] },
+            { lat: nextHandle.lat, lon: nextHandle.lon }
+          ];
+        } else if (!prevHandle && nextHandle) {
+          // Point de départ (D) : relier [newCoord -> nextHandle]
+          isStart = true;
+          intermediatePts = [
+            { lat: newCoord[0], lon: newCoord[1] },
+            { lat: nextHandle.lat, lon: nextHandle.lon }
+          ];
+        } else if (prevHandle && !nextHandle) {
+          // Point d'arrivée (A) : relier [prevHandle -> newCoord]
+          isEnd = true;
+          intermediatePts = [
+            { lat: prevHandle.lat, lon: prevHandle.lon },
+            { lat: newCoord[0], lon: newCoord[1] }
+          ];
+        }
+
+        // Requête BRouter multi-profils (sentiers, chemins, routes)
+        const reroutedSegment = await this.queryBRouter(intermediatePts);
+        if (reroutedSegment && reroutedSegment.length > 0) {
+          routeSuccess = true;
+          if (isStart) {
+            // Remplacer du début jusqu'à nextHandle inclus
+            const endSlice = this.currentEditCoords.slice(nextHandle.index + 1);
+            this.currentEditCoords = [...reroutedSegment, ...endSlice];
+          } else if (isEnd) {
+            // Remplacer de prevHandle jusqu'à la fin
+            const startSlice = this.currentEditCoords.slice(0, prevHandle.index);
+            this.currentEditCoords = [...startSlice, ...reroutedSegment];
+          } else {
+            // Remplacer la portion entre prevHandle et nextHandle
+            const startSlice = this.currentEditCoords.slice(0, prevHandle.index);
+            const endSlice = this.currentEditCoords.slice(nextHandle.index + 1);
+            this.currentEditCoords = [...startSlice, ...reroutedSegment, ...endSlice];
+          }
+        }
       }
-    } else {
-      // Déplacement direct
-      this.currentEditCoords[handleIndex] = [newCoord[0], newCoord[1], 0];
-    }
 
-    // Mettre à jour la polyline sur la carte
-    const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
-    if (this.editingTrack.polyline) {
-      this.editingTrack.polyline.setLatLngs(latlngs);
-    }
+      if (!routeSuccess) {
+        // Fallback déplacement direct
+        if (handleOrder === 0) {
+          this.currentEditCoords[0] = [newCoord[0], newCoord[1], 0];
+        } else if (handleOrder === this.editHandles.length - 1) {
+          this.currentEditCoords[this.currentEditCoords.length - 1] = [newCoord[0], newCoord[1], 0];
+        } else if (handleIndex >= 0 && handleIndex < this.currentEditCoords.length) {
+          this.currentEditCoords[handleIndex] = [newCoord[0], newCoord[1], 0];
+        }
+      }
 
-    // Recalculer les poignées pour les réaligner
-    this.generateEditHandles();
+      // Mettre à jour la polyline sur la carte
+      const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
+      if (this.editingTrack.polyline) {
+        this.editingTrack.polyline.setLatLngs(latlngs);
+      }
 
-    // Mettre à jour les métriques
-    const stats = this.computeTrackStats(this.currentEditCoords);
-    this.editingTrack.distance = stats.distanceKm.toFixed(1);
-    this.editingTrack.elevationGain = stats.elevationGain;
+      // Recalculer les poignées pour les réaligner
+      this.generateEditHandles();
 
-    const dEl = document.getElementById('gpx-edit-dist');
-    if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
-    const eEl = document.getElementById('gpx-edit-ele');
-    if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
+      // Mettre à jour les métriques
+      const stats = this.computeTrackStats(this.currentEditCoords);
+      this.editingTrack.distance = stats.distanceKm.toFixed(1);
+      this.editingTrack.elevationGain = stats.elevationGain;
 
-    if (typeof this.mapManager.updateStandaloneGpxHud === 'function') {
-      this.mapManager.updateStandaloneGpxHud();
+      const dEl = document.getElementById('gpx-edit-dist');
+      if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
+      const eEl = document.getElementById('gpx-edit-ele');
+      if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
+
+      if (typeof this.mapManager?.updateStandaloneGpxHud === 'function') {
+        this.mapManager.updateStandaloneGpxHud();
+      }
+    } catch (err) {
+      console.error("Erreur lors du déplacement de poignée GPX:", err);
+    } finally {
+      this.isProcessingEdit = false;
+      if (statusEl) statusEl.classList.add('hidden');
     }
   }
 
@@ -637,6 +688,10 @@ class GpxCreatorEditor {
         <button id="btn-toggle-edit-autoroute" type="button" class="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.editAutoRoute ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver l'auto-routage sur les sentiers voisins">
           ${this.editAutoRoute ? '🥾 Auto-routage : OUI' : '📏 Glisser simple'}
         </button>
+      </div>
+
+      <div id="gpx-edit-status" class="text-xs text-center text-violet-300 font-semibold mb-2 hidden bg-violet-950/80 p-2 rounded-xl border border-violet-800 animate-pulse">
+        🔄 <strong>Calcul du tracé en cours...</strong> Ajustement automatique sur les sentiers et routes.
       </div>
 
       <div class="grid grid-cols-2 gap-2 mb-3 text-center">
@@ -710,19 +765,25 @@ class GpxCreatorEditor {
 
   async queryBRouter(waypoints) {
     if (!waypoints || waypoints.length < 2) return null;
-    const lonlats = waypoints.map(wp => `${wp.lon.toFixed(6)},${wp.lat.toFixed(6)}`).join('|');
-    const url = `${this.brouterBase}?lonlats=${lonlats}&profile=${this.routingProfile}&alternativeidx=0&format=geojson`;
+    const lonlats = waypoints.map(wp => `${Number(wp.lon).toFixed(6)},${Number(wp.lat).toFixed(6)}`).join('|');
+    const profiles = [this.routingProfile || 'hiking-mountain', 'trekking', 'safety'];
 
-    try {
-      const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      if (data && data.features && data.features[0] && data.features[0].geometry) {
-        // BRouter renvoie [lon, lat, ele]
-        return data.features[0].geometry.coordinates.map(pt => [pt[1], pt[0], pt[2] || 0]);
+    for (const profile of profiles) {
+      const url = `${this.brouterBase}?lonlats=${lonlats}&profile=${profile}&alternativeidx=0&format=geojson`;
+      try {
+        const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+        if (!resp.ok) continue;
+        const data = await resp.json();
+        if (data && data.features && data.features[0] && data.features[0].geometry) {
+          const coords = data.features[0].geometry.coordinates;
+          if (coords && coords.length > 0) {
+            // BRouter renvoie [lon, lat, ele] -> convertir en [lat, lon, ele]
+            return coords.map(pt => [pt[1], pt[0], pt[2] || 0]);
+          }
+        }
+      } catch (err) {
+        console.warn(`BRouter ${profile} warning:`, err);
       }
-    } catch (err) {
-      console.warn("BRouter routing warning (fallback to straight line):", err);
     }
     return null;
   }
