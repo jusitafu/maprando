@@ -145,7 +145,7 @@ class GpxCreatorEditor {
     const parent = document.getElementById('map-column') || document.getElementById('main-map-app-container') || document.body;
     const card = document.createElement('div');
     card.id = 'gpx-creator-floating-panel';
-    card.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border-2 border-sky-400 backdrop-blur-md w-[92%] max-w-lg transition-all animate-in fade-in slide-in-from-top-3 duration-200';
+    card.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border-2 border-sky-400 backdrop-blur-md w-[92%] max-w-lg';
     card.innerHTML = `
       <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
         <div class="flex items-center gap-2">
@@ -162,7 +162,7 @@ class GpxCreatorEditor {
         </button>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+      <div class="grid grid-cols-3 gap-2 mb-2 text-center">
         <div class="bg-slate-950/70 p-2 rounded-xl border border-slate-800">
           <span class="text-[10px] text-slate-400 block font-semibold uppercase">Distance</span>
           <span id="gpx-create-dist" class="text-sm sm:text-base font-black text-sky-400">0.00 km</span>
@@ -175,6 +175,11 @@ class GpxCreatorEditor {
           <span class="text-[10px] text-slate-400 block font-semibold uppercase">Waypoints</span>
           <span id="gpx-create-pts" class="text-sm sm:text-base font-black text-amber-400">0</span>
         </div>
+      </div>
+
+      <!-- Ruban visuel de succession des étapes (A -> B -> C -> D) avec suppression directe 1-clic -->
+      <div id="gpx-create-waypoints-list" class="my-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800 text-xs flex items-center gap-1.5 flex-wrap max-h-24 overflow-y-auto">
+        <span class="text-[11px] text-slate-500 italic">👉 Cliquez sur la carte pour poser les étapes successives (A, B, C...)</span>
       </div>
 
       <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
@@ -192,8 +197,8 @@ class GpxCreatorEditor {
       </div>
 
       <div class="text-[11px] text-sky-200 mt-2 bg-sky-950/70 px-3 py-1.5 rounded-xl border border-sky-800/80 flex items-center justify-between gap-2">
-        <span class="leading-tight">🖐️ <strong>Déplacez n'importe quel point (A, B, C...) avec la souris</strong> pour ajuster l'itinéraire en direct.</span>
-        <span class="text-[10px] text-slate-400 whitespace-nowrap">(Clic droit = supprimer)</span>
+        <span class="leading-tight">🖐️ <strong>Déplacez n'importe quelle lettre avec la souris</strong> pour ajuster l'itinéraire.</span>
+        <span class="text-[10px] text-slate-400 whitespace-nowrap">(Clic droit ou popup = supprimer)</span>
       </div>
     `;
 
@@ -302,6 +307,7 @@ class GpxCreatorEditor {
       const isStart = idx === 0;
       const isEnd = idx === total - 1 && total > 1;
       const bgColor = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
+      const roleLabel = isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Étape');
 
       wp.marker.setIcon(L.divIcon({
         className: 'custom-wp-pin',
@@ -314,7 +320,87 @@ class GpxCreatorEditor {
         iconAnchor: [15, 15]
       }));
 
-      wp.marker.setTooltipContent(`📍 Waypoint <strong>${letter}</strong> (${isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Étape')})<br><span style="font-size:10px; color:#cbd5e1;">Maintenez et glissez pour déplacer<br>Clic droit pour supprimer</span>`);
+      wp.marker.setTooltipContent(`📍 Point <strong>${letter}</strong> (${roleLabel})<br><span style="font-size:10px; color:#cbd5e1;">Glissez pour déplacer • Clic droit = supprimer</span>`);
+
+      // Popup au clic avec suppression directe de l'étape
+      wp.marker.bindPopup(`
+        <div style="font-family:sans-serif; text-align:center; min-width:140px; padding:3px;">
+          <div style="font-weight:900; color:${bgColor}; font-size:14px;">Point ${letter}</div>
+          <div style="font-size:11px; color:#475569; margin-bottom:5px;">${isStart ? 'Point de Départ' : (isEnd ? 'Point d\'Arrivée' : 'Étape intermédiaire')}</div>
+          <div style="font-size:10px; color:#64748b; margin-bottom:8px;">Glissez pour déplacer vers un autre chemin</div>
+          ${total > 1 ? `<button type="button" class="btn-popup-del-wp" style="background:#ef4444; color:white; border:none; padding:4px 10px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer; width:100%; box-shadow:0 2px 4px rgba(0,0,0,0.2);">🗑️ Supprimer ce point (${letter})</button>` : ''}
+        </div>
+      `, { offset: [0, -14] });
+
+      wp.marker.off('popupopen');
+      wp.marker.on('popupopen', (popEvt) => {
+        const popEl = popEvt.popup.getElement();
+        if (popEl) {
+          const btn = popEl.querySelector('.btn-popup-del-wp');
+          if (btn) {
+            btn.onclick = (be) => {
+              be.stopPropagation();
+              this.removeCreateWaypoint(wp);
+            };
+          }
+        }
+      });
+    });
+
+    this.updateWaypointsListUI();
+  }
+
+  updateWaypointsListUI() {
+    const listEl = document.getElementById('gpx-create-waypoints-list');
+    if (!listEl) return;
+
+    const total = this.createWaypoints.length;
+    if (total === 0) {
+      listEl.innerHTML = `<span class="text-[11px] text-slate-500 italic">👉 Cliquez sur la carte pour poser les étapes successives (A, B, C...)</span>`;
+      return;
+    }
+
+    let html = '';
+    this.createWaypoints.forEach((wp, idx) => {
+      const isStart = idx === 0;
+      const isEnd = idx === total - 1 && total > 1;
+      const letter = String.fromCharCode(65 + idx);
+
+      let colorClass = 'bg-sky-950/80 text-sky-300 border-sky-700/60';
+      let roleLabel = 'Étape';
+      if (isStart) {
+        colorClass = 'bg-emerald-950/80 text-emerald-300 border-emerald-700/60';
+        roleLabel = 'Départ';
+      } else if (isEnd) {
+        colorClass = 'bg-rose-950/80 text-rose-300 border-rose-700/60';
+        roleLabel = 'Arrivée';
+      }
+
+      html += `
+        <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg border ${colorClass} text-[11px] font-bold shadow-sm select-none" title="Waypoint ${letter} (${roleLabel})">
+          <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white">${letter}</span>
+          <span class="text-[10px] opacity-80 font-medium">${roleLabel}</span>
+          ${total > 1 ? `
+            <button type="button" class="btn-delete-wp ml-1 text-slate-400 hover:text-white hover:bg-rose-600 rounded px-1.5 py-0.5 transition-colors font-black text-xs leading-none" data-idx="${idx}" title="Supprimer l'étape ${letter}">✕</button>
+          ` : ''}
+        </div>
+      `;
+
+      if (idx < total - 1) {
+        html += `<span class="text-slate-600 text-xs font-bold select-none">➔</span>`;
+      }
+    });
+
+    listEl.innerHTML = html;
+
+    listEl.querySelectorAll('.btn-delete-wp').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if (!isNaN(idx) && this.createWaypoints[idx]) {
+          this.removeCreateWaypoint(this.createWaypoints[idx]);
+        }
+      });
     });
   }
 
@@ -333,9 +419,10 @@ class GpxCreatorEditor {
     if (!this.map) return;
     const pts = this.createWaypoints;
 
-    // Mise à jour compteur waypoints
+    // Mise à jour compteur waypoints & ruban d'étapes
     const ptsEl = document.getElementById('gpx-create-pts');
     if (ptsEl) ptsEl.innerText = pts.length;
+    this.updateWaypointsListUI();
 
     const tipEl = document.getElementById('gpx-creator-tip');
     if (tipEl) {
@@ -670,7 +757,7 @@ class GpxCreatorEditor {
     const parent = document.getElementById('map-column') || document.getElementById('main-map-app-container') || document.body;
     const card = document.createElement('div');
     card.id = 'gpx-editor-floating-panel';
-    card.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border-2 border-violet-400 backdrop-blur-md w-[92%] max-w-lg transition-all animate-in fade-in slide-in-from-top-3 duration-200';
+    card.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border-2 border-violet-400 backdrop-blur-md w-[92%] max-w-lg';
 
     const currentStats = this.computeTrackStats(this.currentEditCoords);
 

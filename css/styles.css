@@ -1315,6 +1315,19 @@ path.bearing-preview-line {
   box-sizing: border-box;
 }
 
+/* Optimisation fluidité déplacement 60-120fps : aucun lag transition, aucun reflow intempestif */
+.movable-floating-window.window-is-moving {
+  transition: none !important;
+  user-select: none !important;
+  will-change: left, top, width, height !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+  opacity: 0.96;
+}
+.movable-floating-window.window-is-moving * {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
 /* Bord supérieur actif pour redimensionnement en hauteur (ns-resize) */
 .window-top-resize-handle {
   position: absolute;

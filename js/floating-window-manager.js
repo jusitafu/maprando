@@ -10,6 +10,7 @@ class FloatingWindowManager {
     this.enhancedElements = new WeakSet();
     this.activeDrag = null;
     this.activeResize = null;
+    this.rafPending = false;
     this.initialized = false;
   }
 
@@ -142,10 +143,10 @@ class FloatingWindowManager {
     }
   }
 
-  // --- DÉPLACEMENT PAR LE CONTOUR HAUT ---
+  // --- DÉPLACEMENT PAR LE CONTOUR HAUT (FLUIDITÉ MAXIMALE 60-120 FPS) ---
   startDrag(e, el) {
-    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
 
     const container = this.getContainer(el);
     const containerRect = container.getBoundingClientRect();
@@ -154,9 +155,10 @@ class FloatingWindowManager {
     const initialLeft = panelRect.left - containerRect.left;
     const initialTop = panelRect.top - containerRect.top;
 
-    // Retirer classes Tailwind conflictuelles
-    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2');
+    // Retirer toutes les classes de transition/animation Tailwind provoquant des saccades
+    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2', 'transition-all', 'transition', 'duration-200', 'duration-300');
 
+    el.style.setProperty('transition', 'none', 'important');
     el.style.setProperty('transform', 'none', 'important');
     el.style.setProperty('bottom', 'auto', 'important');
     el.style.setProperty('right', 'auto', 'important');
@@ -168,14 +170,28 @@ class FloatingWindowManager {
     const header = el.querySelector('.window-drag-header') || el;
     header.classList.add('is-dragging');
 
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'grabbing';
+
+    // Précaculer les bornes pour éviter tout getBoundingClientRect() pendant le drag
+    const minX = 4;
+    const maxX = Math.max(minX, containerRect.width - panelRect.width - 4);
+    const minY = 4;
+    const maxY = Math.max(minY, containerRect.height - panelRect.height - 4);
+
     this.activeDrag = {
       el,
       header,
-      container,
       startX: clientX,
       startY: clientY,
       initialLeft,
-      initialTop
+      initialTop,
+      minX,
+      maxX,
+      minY,
+      maxY,
+      targetX: initialLeft,
+      targetY: initialTop
     };
 
     e.preventDefault();
@@ -184,7 +200,7 @@ class FloatingWindowManager {
 
   // --- REDIMENSIONNEMENT PAR LA BORDURE HAUTE ---
   startTopResize(e, el) {
-    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
     const container = this.getContainer(el);
     const containerRect = container.getBoundingClientRect();
     const panelRect = el.getBoundingClientRect();
@@ -192,9 +208,10 @@ class FloatingWindowManager {
     const initialTop = panelRect.top - containerRect.top;
     const initialHeight = panelRect.height;
 
-    // Retirer classes Tailwind conflictuelles
-    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2');
+    // Retirer classes conflictuelles
+    el.classList.remove('right-2', 'sm:right-16', 'right-auto', 'left-1/2', '-translate-x-1/2', 'transition-all', 'transition', 'duration-200', 'duration-300');
 
+    el.style.setProperty('transition', 'none', 'important');
     el.style.setProperty('transform', 'none', 'important');
     el.style.setProperty('bottom', 'auto', 'important');
     el.style.setProperty('right', 'auto', 'important');
@@ -207,15 +224,19 @@ class FloatingWindowManager {
     const handle = el.querySelector('.window-top-resize-handle');
     if (handle) handle.classList.add('is-resizing');
 
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ns-resize';
+
     this.activeResize = {
       type: 'top',
       el,
       handle,
-      container,
       startY: clientY,
       initialTop,
       initialHeight,
-      minHeight: 60
+      minHeight: 60,
+      targetTop: initialTop,
+      targetHeight: initialHeight
     };
 
     e.preventDefault();
@@ -224,26 +245,32 @@ class FloatingWindowManager {
 
   // --- REDIMENSIONNEMENT PAR LE COIN INFÉRIEUR DROIT ---
   startCornerResize(e, el) {
-    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-    const container = this.getContainer(el);
+    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
     const panelRect = el.getBoundingClientRect();
+
+    el.classList.remove('transition-all', 'transition', 'duration-200', 'duration-300');
+    el.style.setProperty('transition', 'none', 'important');
 
     const handle = el.querySelector('.window-corner-resize-handle');
     if (handle) handle.classList.add('is-resizing');
     el.classList.add('window-is-moving');
 
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'se-resize';
+
     this.activeResize = {
       type: 'corner',
       el,
       handle,
-      container,
       startX: clientX,
       startY: clientY,
       initialWidth: panelRect.width,
       initialHeight: panelRect.height,
       minWidth: 180,
-      minHeight: 60
+      minHeight: 60,
+      targetWidth: panelRect.width,
+      targetHeight: panelRect.height
     };
 
     e.preventDefault();
@@ -251,27 +278,29 @@ class FloatingWindowManager {
   }
 
   handleGlobalMouseMove(e) {
-    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+    if (!this.activeDrag && !this.activeResize) return;
+
+    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
 
     if (this.activeDrag) {
-      const { el, container, startX, startY, initialLeft, initialTop } = this.activeDrag;
-      const dx = clientX - startX;
-      const dy = clientY - startY;
+      const d = this.activeDrag;
+      const dx = clientX - d.startX;
+      const dy = clientY - d.startY;
 
-      const containerRect = container.getBoundingClientRect();
-      const panelRect = el.getBoundingClientRect();
+      d.targetX = Math.max(d.minX, Math.min(d.maxX, d.initialLeft + dx));
+      d.targetY = Math.max(d.minY, Math.min(d.maxY, d.initialTop + dy));
 
-      const minX = 4;
-      const maxX = Math.max(minX, containerRect.width - panelRect.width - 4);
-      const minY = 4;
-      const maxY = Math.max(minY, containerRect.height - panelRect.height - 4);
-
-      const targetX = Math.max(minX, Math.min(maxX, initialLeft + dx));
-      const targetY = Math.max(minY, Math.min(maxY, initialTop + dy));
-
-      el.style.setProperty('left', `${targetX}px`, 'important');
-      el.style.setProperty('top', `${targetY}px`, 'important');
+      if (!this.rafPending) {
+        this.rafPending = true;
+        requestAnimationFrame(() => {
+          this.rafPending = false;
+          if (this.activeDrag) {
+            this.activeDrag.el.style.setProperty('left', `${this.activeDrag.targetX}px`, 'important');
+            this.activeDrag.el.style.setProperty('top', `${this.activeDrag.targetY}px`, 'important');
+          }
+        });
+      }
 
       e.preventDefault();
       e.stopPropagation();
@@ -282,21 +311,32 @@ class FloatingWindowManager {
       const r = this.activeResize;
       if (r.type === 'top') {
         const dy = clientY - r.startY;
-        const newTop = r.initialTop + dy;
-        const newHeight = r.initialHeight - dy;
-
-        if (newHeight >= r.minHeight && newTop >= 4) {
-          r.el.style.setProperty('top', `${newTop}px`, 'important');
-          r.el.style.setProperty('height', `${newHeight}px`, 'important');
-        }
+        r.targetTop = r.initialTop + dy;
+        r.targetHeight = r.initialHeight - dy;
       } else if (r.type === 'corner') {
         const dx = clientX - r.startX;
         const dy = clientY - r.startY;
-        const newWidth = Math.max(r.minWidth, r.initialWidth + dx);
-        const newHeight = Math.max(r.minHeight, r.initialHeight + dy);
+        r.targetWidth = Math.max(r.minWidth, r.initialWidth + dx);
+        r.targetHeight = Math.max(r.minHeight, r.initialHeight + dy);
+      }
 
-        r.el.style.setProperty('width', `${newWidth}px`, 'important');
-        r.el.style.setProperty('height', `${newHeight}px`, 'important');
+      if (!this.rafPending) {
+        this.rafPending = true;
+        requestAnimationFrame(() => {
+          this.rafPending = false;
+          if (this.activeResize) {
+            const cur = this.activeResize;
+            if (cur.type === 'top') {
+              if (cur.targetHeight >= cur.minHeight && cur.targetTop >= 4) {
+                cur.el.style.setProperty('top', `${cur.targetTop}px`, 'important');
+                cur.el.style.setProperty('height', `${cur.targetHeight}px`, 'important');
+              }
+            } else if (cur.type === 'corner') {
+              cur.el.style.setProperty('width', `${cur.targetWidth}px`, 'important');
+              cur.el.style.setProperty('height', `${cur.targetHeight}px`, 'important');
+            }
+          }
+        });
       }
 
       e.preventDefault();
@@ -305,6 +345,9 @@ class FloatingWindowManager {
   }
 
   handleGlobalMouseUp() {
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+
     if (this.activeDrag) {
       this.activeDrag.el.classList.remove('window-is-moving');
       if (this.activeDrag.header) this.activeDrag.header.classList.remove('is-dragging');
