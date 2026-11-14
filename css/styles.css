@@ -1307,3 +1307,78 @@ path.bearing-preview-line {
 .map-cursor-altitude-tooltip::before {
   border-top-color: #fbbf24 !important;
 }
+
+/* =========================================================================
+   FENÊTRES FLOTTANTES : DÉPLACEMENT & REDIMENSIONNEMENT PAR LE CONTOUR HAUT
+   ========================================================================= */
+.movable-floating-window {
+  box-sizing: border-box;
+}
+
+/* Bord supérieur actif pour redimensionnement en hauteur (ns-resize) */
+.window-top-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: ns-resize !important;
+  z-index: 60;
+  background: transparent;
+  transition: background 0.15s ease;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.window-top-resize-handle:hover,
+.window-top-resize-handle.is-resizing {
+  background: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+}
+
+/* Barre de titre / contour haut pour déplacement de la fenêtre */
+.window-drag-header {
+  cursor: grab !important;
+  user-select: none !important;
+  touch-action: none;
+}
+.window-drag-header:active,
+.window-drag-header.is-dragging {
+  cursor: grabbing !important;
+}
+
+/* Poignée de redimensionnement en coin inférieur droit */
+.window-corner-resize-handle {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  cursor: se-resize !important;
+  z-index: 60;
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+  background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.7) 50%);
+  border-bottom-right-radius: 8px;
+  touch-action: none;
+}
+.window-corner-resize-handle:hover,
+.window-corner-resize-handle.is-resizing {
+  opacity: 1;
+  background: linear-gradient(135deg, transparent 50%, #38bdf8 50%);
+}
+
+/* Style des waypoints interactifs déplaçables */
+.custom-wp-pin {
+  cursor: grab !important;
+  pointer-events: auto !important;
+}
+.custom-wp-pin:hover div {
+  transform: scale(1.22);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6) !important;
+}
+.custom-wp-pin:active div,
+.custom-wp-pin.is-dragging div {
+  cursor: grabbing !important;
+  transform: scale(1.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7) !important;
+}

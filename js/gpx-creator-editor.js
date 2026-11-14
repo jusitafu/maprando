@@ -189,10 +189,16 @@ class GpxCreatorEditor {
           </button>
         </div>
       </div>
+
+      <div class="text-[11px] text-sky-200 mt-2 bg-sky-950/70 px-3 py-1.5 rounded-xl border border-sky-800/80 flex items-center justify-between gap-2">
+        <span class="leading-tight">🖐️ <strong>Déplacez n'importe quel point (A, B, C...) avec la souris</strong> pour ajuster l'itinéraire en direct.</span>
+        <span class="text-[10px] text-slate-400 whitespace-nowrap">(Clic droit = supprimer)</span>
+      </div>
     `;
 
     parent.appendChild(card);
     this.createFloatingCard = card;
+    window.FloatingWindowManagerInstance?.enhance(card);
 
     // Événements du panneau
     document.getElementById('btn-close-gpx-creator')?.addEventListener('click', () => this.stopCreateMode());
@@ -211,35 +217,115 @@ class GpxCreatorEditor {
   }
 
   async handleCreateMapClick(latlng) {
-    if (this.mode !== 'create' || !this.map) return;
+    if (this.mode !== 'create' || !this.map || this.isDraggingWaypoint) return;
 
-    const letter = String.fromCharCode(65 + this.createWaypoints.length);
+    const index = this.createWaypoints.length;
+    const letter = String.fromCharCode(65 + index);
+
+    // Couleur dynamique : Vert pour Départ (A), Rouge pour Arrivée, Bleu pour intermédiaires
+    const isStart = index === 0;
+    const bgColor = isStart ? '#10b981' : '#0284c7';
+
     const marker = L.marker([latlng.lat, latlng.lng], {
       draggable: true,
       icon: L.divIcon({
         className: 'custom-wp-pin',
         html: `
-          <div style="background:#0284c7; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; border:2px solid white; box-shadow:0 3px 6px rgba(0,0,0,0.4); cursor:grab;">
+          <div style="background:${bgColor}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
             ${letter}
           </div>
         `,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13]
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
       })
     }).addTo(this.map);
 
+    marker.bindTooltip(`📍 Waypoint <strong>${letter}</strong><br><span style="font-size:10px; color:#cbd5e1;">Maintenez et glissez pour déplacer<br>Clic droit pour supprimer</span>`, {
+      direction: 'top',
+      offset: [0, -16],
+      opacity: 0.95
+    });
+
     const wp = { lat: latlng.lat, lon: latlng.lng, marker, letter };
 
-    // Déplacement interactif d'un waypoint posé
-    marker.on('dragend', (e) => {
+    // Événements tactiles et souris pour déplacement fluide d'un waypoint
+    marker.on('dragstart', (e) => {
+      this.isDraggingWaypoint = true;
+      if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+    });
+
+    marker.on('drag', (e) => {
       const pos = e.target.getLatLng();
       wp.lat = pos.lat;
       wp.lon = pos.lng;
-      this.recalculateCreatedRoute();
+      // Traçage direct immédiat pendant le glissement pour un retour visuel instantané
+      if (this.createPolyline && this.createWaypoints.length >= 2) {
+        this.createPolyline.setLatLngs(this.createWaypoints.map(p => [p.lat, p.lon]));
+      }
+    });
+
+    marker.on('dragend', async (e) => {
+      const pos = e.target.getLatLng();
+      wp.lat = pos.lat;
+      wp.lon = pos.lng;
+      await this.recalculateCreatedRoute();
+      // Temporisation pour éviter le faux clic sur la carte après le drop
+      setTimeout(() => {
+        this.isDraggingWaypoint = false;
+      }, 350);
+    });
+
+    marker.on('click', (e) => {
+      if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+    });
+
+    marker.on('mousedown', (e) => {
+      if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+    });
+
+    marker.on('contextmenu', (e) => {
+      if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+      this.removeCreateWaypoint(wp);
     });
 
     this.createWaypoints.push(wp);
+    this.updateWaypointIcons();
     await this.recalculateCreatedRoute();
+  }
+
+  updateWaypointIcons() {
+    const total = this.createWaypoints.length;
+    this.createWaypoints.forEach((wp, idx) => {
+      const letter = String.fromCharCode(65 + idx);
+      wp.letter = letter;
+      const isStart = idx === 0;
+      const isEnd = idx === total - 1 && total > 1;
+      const bgColor = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
+
+      wp.marker.setIcon(L.divIcon({
+        className: 'custom-wp-pin',
+        html: `
+          <div style="background:${bgColor}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
+            ${letter}
+          </div>
+        `,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      }));
+
+      wp.marker.setTooltipContent(`📍 Waypoint <strong>${letter}</strong> (${isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Étape')})<br><span style="font-size:10px; color:#cbd5e1;">Maintenez et glissez pour déplacer<br>Clic droit pour supprimer</span>`);
+    });
+  }
+
+  removeCreateWaypoint(wp) {
+    if (!wp || !this.map) return;
+    if (wp.marker) this.map.removeLayer(wp.marker);
+    const idx = this.createWaypoints.indexOf(wp);
+    if (idx !== -1) {
+      this.createWaypoints.splice(idx, 1);
+    }
+    this.updateWaypointIcons();
+    this.recalculateCreatedRoute();
   }
 
   async recalculateCreatedRoute() {
@@ -318,6 +404,7 @@ class GpxCreatorEditor {
     if (last && last.marker && this.map) {
       this.map.removeLayer(last.marker);
     }
+    this.updateWaypointIcons();
     this.recalculateCreatedRoute();
   }
 
@@ -575,6 +662,7 @@ class GpxCreatorEditor {
 
     parent.appendChild(card);
     this.editFloatingCard = card;
+    window.FloatingWindowManagerInstance?.enhance(card);
 
     // Événements du panneau
     document.getElementById('btn-close-gpx-editor')?.addEventListener('click', () => this.stopEditMode());

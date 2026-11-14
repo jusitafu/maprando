@@ -6585,6 +6585,8 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         </div>
       `;
       hud.classList.remove('hidden');
+    window.FloatingWindowManagerInstance?.enhance(hud);
+      window.FloatingWindowManagerInstance?.enhance(hud);
       return;
     }
 
@@ -6745,6 +6747,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     `;
 
     hud.classList.remove('hidden');
+    window.FloatingWindowManagerInstance?.enhance(hud);
 
 
 
@@ -7175,6 +7178,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       });
     }
     hud.classList.remove('hidden');
+    window.FloatingWindowManagerInstance?.enhance(hud);
     hud.style.display = 'flex';
   }
 
