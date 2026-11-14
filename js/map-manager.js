@@ -5970,126 +5970,115 @@ class MapManager {
 
    */
 
+  /**
+   * Planifie la récupération du nom de la commune avec cache spatial par Bounding Box (0 ms)
+   */
   scheduleCityFetch(lat, lon) {
-
-    if (this._cityTimeout) {
-
-      clearTimeout(this._cityTimeout);
-
-      this._cityTimeout = null;
-
+    // 1. Vérification spatiale instantanée dans le cache des limites communales (0 ms)
+    if (this._spatialCityBboxes && this._spatialCityBboxes.length > 0) {
+      for (let i = this._spatialCityBboxes.length - 1; i >= 0; i--) {
+        const box = this._spatialCityBboxes[i];
+        if (lat >= box.minLat && lat <= box.maxLat && lon >= box.minLon && lon <= box.maxLon) {
+          if (this._cityTimeout) {
+            clearTimeout(this._cityTimeout);
+            this._cityTimeout = null;
+          }
+          this._currentCommuneBbox = box;
+          this._applyCityResult(box.name);
+          return;
+        }
+      }
     }
 
-    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
-
-    if (this._cityCache && this._cityCache.has(key)) {
-
-      this._applyCityResult(this._cityCache.get(key));
-
-      return;
-
+    // 2. Si le curseur a quitté la boîte englobante de la commune précédente,
+    // effacer immédiatement pour ne pas laisser affichée l'ancienne commune pendant le voyage
+    if (this._currentCommuneBbox) {
+      if (lat < this._currentCommuneBbox.minLat || lat > this._currentCommuneBbox.maxLat ||
+          lon < this._currentCommuneBbox.minLon || lon > this._currentCommuneBbox.maxLon) {
+        this._currentCommuneBbox = null;
+        this._applyCityResult('');
+      }
     }
 
-    this._cityTimeout = setTimeout(() => {
-
-      this._cityTimeout = null;
-
+    // 3. Cadencement anti-famine : pendant le mouvement continu, interroger toutes les 120 ms
+    const now = performance.now();
+    if (!this._lastCityFetchTs || (now - this._lastCityFetchTs) >= 120) {
+      if (this._cityTimeout) {
+        clearTimeout(this._cityTimeout);
+        this._cityTimeout = null;
+      }
+      this._lastCityFetchTs = now;
       this.fetchCity(lat, lon);
+      return;
+    }
 
-    }, 220);
-
+    // 4. Temporisation courte (50 ms) dès que le curseur s'arrête ou ralentit
+    if (this._cityTimeout) {
+      clearTimeout(this._cityTimeout);
+    }
+    this._cityTimeout = setTimeout(() => {
+      this._cityTimeout = null;
+      this._lastCityFetchTs = performance.now();
+      this.fetchCity(lat, lon);
+    }, 50);
   }
 
-
-
   /**
-
-   * Récupère le nom de la commune (API officielle découpage administratif geo.api.gouv.fr)
-
+   * Récupère le nom et la Bounding Box de la commune (geo.api.gouv.fr)
    */
-
   async fetchCity(lat, lon) {
-
-    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
-
-
-
-    if (this._cityCache.has(key)) {
-
-      const c = this._cityCache.get(key);
-
-      this._applyCityResult(c);
-
-      return;
-
-    }
-
-
-
     if (this._cityAbortCtrl) {
-
       this._cityAbortCtrl.abort();
-
     }
-
     this._cityAbortCtrl = new AbortController();
 
-
-
     try {
-
       let cityStr = '';
-
       if (this.isInsideFrance(lat, lon)) {
-
-        const url = `https://geo.api.gouv.fr/communes?lat=${lat}&lon=${lon}&fields=nom,code,codeDepartement`;
-
+        const url = `https://geo.api.gouv.fr/communes?lat=${lat}&lon=${lon}&fields=nom,code,codeDepartement,bbox`;
         const resp = await fetch(url, {
-
           signal: this._cityAbortCtrl.signal,
-
           headers: { 'Accept': 'application/json' }
-
         });
-
         if (resp.ok) {
-
           const data = await resp.json();
-
           if (Array.isArray(data) && data.length > 0 && data[0].nom) {
-
             const item = data[0];
-
             cityStr = `${item.nom}${item.codeDepartement ? ` (${item.codeDepartement})` : ''}`;
 
+            // Enregistrement spatial de la boîte englobante de la commune
+            if (item.bbox && item.bbox.coordinates && item.bbox.coordinates[0]) {
+              const ring = item.bbox.coordinates[0];
+              let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
+              for (let p of ring) {
+                if (p[0] < minLon) minLon = p[0];
+                if (p[0] > maxLon) maxLon = p[0];
+                if (p[1] < minLat) minLat = p[1];
+                if (p[1] > maxLat) maxLat = p[1];
+              }
+              const newBox = { name: cityStr, minLat, maxLat, minLon, maxLon };
+              this._currentCommuneBbox = newBox;
+
+              if (!this._spatialCityBboxes) this._spatialCityBboxes = [];
+              // Éviter les doublons dans le cache spatial
+              const existingIdx = this._spatialCityBboxes.findIndex(b => b.name === cityStr);
+              if (existingIdx !== -1) {
+                this._spatialCityBboxes.splice(existingIdx, 1);
+              }
+              if (this._spatialCityBboxes.length > 300) {
+                this._spatialCityBboxes.shift();
+              }
+              this._spatialCityBboxes.push(newBox);
+            }
           }
-
         }
-
       }
-
-
-
-      if (this._cityCache.size > 500) {
-
-        const firstKey = this._cityCache.keys().next().value;
-
-        this._cityCache.delete(firstKey);
-
-      }
-
-      this._cityCache.set(key, cityStr);
 
       this._applyCityResult(cityStr);
-
     } catch (e) {
-
       if (e.name === 'AbortError') return;
-
       this._applyCityResult('');
-
     }
-
   }
 
 
