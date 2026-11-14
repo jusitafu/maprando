@@ -363,6 +363,11 @@
         });
       }
 
+      // Initialisation du Créateur & Éditeur interactif GPX
+      if (window.GpxCreatorEditorInstance && window.MapManagerInstance) {
+        window.GpxCreatorEditorInstance.init(window.MapManagerInstance);
+      }
+
       // Glisser-déposer direct sur la carte (#map-column)
       this.initMapDragAndDropGpx();
     }
@@ -444,11 +449,11 @@
         this.hideStandaloneGpxHud();
 
         const isAuthed = typeof window.AuthManager !== 'undefined' && window.AuthManager.isAuthenticated();
+        this.applyFreeMapMode(false);
         if (!isAuthed) {
           if (lockModal) lockModal.classList.remove('hidden');
         } else {
           if (lockModal) lockModal.classList.add('hidden');
-          this.applyFreeMapMode(false);
         }
 
         setTimeout(() => {
@@ -504,6 +509,8 @@
       const userControls = document.querySelector('#main-map-app-container header .flex.items-center.gap-2.flex-wrap.justify-end');
       const tabButtons = document.querySelectorAll('.tab-btn');
       const quickGpxBtn = document.getElementById('btn-quick-gpx-viewer');
+      const createGpxBtn = document.getElementById('btn-create-gpx');
+      const editGpxBtn = document.getElementById('btn-edit-gpx');
       const tableCol = document.getElementById('table-column');
       const mapCol = document.getElementById('map-column');
       const headerSubLocation = document.getElementById('header-sub-location');
@@ -561,8 +568,10 @@
         if (headerSubLocation) headerSubLocation.innerHTML = 'Outils Cartographiques &bull; IGN &amp; GPX';
         // Masquer les onglets adhérents (Trouver, Charger, Gérer)
         tabButtons.forEach(btn => btn.classList.add('hidden'));
-        // Afficher le bouton charger GPX libre
+        // Afficher les boutons GPX libre (Charger 1-3 traces, Créer, Modifier)
         if (quickGpxBtn) quickGpxBtn.classList.remove('hidden');
+        if (createGpxBtn) createGpxBtn.classList.remove('hidden');
+        if (editGpxBtn) editGpxBtn.classList.remove('hidden');
 
         // Forcer la carte en pleine page (100% largeur / hauteur, cacher la colonne tableau)
         if (tableCol) tableCol.classList.add('hidden');
@@ -627,6 +636,12 @@
         if (headerSubLocation) headerSubLocation.innerHTML = 'Sanary-sur-Mer &bull; Var (83)';
         tabButtons.forEach(btn => btn.classList.remove('hidden'));
         if (quickGpxBtn) quickGpxBtn.classList.add('hidden');
+        if (createGpxBtn) createGpxBtn.classList.add('hidden');
+        if (editGpxBtn) editGpxBtn.classList.add('hidden');
+        if (window.GpxCreatorEditorInstance) {
+          window.GpxCreatorEditorInstance.stopCreateMode();
+          window.GpxCreatorEditorInstance.stopEditMode();
+        }
 
         // Restaurer la vue (mixte par défaut pour le club)
         if (window.App && typeof window.App.setViewMode === 'function') {

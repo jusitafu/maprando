@@ -129,6 +129,10 @@ class AppController {
         };
         window.MapManagerInstance.onBaseLayerChangeCallback = (layerKey) => this.handleBaseLayerChange(layerKey);
 
+        if (window.GpxCreatorEditorInstance) {
+          window.GpxCreatorEditorInstance.init(window.MapManagerInstance);
+        }
+
         // Synchronisation bidirectionnelle : Le zoom/dézoom de la carte à la souris ajuste le curseur de rayon
         window.MapManagerInstance.onMapZoomChangeCallback = (zoom) => {
           if (!window.MapManagerInstance || !window.MapManagerInstance.map) return;
