@@ -16,6 +16,7 @@ class GpxCreatorEditor {
     this.createPolyline = null;
     this.createAutoRoute = true;
     this.createFloatingCard = null;
+    this.createHistory = [];          // Historique pour annulation (Ctrl+Z)
 
     // État Édition
     this.editingTrack = null;         // Reference vers la trace dans standaloneTracks
@@ -25,6 +26,8 @@ class GpxCreatorEditor {
     this.editAutoRoute = true;
     this.editFloatingCard = null;
     this.isProcessingEdit = false;
+    this.editHistory = [];            // Historique pour annulation (Ctrl+Z)
+    this._undoToastTimer = null;
 
     // Service BRouter
     this.brouterBase = 'https://brouter.de/brouter';
@@ -57,6 +60,24 @@ class GpxCreatorEditor {
         }
       });
     }
+
+    // Raccourci universel clavier CTRL+Z / CMD+Z pour annuler la dernière opération
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
+        if (document.activeElement && (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement.isContentEditable)) {
+          return;
+        }
+        if (this.mode === 'create') {
+          e.preventDefault();
+          e.stopPropagation();
+          this.undoLastCreateOperation();
+        } else if (this.mode === 'edit') {
+          e.preventDefault();
+          e.stopPropagation();
+          this.undoLastEditOperation();
+        }
+      }
+    });
 
     // Réinitialisation si la carte change
     window.addEventListener('hashchange', () => {
@@ -183,8 +204,8 @@ class GpxCreatorEditor {
       </div>
 
       <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
-        <button id="btn-undo-create-point" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5">
-          <span>↶</span> <span>Annuler dernier point</span>
+        <button id="btn-undo-create-point" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="Annuler la dernière opération (Ctrl+Z)">
+          <span>↶</span> <span>Annuler (Ctrl+Z)</span>
         </button>
         <div class="flex items-center gap-2">
           <button id="btn-reset-create-points" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-rose-200 text-xs font-bold rounded-xl transition" title="Effacer tout">
@@ -198,7 +219,7 @@ class GpxCreatorEditor {
 
       <div class="text-[11px] text-sky-200 mt-2 bg-sky-950/70 px-3 py-1.5 rounded-xl border border-sky-800/80 flex items-center justify-between gap-2">
         <span class="leading-tight">🖐️ <strong>Déplacez n'importe quelle lettre avec la souris</strong> pour ajuster l'itinéraire.</span>
-        <span class="text-[10px] text-slate-400 whitespace-nowrap">(Clic droit ou popup = supprimer)</span>
+        <span class="text-[10px] text-sky-300 font-semibold whitespace-nowrap">Annuler : <strong>Ctrl+Z</strong></span>
       </div>
     `;
 
@@ -217,18 +238,21 @@ class GpxCreatorEditor {
       }
       this.recalculateCreatedRoute();
     });
-    document.getElementById('btn-undo-create-point')?.addEventListener('click', () => this.undoLastCreatePoint());
+    document.getElementById('btn-undo-create-point')?.addEventListener('click', () => this.undoLastCreateOperation());
     document.getElementById('btn-reset-create-points')?.addEventListener('click', () => this.resetCreatePoints());
     document.getElementById('btn-export-created-gpx')?.addEventListener('click', () => this.exportCreatedGpx());
   }
 
-  async handleCreateMapClick(latlng) {
-    if (this.mode !== 'create' || !this.map || this.isDraggingWaypoint) return;
+  saveCreateHistorySnapshot() {
+    if (!this.createHistory) this.createHistory = [];
+    const snapshot = this.createWaypoints.map(w => ({ lat: w.lat, lon: w.lon }));
+    this.createHistory.push(snapshot);
+    if (this.createHistory.length > 30) this.createHistory.shift();
+  }
 
+  createWaypointObject(latlng) {
     const index = this.createWaypoints.length;
     const letter = String.fromCharCode(65 + index);
-
-    // Couleur dynamique : Vert pour Départ (A), Rouge pour Arrivée, Bleu pour intermédiaires
     const isStart = index === 0;
     const bgColor = isStart ? '#10b981' : '#0284c7';
 
@@ -246,17 +270,12 @@ class GpxCreatorEditor {
       })
     }).addTo(this.map);
 
-    marker.bindTooltip(`📍 Waypoint <strong>${letter}</strong><br><span style="font-size:10px; color:#cbd5e1;">Maintenez et glissez pour déplacer<br>Clic droit pour supprimer</span>`, {
-      direction: 'top',
-      offset: [0, -16],
-      opacity: 0.95
-    });
-
     const wp = { lat: latlng.lat, lon: latlng.lng, marker, letter };
 
-    // Événements tactiles et souris pour déplacement fluide d'un waypoint
+    // Sauvegarder l'état au tout début du glissement pour que Ctrl+Z permette de revenir en arrière
     marker.on('dragstart', (e) => {
       this.isDraggingWaypoint = true;
+      this.saveCreateHistorySnapshot();
       if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
     });
 
@@ -264,7 +283,6 @@ class GpxCreatorEditor {
       const pos = e.target.getLatLng();
       wp.lat = pos.lat;
       wp.lon = pos.lng;
-      // Traçage direct immédiat pendant le glissement pour un retour visuel instantané
       if (this.createPolyline && this.createWaypoints.length >= 2) {
         this.createPolyline.setLatLngs(this.createWaypoints.map(p => [p.lat, p.lon]));
       }
@@ -275,7 +293,6 @@ class GpxCreatorEditor {
       wp.lat = pos.lat;
       wp.lon = pos.lng;
       await this.recalculateCreatedRoute();
-      // Temporisation pour éviter le faux clic sur la carte après le drop
       setTimeout(() => {
         this.isDraggingWaypoint = false;
       }, 350);
@@ -294,6 +311,14 @@ class GpxCreatorEditor {
       this.removeCreateWaypoint(wp);
     });
 
+    return wp;
+  }
+
+  async handleCreateMapClick(latlng) {
+    if (this.mode !== 'create' || !this.map || this.isDraggingWaypoint) return;
+
+    this.saveCreateHistorySnapshot();
+    const wp = this.createWaypointObject(latlng);
     this.createWaypoints.push(wp);
     this.updateWaypointIcons();
     await this.recalculateCreatedRoute();
@@ -406,6 +431,7 @@ class GpxCreatorEditor {
 
   removeCreateWaypoint(wp) {
     if (!wp || !this.map) return;
+    this.saveCreateHistorySnapshot();
     if (wp.marker) this.map.removeLayer(wp.marker);
     const idx = this.createWaypoints.indexOf(wp);
     if (idx !== -1) {
@@ -486,22 +512,48 @@ class GpxCreatorEditor {
     if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
   }
 
-  undoLastCreatePoint() {
-    if (this.createWaypoints.length === 0) return;
-    const last = this.createWaypoints.pop();
-    if (last && last.marker && this.map) {
-      this.map.removeLayer(last.marker);
+  async undoLastCreateOperation() {
+    if (!this.createHistory || this.createHistory.length === 0) {
+      if (this.createWaypoints.length > 0) {
+        const last = this.createWaypoints.pop();
+        if (last && last.marker && this.map) this.map.removeLayer(last.marker);
+        this.updateWaypointIcons();
+        await this.recalculateCreatedRoute();
+        this.showUndoFeedback("Dernier point retiré");
+      } else {
+        this.showUndoFeedback("Aucune opération à annuler");
+      }
+      return;
     }
+    const prevSnapshot = this.createHistory.pop();
+    // Nettoyer tous les marqueurs actuels
+    this.createWaypoints.forEach(wp => {
+      if (wp.marker && this.map) this.map.removeLayer(wp.marker);
+    });
+    this.createWaypoints = [];
+    // Recréer chaque waypoint
+    prevSnapshot.forEach(pt => {
+      const wp = this.createWaypointObject(L.latLng(pt.lat, pt.lon));
+      this.createWaypoints.push(wp);
+    });
     this.updateWaypointIcons();
-    this.recalculateCreatedRoute();
+    await this.recalculateCreatedRoute();
+    this.showUndoFeedback("Opération annulée (Ctrl+Z)");
+  }
+
+  undoLastCreatePoint() {
+    this.undoLastCreateOperation();
   }
 
   resetCreatePoints() {
+    if (this.createWaypoints.length === 0) return;
+    this.saveCreateHistorySnapshot();
     this.createWaypoints.forEach(wp => {
       if (wp.marker && this.map) this.map.removeLayer(wp.marker);
     });
     this.createWaypoints = [];
     this.recalculateCreatedRoute();
+    this.showUndoFeedback("Tous les points ont été effacés (Ctrl+Z pour restaurer)");
   }
 
   exportCreatedGpx() {
@@ -556,6 +608,9 @@ class GpxCreatorEditor {
     const flatLatLngs = Array.isArray(rawLatLngs[0]) ? rawLatLngs.flat() : rawLatLngs;
     this.originalCoords = flatLatLngs.map(pt => [pt.lat, pt.lng, pt.alt || 0]);
     this.currentEditCoords = JSON.parse(JSON.stringify(this.originalCoords));
+
+    // Sauvegarder l'état au démarrage du mode édition
+    this.editHistory = [];
 
     // Générer les poignées de manipulation le long de la trace
     this.generateEditHandles();
@@ -631,6 +686,11 @@ class GpxCreatorEditor {
       }).addTo(this.map);
 
       // Déplacement interactif de la poignée
+      marker.on('dragstart', (e) => {
+        this.saveEditHistorySnapshot();
+        if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+      });
+
       marker.on('dragend', async (e) => {
         const newPos = e.target.getLatLng();
         await this.handleEditHandleMoved(idx, [newPos.lat, newPos.lng], order, handleIndices);
@@ -793,12 +853,22 @@ class GpxCreatorEditor {
       </div>
 
       <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80">
-        <button id="btn-reset-edited-track" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="Annuler toutes les modifications">
-          <span>↶</span> <span>Rétablir l'original</span>
-        </button>
+        <div class="flex items-center gap-1.5">
+          <button id="btn-undo-edit-point" type="button" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5" title="Annuler la dernière modification (Ctrl+Z)">
+            <span>↶</span> <span>Annuler (Ctrl+Z)</span>
+          </button>
+          <button id="btn-reset-edited-track" type="button" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-300 text-xs font-bold rounded-xl transition" title="Rétablir le tracé d'origine">
+            <span>Rétablir l'original</span>
+          </button>
+        </div>
         <button id="btn-export-edited-gpx" type="button" class="px-4 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs font-black rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer">
           <span>💾</span> <span>Télécharger le GPX modifié</span>
         </button>
+      </div>
+
+      <div class="text-[11px] text-violet-200 mt-2 bg-violet-950/70 px-3 py-1.5 rounded-xl border border-violet-800/80 flex items-center justify-between gap-2">
+        <span class="leading-tight">🖐️ <strong>Glissez une poignée ronde</strong> vers un sentier voisin pour dévier le tracé.</span>
+        <span class="text-[10px] text-violet-300 font-semibold whitespace-nowrap">Annuler : <strong>Ctrl+Z</strong></span>
       </div>
     `;
 
@@ -816,12 +886,50 @@ class GpxCreatorEditor {
         b.innerHTML = this.editAutoRoute ? '🥾 Auto-routage : OUI' : '📏 Glisser simple';
       }
     });
+    document.getElementById('btn-undo-edit-point')?.addEventListener('click', () => this.undoLastEditOperation());
     document.getElementById('btn-reset-edited-track')?.addEventListener('click', () => this.resetEditTrack());
     document.getElementById('btn-export-edited-gpx')?.addEventListener('click', () => this.exportEditedGpx());
   }
 
+  saveEditHistorySnapshot() {
+    if (!this.editHistory) this.editHistory = [];
+    if (!this.currentEditCoords) return;
+    this.editHistory.push(JSON.parse(JSON.stringify(this.currentEditCoords)));
+    if (this.editHistory.length > 30) this.editHistory.shift();
+  }
+
+  undoLastEditOperation() {
+    if (!this.editHistory || this.editHistory.length === 0) {
+      this.showUndoFeedback("Aucune modification antérieure à annuler");
+      return;
+    }
+    const prevCoords = this.editHistory.pop();
+    this.currentEditCoords = prevCoords;
+    const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
+    if (this.editingTrack && this.editingTrack.polyline) {
+      this.editingTrack.polyline.setLatLngs(latlngs);
+    }
+    this.generateEditHandles();
+    const stats = this.computeTrackStats(this.currentEditCoords);
+    if (this.editingTrack) {
+      this.editingTrack.distance = stats.distanceKm.toFixed(1);
+      this.editingTrack.elevationGain = stats.elevationGain;
+    }
+
+    const dEl = document.getElementById('gpx-edit-dist');
+    if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
+    const eEl = document.getElementById('gpx-edit-ele');
+    if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
+
+    if (typeof this.mapManager?.updateStandaloneGpxHud === 'function') {
+      this.mapManager.updateStandaloneGpxHud();
+    }
+    this.showUndoFeedback("Modification annulée (Ctrl+Z)");
+  }
+
   resetEditTrack() {
     if (!this.editingTrack || !this.originalCoords || this.originalCoords.length === 0) return;
+    this.saveEditHistorySnapshot();
     this.currentEditCoords = JSON.parse(JSON.stringify(this.originalCoords));
     const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
     if (this.editingTrack.polyline) {
@@ -836,6 +944,23 @@ class GpxCreatorEditor {
     if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
     const eEl = document.getElementById('gpx-edit-ele');
     if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
+    this.showUndoFeedback("Tracé original rétabli (Ctrl+Z pour annuler)");
+  }
+
+  showUndoFeedback(msg) {
+    let toast = document.getElementById('gpx-undo-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'gpx-undo-toast';
+      toast.className = 'fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white border border-sky-400 px-4 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md transition-opacity duration-200 pointer-events-none flex items-center gap-2';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span class="text-amber-400 text-sm">↶</span> <span>${msg}</span>`;
+    toast.style.opacity = '1';
+    if (this._undoToastTimer) clearTimeout(this._undoToastTimer);
+    this._undoToastTimer = setTimeout(() => {
+      if (toast) toast.style.opacity = '0';
+    }, 1600);
   }
 
   exportEditedGpx() {
