@@ -6755,37 +6755,36 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         <div class="flex items-center gap-2">
 
           ${count < 3 ? `
-
             <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer">
-
               <span class="text-base font-black">+</span> <span>Ajouter trace</span>
-
             </button>
+          ` : ''}
 
+          <!-- Bouton Colorer les Pentes -->
+          <button id="btn-toggle-slope-colors" type="button" class="px-3 py-2 rounded-xl ${this.slopeColoringActive ? 'bg-gradient-to-r from-emerald-600 via-amber-600 to-rose-600 text-white ring-2 ring-white font-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleSlopeColoring()" title="Colorer la trace selon les pourcentages de pente du relief">
+            <span>📈</span> <span>${this.slopeColoringActive ? 'Pentes : ON' : 'Pentes'}</span>
+          </button>
+
+          <!-- Bouton Fusionner 2 traces -->
+          ${count >= 2 ? `
+            <button id="btn-merge-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.openMergeModal()" title="Fusionner 2 traces en un seul parcours continu">
+              <span>🔀</span> <span>Fusionner</span>
+            </button>
           ` : ''}
 
           <button id="btn-print-standalone-gpx" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer">
-
             <span class="text-base">🖨️</span> <span>Imprimer</span>
-
           </button>
 
           <button id="btn-clear-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-700 text-slate-200 hover:text-white font-black text-xs sm:text-sm transition cursor-pointer" title="Fermer toutes les traces">
-
             Tout effacer
-
           </button>
 
           <!-- 3 solutions habituelles : - pour réduire, □ pour agrandir, ✕ pour fermer -->
-
           <div class="flex items-center gap-1.5 ml-2 pl-2.5 border-l-2 border-slate-700">
-
             <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire la boîte" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
-
               &minus;
-
             </button>
-
             <button type="button" onclick="window.MapManagerInstance.autoFitHud()" title="Ajuster la taille / Afficher toutes les randonnées (ou double-clic sur l'en-tête)" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
               &#x25A1;
             </button>
@@ -6795,6 +6794,18 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           </div>
         </div>
       </div>
+
+      <!-- Légende Pentes active -->
+      ${this.slopeColoringActive ? `
+        <div id="standalone-slope-legend" class="flex items-center justify-center flex-wrap gap-2.5 text-xs bg-slate-950/90 px-3 py-1.5 rounded-2xl border border-slate-700 text-slate-200 shadow-sm animate-in fade-in">
+          <span class="font-bold text-slate-400 flex items-center gap-1">📈 <span>Pentes :</span></span>
+          <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#10b981] inline-block shadow-sm"></span> &lt; 5% Plat</span>
+          <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#eab308] inline-block shadow-sm"></span> 5-12% Modéré</span>
+          <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#f97316] inline-block shadow-sm"></span> 12-20% Raide</span>
+          <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#ef4444] inline-block shadow-sm"></span> &gt; 20% Très raide</span>
+        </div>
+      ` : ''}
+
       <div class="gpx-tracks-container flex-1 min-h-0 flex flex-col gap-2.5 overflow-y-auto pr-1">
         ${tracksHtml}
       </div>
@@ -6872,6 +6883,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       if (removed && removed.layer && this.map && this.map.hasLayer(removed.layer)) {
         this.map.removeLayer(removed.layer);
       }
+      if (removed && removed.slopeLayer && this.map && this.map.hasLayer(removed.slopeLayer)) {
+        this.map.removeLayer(removed.slopeLayer);
+      }
     }
     this.clearCursorPosition();
     if (window.ElevationProfileInstance) {
@@ -6900,6 +6914,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         if (t && t.layer && this.map && this.map.hasLayer(t.layer)) {
           this.map.removeLayer(t.layer);
         }
+        if (t && t.slopeLayer && this.map && this.map.hasLayer(t.slopeLayer)) {
+          this.map.removeLayer(t.slopeLayer);
+        }
       });
       this.standaloneTracks = [];
     }
@@ -6915,6 +6932,366 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     if (hud) hud.classList.add('hidden');
     if (window.App && window.App.selectedHike && String(window.App.selectedHike.id).startsWith('gpx_user_')) {
       window.App.deselectHike();
+    }
+  }
+
+  // =========================================================================
+  // COLORATION DES PENTES LE LONG DE LA TRACE
+  // =========================================================================
+
+  calculateSlopeSegments(pts) {
+    if (!pts || pts.length < 2) return [];
+
+    const getSlopeCategory = (slopePct) => {
+      if (slopePct < 5) return { color: '#10b981', label: '< 5% Plat / Facile', classId: 0 };
+      if (slopePct < 12) return { color: '#eab308', label: '5-12% Modéré', classId: 1 };
+      if (slopePct < 20) return { color: '#f97316', label: '12-20% Raide', classId: 2 };
+      return { color: '#ef4444', label: '> 20% Très raide', classId: 3 };
+    };
+
+    const segments = [];
+    let currentCat = null;
+    let currentLatLngs = [];
+    const n = pts.length;
+
+    for (let i = 0; i < n - 1; i++) {
+      const p1 = pts[i];
+      const p1Lon = p1.lon !== undefined ? p1.lon : p1.lng;
+      const p1LatLng = L.latLng(p1.lat, p1Lon);
+
+      // Fenêtre glissante de 25-30m pour lisser les micro-variations altimétriques du GPS
+      let j = i + 1;
+      let cumDist = 0;
+      while (j < n - 1) {
+        const pjPrev = pts[j - 1];
+        const pj = pts[j];
+        const stepDist = L.latLng(pjPrev.lat, pjPrev.lon !== undefined ? pjPrev.lon : pjPrev.lng)
+          .distanceTo(L.latLng(pj.lat, pj.lon !== undefined ? pj.lon : pj.lng));
+        cumDist += stepDist;
+        if (cumDist >= 25) break;
+        j++;
+      }
+
+      const pTarget = pts[j];
+      const targetLon = pTarget.lon !== undefined ? pTarget.lon : pTarget.lng;
+      const targetLatLng = L.latLng(pTarget.lat, targetLon);
+      const spanDist = p1LatLng.distanceTo(targetLatLng);
+
+      const ele1 = p1.ele !== undefined ? p1.ele : (p1.alt || 0);
+      const eleTarget = pTarget.ele !== undefined ? pTarget.ele : (pTarget.alt || 0);
+      const dEle = eleTarget - ele1;
+
+      const slopePct = spanDist > 3 ? (dEle / spanDist) * 100 : 0;
+      const cat = getSlopeCategory(slopePct);
+
+      const p2 = pts[i + 1];
+      const p2Lon = p2.lon !== undefined ? p2.lon : p2.lng;
+      const p2LatLng = L.latLng(p2.lat, p2Lon);
+
+      if (!currentCat || currentCat.classId !== cat.classId) {
+        if (currentLatLngs.length > 0) {
+          segments.push({ color: currentCat.color, latlngs: currentLatLngs, label: currentCat.label });
+        }
+        currentCat = cat;
+        currentLatLngs = [p1LatLng, p2LatLng];
+      } else {
+        currentLatLngs.push(p2LatLng);
+      }
+    }
+
+    if (currentLatLngs.length > 0 && currentCat) {
+      segments.push({ color: currentCat.color, latlngs: currentLatLngs, label: currentCat.label });
+    }
+
+    return segments;
+  }
+
+  toggleSlopeColoring(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.slopeColoringActive = forceState;
+    } else {
+      this.slopeColoringActive = !this.slopeColoringActive;
+    }
+
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
+
+    this.standaloneTracks.forEach(t => {
+      if (this.slopeColoringActive) {
+        // Masquer le tracé unicolore
+        if (t.polyline) t.polyline.setStyle({ opacity: 0 });
+
+        // Générer ou afficher le calque multi-couleurs des pentes
+        if (!t.slopeLayer) {
+          const segments = this.calculateSlopeSegments(t.points);
+          const polylines = segments.map(s => {
+            const poly = L.polyline(s.latlngs, {
+              color: s.color,
+              weight: 7,
+              opacity: 1.0,
+              lineCap: 'round',
+              lineJoin: 'round',
+              interactive: true
+            });
+            poly.bindTooltip(`<b>Pente : ${s.label}</b>`, { sticky: true });
+            return poly;
+          });
+          t.slopeLayer = L.featureGroup(polylines);
+        }
+
+        if (this.map && !this.map.hasLayer(t.slopeLayer)) {
+          this.map.addLayer(t.slopeLayer);
+        }
+      } else {
+        // Rétablir le tracé unicolore
+        if (t.polyline) t.polyline.setStyle({ opacity: 1.0 });
+        if (t.slopeLayer && this.map && this.map.hasLayer(t.slopeLayer)) {
+          this.map.removeLayer(t.slopeLayer);
+        }
+      }
+    });
+
+    this.showStandaloneGpxHud();
+  }
+
+  // =========================================================================
+  // FUSION DE 2 TRACES GPX
+  // =========================================================================
+
+  openMergeModal() {
+    if (!this.standaloneTracks || this.standaloneTracks.length < 2) {
+      alert("⚠️ La fusion nécessite au moins 2 traces GPX chargées sur la carte.\n\nVeuillez d'abord cliquer sur « Charger 1 à 3 traces GPX » pour ajouter une seconde trace.");
+      return;
+    }
+
+    this._mergeTrack1Idx = 0;
+    this._mergeTrack2Idx = 1;
+    this._mergeReverseTrack1 = false;
+    this._mergeReverseTrack2 = false;
+    this._mergeMode = 'autoroute'; // 'autoroute' ou 'straight'
+
+    let modal = document.getElementById('modal-merge-gpx');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-merge-gpx';
+      modal.className = 'fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in';
+      document.body.appendChild(modal);
+    }
+
+    this.renderMergeModalContent();
+    modal.classList.remove('hidden');
+  }
+
+  closeMergeModal() {
+    const modal = document.getElementById('modal-merge-gpx');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  swapMergeTracks() {
+    const tmp = this._mergeTrack1Idx;
+    this._mergeTrack1Idx = this._mergeTrack2Idx;
+    this._mergeTrack2Idx = tmp;
+
+    const tmpRev = this._mergeReverseTrack1;
+    this._mergeReverseTrack1 = this._mergeReverseTrack2;
+    this._mergeReverseTrack2 = tmpRev;
+
+    this.renderMergeModalContent();
+  }
+
+  renderMergeModalContent() {
+    const modal = document.getElementById('modal-merge-gpx');
+    if (!modal) return;
+
+    const tracks = this.standaloneTracks || [];
+    const t1 = tracks[this._mergeTrack1Idx] || tracks[0];
+    const t2 = tracks[this._mergeTrack2Idx] || tracks[1];
+
+    if (!t1 || !t2) return;
+
+    const pts1 = t1 && t1.points ? (this._mergeReverseTrack1 ? [...t1.points].reverse() : t1.points) : [];
+    const pts2 = t2 && t2.points ? (this._mergeReverseTrack2 ? [...t2.points].reverse() : t2.points) : [];
+
+    let gapMeters = 0;
+    let p1End = null;
+    let p2Start = null;
+
+    if (pts1.length > 0 && pts2.length > 0) {
+      p1End = pts1[pts1.length - 1];
+      p2Start = pts2[0];
+      const p1EndLon = p1End.lon !== undefined ? p1End.lon : p1End.lng;
+      const p2StartLon = p2Start.lon !== undefined ? p2Start.lon : p2Start.lng;
+      gapMeters = L.latLng(p1End.lat, p1EndLon).distanceTo(L.latLng(p2Start.lat, p2StartLon));
+    }
+
+    const distEst = ((t1.distanceKm || parseFloat(t1.distance) || 0) + (t2.distanceKm || parseFloat(t2.distance) || 0) + (gapMeters / 1000)).toFixed(1);
+    const eleEst = ((t1.elevationGain || 0) + (t2.elevationGain || 0));
+
+    modal.innerHTML = `
+      <div class="bg-slate-900 border-2 border-violet-500 rounded-3xl p-4 sm:p-6 max-w-xl w-full shadow-2xl text-white flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
+        
+        <!-- En-tête -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">🔀</span>
+            <div>
+              <h3 class="font-black text-base sm:text-lg text-violet-300 leading-tight">Fusion de 2 Traces GPX</h3>
+              <p class="text-xs text-slate-400">Assemblez vos traces en un seul itinéraire continu</p>
+            </div>
+          </div>
+          <button type="button" onclick="window.MapManagerInstance.closeMergeModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white font-bold flex items-center justify-center transition cursor-pointer">✕</button>
+        </div>
+
+        <!-- Trace 1 (Départ) -->
+        <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase text-violet-400 tracking-wider">1️⃣ Première partie (Départ)</span>
+            <label class="text-xs text-slate-300 flex items-center gap-1.5 cursor-pointer hover:text-white select-none">
+              <input type="checkbox" id="merge-chk-rev1" ${this._mergeReverseTrack1 ? 'checked' : ''} onchange="window.MapManagerInstance._mergeReverseTrack1 = this.checked; window.MapManagerInstance.renderMergeModalContent();" class="rounded text-violet-600 focus:ring-0">
+              <span>🔄 Inverser le sens</span>
+            </label>
+          </div>
+          <select id="merge-select-t1" onchange="window.MapManagerInstance._mergeTrack1Idx = parseInt(this.value); window.MapManagerInstance.renderMergeModalContent();" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold cursor-pointer">
+            ${tracks.map((t, idx) => `
+              <option value="${idx}" ${idx === this._mergeTrack1Idx ? 'selected' : ''}>
+                ${t.name} (${t.distance} km • +${t.elevationGain}m)
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <!-- Bouton intervertir -->
+        <div class="flex items-center justify-center -my-2 z-10">
+          <button type="button" onclick="window.MapManagerInstance.swapMergeTracks()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-violet-700 border border-slate-700 hover:border-violet-500 text-violet-300 hover:text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md cursor-pointer" title="Inverser l'ordre des deux traces">
+            <span>⇄</span> <span>Intervertir l'ordre</span>
+          </button>
+        </div>
+
+        <!-- Trace 2 (Suite) -->
+        <div class="p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase text-emerald-400 tracking-wider">2️⃣ Seconde partie (Arrivée)</span>
+            <label class="text-xs text-slate-300 flex items-center gap-1.5 cursor-pointer hover:text-white select-none">
+              <input type="checkbox" id="merge-chk-rev2" ${this._mergeReverseTrack2 ? 'checked' : ''} onchange="window.MapManagerInstance._mergeReverseTrack2 = this.checked; window.MapManagerInstance.renderMergeModalContent();" class="rounded text-emerald-600 focus:ring-0">
+              <span>🔄 Inverser le sens</span>
+            </label>
+          </div>
+          <select id="merge-select-t2" onchange="window.MapManagerInstance._mergeTrack2Idx = parseInt(this.value); window.MapManagerInstance.renderMergeModalContent();" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold cursor-pointer">
+            ${tracks.map((t, idx) => `
+              <option value="${idx}" ${idx === this._mergeTrack2Idx ? 'selected' : ''}>
+                ${t.name} (${t.distance} km • +${t.elevationGain}m)
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <!-- Diagnostic de raccordement -->
+        <div class="p-3.5 rounded-2xl ${gapMeters < 35 ? 'bg-emerald-950/60 border border-emerald-700/60' : 'bg-amber-950/60 border border-amber-700/60'} text-xs flex flex-col gap-2">
+          ${gapMeters < 35 ? `
+            <div class="text-emerald-300 font-bold flex items-center gap-1.5">
+              <span>✅</span> <span>Traces déjà jointives (${Math.round(gapMeters)} m d'écart). Raccordement direct parfait !</span>
+            </div>
+          ` : `
+            <div class="text-amber-300 font-bold flex items-center gap-1.5">
+              <span>⚠️</span> <span>Écart de ${gapMeters >= 1000 ? (gapMeters / 1000).toFixed(2) + ' km' : Math.round(gapMeters) + ' m'} entre la fin de la 1ère trace et le début de la 2nde.</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 mt-1">
+              <label class="flex items-center gap-2 cursor-pointer p-2 bg-slate-900/80 rounded-xl border border-slate-700 select-none">
+                <input type="radio" name="merge-mode" value="autoroute" ${this._mergeMode === 'autoroute' ? 'checked' : ''} onchange="window.MapManagerInstance._mergeMode = 'autoroute';" class="text-violet-600">
+                <span class="font-bold text-slate-200">🥾 Relier par sentiers (Auto-routage IGN/BRouter)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer p-2 bg-slate-900/80 rounded-xl border border-slate-700 select-none">
+                <input type="radio" name="merge-mode" value="straight" ${this._mergeMode === 'straight' ? 'checked' : ''} onchange="window.MapManagerInstance._mergeMode = 'straight';" class="text-violet-600">
+                <span class="text-slate-300">📏 Ligne droite directe</span>
+              </label>
+            </div>
+          `}
+        </div>
+
+        <!-- Résumé fusion -->
+        <div class="flex items-center justify-between p-3 bg-slate-950/70 rounded-2xl border border-slate-800 text-xs text-slate-300">
+          <span>Total estimé après fusion :</span>
+          <span class="font-black text-white font-mono text-sm sm:text-base text-emerald-400">
+            ~${distEst} km • +${eleEst} m
+          </span>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800 flex-wrap">
+          <button type="button" onclick="window.MapManagerInstance.closeMergeModal()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer">
+            Annuler
+          </button>
+          <button id="btn-do-merge-display" type="button" onclick="window.MapManagerInstance.executeMerge('display')" class="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs transition shadow-lg cursor-pointer flex items-center gap-1.5">
+            <span>🔀</span> <span>Afficher sur la carte</span>
+          </button>
+          <button id="btn-do-merge-download" type="button" onclick="window.MapManagerInstance.executeMerge('download')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition shadow-lg cursor-pointer flex items-center gap-1.5">
+            <span>💾</span> <span>Télécharger le GPX</span>
+          </button>
+        </div>
+
+      </div>
+    `;
+  }
+
+  async executeMerge(action = 'display') {
+    const tracks = this.standaloneTracks || [];
+    const t1 = tracks[this._mergeTrack1Idx];
+    const t2 = tracks[this._mergeTrack2Idx];
+
+    if (!t1 || !t2 || this._mergeTrack1Idx === this._mergeTrack2Idx) {
+      alert("Veuillez sélectionner deux traces différentes à fusionner.");
+      return;
+    }
+
+    const btnDisplay = document.getElementById('btn-do-merge-display');
+    const btnDownload = document.getElementById('btn-do-merge-download');
+    if (btnDisplay) { btnDisplay.disabled = true; btnDisplay.innerHTML = '🔄 Fusion en cours...'; }
+    if (btnDownload) { btnDownload.disabled = true; }
+
+    const pts1 = this._mergeReverseTrack1 ? [...t1.points].reverse() : t1.points;
+    const pts2 = this._mergeReverseTrack2 ? [...t2.points].reverse() : t2.points;
+
+    const coords1 = pts1.map(p => [p.lat, p.lon !== undefined ? p.lon : p.lng, p.ele !== undefined ? p.ele : (p.alt || 0)]);
+    const coords2 = pts2.map(p => [p.lat, p.lon !== undefined ? p.lon : p.lng, p.ele !== undefined ? p.ele : (p.alt || 0)]);
+
+    const p1End = { lat: coords1[coords1.length - 1][0], lon: coords1[coords1.length - 1][1] };
+    const p2Start = { lat: coords2[0][0], lon: coords2[0][1] };
+    const gapMeters = L.latLng(p1End.lat, p1End.lon).distanceTo(L.latLng(p2Start.lat, p2Start.lon));
+
+    let bridgeCoords = [];
+    if (gapMeters > 35 && this._mergeMode === 'autoroute' && window.GpxCreatorEditorInstance) {
+      try {
+        const bridge = await window.GpxCreatorEditorInstance.querySingleLeg(p1End, p2Start);
+        if (bridge && bridge.length > 0) {
+          bridgeCoords = bridge;
+        }
+      } catch (err) {
+        console.warn("Échec auto-routage jonction fusion :", err);
+      }
+    }
+
+    const mergedCoords = [...coords1, ...bridgeCoords, ...coords2];
+    this.closeMergeModal();
+
+    if (action === 'download' && window.GpxCreatorEditorInstance) {
+      const defaultName = await window.GpxCreatorEditorInstance.buildProposedGpxName(mergedCoords);
+      const chosenName = await window.GpxCreatorEditorInstance.promptGpxFilename(defaultName, 'violet');
+      if (!chosenName) return;
+
+      const gpxXml = window.GpxCreatorEditorInstance.generateGpxXml(chosenName, mergedCoords, []);
+      window.GpxCreatorEditorInstance.downloadGpxFile(`${chosenName}.gpx`, gpxXml);
+      window.GpxCreatorEditorInstance.showUndoFeedback(`Trace fusionnée exportée : ${chosenName}.gpx`);
+    } else {
+      // Afficher sur la carte
+      const defaultName = (await window.GpxCreatorEditorInstance?.buildProposedGpxName(mergedCoords)) || `${t1.name} + ${t2.name}`;
+      const gpxXml = window.GpxCreatorEditorInstance?.generateGpxXml(defaultName, mergedCoords, []) || '';
+      
+      // Retirer les 2 traces sources de la carte pour faire place à la trace fusionnée
+      this.removeStandaloneTrack(t1.id);
+      this.removeStandaloneTrack(t2.id);
+
+      // Charger la trace fusionnée
+      this.loadStandaloneGpxContent(gpxXml, `${defaultName}.gpx`);
+      window.GpxCreatorEditorInstance?.showUndoFeedback(`Traces fusionnées avec succès !`);
     }
   }
 
