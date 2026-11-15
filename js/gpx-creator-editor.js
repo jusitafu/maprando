@@ -925,16 +925,24 @@ class GpxCreatorEditor {
     const container = this.map ? this.map.getContainer() : null;
     if (container) container.style.cursor = 'crosshair';
 
+    // Rendre les marqueurs et poignées transparents aux clics pendant la découpe
+    const markerPane = this.map ? this.map.getPane('markerPane') : null;
+    if (markerPane) markerPane.style.pointerEvents = 'none';
+
     let startLatLng = null;
     let tempRect = null;
 
     this._onBoxCutMouseDown = (e) => {
-      startLatLng = e.latlng;
-      if (tempRect) {
+      const latlng = e.latlng || (this.map ? this.map.mouseEventToLatLng(e) : null);
+      if (!latlng) return;
+      startLatLng = latlng;
+
+      if (tempRect && this.map) {
         this.map.removeLayer(tempRect);
         tempRect = null;
       }
       tempRect = L.rectangle([startLatLng, startLatLng], {
+        interactive: false,
         color: '#f43f5e',
         weight: 2,
         dashArray: '4, 4',
@@ -943,25 +951,37 @@ class GpxCreatorEditor {
       }).addTo(this.map);
 
       const onMouseMove = (ev) => {
-        if (!startLatLng || !tempRect) return;
-        tempRect.setBounds(L.latLngBounds(startLatLng, ev.latlng));
+        if (!startLatLng || !tempRect || !this.map) return;
+        try {
+          const curLatLng = this.map.mouseEventToLatLng(ev);
+          tempRect.setBounds(L.latLngBounds(startLatLng, curLatLng));
+        } catch (err) {}
       };
 
       const onMouseUp = async (ev) => {
         window.removeEventListener('mousemove', onMouseMove);
         window.removeEventListener('mouseup', onMouseUp);
 
-        if (!startLatLng) return;
-        const bounds = L.latLngBounds(startLatLng, ev.latlng);
-        if (tempRect) {
+        if (!startLatLng || !this.map) return;
+        let curLatLng = null;
+        try {
+          curLatLng = this.map.mouseEventToLatLng(ev);
+        } catch (err) {
+          curLatLng = startLatLng;
+        }
+
+        const bounds = L.latLngBounds(startLatLng, curLatLng);
+        if (tempRect && this.map) {
           this.map.removeLayer(tempRect);
           tempRect = null;
         }
         startLatLng = null;
         this.stopBoxCutMode();
 
-        // Appliquer la coupe sur les coordonnées de la trace
-        await this.applyBoxCut(bounds);
+        // Appliquer la coupe si le rectangle a une diagonale d'au moins 5 mètres
+        if (bounds.getNorthEast().distanceTo(bounds.getSouthWest()) > 5) {
+          await this.applyBoxCut(bounds);
+        }
       };
 
       window.addEventListener('mousemove', onMouseMove);
@@ -989,6 +1009,8 @@ class GpxCreatorEditor {
       if (this.map.dragging) this.map.dragging.enable();
       const container = this.map.getContainer();
       if (container) container.style.cursor = '';
+      const markerPane = this.map.getPane('markerPane');
+      if (markerPane) markerPane.style.pointerEvents = '';
       if (this._onBoxCutMouseDown) {
         this.map.off('mousedown', this._onBoxCutMouseDown);
         this._onBoxCutMouseDown = null;
@@ -1002,7 +1024,8 @@ class GpxCreatorEditor {
     const coords = this.currentEditCoords;
     const insideIndices = [];
     coords.forEach((c, idx) => {
-      if (bounds.contains([c[0], c[1]])) {
+      const isInside = bounds.contains(L.latLng(c[0], c[1]));
+      if (isInside) {
         insideIndices.push(idx);
       }
     });
