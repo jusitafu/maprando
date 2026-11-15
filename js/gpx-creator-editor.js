@@ -648,7 +648,8 @@ class GpxCreatorEditor {
       hud.classList.remove('hidden');
     }
 
-    // Nettoyer les poignées
+    // Nettoyer les poignées et le mode découpe
+    this.stopBoxCutMode();
     this.clearEditHandles();
 
     // Fermer panneau flottant
@@ -795,28 +796,8 @@ class GpxCreatorEditor {
         }
       }
 
-      // Mettre à jour la polyline sur la carte
-      const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
-      if (this.editingTrack.polyline) {
-        this.editingTrack.polyline.setLatLngs(latlngs);
-      }
-
-      // Recalculer les poignées pour les réaligner
-      this.generateEditHandles();
-
-      // Mettre à jour les métriques
-      const stats = this.computeTrackStats(this.currentEditCoords);
-      this.editingTrack.distance = stats.distanceKm.toFixed(1);
-      this.editingTrack.elevationGain = stats.elevationGain;
-
-      const dEl = document.getElementById('gpx-edit-dist');
-      if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
-      const eEl = document.getElementById('gpx-edit-ele');
-      if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
-
-      if (typeof this.mapManager?.updateStandaloneGpxHud === 'function') {
-        this.mapManager.updateStandaloneGpxHud();
-      }
+      // Mettre à jour l'affichage de la trace modifiée et ses métriques
+      this.updateEditedTrackDisplay();
     } catch (err) {
       console.error("Erreur lors du déplacement de poignée GPX:", err);
     } finally {
@@ -844,10 +825,23 @@ class GpxCreatorEditor {
         <button id="btn-close-gpx-editor" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800" title="Quitter le mode édition">✕</button>
       </div>
 
-      <div class="text-xs text-slate-300 mb-2.5 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60">
-        <span class="leading-tight">👉 <strong>Faites glisser une poignée ronde</strong> vers un sentier voisin pour dévier le tracé.</span>
-        <button id="btn-toggle-edit-autoroute" type="button" class="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.editAutoRoute ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver l'auto-routage sur les sentiers voisins">
-          ${this.editAutoRoute ? '🥾 Auto-routage : OUI' : '📏 Glisser simple'}
+      <div class="text-xs text-slate-300 mb-2.5 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60 flex-wrap">
+        <span id="gpx-editor-tip" class="leading-tight">👉 <strong>Faites glisser une poignée</strong> ou utilisez <strong>Supprimer zone</strong>.</span>
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button id="btn-box-cut-track" type="button" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/80 text-rose-300 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer" title="Sélectionner une portion de trace à supprimer avec un rectangle (clic maintenu + glisser)">
+            <span>✂️</span> <span>Supprimer zone</span>
+          </button>
+          <button id="btn-toggle-edit-autoroute" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.editAutoRoute ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver l'auto-routage sur les sentiers voisins">
+            ${this.editAutoRoute ? '🥾 Auto-routage : OUI' : '📏 Glisser simple'}
+          </button>
+        </div>
+      </div>
+
+      <!-- Bandeau interactif de reconnexion de tronçon coupé -->
+      <div id="gpx-edit-reconnect-bar" class="text-xs text-amber-200 bg-amber-950/90 p-2.5 rounded-xl border border-amber-700/80 mb-2 hidden flex items-center justify-between gap-2 shadow-lg animate-in fade-in">
+        <span id="gpx-edit-reconnect-msg" class="leading-tight text-left">✂️ <strong>Tronçon supprimé</strong>. Relier les 2 extrémités ?</span>
+        <button id="btn-reconnect-split-track" type="button" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-black shadow transition whitespace-nowrap cursor-pointer">
+          🥾 Relier par sentiers
         </button>
       </div>
 
@@ -881,7 +875,7 @@ class GpxCreatorEditor {
       </div>
 
       <div class="text-[11px] text-violet-200 mt-2 bg-violet-950/70 px-3 py-1.5 rounded-xl border border-violet-800/80 flex items-center justify-between gap-2">
-        <span class="leading-tight">🖐️ <strong>Glissez une poignée ronde</strong> vers un sentier voisin pour dévier le tracé.</span>
+        <span class="leading-tight">🖐️ <strong>Glissez une poignée</strong> ou <strong>supprimez une zone par rectangle</strong>.</span>
         <span class="text-[10px] text-violet-300 font-semibold whitespace-nowrap">Annuler : <strong>Ctrl+Z</strong></span>
       </div>
     `;
@@ -892,6 +886,8 @@ class GpxCreatorEditor {
 
     // Événements du panneau
     document.getElementById('btn-close-gpx-editor')?.addEventListener('click', () => this.stopEditMode());
+    document.getElementById('btn-box-cut-track')?.addEventListener('click', () => this.toggleBoxCutMode());
+    document.getElementById('btn-reconnect-split-track')?.addEventListener('click', () => this.reconnectCutParts());
     document.getElementById('btn-toggle-edit-autoroute')?.addEventListener('click', () => {
       this.editAutoRoute = !this.editAutoRoute;
       const b = document.getElementById('btn-toggle-edit-autoroute');
@@ -903,6 +899,224 @@ class GpxCreatorEditor {
     document.getElementById('btn-undo-edit-point')?.addEventListener('click', () => this.undoLastEditOperation());
     document.getElementById('btn-reset-edited-track')?.addEventListener('click', () => this.resetEditTrack());
     document.getElementById('btn-export-edited-gpx')?.addEventListener('click', () => this.exportEditedGpx());
+  }
+
+  toggleBoxCutMode() {
+    if (this._isBoxCutMode) {
+      this.stopBoxCutMode();
+    } else {
+      this.startBoxCutMode();
+    }
+  }
+
+  startBoxCutMode() {
+    this._isBoxCutMode = true;
+    const btn = document.getElementById('btn-box-cut-track');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-rose-600 text-white border border-rose-400 ring-2 ring-rose-400 rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer';
+      btn.innerHTML = '<span>✕</span> <span>Annuler découpe</span>';
+    }
+    const tip = document.getElementById('gpx-editor-tip');
+    if (tip) {
+      tip.innerHTML = '✂️ <strong>Tracez un rectangle</strong> (clic maintenu + glisser) sur la zone à couper.';
+    }
+
+    if (this.map && this.map.dragging) this.map.dragging.disable();
+    const container = this.map ? this.map.getContainer() : null;
+    if (container) container.style.cursor = 'crosshair';
+
+    let startLatLng = null;
+    let tempRect = null;
+
+    this._onBoxCutMouseDown = (e) => {
+      startLatLng = e.latlng;
+      if (tempRect) {
+        this.map.removeLayer(tempRect);
+        tempRect = null;
+      }
+      tempRect = L.rectangle([startLatLng, startLatLng], {
+        color: '#f43f5e',
+        weight: 2,
+        dashArray: '4, 4',
+        fillColor: '#f43f5e',
+        fillOpacity: 0.25
+      }).addTo(this.map);
+
+      const onMouseMove = (ev) => {
+        if (!startLatLng || !tempRect) return;
+        tempRect.setBounds(L.latLngBounds(startLatLng, ev.latlng));
+      };
+
+      const onMouseUp = async (ev) => {
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+
+        if (!startLatLng) return;
+        const bounds = L.latLngBounds(startLatLng, ev.latlng);
+        if (tempRect) {
+          this.map.removeLayer(tempRect);
+          tempRect = null;
+        }
+        startLatLng = null;
+        this.stopBoxCutMode();
+
+        // Appliquer la coupe sur les coordonnées de la trace
+        await this.applyBoxCut(bounds);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    };
+
+    if (this.map) {
+      this.map.on('mousedown', this._onBoxCutMouseDown);
+    }
+  }
+
+  stopBoxCutMode() {
+    this._isBoxCutMode = false;
+    const btn = document.getElementById('btn-box-cut-track');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/80 text-rose-300 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer';
+      btn.innerHTML = '<span>✂️</span> <span>Supprimer zone</span>';
+    }
+    const tip = document.getElementById('gpx-editor-tip');
+    if (tip) {
+      tip.innerHTML = '👉 <strong>Faites glisser une poignée</strong> ou utilisez <strong>Supprimer zone</strong>.';
+    }
+
+    if (this.map) {
+      if (this.map.dragging) this.map.dragging.enable();
+      const container = this.map.getContainer();
+      if (container) container.style.cursor = '';
+      if (this._onBoxCutMouseDown) {
+        this.map.off('mousedown', this._onBoxCutMouseDown);
+        this._onBoxCutMouseDown = null;
+      }
+    }
+  }
+
+  async applyBoxCut(bounds) {
+    if (!this.currentEditCoords || this.currentEditCoords.length < 2) return;
+
+    const coords = this.currentEditCoords;
+    const insideIndices = [];
+    coords.forEach((c, idx) => {
+      if (bounds.contains([c[0], c[1]])) {
+        insideIndices.push(idx);
+      }
+    });
+
+    if (insideIndices.length === 0) {
+      this.showUndoFeedback("Aucun point de la trace dans le rectangle");
+      return;
+    }
+
+    // Sauvegarder pour Ctrl+Z
+    this.saveEditHistorySnapshot();
+
+    const firstIdx = insideIndices[0];
+    const lastIdx = insideIndices[insideIndices.length - 1];
+
+    const part1 = coords.slice(0, firstIdx);
+    const part2 = coords.slice(lastIdx + 1);
+
+    if (part1.length > 0 && part2.length > 0) {
+      // Coupe en plein milieu de la trace
+      this.currentEditCoords = [...part1, ...part2];
+      this._lastCutPart1End = part1[part1.length - 1];
+      this._lastCutPart2Start = part2[0];
+      this._lastCutIndex = part1.length;
+
+      this.updateEditedTrackDisplay();
+      this.showUndoFeedback(`✂️ Tronçon de ${insideIndices.length} points supprimé (Ctrl+Z pour restaurer)`);
+
+      // Afficher le bandeau pour proposer de relier les 2 bouts
+      const reconnectBar = document.getElementById('gpx-edit-reconnect-bar');
+      const reconnectMsg = document.getElementById('gpx-edit-reconnect-msg');
+      if (reconnectBar) {
+        reconnectBar.classList.remove('hidden');
+        if (reconnectMsg) {
+          reconnectMsg.innerHTML = `✂️ <strong>${insideIndices.length} points coupés</strong>. Relier les 2 extrémités ?`;
+        }
+      }
+    } else if (part1.length > 0) {
+      // Coupe en fin de parcours
+      this.currentEditCoords = part1;
+      this.updateEditedTrackDisplay();
+      this.showUndoFeedback(`✂️ Fin de trace raccourcie (${insideIndices.length} points retirés)`);
+    } else if (part2.length > 0) {
+      // Coupe en début de parcours
+      this.currentEditCoords = part2;
+      this.updateEditedTrackDisplay();
+      this.showUndoFeedback(`✂️ Début de trace raccourci (${insideIndices.length} points retirés)`);
+    }
+  }
+
+  async reconnectCutParts() {
+    if (!this._lastCutPart1End || !this._lastCutPart2Start || typeof this._lastCutIndex !== 'number') return;
+
+    const p1 = { lat: this._lastCutPart1End[0], lon: this._lastCutPart1End[1] };
+    const p2 = { lat: this._lastCutPart2Start[0], lon: this._lastCutPart2Start[1] };
+
+    const statusEl = document.getElementById('gpx-edit-status');
+    if (statusEl) {
+      statusEl.classList.remove('hidden');
+      statusEl.innerHTML = '🔄 <strong>Raccordement automatique en cours...</strong> Calcul de la nouvelle portion.';
+    }
+
+    this.saveEditHistorySnapshot();
+
+    try {
+      let bridgeCoords = null;
+      if (this.editAutoRoute) {
+        bridgeCoords = await this.querySingleLeg(p1, p2);
+      }
+      if (!bridgeCoords || bridgeCoords.length === 0) {
+        bridgeCoords = [
+          [p1.lat, p1.lon, this._lastCutPart1End[2] || 0],
+          [p2.lat, p2.lon, this._lastCutPart2Start[2] || 0]
+        ];
+      }
+
+      const part1 = this.currentEditCoords.slice(0, this._lastCutIndex);
+      const part2 = this.currentEditCoords.slice(this._lastCutIndex);
+
+      this.currentEditCoords = [...part1, ...bridgeCoords, ...part2];
+      this.updateEditedTrackDisplay();
+      this.showUndoFeedback("🔗 Nouvelle portion raccordée avec succès !");
+
+      const reconnectBar = document.getElementById('gpx-edit-reconnect-bar');
+      if (reconnectBar) reconnectBar.classList.add('hidden');
+    } catch (err) {
+      console.error("Erreur lors de la reconnexion de trace :", err);
+    } finally {
+      if (statusEl) statusEl.classList.add('hidden');
+      this._lastCutPart1End = null;
+      this._lastCutPart2Start = null;
+      this._lastCutIndex = null;
+    }
+  }
+
+  updateEditedTrackDisplay() {
+    if (!this.currentEditCoords) return;
+    const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
+    if (this.editingTrack && this.editingTrack.polyline) {
+      this.editingTrack.polyline.setLatLngs(latlngs);
+    }
+    this.generateEditHandles();
+    const stats = this.computeTrackStats(this.currentEditCoords);
+    if (this.editingTrack) {
+      this.editingTrack.distance = stats.distanceKm.toFixed(1);
+      this.editingTrack.elevationGain = stats.elevationGain;
+    }
+    const dEl = document.getElementById('gpx-edit-dist');
+    if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
+    const eEl = document.getElementById('gpx-edit-ele');
+    if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
+    if (typeof this.mapManager?.updateStandaloneGpxHud === 'function') {
+      this.mapManager.updateStandaloneGpxHud();
+    }
   }
 
   saveEditHistorySnapshot() {
@@ -919,25 +1133,14 @@ class GpxCreatorEditor {
     }
     const prevCoords = this.editHistory.pop();
     this.currentEditCoords = prevCoords;
-    const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
-    if (this.editingTrack && this.editingTrack.polyline) {
-      this.editingTrack.polyline.setLatLngs(latlngs);
-    }
-    this.generateEditHandles();
-    const stats = this.computeTrackStats(this.currentEditCoords);
-    if (this.editingTrack) {
-      this.editingTrack.distance = stats.distanceKm.toFixed(1);
-      this.editingTrack.elevationGain = stats.elevationGain;
-    }
+    this.updateEditedTrackDisplay();
 
-    const dEl = document.getElementById('gpx-edit-dist');
-    if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
-    const eEl = document.getElementById('gpx-edit-ele');
-    if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
+    const reconnectBar = document.getElementById('gpx-edit-reconnect-bar');
+    if (reconnectBar) reconnectBar.classList.add('hidden');
+    this._lastCutPart1End = null;
+    this._lastCutPart2Start = null;
+    this._lastCutIndex = null;
 
-    if (typeof this.mapManager?.updateStandaloneGpxHud === 'function') {
-      this.mapManager.updateStandaloneGpxHud();
-    }
     this.showUndoFeedback("Modification annulée (Ctrl+Z)");
   }
 
@@ -1250,14 +1453,25 @@ class GpxCreatorEditor {
 
   /**
    * Construit le nom de fichier GPX recommandé selon la nomenclature :
-   * ville - kilométrage - dénivelé positif total (format D+XXX m)
+   * YYYYMMDDHHMM - ville - kilométrage - dénivelé positif total (format D+XXX m)
+   * Exemple : 202611150805 - Cassis - 0.7 km - D+53 m
    */
   async buildProposedGpxName(coords) {
     const stats = this.computeTrackStats(coords);
     const city = await this.getStartCity(coords);
     const distStr = `${stats.distanceKm.toFixed(1)} km`;
     const eleStr = `D+${Math.round(stats.elevationGain)} m`;
-    return `${city} - ${distStr} - ${eleStr}`;
+
+    // Horodatage sous format YYYYMMDDHHMM (12 chiffres consécutifs)
+    const now = new Date();
+    const YYYY = now.getFullYear();
+    const MM = String(now.getMonth() + 1).padStart(2, '0');
+    const DD = String(now.getDate()).padStart(2, '0');
+    const HH = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const timestamp = `${YYYY}${MM}${DD}${HH}${mm}`;
+
+    return `${timestamp} - ${city} - ${distStr} - ${eleStr}`;
   }
 
   /**

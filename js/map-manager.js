@@ -1115,83 +1115,84 @@ class MapManager {
 
 
     // Show banner & update button in UI
-
     const banner = document.getElementById('map-selection-banner');
-
     const msg = document.getElementById('map-selection-msg');
-
     const btnText = document.getElementById('btn-map-area-print-text');
-
     if (banner) banner.classList.remove('hidden');
-
-    if (msg) msg.innerHTML = '<span class="font-bold text-emerald-300">Étape 1 sur 2 :</span> Cliquez sur la carte pour poser le premier coin.';
-
+    if (msg) msg.innerHTML = '<span class="font-bold text-emerald-300">Zone d\'impression :</span> Cliquez et glissez pour encadrer la zone (ou cliquez sur 2 coins opposés).';
     if (btnText) btnText.textContent = 'Annuler la sélection';
 
+    // Désactiver le déplacement de la carte pour permettre le tracé par clic-glissé
+    if (this.map && this.map.dragging) {
+      this.map.dragging.disable();
+    }
+    this._isAreaDragging = false;
+    this._areaStartScreenPoint = null;
 
+    this._onAreaMouseDown = (e) => {
+      if (!this.areaSelectionActive) return;
+      if (!this.areaSelectionCorner1) {
+        this.areaSelectionCorner1 = e.latlng;
+        this._areaStartScreenPoint = e.containerPoint;
+        this._isAreaDragging = true;
+
+        L.circleMarker(e.latlng, {
+          radius: 6,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: '#10b981',
+          fillOpacity: 1
+        }).addTo(this.areaSelectionLayer);
+      }
+    };
+
+    this._onAreaMouseUp = (e) => {
+      if (!this.areaSelectionActive || !this._isAreaDragging || !this.areaSelectionCorner1) return;
+      this._isAreaDragging = false;
+      const endPoint = e.containerPoint;
+      const dragDist = this._areaStartScreenPoint ? this._areaStartScreenPoint.distanceTo(endPoint) : 0;
+
+      // Si l'utilisateur a glissé d'au moins 20 pixels, on finalise la sélection immédiatement
+      if (dragDist > 20) {
+        this.handleAreaSelectionClick(e.latlng);
+      }
+    };
+
+    this.map.on('mousedown', this._onAreaMouseDown);
+    this.map.on('mouseup', this._onAreaMouseUp);
 
     // Mouse move handler
-
     this._onAreaMouseMove = (e) => {
-
       if (!this.areaSelectionCorner1) return;
-
       const corner2 = e.latlng;
-
       const bounds = L.latLngBounds(this.areaSelectionCorner1, corner2);
 
-
-
       if (!this.areaSelectionRect) {
-
         this.areaSelectionRect = L.rectangle(bounds, {
-
           color: '#10b981',
-
           weight: 2,
-
           dashArray: '5, 5',
-
           fillColor: '#10b981',
-
           fillOpacity: 0.2
-
         }).addTo(this.areaSelectionLayer);
-
       } else {
-
         this.areaSelectionRect.setBounds(bounds);
-
       }
 
-
-
       // Calculate approximate dimensions in km
-
       const dKmWidth = GPXParser.haversineDistance(
-
         this.areaSelectionCorner1.lat, this.areaSelectionCorner1.lng,
-
         this.areaSelectionCorner1.lat, corner2.lng
-
       );
-
       const dKmHeight = GPXParser.haversineDistance(
-
         this.areaSelectionCorner1.lat, this.areaSelectionCorner1.lng,
-
         corner2.lat, this.areaSelectionCorner1.lng
-
       );
 
       if (msg) {
-
-        msg.innerHTML = `<span class="font-bold text-emerald-300">Étape 2 sur 2 :</span> Cliquez pour le coin opposé • <span class="bg-slate-800 px-2 py-0.5 rounded text-white font-mono">${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km</span>`;
-
+        msg.innerHTML = `<span class="font-bold text-emerald-300">Zone d'impression :</span> Relâchez pour valider • <span class="bg-slate-800 px-2 py-0.5 rounded text-white font-mono">${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km</span>`;
       }
-
     };
-
     this.map.on('mousemove', this._onAreaMouseMove);
 
 
@@ -1215,59 +1216,47 @@ class MapManager {
 
 
   cancelAreaSelection() {
-
     this.areaSelectionActive = false;
-
     this.areaSelectionCorner1 = null;
+    this._isAreaDragging = false;
+    this._areaStartScreenPoint = null;
 
-    L.DomUtil.removeClass(this.map.getContainer(), 'area-selection-cursor');
+    if (this.map) {
+      if (this.map.dragging) this.map.dragging.enable();
+      L.DomUtil.removeClass(this.map.getContainer(), 'area-selection-cursor');
 
-
-
-    if (this._onAreaMouseMove) {
-
-      this.map.off('mousemove', this._onAreaMouseMove);
-
-      this._onAreaMouseMove = null;
-
+      if (this._onAreaMouseMove) {
+        this.map.off('mousemove', this._onAreaMouseMove);
+        this._onAreaMouseMove = null;
+      }
+      if (this._onAreaMouseDown) {
+        this.map.off('mousedown', this._onAreaMouseDown);
+        this._onAreaMouseDown = null;
+      }
+      if (this._onAreaMouseUp) {
+        this.map.off('mouseup', this._onAreaMouseUp);
+        this._onAreaMouseUp = null;
+      }
     }
 
     if (this._onAreaKeyDown) {
-
       window.removeEventListener('keydown', this._onAreaKeyDown);
-
       this._onAreaKeyDown = null;
-
     }
-
-
 
     if (this.areaSelectionLayer) {
-
       this.areaSelectionLayer.clearLayers();
-
     }
-
     this.areaSelectionRect = null;
 
-
-
     const banner = document.getElementById('map-selection-banner');
-
     const btnText = document.getElementById('btn-map-area-print-text');
-
     if (banner) banner.classList.add('hidden');
-
     if (btnText) btnText.textContent = 'Imprimer une zone';
 
-
-
     if (this.areaSelectionOnCancel) {
-
       this.areaSelectionOnCancel();
-
     }
-
   }
 
 
@@ -1358,24 +1347,31 @@ class MapManager {
 
 
 
-      // Clean up event listeners & cursor
+      // Clean up event listeners, dragging & cursor
+      if (this.map && this.map.dragging) {
+        this.map.dragging.enable();
+      }
+      this._isAreaDragging = false;
+      this._areaStartScreenPoint = null;
 
       L.DomUtil.removeClass(this.map.getContainer(), 'area-selection-cursor');
 
       if (this._onAreaMouseMove) {
-
         this.map.off('mousemove', this._onAreaMouseMove);
-
         this._onAreaMouseMove = null;
-
+      }
+      if (this._onAreaMouseDown) {
+        this.map.off('mousedown', this._onAreaMouseDown);
+        this._onAreaMouseDown = null;
+      }
+      if (this._onAreaMouseUp) {
+        this.map.off('mouseup', this._onAreaMouseUp);
+        this._onAreaMouseUp = null;
       }
 
       if (this._onAreaKeyDown) {
-
         window.removeEventListener('keydown', this._onAreaKeyDown);
-
         this._onAreaKeyDown = null;
-
       }
 
 
@@ -3713,6 +3709,30 @@ class MapManager {
 
       this.updateBearingDisplay(this.bearingPointA, currentPoint, true);
 
+      // Défilement automatique (auto-pan) vers le bord de la carte
+      const containerPoint = e.containerPoint;
+      const size = this.map.getSize();
+      const margin = 55;
+      let panX = 0;
+      let panY = 0;
+
+      if (containerPoint.x < margin) {
+        panX = -Math.min(22, Math.max(4, Math.round((margin - containerPoint.x) / 2.2)));
+      } else if (containerPoint.x > size.x - margin) {
+        panX = Math.min(22, Math.max(4, Math.round((containerPoint.x - (size.x - margin)) / 2.2)));
+      }
+
+      if (containerPoint.y < margin) {
+        panY = -Math.min(22, Math.max(4, Math.round((margin - containerPoint.y) / 2.2)));
+      } else if (containerPoint.y > size.y - margin) {
+        panY = Math.min(22, Math.max(4, Math.round((containerPoint.y - (size.y - margin)) / 2.2)));
+      }
+
+      if (panX !== 0 || panY !== 0) {
+        this._startBearingAutoPan(panX, panY, containerPoint);
+      } else {
+        this._stopBearingAutoPan();
+      }
     };
 
     this.map.on('mousemove', this._onBearingMouseMove);
@@ -3845,13 +3865,41 @@ class MapManager {
 
 
 
+  _startBearingAutoPan(panX, panY, containerPoint) {
+    this._bearingPanVelocity = { x: panX, y: panY, point: containerPoint };
+    if (this._bearingAutoPanRaf) return;
+
+    const step = () => {
+      if (!this.bearingMeasurementActive || !this.bearingPointA || !this._bearingPanVelocity) {
+        this._bearingAutoPanRaf = null;
+        return;
+      }
+      this.map.panBy([this._bearingPanVelocity.x, this._bearingPanVelocity.y], { animate: false });
+      if (this._bearingPanVelocity.point) {
+        const curLatLng = this.map.containerPointToLatLng(this._bearingPanVelocity.point);
+        if (this.bearingPreviewLine) {
+          this.bearingPreviewLine.setLatLngs([this.bearingPointA, curLatLng]);
+        }
+        this.updateBearingDisplay(this.bearingPointA, curLatLng, true);
+      }
+      this._bearingAutoPanRaf = requestAnimationFrame(step);
+    };
+    this._bearingAutoPanRaf = requestAnimationFrame(step);
+  }
+
+  _stopBearingAutoPan() {
+    if (this._bearingAutoPanRaf) {
+      cancelAnimationFrame(this._bearingAutoPanRaf);
+      this._bearingAutoPanRaf = null;
+    }
+    this._bearingPanVelocity = null;
+  }
+
   cancelBearingMeasurement() {
-
     this.bearingMeasurementActive = false;
-
     this.bearingPointA = null;
-
     this.bearingPointB = null;
+    this._stopBearingAutoPan();
 
 
 
@@ -4368,9 +4416,8 @@ class MapManager {
 
 
       // Réinitialiser pour le cap suivant
-
+      this._stopBearingAutoPan();
       this.bearingPointA = null;
-
       this.bearingPointB = null;
 
 
