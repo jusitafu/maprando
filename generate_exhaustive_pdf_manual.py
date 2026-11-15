@@ -46,7 +46,6 @@ fig7b_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig07b_creer_gpx.jpg"))
 fig7c_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig07c_modifier_gpx.jpg"))
 fig7d_b64 = get_base64_img(os.path.join(SCREEN_DIR, "v163_verified_slope_coloration.png"))
 fig7e_b64 = get_base64_img(os.path.join(SCREEN_DIR, "v163_verified_merge_modal.png"))
-fig7f_b64 = get_base64_img(os.path.join(SCREEN_DIR, "v164_verified_water_toilets_active.png"))
 fig8_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig08_profil_alti_synchro.jpg"))
 fig9_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig09_impression_zone.jpg"))
 fig10_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig10_module_randonner.jpg"))
@@ -388,8 +387,8 @@ html_content = f"""<!DOCTYPE html>
 
         <div class="toc-item">
           <div class="num">Chapitre 8 • Page 9</div>
-          <div class="title">Pentes, Fusion GPX &amp; Eau / Toilettes</div>
-          <div class="desc">Coloration 4 gradients de pente, fusion intelligente et détection des points d'eau OSM.</div>
+          <div class="title">Pentes &amp; Fusion GPX (Outils Avancés)</div>
+          <div class="desc">Coloration 4 gradients de pente lissée &amp; fusion avec auto-routage des sentiers.</div>
         </div>
 
         <div class="toc-item">
@@ -748,7 +747,7 @@ html_content = f"""<!DOCTYPE html>
   </section>
 
   <!-- ===================================================================== -->
-  <!-- PAGE 9 : OUTILS AVANCÉS : PENTES, FUSION GPX & EAU / TOILETTES        -->
+  <!-- PAGE 9 : OUTILS AVANCÉS : COLORATION DES PENTES & FUSION DE TRACES GPX-->
   <!-- ===================================================================== -->
   <section class="page-section">
     <div class="page-header">
@@ -756,53 +755,49 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 8 • PENTES, FUSION GPX &amp; EAU / TOILETTES</div>
+      <div>CHAPITRE 8 • PENTES &amp; FUSION DE TRACES GPX</div>
     </div>
 
     <div class="page-body">
-      <h2>📈 8. Outils Cartographiques Avancés : Pentes, Fusion GPX &amp; Eau / Toilettes</h2>
+      <h2>📈 8. Outils Cartographiques Avancés : Pentes &amp; Fusion GPX</h2>
       <p>
-        Pour pousser l'analyse du terrain, assurer le ravitaillement et préparer des traversées complexes, <strong>Map &amp; Rando</strong> intègre trois outils exclusifs accessibles depuis le panneau HUD des traces GPX et la barre flottante.
+        Pour pousser l'analyse du terrain et préparer des traversées complexes, <strong>Map &amp; Rando</strong> intègre deux outils exclusifs directement accessibles depuis le panneau HUD des traces GPX.
       </p>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6pt; margin: 2pt 0 4pt 0;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; margin: 3pt 0;">
         <div class="figure-box" style="margin: 0;">
-          <img src="{fig7d_b64}" alt="Coloration des pentes" style="max-height: 48mm; width: 100%; object-fit: contain;">
-          <div class="figure-caption">Fig. 7b : Coloration des pentes (4 paliers lissés).</div>
+          <img src="{fig7d_b64}" alt="Coloration des pentes" style="max-height: 68mm; width: 100%; object-fit: contain;">
+          <div class="figure-caption">Figure 7b : Coloration des pentes en 4 paliers d'effort avec légende intégrée et infobulle au survol.</div>
         </div>
         <div class="figure-box" style="margin: 0;">
-          <img src="{fig7e_b64}" alt="Fusion de traces GPX" style="max-height: 48mm; width: 100%; object-fit: contain;">
-          <div class="figure-caption">Fig. 7c : Fusion GPX avec auto-routage sentiers.</div>
-        </div>
-        <div class="figure-box" style="margin: 0;">
-          <img src="{fig7f_b64}" alt="Eau potable et toilettes OSM" style="max-height: 48mm; width: 100%; object-fit: contain;">
-          <div class="figure-caption">Fig. 7d : Eau 💧 et Toilettes 🚻 le long de la trace.</div>
+          <img src="{fig7e_b64}" alt="Fusion de traces GPX" style="max-height: 68mm; width: 100%; object-fit: contain;">
+          <div class="figure-caption">Figure 7c : Modal de fusion avec diagnostic d'écart, inversion de sens et auto-routage des sentiers.</div>
         </div>
       </div>
 
-      <h3 style="margin-top: 2pt;">📈 1. Coloration Interactive des Pentes</h3>
+      <h3>📈 1. Coloration Interactive des Pentes le Long de la Trace</h3>
       <p>
-        Cliquez sur <strong>📈 Pentes</strong> : le tracé unicolore se transforme en segments colorés reflétant le pourcentage réel de dénivelé ressenti (lissé sur fenêtre glissante de 25-30 m anti-bruit GPS) :
-        <span style="color:#10b981; font-weight:700;">🟩 &lt; 5%</span> Plat • 
-        <span style="color:#ca8a04; font-weight:700;">🟨 5-12%</span> Modéré • 
-        <span style="color:#ea580c; font-weight:700;">🟧 12-20%</span> Soutenu • 
-        <span style="color:#dc2626; font-weight:700;">🟥 &gt; 20%</span> Raide.
-        Une réglette de légende s'affiche sous le HUD et le survol d'un tronçon indique la pente précise (ex. <code>+14.2%</code>).
-      </p>
-
-      <h3 style="margin-top: 2pt;">🔀 2. Fusion Intelligente de 2 Traces GPX</h3>
-      <p>
-        Dès que 2 traces sont chargées, le bouton violet <strong>🔀 Fusionner</strong> ouvre la console d'assemblage en itinéraire continu. Vous pouvez intervertir l'ordre départ/arrivée (<code>⇄</code>) ou cocher <code>🔄 Inverser le sens</code> pour chaque trace. Si un écart sépare les extrémités, l'option <strong>🥾 Relier par sentiers</strong> trace automatiquement la liaison sur les sentiers réels via le moteur hybride IGN/BRouter.
-      </p>
-
-      <h3 style="margin-top: 2pt;">💧 3. Points d'Eau Potable &amp; Toilettes Publiques (Données Officielles OSM)</h3>
-      <p>
-        Accessible via le bouton <strong>💧 Eau &amp; Toilettes</strong> du HUD ou la barre flottante de carte :
+        Cliquez sur le bouton <strong>📈 Pentes</strong> : le tracé unicolore se transforme instantanément en segments colorés reflétant le pourcentage réel de dénivelé ressenti par le randonneur.
       </p>
       <ul>
-        <li><strong>Données mondiales OpenStreetMap officielles :</strong> interroge les serveurs officiels OSM pour repérer les fontaines d'eau potable, sources captées, robinets publics et blocs sanitaires dans un rayon de sécurité autour de votre parcours.</li>
-        <li><strong>Marqueurs distincts &amp; Calcul de distance au sentier :</strong> pastilles bleues 💧 pour l'eau et violettes 🚻 pour les sanitaires. Le clic sur une pastille affiche le nom, l'opérateur, la gratuité, l'accessibilité PMR et la <strong>distance exacte séparant le point d'eau du sentier</strong> (ex. <em>« À ~45 m de votre trace GPX »</em>).</li>
-        <li><strong>Bandeau compteur &amp; Légende :</strong> le HUD affiche en temps réel le décompte des points trouvés (ex. <em>💧 7 • 🚻 7</em>) avec toggle ON/OFF instantané.</li>
+        <li><strong>Calcul lissé sans saccades :</strong> un algorithme par fenêtre glissante (25 à 30 mètres) absorbe le bruit GPS et fournit une pente fidèle à la réalité du terrain.</li>
+        <li><strong>Échelle à 4 paliers d'effort :</strong> 
+          <span style="color:#10b981; font-weight:700;">🟩 &lt; 5%</span> Plat / Roulant • 
+          <span style="color:#ca8a04; font-weight:700;">🟨 5-12%</span> Montée modérée • 
+          <span style="color:#ea580c; font-weight:700;">🟧 12-20%</span> Montée soutenue / Raide • 
+          <span style="color:#dc2626; font-weight:700;">🟥 &gt; 20%</span> Très raide / Escarpé.
+        </li>
+        <li><strong>Légende dynamique &amp; Infobulle :</strong> une réglette de rappel s'affiche sous le HUD et le survol d'un tronçon indique la pente précise (ex. <code>+14.2%</code>).</li>
+      </ul>
+
+      <h3>🔀 2. Fusion Intelligente de 2 Traces GPX</h3>
+      <p>
+        Dès que 2 traces au moins sont affichées, le bouton violet <strong>🔀 Fusionner</strong> ouvre la console d'assemblage en itinéraire continu.
+      </p>
+      <ul>
+        <li><strong>Contrôle du sens &amp; de l'ordre :</strong> sélectionnez la Trace 1 (Départ) et la Trace 2 (Arrivée). Cliquez sur <code>⇄ Intervertir l'ordre</code> ou cochez <code>🔄 Inverser le sens</code> pour chaque segment indépendamment si l'une des traces a été parcourue en sens inverse.</li>
+        <li><strong>Diagnostic d'écart automatique :</strong> si les deux traces se touchent (&lt; 35 m), la jonction est directe. Si un écart existe, l'option <strong>🥾 Relier par sentiers</strong> calcule automatiquement le tracé intermédiaire le long des sentiers réels via le moteur hybride IGN/BRouter.</li>
+        <li><strong>Affichage ou Téléchargement :</strong> basculez le parcours fusionné directement sur la carte ou téléchargez le fichier avec nommage normalisé (<code>YYYYMMDDHHMM - Ville - Dist - D+</code>).</li>
       </ul>
     </div>
 

@@ -6765,11 +6765,6 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
             <span>📈</span> <span>${this.slopeColoringActive ? 'Pentes : ON' : 'Pentes'}</span>
           </button>
 
-          <!-- Bouton Eau & Toilettes -->
-          <button id="btn-toggle-water-toilets" type="button" class="px-3 py-2 rounded-xl ${this.waterToiletsActive ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white ring-2 ring-white font-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaterAndToilets()" title="Afficher les points d'eau potable et les toilettes publiques à proximité de la trace">
-            <span>💧</span> <span>${this.waterToiletsActive ? (this._waterToiletsSummary || 'Eau & Toilettes : ON') : 'Eau & Toilettes'}</span>
-          </button>
-
           <!-- Bouton Fusionner 2 traces -->
           ${count >= 2 ? `
             <button id="btn-merge-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.openMergeModal()" title="Fusionner 2 traces en un seul parcours continu">
@@ -6808,18 +6803,6 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#eab308] inline-block shadow-sm"></span> 5-12% Modéré</span>
           <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#f97316] inline-block shadow-sm"></span> 12-20% Raide</span>
           <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#ef4444] inline-block shadow-sm"></span> &gt; 20% Très raide</span>
-        </div>
-      ` : ''}
-
-      <!-- Bandeau Eau & Toilettes active -->
-      ${this.waterToiletsActive ? `
-        <div id="standalone-water-toilets-legend" class="flex items-center justify-between flex-wrap gap-2.5 text-xs bg-slate-950/90 px-3.5 py-1.5 rounded-2xl border border-sky-500/50 text-slate-200 shadow-sm animate-in fade-in">
-          <div class="flex items-center gap-3">
-            <span class="font-bold text-sky-400 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-sm"></span> 💧 <span>Eau potable :</span> <span class="text-white font-black font-mono text-sm">${this._waterCount !== undefined ? this._waterCount : '...'}</span></span>
-            <span class="text-slate-600">•</span>
-            <span class="font-bold text-violet-400 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-violet-400 inline-block shadow-sm"></span> 🚻 <span>Toilettes :</span> <span class="text-white font-black font-mono text-sm">${this._toiletsCount !== undefined ? this._toiletsCount : '...'}</span></span>
-          </div>
-          <span class="text-[11px] text-slate-400 hidden sm:inline">Survolez ou cliquez sur un marqueur pour voir la distance au sentier</span>
         </div>
       ` : ''}
 
