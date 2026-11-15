@@ -6765,6 +6765,11 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
             <span>📈</span> <span>${this.slopeColoringActive ? 'Pentes : ON' : 'Pentes'}</span>
           </button>
 
+          <!-- Bouton Eau & Toilettes -->
+          <button id="btn-toggle-water-toilets" type="button" class="px-3 py-2 rounded-xl ${this.waterToiletsActive ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white ring-2 ring-white font-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaterAndToilets()" title="Afficher les points d'eau potable et les toilettes publiques à proximité de la trace">
+            <span>💧</span> <span>${this.waterToiletsActive ? (this._waterToiletsSummary || 'Eau & Toilettes : ON') : 'Eau & Toilettes'}</span>
+          </button>
+
           <!-- Bouton Fusionner 2 traces -->
           ${count >= 2 ? `
             <button id="btn-merge-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.openMergeModal()" title="Fusionner 2 traces en un seul parcours continu">
@@ -6803,6 +6808,18 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#eab308] inline-block shadow-sm"></span> 5-12% Modéré</span>
           <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#f97316] inline-block shadow-sm"></span> 12-20% Raide</span>
           <span class="flex items-center gap-1 font-semibold"><span class="w-3 h-3 rounded-full bg-[#ef4444] inline-block shadow-sm"></span> &gt; 20% Très raide</span>
+        </div>
+      ` : ''}
+
+      <!-- Bandeau Eau & Toilettes active -->
+      ${this.waterToiletsActive ? `
+        <div id="standalone-water-toilets-legend" class="flex items-center justify-between flex-wrap gap-2.5 text-xs bg-slate-950/90 px-3.5 py-1.5 rounded-2xl border border-sky-500/50 text-slate-200 shadow-sm animate-in fade-in">
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-sky-400 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-sm"></span> 💧 <span>Eau potable :</span> <span class="text-white font-black font-mono text-sm">${this._waterCount !== undefined ? this._waterCount : '...'}</span></span>
+            <span class="text-slate-600">•</span>
+            <span class="font-bold text-violet-400 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-violet-400 inline-block shadow-sm"></span> 🚻 <span>Toilettes :</span> <span class="text-white font-black font-mono text-sm">${this._toiletsCount !== undefined ? this._toiletsCount : '...'}</span></span>
+          </div>
+          <span class="text-[11px] text-slate-400 hidden sm:inline">Survolez ou cliquez sur un marqueur pour voir la distance au sentier</span>
         </div>
       ` : ''}
 
@@ -6920,6 +6937,14 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       });
       this.standaloneTracks = [];
     }
+    if (this.waterToiletsLayer && this.map && this.map.hasLayer(this.waterToiletsLayer)) {
+      this.map.removeLayer(this.waterToiletsLayer);
+    }
+    this.waterToiletsActive = false;
+    this._waterCount = 0;
+    this._toiletsCount = 0;
+    this._waterToiletsSummary = null;
+    this.updateWaterToiletsUi();
     this.standaloneHike = null;
     if (this.selectedHike && String(this.selectedHike.id).startsWith('gpx_user_')) {
       this.selectedHike = null;
@@ -7051,6 +7076,249 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     });
 
     this.showStandaloneGpxHud();
+  }
+
+  // =========================================================================
+  // POINTS D'EAU POTABLE & TOILETTES PUBLIQUES (OPENSTREETMAP)
+  // =========================================================================
+
+  async toggleWaterAndToilets(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.waterToiletsActive = forceState;
+    } else {
+      this.waterToiletsActive = !this.waterToiletsActive;
+    }
+
+    if (!this.waterToiletsActive) {
+      if (this.waterToiletsLayer && this.map && this.map.hasLayer(this.waterToiletsLayer)) {
+        this.map.removeLayer(this.waterToiletsLayer);
+      }
+      this._waterCount = 0;
+      this._toiletsCount = 0;
+      this._waterToiletsSummary = null;
+      this.updateWaterToiletsUi();
+      return;
+    }
+
+    await this.loadWaterAndToilets();
+  }
+
+  async loadWaterAndToilets() {
+    if (!this.map) return;
+
+    if (!this.waterToiletsLayer) {
+      this.waterToiletsLayer = L.featureGroup();
+    }
+    this.waterToiletsLayer.clearLayers();
+
+    // 1. Déterminer la zone de recherche (bbox)
+    let minLat, maxLat, minLon, maxLon;
+    const allPts = [];
+    if (this.standaloneTracks && this.standaloneTracks.length > 0) {
+      this.standaloneTracks.forEach(t => {
+        if (t.points && t.points.length > 0) {
+          t.points.forEach(p => {
+            const lat = p.lat !== undefined ? p.lat : p[0];
+            const lon = p.lon !== undefined ? p.lon : (p.lng !== undefined ? p.lng : p[1]);
+            allPts.push({ lat, lon });
+          });
+        }
+      });
+    }
+
+    if (allPts.length > 0) {
+      minLat = Math.min(...allPts.map(p => p.lat));
+      maxLat = Math.max(...allPts.map(p => p.lat));
+      minLon = Math.min(...allPts.map(p => p.lon));
+      maxLon = Math.max(...allPts.map(p => p.lon));
+      // Marge de recherche de ~350 m autour de la trace
+      minLat -= 0.003;
+      maxLat += 0.003;
+      minLon -= 0.004;
+      maxLon += 0.004;
+    } else {
+      const b = this.map.getBounds();
+      minLat = b.getSouth();
+      maxLat = b.getNorth();
+      minLon = b.getWest();
+      maxLon = b.getEast();
+    }
+
+    // Limiter la taille d'une requête OSM pour ne jamais dépasser la limite de 50 000 nœuds de l'API OSM
+    const latSpan = maxLat - minLat;
+    const lonSpan = maxLon - minLon;
+    const maxAllowedSpan = 0.025; // ~2.5 km
+    if (latSpan > maxAllowedSpan || lonSpan > maxAllowedSpan) {
+      const cLat = (minLat + maxLat) / 2;
+      const cLon = (minLon + maxLon) / 2;
+      minLat = cLat - (maxAllowedSpan / 2);
+      maxLat = cLat + (maxAllowedSpan / 2);
+      minLon = cLon - (maxAllowedSpan / 2);
+      maxLon = cLon + (maxAllowedSpan / 2);
+    }
+
+    if (window.GpxCreatorEditorInstance) {
+      window.GpxCreatorEditorInstance.showUndoFeedback("💧 Recherche eau potable & toilettes...");
+    }
+
+    try {
+      const url = `https://api.openstreetmap.org/api/0.6/map?bbox=${minLon.toFixed(4)},${minLat.toFixed(4)},${maxLon.toFixed(4)},${maxLat.toFixed(4)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("OSM status: " + resp.status);
+      const xmlText = await resp.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, 'text/xml');
+      const nodes = xml.querySelectorAll('node');
+
+      let waterCount = 0;
+      let toiletsCount = 0;
+
+      nodes.forEach(node => {
+        const tags = {};
+        node.querySelectorAll('tag').forEach(t => {
+          tags[t.getAttribute('k')] = t.getAttribute('v');
+        });
+
+        const isWater = tags.amenity === 'drinking_water' || tags.drinking_water === 'yes' || tags.amenity === 'water_point' || (tags.natural === 'spring' && tags.drinking_water !== 'no');
+        const isToilet = tags.amenity === 'toilets';
+
+        if (!isWater && !isToilet) return;
+
+        const lat = parseFloat(node.getAttribute('lat'));
+        const lon = parseFloat(node.getAttribute('lon'));
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        if (isWater) waterCount++;
+        if (isToilet) toiletsCount++;
+
+        // Calcul de la distance minimale au tracé GPX si actif
+        let distMsg = '';
+        if (allPts.length > 0) {
+          const ptLoc = L.latLng(lat, lon);
+          let minDist = Infinity;
+          const step = Math.max(1, Math.floor(allPts.length / 100));
+          for (let i = 0; i < allPts.length; i += step) {
+            const d = ptLoc.distanceTo(L.latLng(allPts[i].lat, allPts[i].lon));
+            if (d < minDist) minDist = d;
+          }
+          if (minDist < 1000) {
+            distMsg = `<div class="mt-1 text-[11px] font-bold text-emerald-600 flex items-center gap-1"><span>📏</span> À ~${Math.round(minDist)} m de votre trace GPX</div>`;
+          } else {
+            distMsg = `<div class="mt-1 text-[11px] text-slate-500 flex items-center gap-1"><span>📏</span> À ${(minDist/1000).toFixed(1)} km de votre trace GPX</div>`;
+          }
+        }
+
+        const iconHtml = isWater 
+          ? `<div style="background: linear-gradient(135deg, #0284c7, #06b6d4); color: white; border: 2px solid white; border-radius: 9999px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.35); font-size: 16px; cursor: pointer;">💧</div>`
+          : `<div style="background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; border: 2px solid white; border-radius: 9999px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.35); font-size: 16px; cursor: pointer;">🚻</div>`;
+
+        const icon = L.divIcon({
+          html: iconHtml,
+          className: 'poi-water-toilet-icon',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -16]
+        });
+
+        const name = tags.name || (isWater ? "Point d'eau potable" : "Toilettes publiques");
+        const fee = tags.fee === 'no' ? '<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Gratuit</span>' : (tags.fee === 'yes' ? '<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold">Payant</span>' : '');
+        const access = tags.wheelchair === 'yes' || tags.wheelchair === 'designated' ? '<span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-bold">♿ PMR</span>' : '';
+
+        const popupHtml = `
+          <div class="p-1 min-w-[200px] text-slate-800">
+            <div class="flex items-center gap-1.5 font-black text-sm ${isWater ? 'text-sky-700' : 'text-violet-700'} border-b border-slate-200 pb-1 mb-1.5">
+              <span>${isWater ? '💧 Point d\'Eau Potable' : '🚻 Toilettes Publiques'}</span>
+            </div>
+            <div class="font-bold text-xs text-slate-900">${name}</div>
+            ${tags.operator ? `<div class="text-[11px] text-slate-500">${tags.operator}</div>` : ''}
+            <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              ${fee}
+              ${access}
+            </div>
+            ${distMsg}
+            <div class="mt-2 pt-1 border-t border-slate-100 text-[10px] text-slate-400 font-mono">
+              ${lat.toFixed(5)}, ${lon.toFixed(5)}
+            </div>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lon], { icon }).bindPopup(popupHtml);
+        this.waterToiletsLayer.addLayer(marker);
+      });
+
+      this._waterCount = waterCount;
+      this._toiletsCount = toiletsCount;
+      this._waterToiletsSummary = `💧 ${waterCount} • 🚻 ${toiletsCount}`;
+
+      if (this.map && !this.map.hasLayer(this.waterToiletsLayer)) {
+        this.map.addLayer(this.waterToiletsLayer);
+      }
+
+      this.updateWaterToiletsUi();
+
+      if (window.GpxCreatorEditorInstance) {
+        window.GpxCreatorEditorInstance.showUndoFeedback(`Trouvé : ${waterCount} point(s) d'eau et ${toiletsCount} toilette(s)`);
+      }
+
+    } catch (err) {
+      console.warn("Échec requête Eau & Toilettes OSM :", err);
+      if (window.GpxCreatorEditorInstance) {
+        window.GpxCreatorEditorInstance.showUndoFeedback("⚠️ Info eau & toilettes indisponible temporairement");
+      }
+    }
+  }
+
+  updateWaterToiletsUi() {
+    const hudBtn = document.getElementById('btn-toggle-water-toilets');
+    if (hudBtn) {
+      if (this.waterToiletsActive) {
+        hudBtn.className = 'px-3 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 text-white ring-2 ring-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer';
+        hudBtn.innerHTML = `<span>💧</span> <span>${this._waterToiletsSummary || 'Eau & Toilettes : ON'}</span>`;
+      } else {
+        hudBtn.className = 'px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer';
+        hudBtn.innerHTML = `<span>💧</span> <span>Eau & Toilettes</span>`;
+      }
+    }
+
+    const hud = document.getElementById('standalone-gpx-hud');
+    let legend = document.getElementById('standalone-water-toilets-legend');
+    if (this.waterToiletsActive) {
+      if (!legend && hud) {
+        legend = document.createElement('div');
+        legend.id = 'standalone-water-toilets-legend';
+        legend.className = 'flex items-center justify-between flex-wrap gap-2.5 text-xs bg-slate-950/90 px-3.5 py-1.5 rounded-2xl border border-sky-500/50 text-slate-200 shadow-sm animate-in fade-in';
+        const slopeLegend = document.getElementById('standalone-slope-legend');
+        if (slopeLegend) {
+          slopeLegend.insertAdjacentElement('afterend', legend);
+        } else {
+          const header = hud.querySelector('.flex.items-center.justify-between');
+          if (header) header.insertAdjacentElement('afterend', legend);
+        }
+      }
+      if (legend) {
+        legend.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-bold text-sky-400 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block"></span> 💧 <span>Eau potable :</span> <span class="text-white font-black font-mono text-sm">${this._waterCount || 0}</span></span>
+            <span class="text-slate-600">•</span>
+            <span class="font-bold text-violet-400 flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-violet-400 inline-block"></span> 🚻 <span>Toilettes :</span> <span class="text-white font-black font-mono text-sm">${this._toiletsCount || 0}</span></span>
+          </div>
+          <span class="text-[11px] text-slate-400 hidden sm:inline">Survolez ou cliquez pour la distance au sentier</span>
+        `;
+      }
+    } else if (legend) {
+      legend.remove();
+    }
+
+    const floatBtn = document.getElementById('btn-map-water-toilets');
+    if (floatBtn) {
+      if (this.waterToiletsActive) {
+        floatBtn.classList.add('bg-sky-600', 'text-white', 'border-sky-400', 'ring-2', 'ring-sky-300');
+        floatBtn.classList.remove('bg-white/95', 'text-slate-900', 'border-slate-400');
+      } else {
+        floatBtn.classList.remove('bg-sky-600', 'text-white', 'border-sky-400', 'ring-2', 'ring-sky-300');
+        floatBtn.classList.add('bg-white/95', 'text-slate-900', 'border-slate-400');
+      }
+    }
   }
 
   // =========================================================================

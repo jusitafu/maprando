@@ -1851,6 +1851,16 @@
               </ul>
             </div>
 
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-sky-500/40 space-y-2">
+              <div class="font-extrabold text-sky-300 flex items-center gap-1.5"><span>💧</span> Points d'Eau Potable &amp; <span>🚻</span> Toilettes Publiques (Données Officielles OSM)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Bouton « 💧 Eau &amp; Toilettes » :</strong> accessible à la fois dans le panneau flottant des traces GPX et dans la barre d'outils inférieure de la carte.</li>
+                <li><strong>Détection géolocalisée temps réel :</strong> interroge la base OpenStreetMap pour localiser toutes les fontaines publiques, bornes de puisage et blocs sanitaires dans un rayon de 800 m à 1 km autour du parcours ou de la vue cartographique.</li>
+                <li><strong>Distance précise au sentier :</strong> chaque marqueur indique la <strong>distance exacte qui le sépare de votre tracé GPX</strong> (ex. <code>📏 À ~35 m de votre trace</code>), sa gratuité éventuelle et son accessibilité PMR.</li>
+                <li><strong>Compteur dynamique :</strong> un bandeau récapitulatif affiche en direct le nombre de points d'eau potable et de sanitaires disponibles pour votre sécurité hydrique.</li>
+              </ul>
+            </div>
+
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-blue-500/40 space-y-2">
               <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>✏️</span> Créer &amp; <span>🛠️</span> Modifier une trace GPX (Auto-Routage Sentiers)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
@@ -2875,6 +2885,13 @@
               title="Mesurer un trajet par clics successifs (distance, segments et cap)">
               <span class="tool-icon text-lg sm:text-xl group-hover:scale-110 transition-transform">📏</span>
               <span id="btn-map-measure-text">Mesurer</span>
+            </button>
+            <button id="btn-map-water-toilets" 
+              class="map-floating-tool-btn px-4 sm:px-5 py-3 bg-white/95 hover:bg-white text-slate-900 hover:text-sky-700 rounded-2xl shadow-xl hover:shadow-2xl border-2 border-slate-400 text-sm sm:text-base font-black transition-all flex items-center gap-2.5 cursor-pointer backdrop-blur-md active:scale-95 group" 
+              title="Afficher les points d'eau potable et les toilettes publiques à proximité"
+              onclick="window.MapManagerInstance.toggleWaterAndToilets()">
+              <span class="tool-icon text-lg sm:text-xl group-hover:scale-110 transition-transform">💧</span>
+              <span id="btn-map-water-toilets-text">Eau &amp; Toilettes</span>
             </button>
           </div>
 
@@ -7396,7 +7413,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=157"></script>
   <script src="js/ign-top25-sheets.js?v=157"></script>
-  <script src="js/map-manager.js?v=163"></script>
+  <script src="js/map-manager.js?v=164"></script>
 
   <script src="js/pdf-exporter.js?v=157"></script>
   <script src="js/gr-manager.js?v=157"></script>
