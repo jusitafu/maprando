@@ -651,6 +651,7 @@ class GpxCreatorEditor {
     // Nettoyer les poignées et le mode découpe
     this.stopBoxCutMode();
     this.clearEditHandles();
+    this.clearGapDashedLine();
 
     // Fermer panneau flottant
     if (this.editFloatingCard) {
@@ -1018,6 +1019,30 @@ class GpxCreatorEditor {
     }
   }
 
+  showGapDashedLine(p1, p2) {
+    this.clearGapDashedLine();
+    if (!this.map) return;
+    this._gapDashedLine = L.polyline([[p1.lat, p1.lon], [p2.lat, p2.lon]], {
+      color: '#f59e0b',
+      weight: 3.5,
+      dashArray: '6, 8',
+      opacity: 0.9,
+      interactive: true
+    }).addTo(this.map);
+    this._gapDashedLine.bindTooltip("✂️ Portion coupée (en attente de raccordement)", {
+      permanent: true,
+      direction: 'center',
+      className: 'bg-slate-900 text-amber-300 font-bold px-2 py-1 rounded text-xs border border-amber-500 shadow-md'
+    });
+  }
+
+  clearGapDashedLine() {
+    if (this._gapDashedLine && this.map) {
+      this.map.removeLayer(this._gapDashedLine);
+      this._gapDashedLine = null;
+    }
+  }
+
   async applyBoxCut(bounds) {
     if (!this.currentEditCoords || this.currentEditCoords.length < 2) return;
 
@@ -1046,15 +1071,71 @@ class GpxCreatorEditor {
 
     if (part1.length > 0 && part2.length > 0) {
       // Coupe en plein milieu de la trace
+      const p1 = { lat: part1[part1.length - 1][0], lon: part1[part1.length - 1][1] };
+      const p2 = { lat: part2[0][0], lon: part2[0][1] };
+
+      // Si l'auto-routage est actif (AUTO-ROUTAGE : OUI), calcul et raccordement 100% automatique immédiat par les sentiers réels !
+      if (this.editAutoRoute) {
+        const statusEl = document.getElementById('gpx-edit-status');
+        if (statusEl) {
+          statusEl.classList.remove('hidden');
+          statusEl.innerHTML = `🔄 <strong>Auto-routage...</strong> Raccordement automatique par les sentiers (${insideIndices.length} points coupés).`;
+        }
+
+        let bridgeCoords = null;
+        try {
+          bridgeCoords = await this.querySingleLeg(p1, p2);
+        } catch (err) {
+          console.warn("Échec auto-routage raccordement direct :", err);
+        } finally {
+          if (statusEl) statusEl.classList.add('hidden');
+        }
+
+        if (bridgeCoords && bridgeCoords.length > 0) {
+          this.currentEditCoords = [...part1, ...bridgeCoords, ...part2];
+          this.clearGapDashedLine();
+          this.updateEditedTrackDisplay();
+          this.showUndoFeedback(`✂️ ${insideIndices.length} pts coupés & raccordé par les sentiers (${bridgeCoords.length} pts) ! (Ctrl+Z pour annuler)`);
+
+          const reconnectBar = document.getElementById('gpx-edit-reconnect-bar');
+          if (reconnectBar) reconnectBar.classList.add('hidden');
+          this._lastCutPart1End = null;
+          this._lastCutPart2Start = null;
+          this._lastCutIndex = null;
+          return;
+        }
+      }
+
+      // Si auto-routage inactif (mode manuel) ou si aucun sentier n'a pu relier p1 et p2 :
       this.currentEditCoords = [...part1, ...part2];
       this._lastCutPart1End = part1[part1.length - 1];
       this._lastCutPart2Start = part2[0];
       this._lastCutIndex = part1.length;
 
-      this.updateEditedTrackDisplay();
-      this.showUndoFeedback(`✂️ Tronçon de ${insideIndices.length} points supprimé (Ctrl+Z pour restaurer)`);
+      // Afficher les deux morceaux séparés (sans trait plein continu trompeur à travers champ)
+      if (this.editingTrack && this.editingTrack.polyline) {
+        this.editingTrack.polyline.setLatLngs([
+          part1.map(c => [c[0], c[1]]),
+          part2.map(c => [c[0], c[1]])
+        ]);
+      }
+      this.generateEditHandles();
+      const stats = this.computeTrackStats(this.currentEditCoords);
+      if (this.editingTrack) {
+        this.editingTrack.distance = stats.distanceKm.toFixed(1);
+        this.editingTrack.elevationGain = stats.elevationGain;
+      }
+      const dEl = document.getElementById('gpx-edit-dist');
+      if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
+      const eEl = document.getElementById('gpx-edit-ele');
+      if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
 
-      // Afficher le bandeau pour proposer de relier les 2 bouts
+      // Afficher une ligne en pointillés orange très visible entre p1 et p2
+      this.showGapDashedLine(p1, p2);
+
+      this.showUndoFeedback(`✂️ Tronçon de ${insideIndices.length} points supprimé (en attente de raccordement)`);
+
+      // Afficher le bandeau pour proposer de relier
       const reconnectBar = document.getElementById('gpx-edit-reconnect-bar');
       const reconnectMsg = document.getElementById('gpx-edit-reconnect-msg');
       if (reconnectBar) {
@@ -1065,11 +1146,13 @@ class GpxCreatorEditor {
       }
     } else if (part1.length > 0) {
       // Coupe en fin de parcours
+      this.clearGapDashedLine();
       this.currentEditCoords = part1;
       this.updateEditedTrackDisplay();
       this.showUndoFeedback(`✂️ Fin de trace raccourcie (${insideIndices.length} points retirés)`);
     } else if (part2.length > 0) {
       // Coupe en début de parcours
+      this.clearGapDashedLine();
       this.currentEditCoords = part2;
       this.updateEditedTrackDisplay();
       this.showUndoFeedback(`✂️ Début de trace raccourci (${insideIndices.length} points retirés)`);
@@ -1106,6 +1189,7 @@ class GpxCreatorEditor {
       const part2 = this.currentEditCoords.slice(this._lastCutIndex);
 
       this.currentEditCoords = [...part1, ...bridgeCoords, ...part2];
+      this.clearGapDashedLine();
       this.updateEditedTrackDisplay();
       this.showUndoFeedback("🔗 Nouvelle portion raccordée avec succès !");
 
@@ -1156,6 +1240,7 @@ class GpxCreatorEditor {
     }
     const prevCoords = this.editHistory.pop();
     this.currentEditCoords = prevCoords;
+    this.clearGapDashedLine();
     this.updateEditedTrackDisplay();
 
     const reconnectBar = document.getElementById('gpx-edit-reconnect-bar');
@@ -1170,6 +1255,7 @@ class GpxCreatorEditor {
   resetEditTrack() {
     if (!this.editingTrack || !this.originalCoords || this.originalCoords.length === 0) return;
     this.saveEditHistorySnapshot();
+    this.clearGapDashedLine();
     this.currentEditCoords = JSON.parse(JSON.stringify(this.originalCoords));
     const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
     if (this.editingTrack.polyline) {
