@@ -28,8 +28,9 @@ if not os.path.exists(EDGE_EXE):
 
 def get_base64_img(path):
     if os.path.exists(path):
+        mime = "image/png" if path.lower().endswith(".png") else "image/jpeg"
         with open(path, "rb") as f:
-            return "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
+            return f"data:{mime};base64," + base64.b64encode(f.read()).decode("utf-8")
     return ""
 
 logo_b64 = get_base64_img(os.path.join(WORKDIR, "logo.png"))
@@ -43,12 +44,14 @@ fig6_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig06_mesure_cap_distance.jp
 fig7_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig07_traces_gpx_multi.jpg"))
 fig7b_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig07b_creer_gpx.jpg"))
 fig7c_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig07c_modifier_gpx.jpg"))
+fig7d_b64 = get_base64_img(os.path.join(SCREEN_DIR, "v163_verified_slope_coloration.png"))
+fig7e_b64 = get_base64_img(os.path.join(SCREEN_DIR, "v163_verified_merge_modal.png"))
 fig8_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig08_profil_alti_synchro.jpg"))
 fig9_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig09_impression_zone.jpg"))
 fig10_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig10_module_randonner.jpg"))
 fig11_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig11_guides_savoirs.jpg"))
 
-print("Toutes les captures d'écran (dont les 2 nouveaux outils GPX) sont chargées en mémoire.")
+print("Toutes les captures d'écran (dont les outils Pentes et Fusion GPX v163) sont chargées en mémoire.")
 
 html_content = f"""<!DOCTYPE html>
 <html lang="fr">
@@ -336,7 +339,7 @@ html_content = f"""<!DOCTYPE html>
       </div>
 
       <div style="font-weight: 800; font-size: 9.5pt; color: #0f172a; margin-bottom: 2pt; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 2pt;">
-        📑 SOMMAIRE GÉNÉRAL DES 13 CHAPITRES
+        📑 SOMMAIRE GÉNÉRAL DES 14 CHAPITRES (15 PAGES)
       </div>
 
       <div class="toc-grid">
@@ -384,45 +387,51 @@ html_content = f"""<!DOCTYPE html>
 
         <div class="toc-item">
           <div class="num">Chapitre 8 • Page 9</div>
-          <div class="title">Créateur d'Itinéraire GPX (Auto-Routage Sentiers)</div>
-          <div class="desc">Tracé automatique sur sentiers IGN, ruban d'étapes (A, B...), déplacement et Ctrl+Z.</div>
+          <div class="title">Pentes &amp; Fusion GPX (Outils Avancés)</div>
+          <div class="desc">Coloration 4 gradients de pente lissée &amp; fusion avec auto-routage des sentiers.</div>
         </div>
 
         <div class="toc-item">
           <div class="num">Chapitre 9 • Page 10</div>
-          <div class="title">Modification de Trace GPX (Sentiers Voisins)</div>
-          <div class="desc">Poignées dynamiques, déviation sur sentiers, annulation par Ctrl+Z et export GPX.</div>
+          <div class="title">Créateur d'Itinéraire GPX (Auto-Routage)</div>
+          <div class="desc">Tracé automatique sur sentiers IGN, ruban d'étapes (A, B...), déplacement et Ctrl+Z.</div>
         </div>
 
         <div class="toc-item">
           <div class="num">Chapitre 10 • Page 11</div>
+          <div class="title">Modification de Trace GPX &amp; Découpage</div>
+          <div class="desc">Poignées dynamiques, rectangle Supprimer zone et reconnexion automatique par sentiers.</div>
+        </div>
+
+        <div class="toc-item">
+          <div class="num">Chapitre 11 • Page 12</div>
           <div class="title">Profil Altimétrique Interactif &amp; Synchronisé</div>
           <div class="desc">Réciprocité complète bidirectionnelle Trace ↔ Profil avec point rouge mobile.</div>
         </div>
 
         <div class="toc-item">
-          <div class="num">Chapitre 11 • Page 12</div>
+          <div class="num">Chapitre 12 • Page 13</div>
           <div class="title">Impression Haute Définition (« Imprimer une zone »)</div>
-          <div class="desc">Sélection 2 clics A4/A3, carroyage UTM kilométrique, cartouche IGN officiel.</div>
+          <div class="desc">Tracé par rectangle ou 2 clics A4/A3, carroyage UTM, cartouche IGN officiel.</div>
         </div>
 
         <div class="toc-item">
-          <div class="num">Chapitre 12 • Page 13</div>
+          <div class="num">Chapitre 13 • Page 14</div>
           <div class="title">Module « Randonner » &amp; Catalogue Club</div>
           <div class="desc">Filtres multicritères, IBP 1 à 5, tableau triable et colonne « Ajoutée par ».</div>
         </div>
 
-        <div class="toc-item" style="grid-column: span 2;">
-          <div class="num">Chapitre 13 • Page 14</div>
-          <div class="title">Module « Guides &amp; Savoirs » — 6 Fiches Techniques &amp; Sécurité Montagne</div>
-          <div class="desc">GNSS/SBAS, LiDAR HD, barème IBP Index, check-list, secours montagne/satellite et montres GPX.</div>
+        <div class="toc-item">
+          <div class="num">Chapitre 14 • Page 15</div>
+          <div class="title">Guides &amp; Savoirs — 6 Fiches &amp; Sécurité</div>
+          <div class="desc">GNSS/SBAS, LiDAR HD, barème IBP, check-list, secours satellite et montres.</div>
         </div>
       </div>
     </div>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 1 / 14</div>
+      <div class="page-number">Page 1 / 15</div>
     </div>
   </section>
 
@@ -469,7 +478,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 2 / 14</div>
+      <div class="page-number">Page 2 / 15</div>
     </div>
   </section>
 
@@ -516,7 +525,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 3 / 14</div>
+      <div class="page-number">Page 3 / 15</div>
     </div>
   </section>
 
@@ -559,7 +568,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 4 / 14</div>
+      <div class="page-number">Page 4 / 15</div>
     </div>
   </section>
 
@@ -598,7 +607,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 5 / 14</div>
+      <div class="page-number">Page 5 / 15</div>
     </div>
   </section>
 
@@ -642,7 +651,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 6 / 14</div>
+      <div class="page-number">Page 6 / 15</div>
     </div>
   </section>
 
@@ -688,7 +697,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 7 / 14</div>
+      <div class="page-number">Page 7 / 15</div>
     </div>
   </section>
 
@@ -733,7 +742,68 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 8 / 14</div>
+      <div class="page-number">Page 8 / 15</div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PAGE 9 : OUTILS AVANCÉS : COLORATION DES PENTES & FUSION DE TRACES GPX-->
+  <!-- ===================================================================== -->
+  <section class="page-section">
+    <div class="page-header">
+      <div class="brand">
+        <img src="{logo_b64}" alt="Map & Rando">
+        <span>Map &amp; Rando • JLDApps 2026</span>
+      </div>
+      <div>CHAPITRE 8 • PENTES &amp; FUSION DE TRACES GPX</div>
+    </div>
+
+    <div class="page-body">
+      <h2>📈 8. Outils Cartographiques Avancés : Pentes &amp; Fusion GPX</h2>
+      <p>
+        Pour pousser l'analyse du terrain et préparer des traversées complexes, <strong>Map &amp; Rando</strong> intègre deux outils exclusifs directement accessibles depuis le panneau HUD des traces GPX.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; margin: 3pt 0;">
+        <div class="figure-box" style="margin: 0;">
+          <img src="{fig7d_b64}" alt="Coloration des pentes" style="max-height: 68mm; width: 100%; object-fit: contain;">
+          <div class="figure-caption">Figure 7b : Coloration des pentes en 4 paliers d'effort avec légende intégrée et infobulle au survol.</div>
+        </div>
+        <div class="figure-box" style="margin: 0;">
+          <img src="{fig7e_b64}" alt="Fusion de traces GPX" style="max-height: 68mm; width: 100%; object-fit: contain;">
+          <div class="figure-caption">Figure 7c : Modal de fusion avec diagnostic d'écart, inversion de sens et auto-routage des sentiers.</div>
+        </div>
+      </div>
+
+      <h3>📈 1. Coloration Interactive des Pentes le Long de la Trace</h3>
+      <p>
+        Cliquez sur le bouton <strong>📈 Pentes</strong> : le tracé unicolore se transforme instantanément en segments colorés reflétant le pourcentage réel de dénivelé ressenti par le randonneur.
+      </p>
+      <ul>
+        <li><strong>Calcul lissé sans saccades :</strong> un algorithme par fenêtre glissante (25 à 30 mètres) absorbe le bruit GPS et fournit une pente fidèle à la réalité du terrain.</li>
+        <li><strong>Échelle à 4 paliers d'effort :</strong> 
+          <span style="color:#10b981; font-weight:700;">🟩 &lt; 5%</span> Plat / Roulant • 
+          <span style="color:#ca8a04; font-weight:700;">🟨 5-12%</span> Montée modérée • 
+          <span style="color:#ea580c; font-weight:700;">🟧 12-20%</span> Montée soutenue / Raide • 
+          <span style="color:#dc2626; font-weight:700;">🟥 &gt; 20%</span> Très raide / Escarpé.
+        </li>
+        <li><strong>Légende dynamique &amp; Infobulle :</strong> une réglette de rappel s'affiche sous le HUD et le survol d'un tronçon indique la pente précise (ex. <code>+14.2%</code>).</li>
+      </ul>
+
+      <h3>🔀 2. Fusion Intelligente de 2 Traces GPX</h3>
+      <p>
+        Dès que 2 traces au moins sont affichées, le bouton violet <strong>🔀 Fusionner</strong> ouvre la console d'assemblage en itinéraire continu.
+      </p>
+      <ul>
+        <li><strong>Contrôle du sens &amp; de l'ordre :</strong> sélectionnez la Trace 1 (Départ) et la Trace 2 (Arrivée). Cliquez sur <code>⇄ Intervertir l'ordre</code> ou cochez <code>🔄 Inverser le sens</code> pour chaque segment indépendamment si l'une des traces a été parcourue en sens inverse.</li>
+        <li><strong>Diagnostic d'écart automatique :</strong> si les deux traces se touchent (&lt; 35 m), la jonction est directe. Si un écart existe, l'option <strong>🥾 Relier par sentiers</strong> calcule automatiquement le tracé intermédiaire le long des sentiers réels via le moteur hybride IGN/BRouter.</li>
+        <li><strong>Affichage ou Téléchargement :</strong> basculez le parcours fusionné directement sur la carte ou téléchargez le fichier avec nommage normalisé (<code>YYYYMMDDHHMM - Ville - Dist - D+</code>).</li>
+      </ul>
+    </div>
+
+    <div class="page-footer">
+      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div class="page-number">Page 9 / 15</div>
     </div>
   </section>
 
@@ -746,11 +816,11 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 8 • CRÉATEUR D'ITINÉRAIRE GPX</div>
+      <div>CHAPITRE 9 • CRÉATEUR D'ITINÉRAIRE GPX</div>
     </div>
 
     <div class="page-body">
-      <h2>✏️ 8. Créateur d'Itinéraire GPX (Auto-Routage Sentiers &amp; Étapes Dynamiques)</h2>
+      <h2>✏️ 9. Créateur d'Itinéraire GPX (Auto-Routage Sentiers &amp; Étapes Dynamiques)</h2>
       <p>
         Pour créer une nouvelle randonnée sur mesure sans passer par un logiciel tiers complexe, cliquez sur le bouton bleu ciel <strong>✏️ Créer un GPX</strong>. L'outil vous permet de concevoir en quelques clics un fichier <code>.gpx</code> de haute précision prêt pour votre montre GPS.
       </p>
@@ -787,7 +857,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 9 / 14</div>
+      <div class="page-number">Page 10 / 15</div>
     </div>
   </section>
 
@@ -800,11 +870,11 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 9 • MODIFICATION DE TRACE GPX</div>
+      <div>CHAPITRE 10 • MODIFICATION DE TRACE GPX</div>
     </div>
 
     <div class="page-body">
-      <h2>🛠️ 9. Modification de Trace GPX (Déviation sur Sentiers Voisins &amp; Poignées Dynamiques)</h2>
+      <h2>🛠️ 10. Modification de Trace GPX (Déviation, Suppression de Zone &amp; Reconnexion Auto)</h2>
       <p>
         Vous disposez d'une trace GPX existante mais vous souhaitez éviter un tronçon difficile, contourner un obstacle ou emprunter une variante panoramique ? Le bouton violet <strong>🛠️ Modifier une trace GPX</strong> transforme votre trace en un objet malléable et interactif.
       </p>
@@ -826,21 +896,22 @@ html_content = f"""<!DOCTYPE html>
         <li><strong>Recalcul en direct des métriques :</strong> le panneau affiche instantanément la nouvelle distance modifiée et le nouveau dénivelé D+ recalculé.</li>
       </ul>
 
-      <h3>Annulation par CTRL + Z &amp; Bouton « Rétablir l'original »</h3>
+      <h3>✂️ Découpage de Zone &amp; Reconnexion Automatique par Sentiers</h3>
       <ul>
-        <li><strong>Raccourci CTRL + Z :</strong> chaque déplacement de poignée est historisé. Une frappe de <strong>Ctrl+Z</strong> (ou clic sur <em>« ↶ Annuler (Ctrl+Z) »</em>) replace immédiatement la poignée à sa position précédente et réajuste le tracé.</li>
-        <li><strong>Bouton « Rétablir l'original » :</strong> réinitialise la trace dans son état initial d'importation en un seul clic.</li>
+        <li><strong>Outil « Supprimer zone » (Rectangle de coupe) :</strong> cliquez sur le bouton rouge <em>« ✂️ Supprimer zone »</em> puis étirez un rectangle à la souris sur la carte englobant le tronçon à retirer : tous les points inclus sont instantanément coupés.</li>
+        <li><strong>Reconnexion intelligente par les sentiers :</strong> grâce au moteur d'auto-routage activé par défaut, Map &amp; Rando <strong>reconnecte immédiatement les 2 extrémités coupées en empruntant les vrais sentiers de liaison IGN BD TOPO®</strong> (avec bouton de secours <em>« 🥾 Relier par sentiers »</em>), évitant toute ligne droite artificielle à travers le relief.</li>
       </ul>
 
-      <h3>Exportation de la Nouvelle Trace Modifiée</h3>
-      <p>
-        Cliquez sur <strong>💾 Télécharger le GPX modifié</strong> : le fichier nettoyé, recalibré et prêt pour la navigation est sauvegardé sous le nom <code>[Trace]_modifiee.gpx</code>.
-      </p>
+      <h3>Annulation CTRL + Z &amp; Export Intelligent Normalisé</h3>
+      <ul>
+        <li><strong>Annulation multi-niveaux par CTRL + Z :</strong> chaque suppression de zone ou déplacement est annulable instantanément avec <strong>Ctrl+Z</strong> ou le bouton <em>« Rétablir l'original »</em>.</li>
+        <li><strong>Export avec dialogue de nommage normalisé :</strong> cliquez sur <em>« 💾 Télécharger le GPX modifié »</em> pour ouvrir la boîte de dialogue proposant le format officiel <code>YYYYMMDDHHMM - Commune - Dist - D+</code> personnalisable.</li>
+      </ul>
     </div>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 10 / 14</div>
+      <div class="page-number">Page 11 / 15</div>
     </div>
   </section>
 
@@ -853,11 +924,11 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 10 • PROFIL ALTIMÉTRIQUE</div>
+      <div>CHAPITRE 11 • PROFIL ALTIMÉTRIQUE</div>
     </div>
 
     <div class="page-body">
-      <h2>📈 10. Profil Altimétrique Interactif &amp; Synchronisé Bidirectionnel</h2>
+      <h2>📈 11. Profil Altimétrique Interactif &amp; Synchronisé Bidirectionnel</h2>
       <p>
         L'analyse du relief est cruciale pour doser son effort en randonnée. Map &amp; Rando propose un profil altimétrique de haute précision bénéficiant d'une <strong>réciprocité complète et bidirectionnelle</strong> avec la carte.
       </p>
@@ -890,7 +961,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 11 / 14</div>
+      <div class="page-number">Page 12 / 15</div>
     </div>
   </section>
 
@@ -903,11 +974,11 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 11 • IMPRESSION HAUTE DÉFINITION</div>
+      <div>CHAPITRE 12 • IMPRESSION HAUTE DÉFINITION</div>
     </div>
 
     <div class="page-body">
-      <h2>🖨️ 11. Outil d'Impression sur Mesure (« Imprimer une zone »)</h2>
+      <h2>🖨️ 12. Outil d'Impression sur Mesure (« Imprimer une zone »)</h2>
       <p>
         Sur le terrain, la batterie d'un smartphone peut s'épuiser ou tomber en panne par grand froid. Disposer d'un <strong>extrait cartographique papier</strong> dans son fond de sac est une règle de sécurité absolue.
       </p>
@@ -917,9 +988,9 @@ html_content = f"""<!DOCTYPE html>
         <div class="figure-caption">Figure 11 : Boîte de dialogue d'impression A4/A3 avec carroyage UTM kilométrique, cartouche officiel et millésime papier IGN TOP 25.</div>
       </div>
 
-      <h3>Sélection de Zone en 2 Clics ou Cadrage Automatique</h3>
+      <h3>Sélection par Rectangle Glissé, 2 Clics ou Cadrage Automatique</h3>
       <p>
-        Cliquez sur le bouton <strong>🖨️ Imprimer une zone</strong> (en bas à droite). Vous pouvez soit cliquer deux coins opposés sur la carte pour définir un rectangle sur mesure, soit laisser l'outil cadrer automatiquement vos traces GPX affichées.
+        Cliquez sur le bouton <strong>🖨️ Imprimer une zone</strong> (en bas à droite). Vous pouvez soit <strong>étirer directement un rectangle à la souris par glisser-déposer</strong>, soit cliquer deux coins opposés sur la carte, soit laisser l'outil cadrer automatiquement vos traces GPX affichées.
       </p>
 
       <h3>Paramètres de la Boîte d'Impression</h3>
@@ -933,7 +1004,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 12 / 14</div>
+      <div class="page-number">Page 13 / 15</div>
     </div>
   </section>
 
@@ -946,11 +1017,11 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 12 • MODULE RANDONNER</div>
+      <div>CHAPITRE 13 • MODULE RANDONNER</div>
     </div>
 
     <div class="page-body">
-      <h2>🥾 12. Module « Randonner » &amp; Catalogue Associatif</h2>
+      <h2>🥾 13. Module « Randonner » &amp; Catalogue Associatif</h2>
       <p>
         Protégé par le mot de passe de l'association, le module <strong>Randonner</strong> regroupe la bibliothèque complète des circuits reconnus par les adhérents du club.
       </p>
@@ -982,7 +1053,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 13 / 14</div>
+      <div class="page-number">Page 14 / 15</div>
     </div>
   </section>
 
@@ -995,11 +1066,11 @@ html_content = f"""<!DOCTYPE html>
         <img src="{logo_b64}" alt="Map & Rando">
         <span>Map &amp; Rando • JLDApps 2026</span>
       </div>
-      <div>CHAPITRE 13 • GUIDES &amp; SAVOIRS</div>
+      <div>CHAPITRE 14 • GUIDES &amp; SAVOIRS</div>
     </div>
 
     <div class="page-body">
-      <h2>📚 13. Module « Guides &amp; Savoirs » — 6 Fiches &amp; Sécurité</h2>
+      <h2>📚 14. Module « Guides &amp; Savoirs » — 6 Fiches &amp; Sécurité</h2>
       <p>
         Le module <strong>Guides &amp; Savoirs</strong> rassemble 6 dossiers techniques de référence rédigés pour perfectionner votre autonomie et votre sécurité en pleine nature.
       </p>
@@ -1027,7 +1098,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 14 / 14</div>
+      <div class="page-number">Page 15 / 15</div>
     </div>
   </section>
 
@@ -1057,8 +1128,14 @@ result = subprocess.run(cmd, capture_output=True, text=True)
 if result.returncode == 0 and os.path.exists(output_pdf):
     print(f"PDF successfully compiled! Size: {os.path.getsize(output_pdf)} bytes")
     # Also copy to randofinder_update
-    rf_pdf = r"C:\Users\lesda\.gemini\antigravity\scratch\randofinder_update\Mode_d_emploi_RandoFinder.pdf"
-    shutil.copy2(output_pdf, rf_pdf)
-    print(f"Copied to {rf_pdf}")
+    targets = [
+        r"C:\Users\lesda\.gemini\antigravity\scratch\maprando\docs\Mode_d_emploi_RandoFinder.pdf",
+        r"C:\Users\lesda\.gemini\antigravity\scratch\randofinder_update\Mode_d_emploi_RandoFinder.pdf",
+        r"C:\Users\lesda\.gemini\antigravity\scratch\randofinder_update\docs\Mode_d_emploi_RandoFinder.pdf",
+    ]
+    for t in targets:
+        os.makedirs(os.path.dirname(t), exist_ok=True)
+        shutil.copy2(output_pdf, t)
+        print(f"Copied to {t}")
 else:
     print(f"Error compiling PDF: {result.stderr}")

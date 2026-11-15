@@ -1834,11 +1834,39 @@
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📦</span> Gestion Multi-traces GPX (jusqu'à 3 parcours) &amp; Impression</div>
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📦</span> Gestion Multi-traces GPX (jusqu'à 3 parcours)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Boîte flottante « TRACES GPX (X/3) » :</strong> chargez jusqu'à 3 fichiers GPX en glisser-déposer. Chaque trace dispose d'une pastille de couleur personnalisable (palette de 6 teintes contrastées), de sa distance, de son dénivelé D+ et de son <strong>Indice IBP Index officiel</strong>.</li>
+                <li><strong>Boîte flottante « TRACES GPX (X/3) » :</strong> chargez jusqu'à 3 fichiers GPX en glisser-déposer ou via « Charger 1 à 3 traces GPX ». Chaque trace dispose d'une pastille de couleur personnalisable (palette de 6 teintes vives), de sa distance, de son dénivelé D+ et de son <strong>Indice IBP Index officiel</strong>.</li>
                 <li><strong>Recentrage &amp; Suppression individuelle :</strong> bouton cible 🎯 pour centrer la carte sur une trace, et <strong>bouton croix ✕ en regard de chaque trace</strong> pour la retirer individuellement sans effacer les autres. Bouton « Tout effacer » pour vider la carte.</li>
-                <li><strong>Imprimer une zone (PDF A4 / A3 Haute Définition) :</strong> cliquez 2 coins opposés pour générer un extrait PDF à l'échelle exacte (ex. <code>1:25 000</code>), avec carroyage UTM kilométrique et valeurs en périphérie, déclinaison magnétique et <strong>mention automatique de la référence et de l'année d'édition de la carte IGN TOP 25</strong> dans le cartouche inférieur.</li>
+                <li><strong>Fenêtre redimensionnable &amp; déplaçable :</strong> glissez le panneau par son en-tête ou ajustez ses dimensions à l'écran en toute liberté.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-violet-500/40 space-y-2">
+              <div class="font-extrabold text-violet-300 flex items-center gap-1.5"><span>📈</span> Pentes &amp; <span>🔀</span> Fusion Intelligente de GPX (Outils Avancés)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>📈 Coloration interactive des pentes :</strong> activez en 1 clic la coloration de la trace selon le pourcentage de pente réel lissé (fenêtre de 25-30 m). Palette normalisée : 🟩 <code>&lt; 5%</code> (plat/facile), 🟨 <code>5-12%</code> (montée modérée), 🟧 <code>12-20%</code> (montée soutenue/raide), 🟥 <code>&gt; 20%</code> (très raide/escarpé). Réglette de légende intégrée et infobulle au survol indiquant le pourcentage exact.</li>
+                <li><strong>🔀 Fusion de 2 traces GPX :</strong> assemblez deux traces en un parcours continu unique. Permet d'<strong>intervertir l'ordre (⇄)</strong> et d'<strong>inverser indépendamment le sens (🔄)</strong> de chaque trace.</li>
+                <li><strong>Diagnostic d'écart &amp; Auto-routage de liaison :</strong> en cas de discontinuité (&ge; 35 m), l'option <strong>« Relier par sentiers »</strong> calcule automatiquement la jonction intermédiaire le long des sentiers réels via le moteur hybride IGN/BRouter. Possibilité d'afficher directement la trace sur la carte ou de télécharger le GPX fusionné avec nommage normalisé (<code>YYYYMMDDHHMM - Ville - Dist - D+</code>).</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-blue-500/40 space-y-2">
+              <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>✏️</span> Créer &amp; <span>🛠️</span> Modifier une trace GPX (Auto-Routage Sentiers)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>✏️ Créer un GPX :</strong> déposez vos étapes (A départ, B, C... étapes, arrivée) : le tracé épouse automatiquement les sentiers réels de randonnée (IGN BD TOPO® / BRouter). Ruban d'étapes visuel, déplacement fluide de points, annulation par <strong>Ctrl+Z</strong> et export GPX.</li>
+                <li><strong>🛠️ Modifier une trace GPX :</strong> poignées de manipulation dynamiques (D, 1, 2... A) réparties sur la trace pour dévier l'itinéraire vers les sentiers voisins avec recalcul instantané de la distance et du D+.</li>
+                <li><strong>✂️ Supprimer une zone par rectangle &amp; Reconnexion automatique :</strong> tracez un rectangle à la souris sur la carte pour supprimer tous les points inclus. Le système <strong>reconnecte immédiatement les 2 extrémités coupées par les sentiers réels</strong> via auto-routage (bouton de secours <em>« 🥾 Relier par sentiers »</em>), évitant toute ligne droite hors chemin.</li>
+                <li><strong>Nommage intelligent au téléchargement :</strong> boîte de dialogue personnalisable proposant le format officiel <code>YYYYMMDDHHMM - Commune - Dist - D+</code>.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🖨️</span> Impression Haute Définition (« Imprimer une zone »)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Sélection par rectangle glissé ou en 2 clics :</strong> étirez directement un rectangle à la souris sur la carte par glisser-déposer ou cliquez 2 coins opposés pour délimiter l'emprise exacte à imprimer.</li>
+                <li><strong>Formats &amp; Échelle stricte :</strong> génération PDF haute fidélité en A4 ou A3 (portrait / paysage) à l'échelle topographique exacte (ex. <code>1:25 000</code>).</li>
+                <li><strong>Cartouche officiel &amp; Carroyage UTM :</strong> carroyage kilométrique universel avec valeurs en marge, déclinaison magnétique et mention automatique de la référence et du millésime de la carte papier IGN TOP 25 (ex. <code>3245 ET - Éd. 2023</code>).</li>
               </ul>
             </div>
           </div>
