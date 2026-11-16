@@ -6864,18 +6864,64 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     ];
 
     if (window.App) {
-
       window.App.areaPrintHike = this.standaloneHike || this.standaloneTracks[0];
-
       window.App.openMapAreaModal(paddedBounds);
-
     }
-
   }
 
+  setTrackColor(trackId, newColor) {
+    if (!this.standaloneTracks || !this.standaloneTracks.length) return;
+    const track = this.standaloneTracks.find(t => String(t.id) === String(trackId));
+    if (!track) return;
 
+    track.color = newColor;
 
-    removeStandaloneTrack(trackId) {
+    // 1. Mettre à jour la polyligne principale Leaflet sur la carte
+    if (track.polyline) {
+      track.polyline.setStyle({ color: newColor });
+    }
+
+    // 2. Mettre à jour le marqueur de départ (qui reprend la couleur de la trace)
+    if (track.startMarker) {
+      track.startMarker.setStyle({ fillColor: newColor });
+    }
+
+    // 3. Mettre à jour les références d'objets actives
+    if (this.standaloneHike && String(this.standaloneHike.id) === String(trackId)) {
+      this.standaloneHike.color = newColor;
+    }
+    if (this.selectedHike && String(this.selectedHike.id) === String(trackId)) {
+      this.selectedHike.color = newColor;
+    }
+    if (window.App && window.App.selectedHike && String(window.App.selectedHike.id) === String(trackId)) {
+      window.App.selectedHike.color = newColor;
+    }
+
+    // 4. Si la coloration des pentes est active, actualiser l'affichage
+    if (this.slopeColoringActive && typeof this.updateSlopeColoringVisibility === 'function') {
+      this.updateSlopeColoringVisibility();
+    }
+
+    // 5. Ré-afficher le HUD pour actualiser la pastille et la sélection active de la palette
+    this.showStandaloneGpxHud();
+  }
+
+  cycleTrackColor(trackId) {
+    if (!this.standaloneTracks || !this.standaloneTracks.length) return;
+    const track = this.standaloneTracks.find(t => String(t.id) === String(trackId));
+    if (!track) return;
+
+    const PALETTE = ['#ff0033', '#0066ff', '#00d655', '#ff6a00', '#a020f0', '#00d4ff', '#0f172a'];
+    let idx = PALETTE.indexOf(track.color);
+    if (idx === -1) {
+      idx = 0;
+    } else {
+      idx = (idx + 1) % PALETTE.length;
+    }
+    this.setTrackColor(trackId, PALETTE[idx]);
+  }
+
+  removeStandaloneTrack(trackId) {
     if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
     const idx = this.standaloneTracks.findIndex(t => t.id === trackId);
     if (idx !== -1) {

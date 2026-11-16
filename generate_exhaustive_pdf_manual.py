@@ -731,7 +731,7 @@ html_content = f"""<!DOCTYPE html>
 
       <h3>Fonctionnalités de Chaque Ligne de Trace</h3>
       <ul>
-        <li><strong>Pastille de couleur personnalisable :</strong> cliquez sur la pastille circulaire pour faire défiler une palette de <strong>6 couleurs vives</strong> (rouge, bleu, vert, orange, violet, cyan) afin de distinguer facilement des variantes d'itinéraires.</li>
+        <li><strong>Pastille de couleur personnalisable :</strong> cliquez sur la pastille circulaire ou directement sur l'une des touches de la palette de <strong>7 couleurs vives</strong> (rouge, bleu, vert, orange, violet, cyan, noir) pour modifier instantanément la couleur du tracé et de son point de départ sur la carte afin de distinguer clairement des variantes d'itinéraires.</li>
         <li><strong>Données physiques clés :</strong> distance totale (km), dénivelé cumulé positif (D+ en mètres) et <strong>Indice IBP Index officiel</strong> calculé automatiquement.</li>
         <li><strong>Bouton Cible (🎯) :</strong> centre immédiatement la carte sur la trace concernée.</li>
         <li><strong>Bouton Croix (✕) de suppression individuelle :</strong> retire la trace sélectionnée de l'écran sans affecter les autres traces affichées.</li>
