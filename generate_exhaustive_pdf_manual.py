@@ -1072,7 +1072,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-body">
       <h2>📚 14. Module « Guides &amp; Savoirs » — 6 Fiches &amp; Sécurité</h2>
       <p>
-        Le module <strong>Guides &amp; Savoirs</strong> rassemble 6 dossiers techniques de référence rédigés pour perfectionner votre autonomie et votre sécurité en pleine nature.
+        Le module <strong>Guides &amp; Savoirs</strong> rassemble 6 dossiers techniques de référence rédigés pour perfectionner votre autonomie et votre sécurité en pleine nature. Chaque fiche est consultable directement à l'écran et téléchargeable en 1 clic au format PDF officiel haute définition.
       </p>
 
       <div class="figure-box">
