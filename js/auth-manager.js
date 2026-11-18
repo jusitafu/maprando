@@ -192,15 +192,33 @@ class AuthManager {
       const raw = localStorage.getItem(this.SESSION_KEY);
       if (raw) {
         const session = JSON.parse(raw);
-        // Vérifie si l'utilisateur existe toujours dans la liste
-        const matchedUser = this.users.find(u => u.id === session.id || u.username === session.username);
+        const sUser = (session.username || '').trim().toLowerCase();
+        // Vérifie si l'utilisateur existe dans la liste (insensible à la casse)
+        const matchedUser = (this.users || []).find(u => 
+          (u.id && session.id && u.id === session.id) || 
+          (u.username && u.username.trim().toLowerCase() === sUser)
+        );
         if (matchedUser) {
+          const isMatchedAdmin = matchedUser.role === 'admin' || (matchedUser.username || '').toLowerCase() === 'admin';
           this.currentUser = {
             id: matchedUser.id,
             username: matchedUser.username,
-            role: matchedUser.role,
-            can_upload: matchedUser.can_upload,
-            can_edit: matchedUser.can_edit
+            role: isMatchedAdmin ? 'admin' : (matchedUser.role || 'user'),
+            can_upload: isMatchedAdmin ? true : Boolean(matchedUser.can_upload),
+            can_edit: isMatchedAdmin ? true : Boolean(matchedUser.can_edit)
+          };
+          return;
+        } else if (sUser === 'admin') {
+          this.currentUser = { ...this.DEFAULT_ADMIN };
+          return;
+        } else if (session.username && session.role) {
+          // Session valide restaurée en attente de la synchronisation Supabase
+          this.currentUser = {
+            id: session.id || ('user_' + sUser),
+            username: session.username,
+            role: session.role,
+            can_upload: Boolean(session.can_upload),
+            can_edit: Boolean(session.can_edit)
           };
           return;
         }
@@ -216,12 +234,15 @@ class AuthManager {
   }
 
   static isAdmin() {
-    return this.currentUser && this.currentUser.role === 'admin';
+    if (!this.currentUser) return false;
+    const role = (this.currentUser.role || '').toLowerCase();
+    const uname = (this.currentUser.username || '').toLowerCase();
+    return role === 'admin' || uname === 'admin';
   }
 
   static hasPermission(permissionName) {
     if (!this.currentUser) return false;
-    if (this.currentUser.role === 'admin') return true;
+    if (this.isAdmin()) return true;
     return Boolean(this.currentUser[permissionName]);
   }
 
@@ -749,6 +770,29 @@ class AuthManager {
         }
 
         this.saveToLocalStorage();
+
+        // Réactualiser la session courante avec les permissions synchronisées
+        if (this.currentUser) {
+          const cUser = (this.currentUser.username || '').trim().toLowerCase();
+          const freshUser = this.users.find(u => (u.username || '').trim().toLowerCase() === cUser);
+          if (freshUser) {
+            const isFreshAdmin = freshUser.role === 'admin' || freshUser.username.toLowerCase() === 'admin';
+            this.currentUser = {
+              id: freshUser.id,
+              username: freshUser.username,
+              role: isFreshAdmin ? 'admin' : (freshUser.role || 'user'),
+              can_upload: isFreshAdmin ? true : Boolean(freshUser.can_upload),
+              can_edit: isFreshAdmin ? true : Boolean(freshUser.can_edit)
+            };
+            try {
+              localStorage.setItem(this.SESSION_KEY, JSON.stringify(this.currentUser));
+            } catch (e) {}
+            if (typeof window !== 'undefined' && window.App && typeof window.App.applyPermissionGuards === 'function') {
+              window.App.applyPermissionGuards();
+            }
+          }
+        }
+
         return { success: true, count: cloudRows.length };
       }
       return { success: false, reason: 'invalid_format' };

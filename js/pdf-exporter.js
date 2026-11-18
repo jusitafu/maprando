@@ -1195,10 +1195,12 @@ static async exportFichePDF(hike, options = {}) {
 
     // 9.D Mention UTM et fuseau
     if (showUtm && typeof MapManager !== 'undefined') {
+      const centerUtm = (typeof MapManager.latLonToUtm === 'function') ? MapManager.latLonToUtm(origCenterLat, origCenterLon) : null;
+      const utmZoneStr = (centerUtm && centerUtm.zone) ? (centerUtm.zone + (centerUtm.band || '')) : '31T';
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(isA3 ? 7 : 6);
       doc.setTextColor(2, 132, 199);
-      doc.text('🌐 Carroyage UTM WGS84 • Fuseau ' + zone + band + ' (1 km × 1 km)', mapX + mapW, calibY - 0.5, { align: 'right' });
+      doc.text('🌐 Carroyage UTM WGS84 • Fuseau ' + utmZoneStr + ' (1 km × 1 km)', mapX + mapW, calibY - 0.5, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(isA3 ? 6 : 5);
       doc.setTextColor(100, 116, 139);

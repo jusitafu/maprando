@@ -3276,13 +3276,18 @@ class AppController {
    * Handle Multi-file Upload (Instant Parse + Auto-Save + Auto-Radius Expansion)
    */
   async handleFilesUploaded(files) {
-    if (StorageManager.isWriteProtected()) {
-      this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y charger des parcours.", "warning");
-      return;
-    }
     if (typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
+    }
+    if (StorageManager.isWriteProtected()) {
+      if (typeof AuthManager !== 'undefined' && AuthManager.hasPermission('can_upload')) {
+        this.showToast("Bascule automatique sur la base Randonneurs Sanaryens pour l'enregistrement...", "info");
+        await this.handleDatabaseChange('sanaryens');
+      } else {
+        this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y charger des parcours.", "warning");
+        return;
+      }
     }
 
     const fileList = Array.from(files);
@@ -3443,13 +3448,18 @@ class AppController {
    * Handle Direct GPX Text Paste
    */
   async handlePasteGPX() {
-    if (StorageManager.isWriteProtected()) {
-      this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y coller des parcours.", "warning");
-      return;
-    }
     if (typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
+    }
+    if (StorageManager.isWriteProtected()) {
+      if (typeof AuthManager !== 'undefined' && AuthManager.hasPermission('can_upload')) {
+        this.showToast("Bascule automatique sur la base Randonneurs Sanaryens pour l'enregistrement...", "info");
+        await this.handleDatabaseChange('sanaryens');
+      } else {
+        this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y coller des parcours.", "warning");
+        return;
+      }
     }
 
     const textarea = document.getElementById('paste-gpx-text');
@@ -6251,13 +6261,18 @@ class AppController {
    * Handle Multi-file Upload (Instant Parse + Auto-Save + Auto-Radius Expansion)
    */
   async handleFilesUploaded(files) {
-    if (StorageManager.isWriteProtected()) {
-      this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y charger des parcours.", "warning");
-      return;
-    }
     if (typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
+    }
+    if (StorageManager.isWriteProtected()) {
+      if (typeof AuthManager !== 'undefined' && AuthManager.hasPermission('can_upload')) {
+        this.showToast("Bascule automatique sur la base Randonneurs Sanaryens pour l'enregistrement...", "info");
+        await this.handleDatabaseChange('sanaryens');
+      } else {
+        this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y charger des parcours.", "warning");
+        return;
+      }
     }
 
     const fileList = Array.from(files);
@@ -6418,13 +6433,18 @@ class AppController {
    * Handle Direct GPX Text Paste
    */
   async handlePasteGPX() {
-    if (StorageManager.isWriteProtected()) {
-      this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y coller des parcours.", "warning");
-      return;
-    }
     if (typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
+    }
+    if (StorageManager.isWriteProtected()) {
+      if (typeof AuthManager !== 'undefined' && AuthManager.hasPermission('can_upload')) {
+        this.showToast("Bascule automatique sur la base Randonneurs Sanaryens pour l'enregistrement...", "info");
+        await this.handleDatabaseChange('sanaryens');
+      } else {
+        this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y coller des parcours.", "warning");
+        return;
+      }
     }
 
     const textarea = document.getElementById('paste-gpx-text');
@@ -9226,13 +9246,18 @@ class AppController {
    * Handle Multi-file Upload (Instant Parse + Auto-Save + Auto-Radius Expansion)
    */
   async handleFilesUploaded(files) {
-    if (StorageManager.isWriteProtected()) {
-      this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y charger des parcours.", "warning");
-      return;
-    }
     if (typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
+    }
+    if (StorageManager.isWriteProtected()) {
+      if (typeof AuthManager !== 'undefined' && AuthManager.hasPermission('can_upload')) {
+        this.showToast("Bascule automatique sur la base Randonneurs Sanaryens pour l'enregistrement...", "info");
+        await this.handleDatabaseChange('sanaryens');
+      } else {
+        this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y charger des parcours.", "warning");
+        return;
+      }
     }
 
     const fileList = Array.from(files);
@@ -9393,13 +9418,18 @@ class AppController {
    * Handle Direct GPX Text Paste
    */
   async handlePasteGPX() {
-    if (StorageManager.isWriteProtected()) {
-      this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y coller des parcours.", "warning");
-      return;
-    }
     if (typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
+    }
+    if (StorageManager.isWriteProtected()) {
+      if (typeof AuthManager !== 'undefined' && AuthManager.hasPermission('can_upload')) {
+        this.showToast("Bascule automatique sur la base Randonneurs Sanaryens pour l'enregistrement...", "info");
+        await this.handleDatabaseChange('sanaryens');
+      } else {
+        this.showToast("Opération impossible : La base JLDApps est sanctuarisée en lecture seule pour les membres. Seul l'administrateur peut y coller des parcours.", "warning");
+        return;
+      }
     }
 
     const textarea = document.getElementById('paste-gpx-text');
@@ -10279,12 +10309,12 @@ class AppController {
     // 1. Onglet Charger
     const uploadTabBtn = document.querySelector('[data-tab="upload"]');
     if (uploadTabBtn) {
-      if (!canUpload || isWriteProtected) {
+      if (!canUpload) {
         uploadTabBtn.classList.add('opacity-40', 'cursor-not-allowed');
-        uploadTabBtn.title = isWriteProtected ? "Base JLDApps sanctuarisée (Lecture seule)" : "Chargement désactivé (Permissions restreintes)";
+        uploadTabBtn.title = "Chargement désactivé (Permissions restreintes)";
       } else {
         uploadTabBtn.classList.remove('opacity-40', 'cursor-not-allowed');
-        uploadTabBtn.title = "";
+        uploadTabBtn.title = isWriteProtected ? "Base JLDApps en lecture seule : l'import enregistrera sur Randonneurs Sanaryens" : "";
       }
     }
 
@@ -10308,7 +10338,7 @@ class AppController {
     // 3. Dropzone
     const dropzone = document.getElementById('upload-dropzone');
     if (dropzone) {
-      if (!canUpload || isWriteProtected) {
+      if (!canUpload) {
         dropzone.classList.add('pointer-events-none', 'opacity-50');
       } else {
         dropzone.classList.remove('pointer-events-none', 'opacity-50');
