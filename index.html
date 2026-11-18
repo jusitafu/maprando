@@ -1895,7 +1895,7 @@
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🖨️</span> Impression Haute Définition (« Imprimer une zone »)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Sélection par rectangle glissé ou en 2 clics :</strong> étirez directement un rectangle à la souris sur la carte par glisser-déposer ou cliquez 2 coins opposés pour délimiter l'emprise exacte à imprimer.</li>
+                <li><strong>Sélection par rectangle glissé ou en 2 clics avec défilement continu :</strong> étirez directement un rectangle à la souris sur la carte ou cliquez sur 2 coins opposés pour délimiter l'emprise exacte. Si votre sélection dépasse de l'écran, <strong>approchez simplement le curseur du bord de l'affichage pour faire défiler la carte en continu au-delà de l'écran</strong> (ou utilisez les flèches du clavier ou le clic droit pour translater la carte).</li>
                 <li><strong>Formats &amp; Échelle stricte :</strong> génération PDF haute fidélité en A4 ou A3 (portrait / paysage) à l'échelle topographique exacte (ex. <code>1:25 000</code>).</li>
                 <li><strong>Cartouche officiel &amp; Carroyage UTM :</strong> carroyage kilométrique universel avec valeurs en marge, déclinaison magnétique et mention automatique de la référence et du millésime de la carte papier IGN TOP 25 (ex. <code>3245 ET - Éd. 2023</code>).</li>
               </ul>
@@ -7427,7 +7427,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=157"></script>
   <script src="js/ign-top25-sheets.js?v=157"></script>
-  <script src="js/map-manager.js?v=167"></script>
+  <script src="js/map-manager.js?v=169"></script>
 
   <script src="js/pdf-exporter.js?v=157"></script>
   <script src="js/gr-manager.js?v=157"></script>

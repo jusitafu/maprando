@@ -848,11 +848,10 @@ class MapManager {
       }
 
       if (this.areaSelectionActive) {
-
-        this.handleAreaSelectionClick(e.latlng);
-
+        if (Date.now() - (this._areaLastActionTime || 0) > 120) {
+          this.handleAreaSelectionClick(e.latlng);
+        }
         return;
-
       }
 
       if (this.clickModeActive) {
@@ -1122,49 +1121,31 @@ class MapManager {
     if (msg) msg.innerHTML = '<span class="font-bold text-emerald-300">Zone d\'impression :</span> Cliquez et glissez pour encadrer la zone (ou cliquez sur 2 coins opposés).';
     if (btnText) btnText.textContent = 'Annuler la sélection';
 
-    // Désactiver le déplacement de la carte pour permettre le tracé par clic-glissé
+    // Désactiver le déplacement par clic gauche standard de Leaflet pour permettre le tracé par clic-glissé
     if (this.map && this.map.dragging) {
       this.map.dragging.disable();
     }
     this._isAreaDragging = false;
     this._areaStartScreenPoint = null;
+    this._areaAutoPanTimer = null;
+    this._areaPanDelta = null;
+    this._areaLastPointer = null;
+    this._isAreaManualPanning = false;
+    this._manualPanStart = null;
+    this._areaLastActionTime = 0;
 
-    this._onAreaMouseDown = (e) => {
-      if (!this.areaSelectionActive) return;
-      if (!this.areaSelectionCorner1) {
-        this.areaSelectionCorner1 = e.latlng;
-        this._areaStartScreenPoint = e.containerPoint;
-        this._isAreaDragging = true;
-
-        L.circleMarker(e.latlng, {
-          radius: 6,
-          color: '#ffffff',
-          weight: 2,
-          fillColor: '#10b981',
-          fillOpacity: 1
-        }).addTo(this.areaSelectionLayer);
+    // Arrêt immédiat de l'auto-pan
+    this._stopAreaAutoPan = () => {
+      if (this._areaAutoPanTimer) {
+        clearInterval(this._areaAutoPanTimer);
+        this._areaAutoPanTimer = null;
       }
+      this._areaPanDelta = null;
     };
 
-    this._onAreaMouseUp = (e) => {
-      if (!this.areaSelectionActive || !this._isAreaDragging || !this.areaSelectionCorner1) return;
-      this._isAreaDragging = false;
-      const endPoint = e.containerPoint;
-      const dragDist = this._areaStartScreenPoint ? this._areaStartScreenPoint.distanceTo(endPoint) : 0;
-
-      // Si l'utilisateur a glissé d'au moins 20 pixels, on finalise la sélection immédiatement
-      if (dragDist > 20) {
-        this.handleAreaSelectionClick(e.latlng);
-      }
-    };
-
-    this.map.on('mousedown', this._onAreaMouseDown);
-    this.map.on('mouseup', this._onAreaMouseUp);
-
-    // Mouse move handler
-    this._onAreaMouseMove = (e) => {
-      if (!this.areaSelectionCorner1) return;
-      const corner2 = e.latlng;
+    // Mise à jour visuelle du rectangle et du bandeau d'information
+    this._updateAreaSelectionRect = (corner2) => {
+      if (!this.areaSelectionCorner1 || !corner2) return;
       const bounds = L.latLngBounds(this.areaSelectionCorner1, corner2);
 
       if (!this.areaSelectionRect) {
@@ -1179,7 +1160,7 @@ class MapManager {
         this.areaSelectionRect.setBounds(bounds);
       }
 
-      // Calculate approximate dimensions in km
+      // Calcul des dimensions approximatives en km
       const dKmWidth = GPXParser.haversineDistance(
         this.areaSelectionCorner1.lat, this.areaSelectionCorner1.lng,
         this.areaSelectionCorner1.lat, corner2.lng
@@ -1189,56 +1170,227 @@ class MapManager {
         corner2.lat, this.areaSelectionCorner1.lng
       );
 
-      if (msg) {
-        msg.innerHTML = `<span class="font-bold text-emerald-300">Zone d'impression :</span> Relâchez pour valider • <span class="bg-slate-800 px-2 py-0.5 rounded text-white font-mono">${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km</span>`;
+      const msgEl = document.getElementById('map-selection-msg');
+      if (msgEl) {
+        msgEl.innerHTML = `<span class="font-bold text-emerald-300">Zone d'impression :</span> ${this._isAreaDragging ? 'Relâchez pour valider' : 'Cliquez pour valider le 2ᵉ point'} • <span class="bg-slate-800 px-2 py-0.5 rounded text-white font-mono">${dKmWidth.toFixed(1)} km × ${dKmHeight.toFixed(1)} km</span> <span class="text-xs text-emerald-200 hidden md:inline">• Défilement auto au bord de l'écran (ou flèches clavier / clic-droit)</span>`;
       }
     };
-    this.map.on('mousemove', this._onAreaMouseMove);
 
+    // Détection d'approche du bord d'écran et défilement automatique continu
+    this._checkAndRunAreaAutoPan = (clientX, clientY) => {
+      if (!this.areaSelectionActive || !this.areaSelectionCorner1) return;
+      this._areaLastPointer = { clientX, clientY };
 
+      const container = this.map.getContainer();
+      const rect = container.getBoundingClientRect();
+      const EDGE_MARGIN = 70; // Détection dès 70px du bord de la carte
 
-    // Escape key handler
+      let panX = 0;
+      let panY = 0;
 
+      // Bord gauche ou droit (y compris curseur sorti de l'écran)
+      if (clientX < rect.left + EDGE_MARGIN) {
+        const diff = Math.max(1, (rect.left + EDGE_MARGIN) - clientX);
+        panX = -Math.min(35, Math.max(6, Math.round(diff * 0.45)));
+      } else if (clientX > rect.right - EDGE_MARGIN) {
+        const diff = Math.max(1, clientX - (rect.right - EDGE_MARGIN));
+        panX = Math.min(35, Math.max(6, Math.round(diff * 0.45)));
+      }
+
+      // Bord haut ou bas (y compris curseur sorti de l'écran)
+      if (clientY < rect.top + EDGE_MARGIN) {
+        const diff = Math.max(1, (rect.top + EDGE_MARGIN) - clientY);
+        panY = -Math.min(35, Math.max(6, Math.round(diff * 0.45)));
+      } else if (clientY > rect.bottom - EDGE_MARGIN) {
+        const diff = Math.max(1, clientY - (rect.bottom - EDGE_MARGIN));
+        panY = Math.min(35, Math.max(6, Math.round(diff * 0.45)));
+      }
+
+      if (panX !== 0 || panY !== 0) {
+        this._areaPanDelta = { x: panX, y: panY };
+        if (!this._areaAutoPanTimer) {
+          this._areaAutoPanTimer = setInterval(() => {
+            if (!this.areaSelectionActive || !this.areaSelectionCorner1 || !this._areaPanDelta) {
+              this._stopAreaAutoPan();
+              return;
+            }
+            // Défilement continu et fluide de la carte
+            this.map.panBy([this._areaPanDelta.x, this._areaPanDelta.y], { animate: false });
+
+            // Recalcul immédiat du point sous le curseur après défilement
+            if (this._areaLastPointer) {
+              const cPoint = this.map.mouseEventToContainerPoint(this._areaLastPointer);
+              const currentLatLng = this.map.containerPointToLatLng(cPoint);
+              this._updateAreaSelectionRect(currentLatLng);
+            }
+          }, 25);
+        }
+      } else {
+        this._stopAreaAutoPan();
+      }
+    };
+
+    // Gestion du mousedown sur la carte
+    this._onAreaMouseDown = (e) => {
+      if (!this.areaSelectionActive) return;
+
+      const orig = e.originalEvent || e;
+      const btn = orig.button !== undefined ? orig.button : 0;
+
+      // Déplacement manuel au clic droit (button === 2) ou clic molette (button === 1)
+      if (btn === 2 || btn === 1) {
+        this._isAreaManualPanning = true;
+        this._manualPanStart = { x: orig.clientX, y: orig.clientY };
+        return;
+      }
+
+      // Clic gauche normal : initialiser le Coin 1 si non défini
+      if (btn === 0) {
+        if (!this.areaSelectionCorner1) {
+          this.areaSelectionCorner1 = e.latlng;
+          this._areaStartScreenPoint = e.containerPoint;
+          this._isAreaDragging = true;
+          this._areaLastPointer = { clientX: orig.clientX, clientY: orig.clientY };
+
+          L.circleMarker(e.latlng, {
+            radius: 6,
+            color: '#ffffff',
+            weight: 2,
+            fillColor: '#10b981',
+            fillOpacity: 1
+          }).addTo(this.areaSelectionLayer);
+
+          const msgEl = document.getElementById('map-selection-msg');
+          if (msgEl) {
+            msgEl.innerHTML = "<span class=\"font-bold text-emerald-300\">Coin 1 fixé :</span> Glissez ou déplacez la souris vers l'angle opposé. <span class=\"text-xs text-emerald-200 hidden md:inline\">Approchez du bord pour faire défiler la carte au-delà de l'écran.</span>";
+          }
+        }
+      }
+    };
+
+    // Écouteur global window de déplacement souris
+    this._onAreaWindowMouseMove = (e) => {
+      if (!this.areaSelectionActive) return;
+
+      // Si déplacement manuel au clic-droit en cours
+      if (this._isAreaManualPanning && this._manualPanStart) {
+        const dx = e.clientX - this._manualPanStart.x;
+        const dy = e.clientY - this._manualPanStart.y;
+        this._manualPanStart = { x: e.clientX, y: e.clientY };
+        this.map.panBy([-dx, -dy], { animate: false });
+        if (this.areaSelectionCorner1) {
+          const cPoint = this.map.mouseEventToContainerPoint(e);
+          this._updateAreaSelectionRect(this.map.containerPointToLatLng(cPoint));
+        }
+        return;
+      }
+
+      if (!this.areaSelectionCorner1) return;
+
+      // Tester l'auto-pan aux bords de l'écran
+      this._checkAndRunAreaAutoPan(e.clientX, e.clientY);
+
+      // Calcul de la position géographique actuelle du pointeur
+      const cPoint = this.map.mouseEventToContainerPoint(e);
+      const currentLatLng = this.map.containerPointToLatLng(cPoint);
+      this._updateAreaSelectionRect(currentLatLng);
+    };
+
+    // Écouteur global window de relâchement souris
+    this._onAreaWindowMouseUp = (e) => {
+      if (!this.areaSelectionActive) return;
+
+      const btn = e.button !== undefined ? e.button : 0;
+      if (btn === 2 || btn === 1) {
+        this._isAreaManualPanning = false;
+        this._manualPanStart = null;
+        return;
+      }
+
+      this._stopAreaAutoPan();
+
+      if (this._isAreaDragging && this.areaSelectionCorner1) {
+        this._isAreaDragging = false;
+        const endPoint = this.map.mouseEventToContainerPoint(e);
+        const dragDist = this._areaStartScreenPoint ? this._areaStartScreenPoint.distanceTo(endPoint) : 0;
+
+        // Si l'utilisateur a glissé d'au moins 20 pixels, on finalise la sélection immédiatement
+        if (dragDist > 20) {
+          this._areaLastActionTime = Date.now();
+          const finalLatLng = this.map.containerPointToLatLng(endPoint);
+          this.handleAreaSelectionClick(finalLatLng);
+        }
+      }
+    };
+
+    // Suppression du menu contextuel au clic droit pendant la sélection
+    this._onAreaContextMenu = (e) => {
+      if (this.areaSelectionActive) {
+        e.preventDefault();
+      }
+    };
+
+    // Écouteur clavier (Échap pour annuler, Flèches pour défiler au clavier)
     this._onAreaKeyDown = (e) => {
+      if (!this.areaSelectionActive) return;
 
       if (e.key === 'Escape') {
-
         this.cancelAreaSelection();
-
+        return;
       }
 
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const panStep = e.shiftKey ? 140 : 60;
+        let dx = 0, dy = 0;
+        if (e.key === 'ArrowUp') dy = -panStep;
+        if (e.key === 'ArrowDown') dy = panStep;
+        if (e.key === 'ArrowLeft') dx = -panStep;
+        if (e.key === 'ArrowRight') dx = panStep;
+
+        this.map.panBy([dx, dy], { animate: false });
+        if (this.areaSelectionCorner1 && this._areaLastPointer) {
+          const cPoint = this.map.mouseEventToContainerPoint(this._areaLastPointer);
+          this._updateAreaSelectionRect(this.map.containerPointToLatLng(cPoint));
+        }
+      }
     };
 
+    this.map.on('mousedown', this._onAreaMouseDown);
+    window.addEventListener('mousemove', this._onAreaWindowMouseMove, { passive: false });
+    window.addEventListener('mouseup', this._onAreaWindowMouseUp);
+    window.addEventListener('contextmenu', this._onAreaContextMenu);
     window.addEventListener('keydown', this._onAreaKeyDown);
-
   }
-
-
 
   cancelAreaSelection() {
     this.areaSelectionActive = false;
     this.areaSelectionCorner1 = null;
     this._isAreaDragging = false;
     this._areaStartScreenPoint = null;
+    this._stopAreaAutoPan();
 
     if (this.map) {
       if (this.map.dragging) this.map.dragging.enable();
       L.DomUtil.removeClass(this.map.getContainer(), 'area-selection-cursor');
-
-      if (this._onAreaMouseMove) {
-        this.map.off('mousemove', this._onAreaMouseMove);
-        this._onAreaMouseMove = null;
-      }
       if (this._onAreaMouseDown) {
         this.map.off('mousedown', this._onAreaMouseDown);
         this._onAreaMouseDown = null;
       }
-      if (this._onAreaMouseUp) {
-        this.map.off('mouseup', this._onAreaMouseUp);
-        this._onAreaMouseUp = null;
-      }
     }
 
+    if (this._onAreaWindowMouseMove) {
+      window.removeEventListener('mousemove', this._onAreaWindowMouseMove);
+      this._onAreaWindowMouseMove = null;
+    }
+    if (this._onAreaWindowMouseUp) {
+      window.removeEventListener('mouseup', this._onAreaWindowMouseUp);
+      this._onAreaWindowMouseUp = null;
+    }
+    if (this._onAreaContextMenu) {
+      window.removeEventListener('contextmenu', this._onAreaContextMenu);
+      this._onAreaContextMenu = null;
+    }
     if (this._onAreaKeyDown) {
       window.removeEventListener('keydown', this._onAreaKeyDown);
       this._onAreaKeyDown = null;
@@ -1259,95 +1411,49 @@ class MapManager {
     }
   }
 
-
-
   handleAreaSelectionClick(latlng) {
-
     if (!this.areaSelectionCorner1) {
-
-      // 1st click: set Corner 1
-
+      // 1er clic : fixer le coin 1
       this.areaSelectionCorner1 = latlng;
-
-
-
-      // Marker at corner 1
-
       L.circleMarker(latlng, {
-
         radius: 6,
-
         color: '#ffffff',
-
         weight: 2,
-
         fillColor: '#10b981',
-
         fillOpacity: 1
-
       }).addTo(this.areaSelectionLayer);
-
-
 
       const msg = document.getElementById('map-selection-msg');
-
       if (msg) {
-
-        msg.innerHTML = '<span class="font-bold text-emerald-300">Étape 2 sur 2 :</span> Déplacez la souris et cliquez pour figer le coin opposé.';
-
+        msg.innerHTML = '<span class="font-bold text-emerald-300">Étape 2 sur 2 :</span> Déplacez la souris vers l\'angle opposé et cliquez. <span class="text-xs text-emerald-200 hidden md:inline">Approchez du bord de l\'écran pour faire défiler la carte au-delà de l\'affichage (ou flèches clavier / clic-droit).</span>';
       }
-
     } else {
-
-      // 2nd click: finish selection
-
+      // 2ème clic : valider la sélection
+      this._stopAreaAutoPan();
       const corner2 = latlng;
-
       const bounds = L.latLngBounds(this.areaSelectionCorner1, corner2);
 
-
-
-      // Lock rectangle style (solid border)
-
+      // Verrouiller le rectangle
       if (this.areaSelectionRect) {
-
         this.areaSelectionRect.setBounds(bounds);
-
         this.areaSelectionRect.setStyle({
-
           dashArray: null,
-
           weight: 3,
-
           color: '#059669',
-
           fillOpacity: 0.15
-
         });
-
       }
 
-
-
-      // Marker at corner 2
-
+      // Marqueur au coin 2
       L.circleMarker(corner2, {
-
         radius: 6,
-
         color: '#ffffff',
-
         weight: 2,
-
         fillColor: '#059669',
-
         fillOpacity: 1
-
       }).addTo(this.areaSelectionLayer);
 
-
-
-      // Clean up event listeners, dragging & cursor
+      // Réactivation du déplacement standard de la carte et nettoyage
       if (this.map && this.map.dragging) {
         this.map.dragging.enable();
       }
@@ -1356,65 +1462,49 @@ class MapManager {
 
       L.DomUtil.removeClass(this.map.getContainer(), 'area-selection-cursor');
 
-      if (this._onAreaMouseMove) {
-        this.map.off('mousemove', this._onAreaMouseMove);
-        this._onAreaMouseMove = null;
-      }
       if (this._onAreaMouseDown) {
         this.map.off('mousedown', this._onAreaMouseDown);
         this._onAreaMouseDown = null;
       }
-      if (this._onAreaMouseUp) {
-        this.map.off('mouseup', this._onAreaMouseUp);
-        this._onAreaMouseUp = null;
+      if (this._onAreaWindowMouseMove) {
+        window.removeEventListener('mousemove', this._onAreaWindowMouseMove);
+        this._onAreaWindowMouseMove = null;
       }
-
+      if (this._onAreaWindowMouseUp) {
+        window.removeEventListener('mouseup', this._onAreaWindowMouseUp);
+        this._onAreaWindowMouseUp = null;
+      }
+      if (this._onAreaContextMenu) {
+        window.removeEventListener('contextmenu', this._onAreaContextMenu);
+        this._onAreaContextMenu = null;
+      }
       if (this._onAreaKeyDown) {
         window.removeEventListener('keydown', this._onAreaKeyDown);
         this._onAreaKeyDown = null;
       }
 
-
-
       const banner = document.getElementById('map-selection-banner');
-
       const btnText = document.getElementById('btn-map-area-print-text');
-
       if (banner) banner.classList.add('hidden');
-
       if (btnText) btnText.textContent = 'Imprimer une zone';
 
-
-
       const finalBounds = [
-
         [Math.min(bounds.getSouth(), bounds.getNorth()), Math.min(bounds.getWest(), bounds.getEast())],
-
         [Math.max(bounds.getSouth(), bounds.getNorth()), Math.max(bounds.getWest(), bounds.getEast())]
-
       ];
 
-
-
       this.areaSelectionActive = false;
-
       this.areaSelectionCorner1 = null;
 
-
-
       if (this.areaSelectionOnComplete) {
-
         this.areaSelectionOnComplete(finalBounds);
-
       }
-
     }
-
   }
 
 
 
-  clearAreaSelectionVisuals() {
+    clearAreaSelectionVisuals() {
 
     if (this.areaSelectionLayer) {
 
