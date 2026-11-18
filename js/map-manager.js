@@ -6426,28 +6426,30 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
 
 
+    // Créer les volets (panes) dédiés pour séparer les halos blancs sous-jacents des tracés colorés
+    if (this.map && !this.map.getPane('gpxBorderPane')) {
+      const p = this.map.createPane('gpxBorderPane');
+      p.style.zIndex = '410';
+    }
+    if (this.map && !this.map.getPane('gpxPolylinePane')) {
+      const p = this.map.createPane('gpxPolylinePane');
+      p.style.zIndex = '420';
+    }
+
     // Halo blanc sous-jacent ultra-large et opaque (14px) pour détacher nettement la trace des fonds très denses (IGN TOP 25)
-
     const borderPolyline = L.polyline(latlngs, {
-
+      pane: 'gpxBorderPane',
       color: '#ffffff',
-
       weight: 14,
-
       opacity: 1.0,
-
       lineCap: 'round',
-
       lineJoin: 'round',
-
       offset: 0
-
     });
-
-
 
     // Tracé principal élargi (7px) en couleur néon éclatante
     const polyline = L.polyline(latlngs, {
+      pane: 'gpxPolylinePane',
       color: assignedColor,
       weight: 7,
       opacity: 1.0,
@@ -6459,6 +6461,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     // Hitbox invisible très large (24px) pour capter le survol confortablement
     const hitboxPolyline = L.polyline(latlngs, {
+      pane: 'gpxPolylinePane',
       color: '#000000',
       weight: 24,
       opacity: 0.001,
@@ -6590,6 +6593,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         clearTimeout(standaloneLeaveTimer);
         standaloneLeaveTimer = null;
       }
+      if (polyline && typeof polyline.bringToFront === 'function') {
+        polyline.bringToFront();
+      }
       if (window.App) {
         window.App.isHikePinned = true;
         window.App.selectedHike = trackItem;
@@ -6645,7 +6651,78 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
   }
 
+  updateAllStandaloneOffsets() {
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
 
+    const count = this.standaloneTracks.length;
+    let baseOffsets = [0];
+    if (count === 2) {
+      baseOffsets = [-3.5, 3.5];
+    } else if (count >= 3) {
+      baseOffsets = [-5, 0, 5];
+    }
+
+    const refTrack = this.standaloneTracks[0];
+
+    // Détection de l'alignement vectoriel (sens identique ou inverse) sur les tronçons communs
+    const getTrackAlignment = (ptsA, ptsB) => {
+      if (!ptsA || !ptsB || ptsA.length < 2 || ptsB.length < 2) return 1;
+      let dotSum = 0;
+      let matchCount = 0;
+      const stepA = Math.max(1, Math.floor(ptsA.length / 100));
+      const stepB = Math.max(1, Math.floor(ptsB.length / 100));
+      for (let i = 0; i < ptsA.length - 1; i += stepA) {
+        const a1 = ptsA[i], a2 = ptsA[i + 1];
+        const a1Lon = a1.lon !== undefined ? a1.lon : a1.lng;
+        const a2Lon = a2.lon !== undefined ? a2.lon : a2.lng;
+        const dxA = a2Lon - a1Lon, dyA = a2.lat - a1.lat;
+        const magA = Math.hypot(dxA, dyA);
+        if (magA === 0) continue;
+        const uxA = dxA / magA, uyA = dyA / magA;
+
+        for (let j = 0; j < ptsB.length - 1; j += stepB) {
+          const b1 = ptsB[j], b2 = ptsB[j + 1];
+          const b1Lon = b1.lon !== undefined ? b1.lon : b1.lng;
+          const b2Lon = b2.lon !== undefined ? b2.lon : b2.lng;
+          const dist = Math.hypot(b1Lon - a1Lon, b1.lat - a1.lat);
+          // Distance seuil ~150 mètres (~0.0015 degrés)
+          if (dist < 0.0015) {
+            const dxB = b2Lon - b1Lon, dyB = b2.lat - b1.lat;
+            const magB = Math.hypot(dxB, dyB);
+            if (magB === 0) continue;
+            const uxB = dxB / magB, uyB = dyB / magB;
+            dotSum += (uxA * uxB + uyA * uyB);
+            matchCount++;
+          }
+        }
+      }
+      return matchCount > 0 && (dotSum / matchCount) < 0 ? -1 : 1;
+    };
+
+    this.standaloneTracks.forEach((t, i) => {
+      const nominal = baseOffsets[i] !== undefined ? baseOffsets[i] : 0;
+      const align = (i === 0 || !refTrack) ? 1 : getTrackAlignment(refTrack.points, t.points);
+      const actualOffset = nominal * align;
+      t.currentOffset = actualOffset;
+
+      if (t.polyline && typeof t.polyline.setOffset === 'function') {
+        t.polyline.setOffset(actualOffset);
+      }
+      if (t.borderPolyline && typeof t.borderPolyline.setOffset === 'function') {
+        t.borderPolyline.setOffset(actualOffset);
+      }
+      if (t.hitboxPolyline && typeof t.hitboxPolyline.setOffset === 'function') {
+        t.hitboxPolyline.setOffset(actualOffset);
+      }
+      if (t.slopeLayer && typeof t.slopeLayer.eachLayer === 'function') {
+        t.slopeLayer.eachLayer(layer => {
+          if (typeof layer.setOffset === 'function') {
+            layer.setOffset(actualOffset);
+          }
+        });
+      }
+    });
+  }
 
   toggleMinimizeHud(forceState = null) {
     if (typeof forceState === 'boolean') {
@@ -6994,6 +7071,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     // 5. Ré-afficher le HUD pour actualiser la pastille et la sélection active de la palette
     this.showStandaloneGpxHud();
+    if (typeof this.updateAllStandaloneOffsets === 'function') {
+      this.updateAllStandaloneOffsets();
+    }
   }
 
   cycleTrackColor(trackId) {
@@ -7041,6 +7121,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         window.App.showHikePreviewPanel(remaining);
       }
       this.showStandaloneGpxHud();
+      if (typeof this.updateAllStandaloneOffsets === 'function') {
+        this.updateAllStandaloneOffsets();
+      }
     }
   }
 
@@ -7169,12 +7252,14 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           const segments = this.calculateSlopeSegments(t.points);
           const polylines = segments.map(s => {
             const poly = L.polyline(s.latlngs, {
+              pane: 'gpxPolylinePane',
               color: s.color,
               weight: 7,
               opacity: 1.0,
               lineCap: 'round',
               lineJoin: 'round',
-              interactive: true
+              interactive: true,
+              offset: t.currentOffset || 0
             });
             poly.bindTooltip(`<b>Pente : ${s.label}</b>`, { sticky: true });
             return poly;
