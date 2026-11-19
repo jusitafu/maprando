@@ -295,19 +295,30 @@ class GpxCreatorEditor {
 
   toggleWaypointNames() {
     this.showWaypointNames = (this.showWaypointNames === false);
-    const mapView = document.getElementById('map-view') || document.getElementById('map') || document.body;
-    if (this.showWaypointNames) {
-      mapView.classList.remove('hide-wp-labels');
-    } else {
-      mapView.classList.add('hide-wp-labels');
-    }
+    const isHidden = !this.showWaypointNames;
+    document.body.classList.toggle('hide-wp-labels', isHidden);
+    document.getElementById('map-view')?.classList.toggle('hide-wp-labels', isHidden);
+    document.getElementById('map-column')?.classList.toggle('hide-wp-labels', isHidden);
+
+    // Mettre à jour immédiatement la visibilité de chaque marqueur du créateur
+    this.createWaypoints.forEach(wp => {
+      if (wp.marker) {
+        const el = wp.marker.getElement();
+        if (el) el.style.display = isHidden ? 'none' : '';
+      }
+    });
+
     const btn = document.getElementById('btn-toggle-create-names');
     if (btn) {
       btn.className = `px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.showWaypointNames ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`;
       btn.innerHTML = this.showWaypointNames ? '🏷️ Noms : OUI' : '🏷️ Noms : NON';
+      btn.title = this.showWaypointNames ? 'Afficher les noms et repères de points' : 'Masquer les points (trace seule)';
     }
     if (window.MapManagerInstance) {
       window.MapManagerInstance.showWaypointNames = this.showWaypointNames;
+      if (typeof window.MapManagerInstance.syncWaypointVisibility === 'function') {
+        window.MapManagerInstance.syncWaypointVisibility();
+      }
       const standaloneBtn = document.getElementById('btn-toggle-standalone-wp-names');
       if (standaloneBtn) {
         standaloneBtn.className = `px-3 py-2 rounded-xl ${this.showWaypointNames ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
@@ -370,6 +381,13 @@ class GpxCreatorEditor {
     }).addTo(this.map);
 
     wp.marker = marker;
+
+    if (this.showWaypointNames === false) {
+      setTimeout(() => {
+        const el = marker.getElement();
+        if (el) el.style.display = 'none';
+      }, 0);
+    }
 
     // Sauvegarder l'état au tout début du glissement pour que Ctrl+Z permette de revenir en arrière
     marker.on('dragstart', (e) => {

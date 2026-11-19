@@ -4785,30 +4785,56 @@ class MapManager {
 
   /**
    * Bascule d'affichage des noms / badges des waypoints sur la carte (traces créées et affichées)
+   * Quand Noms = NON : masque tous les repères et noms de points pour n'avoir QUE la trace seule
    */
   toggleWaypointNames() {
     this.showWaypointNames = (this.showWaypointNames === false);
-    const mapView = document.getElementById('map-view') || document.getElementById('map') || document.body;
-    if (this.showWaypointNames) {
-      mapView.classList.remove('hide-wp-labels');
-    } else {
-      mapView.classList.add('hide-wp-labels');
-    }
+    const isHidden = !this.showWaypointNames;
+    document.body.classList.toggle('hide-wp-labels', isHidden);
+    document.getElementById('map-view')?.classList.toggle('hide-wp-labels', isHidden);
+    document.getElementById('map-column')?.classList.toggle('hide-wp-labels', isHidden);
+
+    this.syncWaypointVisibility();
 
     const standaloneBtn = document.getElementById('btn-toggle-standalone-wp-names');
     if (standaloneBtn) {
       standaloneBtn.className = `px-3 py-2 rounded-xl ${this.showWaypointNames ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
       standaloneBtn.innerHTML = `<span>🏷️</span> <span>${this.showWaypointNames ? 'Noms : OUI' : 'Noms : NON'}</span>`;
+      standaloneBtn.title = this.showWaypointNames ? 'Afficher les points et noms d\'étapes' : 'Masquer les points (trace seule)';
     }
 
     if (window.GpxCreatorEditorInstance) {
       window.GpxCreatorEditorInstance.showWaypointNames = this.showWaypointNames;
+      window.GpxCreatorEditorInstance.createWaypoints.forEach(wp => {
+        if (wp.marker) {
+          const el = wp.marker.getElement();
+          if (el) el.style.display = isHidden ? 'none' : '';
+        }
+      });
       const createBtn = document.getElementById('btn-toggle-create-names');
       if (createBtn) {
         createBtn.className = `px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.showWaypointNames ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`;
         createBtn.innerHTML = this.showWaypointNames ? '🏷️ Noms : OUI' : '🏷️ Noms : NON';
+        createBtn.title = this.showWaypointNames ? 'Afficher les noms et repères de points' : 'Masquer les points (trace seule)';
       }
     }
+  }
+
+  syncWaypointVisibility() {
+    const isHidden = (this.showWaypointNames === false);
+    if (this.standaloneTracks) {
+      this.standaloneTracks.forEach(t => {
+        if (t.waypointMarkers && Array.isArray(t.waypointMarkers)) {
+          t.waypointMarkers.forEach(m => {
+            const el = m.getElement();
+            if (el) el.style.display = isHidden ? 'none' : '';
+          });
+        }
+      });
+    }
+    document.querySelectorAll('.standalone-wpt-pin, .custom-wp-pin').forEach(el => {
+      el.style.display = isHidden ? 'none' : '';
+    });
   }
 
 
@@ -6600,6 +6626,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     const trackLayer = L.featureGroup([borderPolyline, polyline, hitboxPolyline, startMarker, endMarker]);
 
     // Affichage des points d'intérêt / waypoints (POIs) si présents dans le fichier GPX
+    const waypointMarkers = [];
     if (gpxData.waypoints && Array.isArray(gpxData.waypoints) && gpxData.waypoints.length > 0) {
       gpxData.waypoints.forEach(wp => {
         const wptName = wp.name || 'Point d\'intérêt';
@@ -6628,6 +6655,13 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           </div>
         `);
         trackLayer.addLayer(wptMarker);
+        waypointMarkers.push(wptMarker);
+        if (this.showWaypointNames === false) {
+          setTimeout(() => {
+            const el = wptMarker.getElement();
+            if (el) el.style.display = 'none';
+          }, 0);
+        }
       });
     }
 
@@ -6646,6 +6680,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       ibp: (gpxData.ibp !== undefined) ? gpxData.ibp : null,
       color: assignedColor,
       points: pts,
+      waypointMarkers: waypointMarkers,
       startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
       endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] },
       layer: trackLayer,
