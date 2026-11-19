@@ -6491,6 +6491,39 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     }).bindTooltip('<b>Arrivée : ' + (gpxData.name || fileName || 'Trace') + '</b>');
 
     const trackLayer = L.featureGroup([borderPolyline, polyline, hitboxPolyline, startMarker, endMarker]);
+
+    // Affichage des points d'intérêt / waypoints (POIs) si présents dans le fichier GPX
+    if (gpxData.waypoints && Array.isArray(gpxData.waypoints) && gpxData.waypoints.length > 0) {
+      gpxData.waypoints.forEach(wp => {
+        const wptName = wp.name || 'Point d\'intérêt';
+        const wptDesc = wp.desc || '';
+        const wptMarker = L.marker([wp.lat, wp.lon], {
+          icon: L.divIcon({
+            className: 'standalone-wpt-pin',
+            html: `
+              <div style="position:relative; width:26px; height:26px;">
+                <div style="background:${assignedColor}; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.45);">
+                  📍
+                </div>
+                <div style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:180px; overflow:hidden; text-overflow:ellipsis;">
+                  ${wptName}
+                </div>
+              </div>
+            `,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          })
+        }).bindPopup(`
+          <div style="font-family:sans-serif; text-align:left; min-width:140px; padding:3px;">
+            <div style="font-weight:900; color:${assignedColor}; font-size:13px; margin-bottom:2px;">📍 ${wptName}</div>
+            ${wptDesc ? `<div style="font-size:11px; color:#475569; margin-bottom:4px;">${wptDesc}</div>` : ''}
+            <div style="font-size:10px; color:#94a3b8;">${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${wp.ele ? ` • ${Math.round(wp.ele)} m` : ''}</div>
+          </div>
+        `);
+        trackLayer.addLayer(wptMarker);
+      });
+    }
+
     this.map.addLayer(trackLayer);
 
     const trackName = (gpxData.name || fileName || ('Trace ' + (trackIndex + 1))).replace(/\.gpx$/i, '');

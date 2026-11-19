@@ -160,6 +160,26 @@ class GpxCreatorEditor {
     }
   }
 
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  escapeXml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
   showCreateFloatingPanel() {
     if (this.createFloatingCard) this.createFloatingCard.remove();
 
@@ -176,11 +196,20 @@ class GpxCreatorEditor {
         <button id="btn-close-gpx-creator" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800" title="Quitter le mode création">✕</button>
       </div>
 
-      <div class="text-xs text-slate-300 mb-2.5 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60">
+      <div class="text-xs text-slate-300 mb-2 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60">
         <span id="gpx-creator-tip">👉 Cliquez sur la carte pour poser le point A (Départ)...</span>
         <button id="btn-toggle-create-autoroute" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.createAutoRoute ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver le magnétisme automatique sur les sentiers réels">
           ${this.createAutoRoute ? '🥾 Auto-routage Sentiers : OUI' : '📏 Ligne Droite : OUI'}
         </button>
+      </div>
+
+      <!-- Saisie facultative du nom du prochain point (Point d'Intérêt) -->
+      <div class="mb-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
+        <label for="input-next-wp-name" class="text-xs text-sky-300 font-bold whitespace-nowrap flex items-center gap-1">
+          <span>🏷️</span> <span class="hidden sm:inline">Nom du prochain point :</span><span class="sm:hidden">Prochain :</span>
+        </label>
+        <input id="input-next-wp-name" type="text" placeholder="Optionnel (ex: Belvédère, Source... ou vide pour A, B, C)" class="flex-1 bg-slate-900 text-white text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-400 placeholder:text-slate-500 placeholder:italic transition" autocomplete="off" />
+        <button id="btn-clear-next-wp-name" type="button" class="text-slate-400 hover:text-white text-xs px-1.5 py-1 rounded hover:bg-slate-800 hidden" title="Effacer le texte">✕</button>
       </div>
 
       <div class="grid grid-cols-3 gap-2 mb-2 text-center">
@@ -198,7 +227,7 @@ class GpxCreatorEditor {
         </div>
       </div>
 
-      <!-- Ruban visuel de succession des étapes (A -> B -> C -> D) avec suppression directe 1-clic -->
+      <!-- Ruban visuel de succession des étapes (A -> B -> C -> D) avec édition et suppression -->
       <div id="gpx-create-waypoints-list" class="my-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800 text-xs flex items-center gap-1.5 flex-wrap max-h-24 overflow-y-auto">
         <span class="text-[11px] text-slate-500 italic">👉 Cliquez sur la carte pour poser les étapes successives (A, B, C...)</span>
       </div>
@@ -218,7 +247,7 @@ class GpxCreatorEditor {
       </div>
 
       <div class="text-[11px] text-sky-200 mt-2 bg-sky-950/70 px-3 py-1.5 rounded-xl border border-sky-800/80 flex items-center justify-between gap-2">
-        <span class="leading-tight">🖐️ <strong>Déplacez n'importe quelle lettre avec la souris</strong> pour ajuster l'itinéraire.</span>
+        <span class="leading-tight">🖐️ <strong>Déplacez une lettre</strong> pour changer le tracé • <strong>Cliquez</strong> pour la renommer.</span>
         <span class="text-[10px] text-sky-300 font-semibold whitespace-nowrap">Annuler : <strong>Ctrl+Z</strong></span>
       </div>
     `;
@@ -238,6 +267,20 @@ class GpxCreatorEditor {
       }
       this.recalculateCreatedRoute();
     });
+
+    const nextInput = document.getElementById('input-next-wp-name');
+    const clearBtn = document.getElementById('btn-clear-next-wp-name');
+    if (nextInput && clearBtn) {
+      nextInput.addEventListener('input', () => {
+        clearBtn.classList.toggle('hidden', !nextInput.value.trim());
+      });
+      clearBtn.addEventListener('click', () => {
+        nextInput.value = '';
+        clearBtn.classList.add('hidden');
+        nextInput.focus();
+      });
+    }
+
     document.getElementById('btn-undo-create-point')?.addEventListener('click', () => this.undoLastCreateOperation());
     document.getElementById('btn-reset-create-points')?.addEventListener('click', () => this.resetCreatePoints());
     document.getElementById('btn-export-created-gpx')?.addEventListener('click', () => this.exportCreatedGpx());
@@ -245,32 +288,57 @@ class GpxCreatorEditor {
 
   saveCreateHistorySnapshot() {
     if (!this.createHistory) this.createHistory = [];
-    const snapshot = this.createWaypoints.map(w => ({ lat: w.lat, lon: w.lon }));
+    const snapshot = this.createWaypoints.map(w => ({
+      lat: w.lat,
+      lon: w.lon,
+      customName: w.customName || ''
+    }));
     this.createHistory.push(snapshot);
     if (this.createHistory.length > 30) this.createHistory.shift();
   }
 
-  createWaypointObject(latlng) {
+  buildWaypointIcon(wp, letter, bgColor) {
+    const customName = (wp && wp.customName) ? wp.customName.trim() : '';
+    const nameBadge = customName ? `
+      <div class="wp-poi-badge" style="position:absolute; left:33px; top:2px; white-space:nowrap; background:rgba(15,23,42,0.94); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; border:1.5px solid ${bgColor}; box-shadow:0 3px 8px rgba(0,0,0,0.45); pointer-events:none; display:flex; align-items:center; gap:4px; max-width:200px; overflow:hidden; text-overflow:ellipsis;">
+        <span>${this.escapeHtml(customName)}</span>
+      </div>` : '';
+
+    return L.divIcon({
+      className: 'custom-wp-pin',
+      html: `
+        <div style="position:relative; width:30px; height:30px;">
+          <div style="background:${bgColor}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
+            ${letter}
+          </div>
+          ${nameBadge}
+        </div>
+      `,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
+    });
+  }
+
+  createWaypointObject(latlng, customName = '') {
     const index = this.createWaypoints.length;
     const letter = String.fromCharCode(65 + index);
     const isStart = index === 0;
     const bgColor = isStart ? '#10b981' : '#0284c7';
 
+    const wp = {
+      lat: latlng.lat,
+      lon: latlng.lng,
+      marker: null,
+      letter: letter,
+      customName: (customName || '').trim()
+    };
+
     const marker = L.marker([latlng.lat, latlng.lng], {
       draggable: true,
-      icon: L.divIcon({
-        className: 'custom-wp-pin',
-        html: `
-          <div style="background:${bgColor}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
-            ${letter}
-          </div>
-        `,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-      })
+      icon: this.buildWaypointIcon(wp, letter, bgColor)
     }).addTo(this.map);
 
-    const wp = { lat: latlng.lat, lon: latlng.lng, marker, letter };
+    wp.marker = marker;
 
     // Sauvegarder l'état au tout début du glissement pour que Ctrl+Z permette de revenir en arrière
     marker.on('dragstart', (e) => {
@@ -318,10 +386,30 @@ class GpxCreatorEditor {
     if (this.mode !== 'create' || !this.map || this.isDraggingWaypoint) return;
 
     this.saveCreateHistorySnapshot();
-    const wp = this.createWaypointObject(latlng);
+
+    const nameInput = document.getElementById('input-next-wp-name');
+    const customName = nameInput ? nameInput.value.trim() : '';
+
+    const wp = this.createWaypointObject(latlng, customName);
     this.createWaypoints.push(wp);
+
+    if (nameInput && customName) {
+      nameInput.value = '';
+      const clearBtn = document.getElementById('btn-clear-next-wp-name');
+      if (clearBtn) clearBtn.classList.add('hidden');
+    }
+
     this.updateWaypointIcons();
     await this.recalculateCreatedRoute();
+  }
+
+  saveWaypointCustomName(wp, newName) {
+    if (!wp) return;
+    this.saveCreateHistorySnapshot();
+    wp.customName = (newName || '').trim();
+    this.updateWaypointIcons();
+    this.showUndoFeedback(wp.customName ? `Point renommé : ${wp.customName}` : `Point réinitialisé (${wp.letter})`);
+    if (wp.marker) wp.marker.closePopup();
   }
 
   updateWaypointIcons() {
@@ -333,41 +421,104 @@ class GpxCreatorEditor {
       const isEnd = idx === total - 1 && total > 1;
       const bgColor = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
       const roleLabel = isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Étape');
+      const customName = (wp.customName || '').trim();
 
-      wp.marker.setIcon(L.divIcon({
-        className: 'custom-wp-pin',
-        html: `
-          <div style="background:${bgColor}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
-            ${letter}
-          </div>
-        `,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-      }));
+      wp.marker.setIcon(this.buildWaypointIcon(wp, letter, bgColor));
 
-      wp.marker.setTooltipContent(`📍 Point <strong>${letter}</strong> (${roleLabel})<br><span style="font-size:10px; color:#cbd5e1;">Glissez pour déplacer • Clic droit = supprimer</span>`);
+      const tooltipTitle = customName ? `📍 <strong>${this.escapeHtml(customName)}</strong> (Point ${letter} - ${roleLabel})` : `📍 Point <strong>${letter}</strong> (${roleLabel})`;
+      wp.marker.setTooltipContent(`${tooltipTitle}<br><span style="font-size:10px; color:#cbd5e1;">Glissez pour déplacer • Clic = renommer / supprimer</span>`);
 
-      // Popup au clic avec suppression directe de l'étape
+      // Popup au clic avec renommage / POI et suppression
       wp.marker.bindPopup(`
-        <div style="font-family:sans-serif; text-align:center; min-width:140px; padding:3px;">
-          <div style="font-weight:900; color:${bgColor}; font-size:14px;">Point ${letter}</div>
-          <div style="font-size:11px; color:#475569; margin-bottom:5px;">${isStart ? 'Point de Départ' : (isEnd ? 'Point d\'Arrivée' : 'Étape intermédiaire')}</div>
-          <div style="font-size:10px; color:#64748b; margin-bottom:8px;">Glissez pour déplacer vers un autre chemin</div>
-          ${total > 1 ? `<button type="button" class="btn-popup-del-wp" style="background:#ef4444; color:white; border:none; padding:4px 10px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer; width:100%; box-shadow:0 2px 4px rgba(0,0,0,0.2);">🗑️ Supprimer ce point (${letter})</button>` : ''}
+        <div style="font-family:sans-serif; text-align:left; min-width:220px; max-width:260px; padding:3px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;">
+            <span style="font-weight:900; color:${bgColor}; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
+              <span style="background:${bgColor}; color:white; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${letter}</span>
+              Point ${letter}
+            </span>
+            <span style="font-size:10px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0;">${roleLabel}</span>
+          </div>
+
+          <div style="margin-bottom:8px;">
+            <label style="font-size:11px; font-weight:700; color:#334155; display:block; margin-bottom:3px;">🏷️ Nom / Point d'intérêt :</label>
+            <div style="display:flex; gap:4px;">
+              <input type="text" class="input-wp-edit-name" value="${this.escapeHtml(customName)}" placeholder="ex: Belvédère, Source..." style="flex:1; font-size:11px; padding:5px 8px; border:1px solid #cbd5e1; border-radius:6px; outline:none;" />
+              <button type="button" class="btn-save-wp-name" style="background:#0284c7; color:white; border:none; padding:5px 10px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;" title="Enregistrer">✓</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:8px;">
+            <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:4px;">Tags rapides 1-clic :</div>
+            <div style="display:flex; flex-wrap:wrap; gap:3px;">
+              <button type="button" class="btn-tag-wp" data-tag="🏁 Départ" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">🏁 Départ</button>
+              <button type="button" class="btn-tag-wp" data-tag="⛰️ Sommet" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">⛰️ Sommet</button>
+              <button type="button" class="btn-tag-wp" data-tag="📸 Belvédère" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">📸 Belvédère</button>
+              <button type="button" class="btn-tag-wp" data-tag="💧 Source" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">💧 Source</button>
+              <button type="button" class="btn-tag-wp" data-tag="🥪 Pause" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">🥪 Pause</button>
+              <button type="button" class="btn-tag-wp" data-tag="🧗 Col" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">🧗 Col</button>
+              <button type="button" class="btn-tag-wp" data-tag="⛺ Refuge" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">⛺ Refuge</button>
+              <button type="button" class="btn-tag-wp" data-tag="🎯 Arrivée" style="background:#f8fafc; border:1px solid #cbd5e1; font-size:10px; padding:2px 6px; border-radius:4px; cursor:pointer;">🎯 Arrivée</button>
+            </div>
+          </div>
+
+          <div style="font-size:9px; color:#94a3b8; margin-bottom:6px;">Glissez le point sur la carte pour déplacer l'itinéraire</div>
+
+          <div style="display:flex; gap:4px; padding-top:6px; border-top:1px solid #f1f5f9;">
+            ${customName ? `<button type="button" class="btn-reset-wp-name" style="flex:1; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:4px 6px; border-radius:6px; font-size:10px; font-weight:700; cursor:pointer;">↺ Rétablir ${letter}</button>` : ''}
+            ${total > 1 ? `<button type="button" class="btn-popup-del-wp" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; padding:4px 8px; border-radius:6px; font-weight:bold; font-size:10px; cursor:pointer;" title="Supprimer ce point">🗑️ Supprimer</button>` : ''}
+          </div>
         </div>
       `, { offset: [0, -14] });
 
       wp.marker.off('popupopen');
       wp.marker.on('popupopen', (popEvt) => {
         const popEl = popEvt.popup.getElement();
-        if (popEl) {
-          const btn = popEl.querySelector('.btn-popup-del-wp');
-          if (btn) {
-            btn.onclick = (be) => {
-              be.stopPropagation();
-              this.removeCreateWaypoint(wp);
-            };
-          }
+        if (!popEl) return;
+
+        const input = popEl.querySelector('.input-wp-edit-name');
+        const btnSave = popEl.querySelector('.btn-save-wp-name');
+        const btnReset = popEl.querySelector('.btn-reset-wp-name');
+        const btnDel = popEl.querySelector('.btn-popup-del-wp');
+        const tagBtns = popEl.querySelectorAll('.btn-tag-wp');
+
+        if (input) {
+          setTimeout(() => input.focus(), 60);
+          input.addEventListener('keydown', (ke) => {
+            if (ke.key === 'Enter') {
+              ke.preventDefault();
+              this.saveWaypointCustomName(wp, input.value);
+            }
+          });
+        }
+
+        if (btnSave && input) {
+          btnSave.onclick = (be) => {
+            be.stopPropagation();
+            this.saveWaypointCustomName(wp, input.value);
+          };
+        }
+
+        tagBtns.forEach(tBtn => {
+          tBtn.onclick = (te) => {
+            te.stopPropagation();
+            const tag = tBtn.getAttribute('data-tag');
+            if (input) input.value = tag;
+            this.saveWaypointCustomName(wp, tag);
+          };
+        });
+
+        if (btnReset) {
+          btnReset.onclick = (re) => {
+            re.stopPropagation();
+            this.saveWaypointCustomName(wp, '');
+          };
+        }
+
+        if (btnDel) {
+          btnDel.onclick = (de) => {
+            de.stopPropagation();
+            this.removeCreateWaypoint(wp);
+          };
         }
       });
     });
@@ -390,6 +541,7 @@ class GpxCreatorEditor {
       const isStart = idx === 0;
       const isEnd = idx === total - 1 && total > 1;
       const letter = String.fromCharCode(65 + idx);
+      const customName = (wp.customName || '').trim();
 
       let colorClass = 'bg-sky-950/80 text-sky-300 border-sky-700/60';
       let roleLabel = 'Étape';
@@ -401,10 +553,13 @@ class GpxCreatorEditor {
         roleLabel = 'Arrivée';
       }
 
+      const displayLabel = customName ? this.escapeHtml(customName) : roleLabel;
+
       html += `
-        <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg border ${colorClass} text-[11px] font-bold shadow-sm select-none" title="Waypoint ${letter} (${roleLabel})">
-          <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white">${letter}</span>
-          <span class="text-[10px] opacity-80 font-medium">${roleLabel}</span>
+        <div class="wp-ribbon-pill flex items-center gap-1.5 px-2 py-1 rounded-lg border ${colorClass} text-[11px] font-bold shadow-sm select-none cursor-pointer hover:brightness-125 transition" data-idx="${idx}" title="Cliquer pour centrer et renommer ce point">
+          <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white shrink-0">${letter}</span>
+          <span class="text-[10px] opacity-90 font-medium truncate max-w-[110px]">${displayLabel}</span>
+          <span class="text-[10px] opacity-60 hover:opacity-100 text-sky-200" title="Modifier le nom">✏️</span>
           ${wp.isBacktrack ? `<span class="px-1 py-0.5 rounded bg-amber-500/30 text-amber-300 text-[9px] border border-amber-500/50 font-bold" title="Demi-tour forcé : supprimez ou déplacez l'étape suivante (${wp.backtrackNext}) pour filer tout droit">↩️ Demi-tour</span>` : ''}
           ${total > 1 ? `
             <button type="button" class="btn-delete-wp ml-1 text-slate-400 hover:text-white hover:bg-rose-600 rounded px-1.5 py-0.5 transition-colors font-black text-xs leading-none" data-idx="${idx}" title="Supprimer l'étape ${letter}">✕</button>
@@ -418,6 +573,21 @@ class GpxCreatorEditor {
     });
 
     listEl.innerHTML = html;
+
+    // Clic sur une pilule du ruban -> centrer la carte et ouvrir le popup d'édition
+    listEl.querySelectorAll('.wp-ribbon-pill').forEach(pill => {
+      pill.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-delete-wp')) return;
+        const idx = parseInt(pill.getAttribute('data-idx'), 10);
+        if (!isNaN(idx) && this.createWaypoints[idx]) {
+          const wp = this.createWaypoints[idx];
+          if (this.map && wp.marker) {
+            this.map.panTo([wp.lat, wp.lon]);
+            wp.marker.openPopup();
+          }
+        }
+      });
+    });
 
     listEl.querySelectorAll('.btn-delete-wp').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -543,7 +713,7 @@ class GpxCreatorEditor {
     this.createWaypoints = [];
     // Recréer chaque waypoint
     prevSnapshot.forEach(pt => {
-      const wp = this.createWaypointObject(L.latLng(pt.lat, pt.lon));
+      const wp = this.createWaypointObject(L.latLng(pt.lat, pt.lon), pt.customName || '');
       this.createWaypoints.push(wp);
     });
     this.updateWaypointIcons();
@@ -1694,19 +1864,24 @@ class GpxCreatorEditor {
 
   generateGpxXml(trackName, coords, waypoints) {
     const now = new Date().toISOString();
-    const safeTrackName = (trackName || 'Randonnee')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+    const safeTrackName = this.escapeXml(trackName || 'Randonnee');
 
     let wptXml = '';
     if (waypoints && waypoints.length > 0) {
-      wptXml = waypoints.map(wp => `
+      wptXml = waypoints.map((wp, idx) => {
+        const letter = String.fromCharCode(65 + idx);
+        const role = idx === 0 ? 'Départ' : (idx === waypoints.length - 1 && waypoints.length > 1 ? 'Arrivée' : 'Étape');
+        const defaultName = `Point ${letter}${role ? ` (${role})` : ''}`;
+        const finalName = (wp.customName && wp.customName.trim()) ? wp.customName.trim() : defaultName;
+        const safeName = this.escapeXml(finalName);
+        const safeDesc = this.escapeXml(wp.customName ? `Point ${letter} - ${role}` : role);
+        return `
   <wpt lat="${wp.lat.toFixed(6)}" lon="${wp.lon.toFixed(6)}">
-    <name>Point ${wp.letter || ''}</name>
-  </wpt>`).join('');
+    <name>${safeName}</name>
+    <desc>${safeDesc}</desc>
+    <sym>Waypoint</sym>
+  </wpt>`;
+      }).join('');
     }
 
     const trkptXml = coords.map(c => `

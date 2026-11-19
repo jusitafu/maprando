@@ -196,14 +196,45 @@ class GPXParser {
       } catch (e) {}
     }
 
+    // Extract all Waypoints (<wpt>) / Points of Interest
+    const allWptRegex = /<(?:[a-zA-Z0-9_:-]+:)?wpt\b([^>]*?)(?:\/>|>(.*?)<\/(?:[a-zA-Z0-9_:-]+:)?wpt>)/gis;
+    let wptExtractMatch;
+    while ((wptExtractMatch = allWptRegex.exec(cleanText)) !== null) {
+      const attrs = wptExtractMatch[1];
+      const body = wptExtractMatch[2] || '';
+      const pt = parsePointElement(attrs, body);
+      if (pt) {
+        let wptName = '';
+        const nameMatch = /<(?:[a-zA-Z0-9_:-]+:)?name\b[^>]*>([\s\S]*?)<\//i.exec(body);
+        if (nameMatch && nameMatch[1]) {
+          wptName = nameMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+        }
+        let wptDesc = '';
+        const descMatch = /<(?:[a-zA-Z0-9_:-]+:)?(?:desc|description)\b[^>]*>([\s\S]*?)<\//i.exec(body);
+        if (descMatch && descMatch[1]) {
+          wptDesc = descMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+        }
+        let wptSym = '';
+        const symMatch = /<(?:[a-zA-Z0-9_:-]+:)?sym\b[^>]*>([\s\S]*?)<\//i.exec(body);
+        if (symMatch && symMatch[1]) {
+          wptSym = symMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+        }
+        waypoints.push({
+          lat: pt.lat,
+          lon: pt.lon,
+          ele: pt.ele,
+          name: wptName,
+          desc: wptDesc,
+          sym: wptSym
+        });
+      }
+    }
+
     // PRIORITY 5: Fallback to <wpt> ONLY if NO track or route exists at all
     if (rawPoints.length === 0) {
-      const wptRegex = /<(?:[a-zA-Z0-9_:-]+:)?wpt\b([^>]*?)(?:\/>|>(.*?)<\/(?:[a-zA-Z0-9_:-]+:)?wpt>)/gis;
-      let ptMatch;
-      while ((ptMatch = wptRegex.exec(cleanText)) !== null) {
-        const pt = parsePointElement(ptMatch[1], ptMatch[2] || '');
-        if (pt) rawPoints.push(pt);
-      }
+      waypoints.forEach(wp => {
+        rawPoints.push({ lat: wp.lat, lon: wp.lon, ele: wp.ele, time: null });
+      });
     }
 
     // Validation
@@ -263,6 +294,7 @@ class GPXParser {
       },
       bounds: [[minLat, minLon], [maxLat, maxLon]],
       points: points,
+      waypoints: waypoints,
       rawGpx: cleanText,
       ibp: this.calculateIBP({ points, distanceKm: Math.round(totalDistanceKm * 10) / 10, elevationGain: Math.round(elevationGain), notes, name }),
       ibpLevel: this.getIBPLevel(this.calculateIBP({ points, distanceKm: Math.round(totalDistanceKm * 10) / 10, elevationGain: Math.round(elevationGain), notes, name })).level,
