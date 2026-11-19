@@ -2234,6 +2234,11 @@
           <span>Modifier une trace GPX</span>
         </button>
 
+        <!-- BOUTON DISCRET TABLEAU DE MARCHE FFR (ACCÈS EXCLUSIF ANIMATEUR) -->
+        <button id="btn-ffr-roadmap" type="button" class="w-6 h-10 -ml-1 rounded-xl bg-transparent border-0 text-slate-900 opacity-0 hover:opacity-40 hover:text-slate-600 transition cursor-pointer select-none" title="Tableau de marche FFR" aria-label="Tableau de marche FFR">
+          <span class="text-xs">📋</span>
+        </button>
+
         <button data-tab="explorer" class="tab-btn px-4 py-2.5 rounded-2xl text-sm md:text-base font-extrabold transition flex items-center gap-2 bg-emerald-700 text-white shadow-sm hover:brightness-110">
 
           <span class="text-lg">🔍</span>
@@ -7433,6 +7438,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/pdf-exporter.js?v=171"></script>
   <script src="js/gr-manager.js?v=157"></script>
   <script src="js/gpx-creator-editor.js?v=172"></script>
+  <script src="js/ffr-roadmap-manager.js?v=173"></script>
   <script src="js/floating-window-manager.js?v=157"></script>
 
   <script src="js/portal-router.js?v=157"></script>
