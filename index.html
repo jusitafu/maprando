@@ -7471,24 +7471,54 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
           💡 En sélectionnant votre type d'écran, <strong>1 cm mesuré avec un double-décimètre posé sur votre vitre</strong> correspondra exactement à <strong>250 m</strong> sur le terrain au 1 : 25 000 (ou <strong>1,25 km</strong> au 1 : 125 000).
         </div>
 
-        <!-- Mode selector: Preset vs Custom vs Credit Card -->
+        <!-- Mode selector: Ruler vs Credit Card vs Preset vs Custom -->
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Méthode de réglage :</label>
-          <div class="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
-            <button type="button" id="tab-calib-preset" class="py-2 px-1 rounded-xl border-2 transition cursor-pointer border-emerald-600 bg-emerald-50 text-emerald-800 font-bold">
-              💻 Modèle d'écran
-            </button>
-            <button type="button" id="tab-calib-custom" class="py-2 px-1 rounded-xl border-2 transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium">
-              ✏️ Diagonale (pouces)
+          <div class="grid grid-cols-4 gap-1.5 text-center text-xs font-semibold">
+            <button type="button" id="tab-calib-ruler" class="py-2 px-1 rounded-xl border-2 transition cursor-pointer border-emerald-600 bg-emerald-50 text-emerald-800 font-bold shadow-xs">
+              📏 Règle physique
             </button>
             <button type="button" id="tab-calib-card" class="py-2 px-1 rounded-xl border-2 transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium">
               💳 Carte bancaire
             </button>
+            <button type="button" id="tab-calib-preset" class="py-2 px-1 rounded-xl border-2 transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium">
+              💻 Modèle PC
+            </button>
+            <button type="button" id="tab-calib-custom" class="py-2 px-1 rounded-xl border-2 transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium">
+              ✏️ Diagonale
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 0: Physical Ruler direct adjustment (Mode direct à la règle) -->
+        <div id="section-calib-ruler" class="space-y-3">
+          <div class="text-xs text-slate-700 bg-emerald-50/80 p-3 rounded-2xl border border-emerald-200 leading-relaxed">
+            📐 <strong>Ajustement direct à votre double-décimètre ou règle :</strong><br>
+            1. Posez votre règle physique à plat sur l'écran contre la réglette témoin jaune ci-dessous.<br>
+            2. Ajustez le curseur (ou cliquez sur les boutons <strong>&minus;</strong> et <strong>+</strong>) jusqu'à ce que la graduation <strong>5</strong> coïncide <strong>exactement avec les 5,0 cm</strong> de votre règle physique.<br>
+            3. Cliquez sur <strong>« Enregistrer cet étalonnage »</strong>.
+          </div>
+
+          <div class="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <div class="flex items-center justify-between text-xs font-bold text-slate-700 mb-1">
+              <span>Ajuster la réglette de 5 cm :</span>
+              <span id="lbl-ruler-5cm-px" class="font-mono text-emerald-700 font-black">189 px (37.8 px/cm)</span>
+            </div>
+            
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btn-calib-ruler-minus-1" class="px-2 py-1.5 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-bold rounded-xl text-xs transition shadow-xs" title="Rétrécir de 1 px">&minus;1px</button>
+              <button type="button" id="btn-calib-ruler-minus-01" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold rounded-xl text-xs transition border border-slate-300" title="Rétrécir fin">&minus;</button>
+              
+              <input type="range" id="slider-calib-ruler" min="130" max="360" step="0.5" value="189" class="flex-1 accent-emerald-600 cursor-pointer">
+
+              <button type="button" id="btn-calib-ruler-plus-01" class="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold rounded-xl text-xs transition border border-slate-300" title="Élargir fin">+</button>
+              <button type="button" id="btn-calib-ruler-plus-1" class="px-2 py-1.5 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-bold rounded-xl text-xs transition shadow-xs" title="Élargir de 1 px">+1px</button>
+            </div>
           </div>
         </div>
 
         <!-- Section 1: Brand & Model Selection (10 dernières années) -->
-        <div id="section-calib-preset" class="space-y-3">
+        <div id="section-calib-preset" class="hidden space-y-3">
           <div>
             <label for="select-screen-brand" class="block text-xs font-bold text-slate-700 mb-1">1. Choisissez votre marque :</label>
             <select id="select-screen-brand" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white shadow-sm cursor-pointer">

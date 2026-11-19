@@ -114,7 +114,7 @@
 
   class ScreenCalibManager {
     constructor() {
-      this.currentMode = 'preset'; // 'preset' | 'custom' | 'card'
+      this.currentMode = 'ruler'; // 'ruler' | 'preset' | 'custom' | 'card'
       this.selectedBrandId = 'hp';
       this.activeCalib = this.loadCalibration();
       this.tempCalib = { ...this.activeCalib };
@@ -160,6 +160,9 @@
       if (window.MapManagerInstance) {
         window.MapManagerInstance._screenCalib = this.activeCalib;
         window.MapManagerInstance.updateMapHud();
+        if (typeof window.MapManagerInstance.updateTrueCmScale === 'function') {
+          window.MapManagerInstance.updateTrueCmScale();
+        }
       }
 
       if (window.App && typeof window.App.showToast === 'function') {
@@ -247,9 +250,63 @@
 
       this.populateBrandAndModelDropdowns();
       this.setupEventListeners();
+
+      // Initialiser le slider de la règle physique avec la calibration actuelle
+      const sliderRuler = document.getElementById('slider-calib-ruler');
+      if (sliderRuler) {
+        const current5cm = (this.tempCalib.cssPxPerCm || 37.795275) * 5.0;
+        sliderRuler.value = current5cm.toFixed(1);
+      }
+
+      // Initialiser le slider de la carte bancaire
+      const sliderCard = document.getElementById('slider-calib-card');
+      const cardBox = document.getElementById('calib-card-box');
+      if (sliderCard) {
+        const cardW = this.tempCalib.cardWidthPx || ((this.tempCalib.cssPxPerCm || 37.795275) * 8.56);
+        sliderCard.value = cardW.toFixed(1);
+        if (cardBox) cardBox.style.width = `${cardW.toFixed(0)}px`;
+      }
+
+      // Activer l'onglet règle physique par défaut pour un réglage direct
+      const initialMode = (this.tempCalib && (this.tempCalib.type === 'card' || this.tempCalib.type === 'custom')) ? this.tempCalib.type : 'ruler';
+      this.setTab(initialMode);
+
       this.updateRulerPreview();
 
       modal.classList.remove('hidden');
+    }
+
+    setTab(mode) {
+      this.currentMode = mode;
+      const tabRuler = document.getElementById('tab-calib-ruler');
+      const tabPreset = document.getElementById('tab-calib-preset');
+      const tabCustom = document.getElementById('tab-calib-custom');
+      const tabCard = document.getElementById('tab-calib-card');
+
+      const secRuler = document.getElementById('section-calib-ruler');
+      const secPreset = document.getElementById('section-calib-preset');
+      const secCustom = document.getElementById('section-calib-custom');
+      const secCard = document.getElementById('section-calib-card');
+
+      const tabs = [
+        { btn: tabRuler, sec: secRuler, active: mode === 'ruler' },
+        { btn: tabPreset, sec: secPreset, active: mode === 'preset' },
+        { btn: tabCustom, sec: secCustom, active: mode === 'custom' },
+        { btn: tabCard, sec: secCard, active: mode === 'card' }
+      ];
+
+      tabs.forEach(t => {
+        if (!t.btn || !t.sec) return;
+        if (t.active) {
+          t.btn.className = 'py-2 px-1 rounded-xl border-2 transition cursor-pointer border-emerald-600 bg-emerald-50 text-emerald-800 font-bold shadow-xs';
+          t.sec.classList.remove('hidden');
+        } else {
+          t.btn.className = 'py-2 px-1 rounded-xl border-2 transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium';
+          t.sec.classList.add('hidden');
+        }
+      });
+
+      this.recalculateTempFromCurrentMode();
     }
 
     closeModal() {
@@ -349,39 +406,37 @@
       this._hasBoundEvents = true;
 
       // Onglets
+      const tabRuler = document.getElementById('tab-calib-ruler');
       const tabPreset = document.getElementById('tab-calib-preset');
       const tabCustom = document.getElementById('tab-calib-custom');
       const tabCard = document.getElementById('tab-calib-card');
 
-      const secPreset = document.getElementById('section-calib-preset');
-      const secCustom = document.getElementById('section-calib-custom');
-      const secCard = document.getElementById('section-calib-card');
+      if (tabRuler) tabRuler.addEventListener('click', () => this.setTab('ruler'));
+      if (tabPreset) tabPreset.addEventListener('click', () => this.setTab('preset'));
+      if (tabCustom) tabCustom.addEventListener('click', () => this.setTab('custom'));
+      if (tabCard) tabCard.addEventListener('click', () => this.setTab('card'));
 
-      const setTab = (mode) => {
-        this.currentMode = mode;
-        const tabs = [
-          { btn: tabPreset, sec: secPreset, active: mode === 'preset' },
-          { btn: tabCustom, sec: secCustom, active: mode === 'custom' },
-          { btn: tabCard, sec: secCard, active: mode === 'card' }
-        ];
-
-        tabs.forEach(t => {
-          if (!t.btn || !t.sec) return;
-          if (t.active) {
-            t.btn.className = 'py-2 px-1 rounded-xl border-2 transition cursor-pointer border-emerald-600 bg-emerald-50 text-emerald-800 font-bold';
-            t.sec.classList.remove('hidden');
-          } else {
-            t.btn.className = 'py-2 px-1 rounded-xl border-2 transition cursor-pointer border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium';
-            t.sec.classList.add('hidden');
-          }
+      // Slider règle physique directe
+      const sliderRuler = document.getElementById('slider-calib-ruler');
+      if (sliderRuler) {
+        sliderRuler.addEventListener('input', () => {
+          this.recalculateTempFromCurrentMode();
         });
+      }
 
+      // Boutons pas-à-pas de la règle physique
+      const adjustRuler = (deltaPx) => {
+        if (!sliderRuler) return;
+        const current = parseFloat(sliderRuler.value) || 189;
+        const nextVal = Math.min(360, Math.max(130, current + deltaPx));
+        sliderRuler.value = nextVal.toFixed(1);
         this.recalculateTempFromCurrentMode();
       };
 
-      if (tabPreset) tabPreset.addEventListener('click', () => setTab('preset'));
-      if (tabCustom) tabCustom.addEventListener('click', () => setTab('custom'));
-      if (tabCard) tabCard.addEventListener('click', () => setTab('card'));
+      document.getElementById('btn-calib-ruler-minus-1')?.addEventListener('click', () => adjustRuler(-1.0));
+      document.getElementById('btn-calib-ruler-minus-01')?.addEventListener('click', () => adjustRuler(-0.2));
+      document.getElementById('btn-calib-ruler-plus-01')?.addEventListener('click', () => adjustRuler(0.2));
+      document.getElementById('btn-calib-ruler-plus-1')?.addEventListener('click', () => adjustRuler(1.0));
 
       // Changement de Marque
       const selectBrand = document.getElementById('select-screen-brand');
@@ -456,7 +511,19 @@
     }
 
     recalculateTempFromCurrentMode() {
-      if (this.currentMode === 'preset') {
+      if (this.currentMode === 'ruler') {
+        const slider = document.getElementById('slider-calib-ruler');
+        const total5cmPx = parseFloat(slider ? slider.value : 189) || 189;
+        const cssPxPerCm = total5cmPx / 5.0;
+
+        this.tempCalib = {
+          type: 'ruler',
+          name: 'Règle physique (Direct)',
+          cssPxPerCm: cssPxPerCm,
+          isCalibrated: true,
+          total5cmPx: total5cmPx
+        };
+      } else if (this.currentMode === 'preset') {
         const selectBrand = document.getElementById('select-screen-brand');
         const selectModel = document.getElementById('select-screen-model');
         const brandId = selectBrand ? selectBrand.value : 'hp';
@@ -510,6 +577,7 @@
     updateRulerPreview() {
       const container = document.getElementById('calib-ruler-container');
       const calcInfo = document.getElementById('calib-calc-info');
+      const lbl5cm = document.getElementById('lbl-ruler-5cm-px');
       if (!container) return;
 
       const pxPerCm = this.tempCalib.cssPxPerCm || 37.795275;
@@ -517,6 +585,9 @@
 
       if (calcInfo) {
         calcInfo.textContent = `1 cm = ${pxPerCm.toFixed(1)} px • 5 cm = ${Math.round(totalWidth)} px`;
+      }
+      if (lbl5cm) {
+        lbl5cm.textContent = `${totalWidth.toFixed(1)} px (${pxPerCm.toFixed(1)} px/cm)`;
       }
 
       let lines = '';

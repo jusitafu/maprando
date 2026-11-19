@@ -17,6 +17,7 @@ class GpxCreatorEditor {
     this.createAutoRoute = true;
     this.createFloatingCard = null;
     this.createHistory = [];          // Historique pour annulation (Ctrl+Z)
+    this.showWaypointNames = true;     // Bascule d'affichage des noms / badges de waypoints
 
     // État Édition
     this.editingTrack = null;         // Reference vers la trace dans standaloneTracks
@@ -198,9 +199,14 @@ class GpxCreatorEditor {
 
       <div class="text-xs text-slate-300 mb-2 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60">
         <span id="gpx-creator-tip">👉 Cliquez sur la carte pour poser le point A (Départ)...</span>
-        <button id="btn-toggle-create-autoroute" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.createAutoRoute ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver le magnétisme automatique sur les sentiers réels">
-          ${this.createAutoRoute ? '🥾 Auto-routage Sentiers : OUI' : '📏 Ligne Droite : OUI'}
-        </button>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+          <button id="btn-toggle-create-names" type="button" class="px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.showWaypointNames !== false ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Afficher ou masquer les noms des points sur la carte">
+            ${this.showWaypointNames !== false ? '🏷️ Noms : OUI' : '🏷️ Noms : NON'}
+          </button>
+          <button id="btn-toggle-create-autoroute" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.createAutoRoute ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver le magnétisme automatique sur les sentiers réels">
+            ${this.createAutoRoute ? '🥾 Auto-routage : OUI' : '📏 Ligne Droite'}
+          </button>
+        </div>
       </div>
 
       <!-- Saisie facultative du nom du prochain point (Point d'Intérêt) -->
@@ -281,9 +287,33 @@ class GpxCreatorEditor {
       });
     }
 
+    document.getElementById('btn-toggle-create-names')?.addEventListener('click', () => this.toggleWaypointNames());
     document.getElementById('btn-undo-create-point')?.addEventListener('click', () => this.undoLastCreateOperation());
     document.getElementById('btn-reset-create-points')?.addEventListener('click', () => this.resetCreatePoints());
     document.getElementById('btn-export-created-gpx')?.addEventListener('click', () => this.exportCreatedGpx());
+  }
+
+  toggleWaypointNames() {
+    this.showWaypointNames = (this.showWaypointNames === false);
+    const mapView = document.getElementById('map-view') || document.getElementById('map') || document.body;
+    if (this.showWaypointNames) {
+      mapView.classList.remove('hide-wp-labels');
+    } else {
+      mapView.classList.add('hide-wp-labels');
+    }
+    const btn = document.getElementById('btn-toggle-create-names');
+    if (btn) {
+      btn.className = `px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.showWaypointNames ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`;
+      btn.innerHTML = this.showWaypointNames ? '🏷️ Noms : OUI' : '🏷️ Noms : NON';
+    }
+    if (window.MapManagerInstance) {
+      window.MapManagerInstance.showWaypointNames = this.showWaypointNames;
+      const standaloneBtn = document.getElementById('btn-toggle-standalone-wp-names');
+      if (standaloneBtn) {
+        standaloneBtn.className = `px-3 py-2 rounded-xl ${this.showWaypointNames ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
+        standaloneBtn.innerHTML = `<span>🏷️</span> <span>${this.showWaypointNames ? 'Noms : OUI' : 'Noms : NON'}</span>`;
+      }
+    }
   }
 
   saveCreateHistorySnapshot() {
@@ -299,10 +329,11 @@ class GpxCreatorEditor {
 
   buildWaypointIcon(wp, letter, bgColor) {
     const customName = (wp && wp.customName) ? wp.customName.trim() : '';
-    const nameBadge = customName ? `
+    const labelText = customName || `Point ${letter}`;
+    const nameBadge = `
       <div class="wp-poi-badge" style="position:absolute; left:33px; top:2px; white-space:nowrap; background:rgba(15,23,42,0.94); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; border:1.5px solid ${bgColor}; box-shadow:0 3px 8px rgba(0,0,0,0.45); pointer-events:none; display:flex; align-items:center; gap:4px; max-width:200px; overflow:hidden; text-overflow:ellipsis;">
-        <span>${this.escapeHtml(customName)}</span>
-      </div>` : '';
+        <span>${this.escapeHtml(labelText)}</span>
+      </div>`;
 
     return L.divIcon({
       className: 'custom-wp-pin',

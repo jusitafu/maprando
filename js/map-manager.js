@@ -645,6 +645,7 @@ class MapManager {
     this.layerControl = L.control.layers(this.baseLayers, overlayLayers, { position: 'topright' }).addTo(this.map);
 
     L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(this.map);
+    this.initTrueCmScaleControl();
 
 
 
@@ -4704,6 +4705,112 @@ class MapManager {
 
   }
 
+  /**
+   * Initialise le widget d'échelle « 1 cm vrai » dont la barre a une longueur STRICTEMENT IMMUABLE sur la vitre
+   */
+  initTrueCmScaleControl() {
+    if (!this.map || this.trueScaleControl) return;
+
+    const TrueScaleControl = L.Control.extend({
+      options: {
+        position: 'bottomleft'
+      },
+      onAdd: (map) => {
+        const container = L.DomUtil.create('div', 'leaflet-control true-cm-scale-control');
+        container.id = 'true-cm-scale-widget';
+        container.title = 'Échelle « 1 cm vrai » sur votre vitre (longueur immuable). Cliquez pour réétalonner à la règle.';
+
+        container.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;">
+            <div id="true-cm-label" style="font-size:10px; font-weight:800; color:#38bdf8; white-space:nowrap;">1 cm = ...</div>
+            <div id="true-cm-bar" class="true-cm-scale-bar"></div>
+            <div style="font-size:8px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">1 cm vitre</div>
+          </div>
+        `;
+
+        container.onclick = (e) => {
+          if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+          window.ScreenCalibManager?.openModal();
+        };
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.on(container, 'click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          window.ScreenCalibManager?.openModal();
+        });
+
+        return container;
+      }
+    });
+
+    this.trueScaleControl = new TrueScaleControl();
+    this.trueScaleControl.addTo(this.map);
+
+    this.map.on('zoom move zoomend', () => this.updateTrueCmScale());
+    setTimeout(() => this.updateTrueCmScale(), 150);
+  }
+
+  /**
+   * Met à jour la valeur métrique du 1 cm vrai tout en maintenant sa taille en pixels strictement immuable
+   */
+  updateTrueCmScale() {
+    if (!this.map) return;
+    const barEl = document.getElementById('true-cm-bar');
+    const labelEl = document.getElementById('true-cm-label');
+    if (!barEl || !labelEl) return;
+
+    const cssPxPerCm = this.getScreenCssPxPerCm();
+    // Longueur strictement invariable sur l'écran : correspond toujours exactement à 1.0 cm mesuré à la règle
+    barEl.style.width = `${cssPxPerCm.toFixed(1)}px`;
+
+    const center = this.map.getCenter();
+    const zoom = this.map.getZoom();
+    const metersPerPixel = (40075016.686 * Math.cos((center.lat * Math.PI) / 180)) / (256 * Math.pow(2, zoom));
+    const distMeters = cssPxPerCm * metersPerPixel;
+
+    let distText = '';
+    if (distMeters < 1) {
+      distText = `${(distMeters * 100).toFixed(0)} cm`;
+    } else if (distMeters < 1000) {
+      distText = `${Math.round(distMeters)} m`;
+    } else {
+      const km = distMeters / 1000;
+      distText = km >= 10 ? `${km.toFixed(1)} km` : `${km.toFixed(2)} km`;
+    }
+
+    labelEl.textContent = `1 cm = ${distText}`;
+  }
+
+  /**
+   * Bascule d'affichage des noms / badges des waypoints sur la carte (traces créées et affichées)
+   */
+  toggleWaypointNames() {
+    this.showWaypointNames = (this.showWaypointNames === false);
+    const mapView = document.getElementById('map-view') || document.getElementById('map') || document.body;
+    if (this.showWaypointNames) {
+      mapView.classList.remove('hide-wp-labels');
+    } else {
+      mapView.classList.add('hide-wp-labels');
+    }
+
+    const standaloneBtn = document.getElementById('btn-toggle-standalone-wp-names');
+    if (standaloneBtn) {
+      standaloneBtn.className = `px-3 py-2 rounded-xl ${this.showWaypointNames ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
+      standaloneBtn.innerHTML = `<span>🏷️</span> <span>${this.showWaypointNames ? 'Noms : OUI' : 'Noms : NON'}</span>`;
+    }
+
+    if (window.GpxCreatorEditorInstance) {
+      window.GpxCreatorEditorInstance.showWaypointNames = this.showWaypointNames;
+      const createBtn = document.getElementById('btn-toggle-create-names');
+      if (createBtn) {
+        createBtn.className = `px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.showWaypointNames ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`;
+        createBtn.innerHTML = this.showWaypointNames ? '🏷️ Noms : OUI' : '🏷️ Noms : NON';
+      }
+    }
+  }
+
 
 
   // =========================================================================
@@ -6505,7 +6612,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
                 <div style="background:${assignedColor}; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.45);">
                   📍
                 </div>
-                <div style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:180px; overflow:hidden; text-overflow:ellipsis;">
+                <div class="standalone-wpt-label wp-poi-badge" style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:180px; overflow:hidden; text-overflow:ellipsis;">
                   ${wptName}
                 </div>
               </div>
@@ -6959,6 +7066,11 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
               <span class="text-base font-black">+</span> <span>Ajouter trace</span>
             </button>
           ` : ''}
+
+          <!-- Bouton Masquer/Afficher les Noms des points -->
+          <button id="btn-toggle-standalone-wp-names" type="button" class="px-3 py-2 rounded-xl ${this.showWaypointNames !== false ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointNames()" title="Afficher ou masquer les noms des points sur la carte">
+            <span>🏷️</span> <span>${this.showWaypointNames !== false ? 'Noms : OUI' : 'Noms : NON'}</span>
+          </button>
 
           <!-- Bouton Colorer les Pentes -->
           <button id="btn-toggle-slope-colors" type="button" class="px-3 py-2 rounded-xl ${this.slopeColoringActive ? 'bg-gradient-to-r from-emerald-600 via-amber-600 to-rose-600 text-white ring-2 ring-white font-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleSlopeColoring()" title="Colorer la trace selon les pourcentages de pente du relief">
