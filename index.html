@@ -325,11 +325,44 @@
         <span>🗺️ Fresque des 4 Territoires (fond d'écran) :</span>
         <span class="text-slate-300 font-medium">🌋 Tongariro &bull; 🏜️ Bardenas &bull; 🌲 Morimond &bull; 🏖️ Sanary-Bandol</span>
       </div>
-      <div class="flex items-center gap-1.5">
-        <a href="mailto:aquacheckjld@gmail.com?subject=FuelCoPilot" 
-           class="text-emerald-400 hover:text-emerald-300 hover:scale-110 transition-transform text-sm inline-flex items-center cursor-pointer" 
-           title="Contacter le développeur par e-mail (FuelCoPilot)">✉️</a>
-        <span class="text-white font-bold">Map &amp; Rando</span> &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
+      <div class="flex items-center gap-2">
+        <!-- Bulle au survol & Enveloppe vectorielle compatible Gmail & Outlook -->
+        <div class="relative group inline-flex items-center">
+          <!-- Bulle d'infobulle au survol (Tooltip) -->
+          <div class="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 scale-95 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 z-50 shadow-2xl">
+            <div class="bg-slate-900/95 backdrop-blur-md border border-emerald-500/50 rounded-2xl p-2.5 text-center text-xs text-white min-w-[220px] space-y-1.5 shadow-2xl">
+              <div class="font-extrabold text-emerald-300 flex items-center justify-center gap-1.5 text-[11px]">
+                <span>💬</span> <span>Un avis ?, une suggestion ?, écrivez-moi !</span>
+              </div>
+              <div class="text-[10px] text-slate-300">Choisissez votre messagerie :</div>
+              <div class="flex items-center justify-center gap-2 pt-1 border-t border-slate-800">
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=aquacheckjld@gmail.com&su=FuelCoPilot" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-[10px] flex items-center gap-1 transition shadow hover:scale-105" title="Ouvrir dans le webmail Gmail">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z"/><path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z"/></svg> Gmail
+                </a>
+                <a href="mailto:aquacheckjld@gmail.com?subject=FuelCoPilot" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-[10px] flex items-center gap-1 transition shadow hover:scale-105" title="Ouvrir avec Outlook ou votre messagerie par défaut">
+                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z"/><path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z"/></svg> Outlook
+                </a>
+              </div>
+            </div>
+            <!-- Flèche triangulaire vers le bas -->
+            <div class="w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-slate-900 mx-auto"></div>
+          </div>
+
+          <!-- Icône Enveloppe Vectorielle SVG réaliste -->
+          <a href="mailto:aquacheckjld@gmail.com?subject=FuelCoPilot" 
+             onclick="if(window.innerWidth < 768){ window.open('https://mail.google.com/mail/?view=cm&fs=1&to=aquacheckjld@gmail.com&su=FuelCoPilot', '_blank'); }"
+             class="p-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 transition-all hover:scale-110 cursor-pointer shadow-md inline-flex items-center justify-center" 
+             title="Un avis ?, une suggestion ?, écrivez-moi !">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+              <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+            </svg>
+          </a>
+        </div>
+
+        <span class="text-white font-bold">Map &amp; Rando</span>
+        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ1.0 (21/11/2026)</span>
+        &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
 
@@ -1741,10 +1774,10 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-            <span>GUIDE COMPLET UTILISATEUR &bull; JLDAPPS 2026</span>
+            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ1.0 (21/11/2026) &bull; JLDAPPS 2026</span>
           </div>
           <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando</span>
+            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ1.0 (21/11/2026)</span></span>
           </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -2293,7 +2326,15 @@
       </div>
 
       <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
-        <span class="text-[11px] text-slate-400 inline-flex items-center gap-1.5"><a href="mailto:aquacheckjld@gmail.com?subject=FuelCoPilot" class="text-emerald-400 hover:text-emerald-300 hover:scale-110 transition-transform text-xs" title="Contacter par e-mail (FuelCoPilot)">✉️</a> Map &amp; Rando by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas</span>
+        <span class="text-[11px] text-slate-400 inline-flex items-center gap-2">
+  <a href="mailto:aquacheckjld@gmail.com?subject=FuelCoPilot" class="p-1 rounded-md bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 hover:text-emerald-300 transition hover:scale-110 inline-flex items-center" title="Un avis ?, une suggestion ?, écrivez-moi !">
+    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M1.5 8.67v8.58a3 3 0 003 3h15a3 3 0 003-3V8.67l-8.928 5.493a3 3 0 01-3.144 0L1.5 8.67z" />
+      <path d="M22.5 6.908V6.75a3 3 0 00-3-3h-15a3 3 0 00-3 3v.158l9.714 5.978a1.5 1.5 0 001.572 0L22.5 6.908z" />
+    </svg>
+  </a>
+  Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ1.0 (21/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
+</span>
         <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg">
           Fermer le Mode d'emploi
         </button>
