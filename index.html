@@ -1766,7 +1766,7 @@
       </div>
 
       <!-- Sommaire rapide des modules -->
-      <div class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-2.5">
         <a href="#me-section-accueil" onclick="document.getElementById('me-section-accueil').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 flex items-center gap-2.5 transition cursor-pointer">
           <span class="text-xl">🏠</span>
           <div>
@@ -1793,6 +1793,13 @@
           <div>
             <div class="text-[10px] font-black text-amber-300 uppercase">Module 3 • Savoirs</div>
             <div class="text-xs font-extrabold text-white">Guides &amp; Fiches</div>
+          </div>
+        </a>
+        <a href="#me-section-comparatif" onclick="document.getElementById('me-section-comparatif').scrollIntoView({behavior:'smooth'}); return false;" class="p-3 rounded-2xl bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/40 flex items-center gap-2.5 transition cursor-pointer col-span-2 sm:col-span-1">
+          <span class="text-xl">⚖️</span>
+          <div>
+            <div class="text-[10px] font-black text-indigo-300 uppercase">Étude Marché</div>
+            <div class="text-xs font-extrabold text-white">vs 9 Solutions</div>
           </div>
         </a>
       </div>
@@ -2026,6 +2033,301 @@
             <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800">
               <div class="font-extrabold text-rose-300 mb-1 flex items-center gap-1.5"><span>🚨</span> Fiche 6 : Secours en Randonnée • Zone Blanche &amp; SOS Satellite</div>
               <p>Procédures d'urgence en montagne (112 en itinérance multi-opérateurs, SMS 114 pour signal faible), balises de détresse autonomes (Garmin inReach, ACR Iridium) et smartphones avec SOS satellite direct.</p>
+            </div>
+          </div>
+        </section>
+        <!-- =============================================================== -->
+        <!-- SECTION 4 : ÉTUDE COMPARATIVE VS 9 SOLUTIONS CARTOGRAPHIQUES    -->
+        <!-- =============================================================== -->
+        <section id="me-section-comparatif" class="p-5 sm:p-6 rounded-3xl bg-slate-950/80 border-2 border-indigo-500/40 space-y-6">
+          <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+            <span class="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/40 flex items-center justify-center text-xl font-bold">⚖️</span>
+            <div>
+              <h4 class="text-base sm:text-lg font-black text-white">4. Étude Comparative Complète : Map &amp; Rando vs 9 Solutions Cartographiques &amp; GPX</h4>
+              <p class="text-xs text-indigo-300">Analyse objective face aux outils de référence du marché : Cartes.gouv.fr (IGN), Iphigénie, Visorando, <strong>Hiker (HiiKER.com)</strong>, Openrunner, Komoot, GPXStudio, Garmin BaseCamp et VisuGPX.</p>
+            </div>
+          </div>
+
+          <!-- Synthèse introductive -->
+          <div class="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 text-xs sm:text-sm text-indigo-100 space-y-2">
+            <div class="font-bold text-white flex items-center gap-2">
+              <span class="text-base">🏆</span>
+              <span>Pourquoi Map &amp; Rando surpasse les plateformes traditionnelles ?</span>
+            </div>
+            <p class="text-slate-300 leading-relaxed font-normal">
+              Alors que la quasi-totalité des acteurs majeurs (Visorando, Iphigénie, Hiker, Openrunner) verrouillent la cartographie officielle <strong>IGN TOP 25® (1:25 000)</strong> derrière un abonnement payant récurrent (25 à 45 €/an) et imposent la création d'un compte utilisateur, <strong>Map &amp; Rando</strong> offre un <strong>accès direct, gratuit et illimité</strong> aux dalles IGN haute définition, combiné à un atelier chirurgical d'édition de trace et à des outils de terrain certifiés.
+            </p>
+          </div>
+
+          <!-- Grand Tableau Comparatif -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h5 class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <span>📊</span> <span>Tableau Synoptique des 10 Solutions Cartographiques &amp; GPX</span>
+              </h5>
+              <span class="text-[10px] text-slate-400 italic">Faites défiler horizontalement sur mobile ➔</span>
+            </div>
+
+            <div class="overflow-x-auto rounded-2xl border border-slate-800 shadow-xl bg-slate-900/90">
+              <table class="w-full text-left text-xs border-collapse min-w-[1050px]">
+                <thead>
+                  <tr class="bg-slate-950 text-slate-300 border-b border-slate-800 text-[11px]">
+                    <th class="py-3 px-3.5 font-bold uppercase tracking-wider w-[210px] sticky left-0 bg-slate-950 z-10 border-r border-slate-800">Fonctionnalités Clés</th>
+                    <th class="py-3 px-3 font-black text-emerald-300 bg-emerald-950/70 border-x-2 border-emerald-500/60 text-center w-[120px]">Map &amp; Rando</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">Cartes.gouv</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">Iphigénie</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">Visorando</th>
+                    <th class="py-3 px-2.5 text-center text-sky-300 font-bold bg-sky-950/30 border-x border-sky-500/30">Hiker (HiiKER)</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">Openrunner</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">Komoot</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">GPXStudio</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">BaseCamp</th>
+                    <th class="py-3 px-2.5 text-center text-slate-300">VisuGPX</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 text-slate-300 text-[11px]">
+                  <!-- Row 1 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Carte IGN TOP 25 (1:25k)</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Gratuit &amp; Illimité</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Gratuit</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (~25 €/an)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (25 €/an)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold bg-sky-950/20 border-x border-sky-500/30">Payant (PRO+ ~35 €/an)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (30 €/an)</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-500">Non dispo (OSM)</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Clé perso requise</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (120-300 €)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (10 €/an)</td>
+                  </tr>
+                  <!-- Row 2 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Sans compte / Accès direct</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300">Oui (Immédiat)</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non (Requis)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui (Local PC)</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Non (pour éditer)</td>
+                  </tr>
+                  <!-- Row 3 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Routage Hybride Piéton</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300">IGN sentiers + BRouter</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Moteur IGN seul</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-500">Non (manuel)</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Standard</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400 bg-sky-950/20 border-x border-sky-500/30">Moteur standard</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Routage OSM</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Moteur Komoot</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">BRouter</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Cartes Garmin</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">BRouter/OSRM</td>
+                  </tr>
+                  <!-- Row 4 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Déplacement dynamique de points</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300">Oui (Temps réel)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Limité</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300 bg-sky-950/20 border-x border-sky-500/30">Limité</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Limité</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                  </tr>
+                  <!-- Row 5 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Détection auto de demi-tour</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Exclusif)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                  </tr>
+                  <!-- Row 6 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Découpe de trace par rectangle</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300">Oui (Direct)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-500">Non (scission)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold">Oui (Outil flèche)</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-500">Non (par profil)</td>
+                  </tr>
+                  <!-- Row 7 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Reconnexion auto du tronçon coupé</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Exclusif)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Non (manuel)</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Non (manuel)</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Non (manuel)</td>
+                  </tr>
+                  <!-- Row 8 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Nommage normalisé (Date-Ville-Km-D+)</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Exclusif)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                  </tr>
+                  <!-- Row 9 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Superposition multi-traces (1 à 3)</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300">Oui (avec couleurs)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Complexe</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non (1 seule)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non (1 active)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400">Oui</td>
+                  </tr>
+                  <!-- Row 10 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Outil Cap (jusqu'à 3) + Auto-Pan</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Exclusif)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Angle simple (1 seul)</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Viseur basique</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Mesure simple</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                  </tr>
+                  <!-- Row 11 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Échelle 1:25k vraie certifiée (écran)</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Exclusif)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non (relative)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                  </tr>
+                  <!-- Row 12 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Carroyage dalles TOP 25 papier</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Exclusif)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Texte seul</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400 bg-sky-950/20 border-x border-sky-500/30">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                  </tr>
+                  <!-- Row 13 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Export PDF A4/A3 HD 1:25k en 1 clic</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Direct)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">2 clics</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Complexe</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Formats figés</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-500 bg-sky-950/20 border-x border-sky-500/30">Non (export GPX)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (HD/A3)</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Basique</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-500">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Impression PC</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (PDF TOP25)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Zoom Détaillé : Hiker (HiiKER / Hiker.com) -->
+          <div class="p-4 rounded-2xl bg-sky-950/40 border border-sky-500/40 space-y-3">
+            <div class="flex items-center justify-between border-b border-sky-500/20 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">🥾</span>
+                <span class="font-extrabold text-white text-sm">Focus Concurrent Intégré : Hiker (HiiKER / Hiker.com &bull; hiiker.app)</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 text-[10px] font-bold border border-sky-500/30">Trekking &amp; Thru-Hiking</span>
+            </div>
+            
+            <p class="text-xs text-slate-300 leading-relaxed font-normal">
+              <strong>Hiker (HiiKER)</strong> est une application et plateforme web irlandaise très populaire à l'international pour la planification de grands treks (West Highland Way, GR20, Tour du Mont-Blanc, Camino, Pacific Crest Trail).
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30 space-y-1.5">
+                <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                  <span>✓</span> Forces de Hiker (HiiKER) :
+                </div>
+                <ul class="list-disc list-inside text-slate-300 space-y-1 font-normal text-[11px]">
+                  <li>Catalogue exhaustif d'itinéraires de grande randonnée mondiaux pré-découpés en étapes journalières.</li>
+                  <li>Visualisation du relief en 3D et météo dynamique en temps réel le long de la trace.</li>
+                  <li>Fonction de partage de position en direct (*Live Locator*) pour la sécurité des proches.</li>
+                  <li>Synchronisation avec les montres connectées modernes (Apple Watch, Wear OS).</li>
+                </ul>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900/80 border border-rose-500/30 space-y-1.5">
+                <div class="font-bold text-rose-400 flex items-center gap-1.5">
+                  <span>✕</span> Limites face à Map &amp; Rando :
+                </div>
+                <ul class="list-disc list-inside text-slate-300 space-y-1 font-normal text-[11px]">
+                  <li><strong>Cartes IGN payantes</strong> : Les couches officielles IGN France (et IGN Espagne/Belgique) nécessitent l'abonnement <em>HiiKER PRO+</em> (~35 €/an). Le mode gratuit n'offre que des fonds OpenStreetMap.</li>
+                  <li><strong>Compte obligatoire</strong> : Impossible de planifier sans s'inscrire au préalable.</li>
+                  <li><strong>Pas d'atelier de découpe rectangulaire</strong> ni de <em>reconnexion automatique de trace</em> par sentiers.</li>
+                  <li><strong>Pas d'outils topographiques certifiés</strong> : Absence d'échelle physique 1:25k étalonnée à l'écran, pas de carroyage des dalles papier TOP 25, et pas d'outil Cap à 3 visées avec défilement fluide (*Auto-Pan*).</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rappel des 7 Atouts Exclusifs -->
+          <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
+            <div class="font-extrabold text-amber-300 flex items-center gap-2 text-xs sm:text-sm">
+              <span>🌟</span>
+              <span>Rappel des 7 Fonctionnalités Uniques au Monde de Map &amp; Rando</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 pt-1">
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">1. Gratuité &amp; Immédiateté IGN :</strong> Zéro création de compte, zéro abonnement pour l'IGN TOP 25®.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">2. Découpe &amp; Reconnexion Auto :</strong> Suppression de zone par rectangle et recouture intelligente par sentiers.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">3. Détection de Demi-Tour Forcé :</strong> Détection temps réel des boucles involontaires lors du déplacement d'étapes.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">4. Outil Cap à 3 Visées + Auto-Pan :</strong> Visée azimutale avec défilement automatique vers les sommets lointains.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">5. Échelle Vraie 1:25 000 Écran :</strong> Étalonnage physique garantissant 4 cm mesurés à la règle = 1 km sur le terrain.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles (3232OT, etc.) sur toute la France.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800 sm:col-span-2"><strong class="text-white">7. Nommage Auto Normalisé à l'Export :</strong> Génération normalisée <code class="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">YYYYMMDDHHMM - Ville - Distance - D+XXX m</code> avec détection de la commune de départ.</div>
             </div>
           </div>
         </section>

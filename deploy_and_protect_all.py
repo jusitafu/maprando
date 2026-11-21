@@ -3,19 +3,84 @@ import shutil
 import re
 import subprocess
 import sys
+from bs4 import BeautifulSoup
 
 GIT_EXE = r'C:\Users\lesda\AppData\Local\GitHubDesktop\app-3.5.6\resources\app\git\cmd\git.exe'
 MAPRANDO_DIR = r'C:\Users\lesda\.gemini\antigravity\scratch\maprando'
 RANDOFINDER_DIR = r'C:\Users\lesda\.gemini\antigravity\scratch\randofinder_update'
+
+def validate_dom_architecture(html_path):
+    """
+    Vérification stricte de l'intégrité de l'architecture DOM d'index.html.
+    Empêche formellement tout déploiement si un conteneur racine ou une modale
+    se retrouve piégé dans une autre vue par omission d'une balise fermante </div>.
+    """
+    print("\n🏛️  Audit d'intégrité de l'arborescence DOM (Protection anti-imbrication)...")
+    with open(html_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    
+    soup = BeautifulSoup(content, "html.parser")
+    
+    # 1. Vérifier que tous les conteneurs racines existent
+    root_elements = [
+        "portal-view",
+        "main-map-app-container",
+        "guides-view",
+        "modal-mode-emploi",
+        "modal-cgu"
+    ]
+    
+    dom_errors = []
+    
+    for el_id in root_elements:
+        el = soup.find(id=el_id)
+        if not el:
+            dom_errors.append(f"Élément racine manquant introuvable : #{el_id}")
+            continue
+        
+        parent = el.parent
+        if not parent or parent.name != "body":
+            dom_errors.append(
+                f"Rupture de hiérarchie DOM critique : #{el_id} a pour parent <{parent.name if parent else 'None'} id='{parent.get('id', '')}'> au lieu de <body> !"
+            )
+            
+    # 2. Vérifier que guides-view ne contient pas de conteneurs tiers
+    guides_el = soup.find(id="guides-view")
+    if guides_el:
+        for forbidden in ["main-map-app-container", "modal-mode-emploi", "modal-cgu"]:
+            if guides_el.find(id=forbidden):
+                dom_errors.append(f"Pollution DOM critique : #{forbidden} est imbriqué à l'intérieur de #guides-view !")
+                
+    # 3. Vérifier la présence de la section comparative avec Hiker
+    comp_sec = soup.find(id="me-section-comparatif")
+    if not comp_sec:
+        dom_errors.append("Section comparative #me-section-comparatif manquante dans le mode d'emploi !")
+    elif "Hiker" not in comp_sec.text:
+        dom_errors.append("La mention de Hiker (HiiKER.com) est absente de la section comparative !")
+
+    if dom_errors:
+        print("\n❌ ÉCHEC CRITIQUE DE SÉCURITÉ DOM - DÉPLOIEMENT BLOQUÉ :")
+        for err in dom_errors:
+            print(f"  🚨 {err}")
+        print("\nCorrigez l'arborescence HTML avant de redéployer !")
+        sys.exit(1)
+        
+    print(f"✓ Intégrité DOM 100% validée : les 5 conteneurs racines sont tous enfants directs de <body>.")
+    print(f"✓ Section comparative vs 9 solutions (avec Hiker.com) validée dans #modal-mode-emploi.")
 
 def sync_and_protect(commit_msg):
     print("=" * 70)
     print("🛡️  LANCEUR DE DÉPLOIEMENT & PROTECTION STRICTE DU CODE 🛡️")
     print("=" * 70)
     
+    index_path = os.path.join(MAPRANDO_DIR, "index.html")
+    
+    # ÉTAPE 0 : Validation DOM stricte AVANT toute copie ou déploiement
+    validate_dom_architecture(index_path)
+
     # 1. Synchroniser index.html
-    shutil.copy2(os.path.join(MAPRANDO_DIR, "index.html"), os.path.join(RANDOFINDER_DIR, "index.html"))
-    print("✓ index.html synchronisé")
+    shutil.copy2(index_path, os.path.join(RANDOFINDER_DIR, "index.html"))
+    print("\n✓ index.html synchronisé")
 
     # 2. Synchroniser les dossiers complets
     for folder in ["images", "audio", "docs", "js"]:
@@ -44,7 +109,7 @@ def sync_and_protect(commit_msg):
 
     # 4. Audit d'intégrité strict : vérifier toutes les ressources référencées
     print("\n🔍 Audit de sécurité des ressources...")
-    with open(os.path.join(MAPRANDO_DIR, "index.html"), "r", encoding="utf-8") as f:
+    with open(index_path, "r", encoding="utf-8") as f:
         html_content = f.read()
 
     # Trouver toutes les références d'images, audio, pdfs
@@ -104,5 +169,5 @@ def sync_and_protect(commit_msg):
     print("=" * 70)
 
 if __name__ == "__main__":
-    msg = sys.argv[1] if len(sys.argv) > 1 else "fix(assets): restauration mosaïque accueil, synchronisation images et protection du code"
+    msg = sys.argv[1] if len(sys.argv) > 1 else "v180: Intégration comparative Hiker.com et protection architecturale DOM"
     sync_and_protect(msg)
