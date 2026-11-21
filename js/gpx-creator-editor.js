@@ -845,6 +845,13 @@ class GpxCreatorEditor {
     // Sauvegarder l'état au démarrage du mode édition
     this.editHistory = [];
 
+    // Charger et afficher les waypoints de la trace s'ils existent
+    this.editWaypoints = (this.editingTrack && this.editingTrack.waypoints && Array.isArray(this.editingTrack.waypoints))
+      ? JSON.parse(JSON.stringify(this.editingTrack.waypoints))
+      : [];
+    this.editWaypointMarkers = [];
+    this.renderEditWaypoints();
+
     // Générer les poignées de manipulation le long de la trace
     this.generateEditHandles();
 
@@ -867,10 +874,66 @@ class GpxCreatorEditor {
       hud.classList.remove('hidden');
     }
 
-    // Nettoyer les poignées et le mode découpe
+    // Nettoyer les poignées, l'ajout de waypoints et le mode découpe
+    this.stopAddWaypointMode();
     this.stopBoxCutMode();
     this.clearEditHandles();
     this.clearGapDashedLine();
+    this.clearEditWaypointMarkers();
+
+    // Re-synchroniser les waypoints sur le layer standalone pour affichage immédiat
+    if (this.editingTrack) {
+      this.editingTrack.waypoints = this.editWaypoints;
+      if (this.editingTrack.layer && this.editingTrack.waypointMarkers) {
+        this.editingTrack.waypointMarkers.forEach(m => {
+          this.editingTrack.layer.removeLayer(m);
+        });
+        this.editingTrack.waypointMarkers = [];
+
+        if (this.editWaypoints && this.editWaypoints.length > 0) {
+          const assignedColor = this.editingTrack.color || '#8b5cf6';
+          this.editWaypoints.forEach(wp => {
+            const wptName = wp.name || 'Point d\'intérêt';
+            const wptDesc = wp.desc || '';
+            const coordsText = `${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${(wp.ele != null && !isNaN(wp.ele)) ? ` • ${Math.round(wp.ele)} m` : ''}`;
+            const wptMarker = L.marker([wp.lat, wp.lon], {
+              icon: L.divIcon({
+                className: 'standalone-wpt-pin',
+                html: `
+                  <div style="position:relative; width:26px; height:26px;">
+                    <div style="background:${assignedColor}; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.45);">
+                      📍
+                    </div>
+                    <div class="standalone-wpt-label wp-poi-badge" style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:240px; overflow:hidden; text-overflow:ellipsis;">
+                      <span class="wpt-badge-name">${wptName}</span>
+                      <span class="wpt-badge-coords text-[9.5px] text-emerald-300 font-mono font-bold block mt-0.5" style="${this.mapManager?.showWaypointCoords ? 'display:block;' : 'display:none;'}">
+                        📍 ${coordsText}
+                      </span>
+                    </div>
+                  </div>
+                `,
+                iconSize: [26, 26],
+                iconAnchor: [13, 13]
+              })
+            }).bindPopup(`
+              <div style="font-family:sans-serif; text-align:left; min-width:140px; padding:3px;">
+                <div style="font-weight:900; color:${assignedColor}; font-size:13px; margin-bottom:2px;">📍 ${wptName}</div>
+                ${wptDesc ? `<div style="font-size:11px; color:#475569; margin-bottom:4px;">${wptDesc}</div>` : ''}
+                <div style="font-size:10px; color:#94a3b8;">${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${wp.ele ? ` • ${Math.round(wp.ele)} m` : ''}</div>
+              </div>
+            `);
+            this.editingTrack.layer.addLayer(wptMarker);
+            this.editingTrack.waypointMarkers.push(wptMarker);
+            if (this.mapManager && this.mapManager.showWaypointNames === false) {
+              setTimeout(() => {
+                const el = wptMarker.getElement();
+                if (el) el.style.display = 'none';
+              }, 0);
+            }
+          });
+        }
+      }
+    }
 
     // Fermer panneau flottant
     if (this.editFloatingCard) {
@@ -1046,8 +1109,14 @@ class GpxCreatorEditor {
       </div>
 
       <div class="text-xs text-slate-300 mb-2.5 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60 flex-wrap">
-        <span id="gpx-editor-tip" class="leading-tight">👉 <strong>Faites glisser une poignée</strong> ou utilisez <strong>Supprimer zone</strong>.</span>
-        <div class="flex items-center gap-1.5 ml-auto">
+        <span id="gpx-editor-tip" class="leading-tight">👉 <strong>Faites glisser une poignée</strong>, ajoutez un <strong>Waypoint</strong> ou <strong>Supprimer zone</strong>.</span>
+        <div class="flex items-center gap-1.5 ml-auto flex-wrap">
+          <button id="btn-add-edit-waypoint" type="button" class="px-2.5 py-1 bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-600/80 text-indigo-200 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer" title="Ajouter un waypoint (étape/POI) en cliquant sur la trace">
+            <span>📍</span> <span>+ Waypoint</span>
+          </button>
+          <button id="btn-toggle-edit-wp-coords" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${(this.showWaypointCoords || this.mapManager?.showWaypointCoords) ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Afficher ou masquer les coordonnées GPS des waypoints">
+            <span>🧭</span> <span>Coordonnées : ${(this.showWaypointCoords || this.mapManager?.showWaypointCoords) ? 'OUI' : 'NON'}</span>
+          </button>
           <button id="btn-box-cut-track" type="button" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/80 text-rose-300 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer" title="Sélectionner une portion de trace à supprimer avec un rectangle (clic maintenu + glisser)">
             <span>✂️</span> <span>Supprimer zone</span>
           </button>
@@ -1106,6 +1175,8 @@ class GpxCreatorEditor {
 
     // Événements du panneau
     document.getElementById('btn-close-gpx-editor')?.addEventListener('click', () => this.stopEditMode());
+    document.getElementById('btn-add-edit-waypoint')?.addEventListener('click', () => this.toggleAddWaypointMode());
+    document.getElementById('btn-toggle-edit-wp-coords')?.addEventListener('click', () => this.toggleEditWaypointCoords());
     document.getElementById('btn-box-cut-track')?.addEventListener('click', () => this.toggleBoxCutMode());
     document.getElementById('btn-reconnect-split-track')?.addEventListener('click', () => this.reconnectCutParts());
     document.getElementById('btn-toggle-edit-autoroute')?.addEventListener('click', () => {
@@ -1130,6 +1201,7 @@ class GpxCreatorEditor {
   }
 
   startBoxCutMode() {
+    if (this._isAddWaypointMode) this.stopAddWaypointMode();
     this._isBoxCutMode = true;
     const btn = document.getElementById('btn-box-cut-track');
     if (btn) {
@@ -1448,7 +1520,10 @@ class GpxCreatorEditor {
   saveEditHistorySnapshot() {
     if (!this.editHistory) this.editHistory = [];
     if (!this.currentEditCoords) return;
-    this.editHistory.push(JSON.parse(JSON.stringify(this.currentEditCoords)));
+    this.editHistory.push({
+      coords: JSON.parse(JSON.stringify(this.currentEditCoords)),
+      waypoints: JSON.parse(JSON.stringify(this.editWaypoints || []))
+    });
     if (this.editHistory.length > 30) this.editHistory.shift();
   }
 
@@ -1457,8 +1532,16 @@ class GpxCreatorEditor {
       this.showUndoFeedback("Aucune modification antérieure à annuler");
       return;
     }
-    const prevCoords = this.editHistory.pop();
-    this.currentEditCoords = prevCoords;
+    const snap = this.editHistory.pop();
+    if (Array.isArray(snap)) {
+      this.currentEditCoords = snap;
+    } else if (snap && snap.coords) {
+      this.currentEditCoords = snap.coords;
+      if (snap.waypoints) {
+        this.editWaypoints = snap.waypoints;
+        this.renderEditWaypoints();
+      }
+    }
     this.clearGapDashedLine();
     this.updateEditedTrackDisplay();
 
@@ -1471,41 +1554,312 @@ class GpxCreatorEditor {
     this.showUndoFeedback("Modification annulée (Ctrl+Z)");
   }
 
-  resetEditTrack() {
-    if (!this.editingTrack || !this.originalCoords || this.originalCoords.length === 0) return;
-    this.saveEditHistorySnapshot();
-    this.clearGapDashedLine();
-    this.currentEditCoords = JSON.parse(JSON.stringify(this.originalCoords));
-    const latlngs = this.currentEditCoords.map(c => [c[0], c[1]]);
-    if (this.editingTrack.polyline) {
-      this.editingTrack.polyline.setLatLngs(latlngs);
-    }
-    this.generateEditHandles();
-    const stats = this.computeTrackStats(this.currentEditCoords);
-    this.editingTrack.distance = stats.distanceKm.toFixed(1);
-    this.editingTrack.elevationGain = stats.elevationGain;
+  // =========================================================================
+  // GESTION DES WAYPOINTS EN MODE ÉDITION
+  // =========================================================================
 
-    const dEl = document.getElementById('gpx-edit-dist');
-    if (dEl) dEl.innerText = `${stats.distanceKm.toFixed(2)} km`;
-    const eEl = document.getElementById('gpx-edit-ele');
-    if (eEl) eEl.innerText = `+${stats.elevationGain} m`;
-    this.showUndoFeedback("Tracé original rétabli (Ctrl+Z pour annuler)");
+  clearEditWaypointMarkers() {
+    if (this.editWaypointMarkers && Array.isArray(this.editWaypointMarkers)) {
+      this.editWaypointMarkers.forEach(m => {
+        if (this.map) this.map.removeLayer(m);
+      });
+    }
+    this.editWaypointMarkers = [];
   }
 
-  showUndoFeedback(msg) {
-    let toast = document.getElementById('gpx-undo-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'gpx-undo-toast';
-      toast.className = 'fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white border border-sky-400 px-4 py-2 rounded-xl text-xs font-bold shadow-2xl backdrop-blur-md transition-opacity duration-200 pointer-events-none flex items-center gap-2';
-      document.body.appendChild(toast);
+  renderEditWaypoints() {
+    this.clearEditWaypointMarkers();
+    if (!this.map || !this.editWaypoints || !Array.isArray(this.editWaypoints)) return;
+    this.editWaypoints.forEach((wp, idx) => {
+      this.renderSingleEditWaypoint(wp, idx);
+    });
+  }
+
+  renderSingleEditWaypoint(wp, idx) {
+    if (!this.map) return;
+    const wptName = wp.name || `Waypoint ${idx + 1}`;
+    const coordsText = `${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${(wp.ele != null && !isNaN(wp.ele)) ? ` • ${Math.round(wp.ele)} m` : ''}`;
+    const isCoordsVisible = this.showWaypointCoords || this.mapManager?.showWaypointCoords;
+
+    const marker = L.marker([wp.lat, wp.lon], {
+      icon: L.divIcon({
+        className: 'edit-wpt-pin',
+        html: `
+          <div style="position:relative; width:28px; height:28px; cursor:pointer;">
+            <div style="background:#10b981; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; border:2.5px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.5);">
+              📍
+            </div>
+            <div class="edit-wpt-label wp-poi-badge" style="position:absolute; left:32px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.95); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; border:1px solid #10b981; box-shadow:0 2px 8px rgba(0,0,0,0.4); max-width:240px; overflow:hidden; text-overflow:ellipsis;">
+              <span class="wpt-badge-name">${wptName}</span>
+              <span class="wpt-badge-coords text-[9.5px] text-emerald-300 font-mono font-bold block mt-0.5" style="${isCoordsVisible ? 'display:block;' : 'display:none;'}">
+                📍 ${coordsText}
+              </span>
+            </div>
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      })
+    });
+
+    marker.bindPopup(`
+      <div style="font-family:sans-serif; text-align:left; min-width:160px; padding:4px;">
+        <div style="font-weight:900; color:#10b981; font-size:13px; margin-bottom:3px;">📍 ${wptName}</div>
+        <div style="font-size:10px; color:#64748b; font-family:monospace; margin-bottom:8px;">${coordsText}</div>
+        <div style="display:flex; gap:6px;">
+          <button type="button" onclick="window.GpxCreatorEditorInstance.deleteEditWaypoint(${idx})" style="background:#e11d48; color:white; border:none; padding:4px 9px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">
+            🗑️ Supprimer ce waypoint
+          </button>
+        </div>
+      </div>
+    `);
+
+    marker.addTo(this.map);
+    this.editWaypointMarkers.push(marker);
+  }
+
+  deleteEditWaypoint(idx) {
+    if (!this.editWaypoints || !this.editWaypoints[idx]) return;
+    this.saveEditHistorySnapshot();
+    const removed = this.editWaypoints.splice(idx, 1);
+    this.renderEditWaypoints();
+    this.showUndoFeedback(`Waypoint « ${removed[0]?.name || ''} » supprimé`);
+  }
+
+  syncEditWaypointsCoordsVisibility() {
+    const isCoordsVisible = this.showWaypointCoords || this.mapManager?.showWaypointCoords;
+    document.querySelectorAll('.edit-wpt-label .wpt-badge-coords').forEach(el => {
+      el.style.display = isCoordsVisible ? 'block' : 'none';
+    });
+    const btn = document.getElementById('btn-toggle-edit-wp-coords');
+    if (btn) {
+      btn.className = `px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${isCoordsVisible ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`;
+      btn.innerHTML = `<span>🧭</span> <span>Coordonnées : ${isCoordsVisible ? 'OUI' : 'NON'}</span>`;
     }
-    toast.innerHTML = `<span class="text-amber-400 text-sm">↶</span> <span>${msg}</span>`;
-    toast.style.opacity = '1';
-    if (this._undoToastTimer) clearTimeout(this._undoToastTimer);
-    this._undoToastTimer = setTimeout(() => {
-      if (toast) toast.style.opacity = '0';
-    }, 1600);
+  }
+
+  toggleEditWaypointCoords() {
+    if (typeof this.mapManager?.toggleWaypointCoords === 'function') {
+      this.mapManager.toggleWaypointCoords();
+    } else {
+      this.showWaypointCoords = !this.showWaypointCoords;
+      this.syncEditWaypointsCoordsVisibility();
+    }
+  }
+
+  toggleAddWaypointMode() {
+    if (this._isAddWaypointMode) {
+      this.stopAddWaypointMode();
+    } else {
+      this.startAddWaypointMode();
+    }
+  }
+
+  startAddWaypointMode() {
+    if (this._isBoxCutMode) this.stopBoxCutMode();
+    this._isAddWaypointMode = true;
+
+    const btn = document.getElementById('btn-add-edit-waypoint');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-emerald-600 text-white border border-emerald-400 ring-2 ring-emerald-400 rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer';
+      btn.innerHTML = '<span>✕</span> <span>Annuler ajout</span>';
+    }
+
+    const tip = document.getElementById('gpx-editor-tip');
+    if (tip) {
+      tip.innerHTML = '📍 <strong>Cliquez sur la trace</strong> à l\'endroit où vous souhaitez ajouter le waypoint.';
+    }
+
+    const container = this.map ? this.map.getContainer() : null;
+    if (container) container.style.cursor = 'crosshair';
+
+    this._onAddWpMapClick = (e) => {
+      this.handleWaypointMapClick(e.latlng);
+    };
+
+    if (this.map) {
+      this.map.on('click', this._onAddWpMapClick);
+    }
+    if (this.editingTrack && this.editingTrack.hitboxPolyline) {
+      this.editingTrack.hitboxPolyline.on('click', this._onAddWpMapClick);
+    }
+    if (this.editingTrack && this.editingTrack.polyline) {
+      this.editingTrack.polyline.on('click', this._onAddWpMapClick);
+    }
+  }
+
+  stopAddWaypointMode() {
+    this._isAddWaypointMode = false;
+
+    const btn = document.getElementById('btn-add-edit-waypoint');
+    if (btn) {
+      btn.className = 'px-2.5 py-1 bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-600/80 text-indigo-200 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer';
+      btn.innerHTML = '<span>📍</span> <span>+ Waypoint</span>';
+    }
+
+    const tip = document.getElementById('gpx-editor-tip');
+    if (tip) {
+      tip.innerHTML = '👉 <strong>Faites glisser une poignée</strong>, ajoutez un <strong>Waypoint</strong> ou <strong>Supprimer zone</strong>.';
+    }
+
+    const container = this.map ? this.map.getContainer() : null;
+    if (container) container.style.cursor = '';
+
+    if (this.map && this._onAddWpMapClick) {
+      this.map.off('click', this._onAddWpMapClick);
+    }
+    if (this.editingTrack && this.editingTrack.hitboxPolyline && this._onAddWpMapClick) {
+      this.editingTrack.hitboxPolyline.off('click', this._onAddWpMapClick);
+    }
+    if (this.editingTrack && this.editingTrack.polyline && this._onAddWpMapClick) {
+      this.editingTrack.polyline.off('click', this._onAddWpMapClick);
+    }
+    this._onAddWpMapClick = null;
+  }
+
+  findNearestTrackPoint(latlng) {
+    if (!this.currentEditCoords || this.currentEditCoords.length === 0) {
+      return { lat: latlng.lat, lng: latlng.lng, ele: 0, index: 0 };
+    }
+    let bestDist = Infinity;
+    let bestIdx = 0;
+    for (let i = 0; i < this.currentEditCoords.length; i++) {
+      const pt = this.currentEditCoords[i];
+      const dLat = pt[0] - latlng.lat;
+      const dLng = pt[1] - latlng.lng;
+      const distSq = dLat * dLat + dLng * dLng;
+      if (distSq < bestDist) {
+        bestDist = distSq;
+        bestIdx = i;
+      }
+    }
+    const best = this.currentEditCoords[bestIdx];
+    return {
+      lat: best[0],
+      lng: best[1],
+      ele: best[2] || 0,
+      index: bestIdx
+    };
+  }
+
+  handleWaypointMapClick(latlng) {
+    if (!this._isAddWaypointMode) return;
+    const snapped = this.findNearestTrackPoint(latlng);
+    this.promptWaypointLabel(snapped);
+  }
+
+  promptWaypointLabel(point) {
+    const existingModal = document.getElementById('modal-add-waypoint-prompt');
+    if (existingModal) existingModal.remove();
+
+    const eleText = (point.ele != null && !isNaN(point.ele) && point.ele > 0) ? ` • Alt. ${Math.round(point.ele)} m` : '';
+    const modal = document.createElement('div');
+    modal.id = 'modal-add-waypoint-prompt';
+    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in';
+    modal.innerHTML = `
+      <div class="bg-slate-900 border-2 border-emerald-500/80 rounded-2xl shadow-2xl p-5 max-w-md w-full text-white relative">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📍</span>
+            <h3 class="text-base sm:text-lg font-black text-emerald-400">Ajouter un Waypoint sur la trace</h3>
+          </div>
+          <button id="btn-close-wp-prompt" type="button" class="text-slate-400 hover:text-white text-xl font-bold p-1 rounded-lg hover:bg-slate-800 cursor-pointer">✕</button>
+        </div>
+
+        <p class="text-xs text-slate-300 mb-2">
+          Point sélectionné sur la trace :
+          <span class="font-mono text-emerald-300 font-bold ml-1">${point.lat.toFixed(5)}°, ${point.lng.toFixed(5)}°${eleText}</span>
+        </p>
+
+        <label class="block text-xs font-bold text-slate-200 mb-1.5" for="input-wp-name">
+          Libellé / Nom du Waypoint :
+        </label>
+        <input id="input-wp-name" type="text" placeholder="Ex: Sommet du Coudon, Refuge, Source..." maxlength="60"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-400 text-sm font-semibold focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 mb-3" />
+
+        <!-- Suggestions rapides -->
+        <div class="text-[11px] text-slate-400 mb-1.5 font-semibold">Suggestions rapides :</div>
+        <div class="flex flex-wrap gap-1.5 mb-4">
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="🏔️ Sommet">🏔️ Sommet</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="🏕️ Refuge">🏕️ Refuge</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="💧 Source">💧 Source</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="🧭 Col">🧭 Col</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="👁️ Belvédère">👁️ Belvédère</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="🅿️ Parking">🅿️ Parking</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="🍴 Pique-nique">🍴 Pique-nique</button>
+          <button type="button" class="wp-chip px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-950/80 hover:text-emerald-300 border border-slate-700 text-xs text-slate-300 font-medium transition cursor-pointer" data-val="⚠️ Danger">⚠️ Danger</button>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+          <button id="btn-cancel-wp-prompt" type="button" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs sm:text-sm font-bold transition cursor-pointer">
+            Annuler
+          </button>
+          <button id="btn-submit-wp-prompt" type="button" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-black shadow-lg transition cursor-pointer">
+            Valider le Waypoint
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const input = modal.querySelector('#input-wp-name');
+    if (input) {
+      setTimeout(() => input.focus(), 50);
+    }
+
+    modal.querySelectorAll('.wp-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (input) {
+          input.value = chip.getAttribute('data-val') || '';
+          input.focus();
+        }
+      });
+    });
+
+    const submit = () => {
+      const val = (input?.value || '').trim();
+      const finalName = val || `Waypoint ${(this.editWaypoints?.length || 0) + 1}`;
+      this.saveEditHistorySnapshot();
+
+      const newWp = {
+        lat: Number(point.lat),
+        lon: Number(point.lng),
+        ele: Number(point.ele || 0),
+        name: finalName,
+        desc: ''
+      };
+
+      if (!this.editWaypoints) this.editWaypoints = [];
+      this.editWaypoints.push(newWp);
+      if (this.editingTrack) {
+        this.editingTrack.waypoints = this.editWaypoints;
+      }
+
+      this.renderEditWaypoints();
+      this.showUndoFeedback(`📍 Waypoint « ${finalName} » ajouté sur la trace !`);
+      modal.remove();
+      this.stopAddWaypointMode();
+    };
+
+    modal.querySelector('#btn-submit-wp-prompt')?.addEventListener('click', submit);
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submit();
+      } else if (e.key === 'Escape') {
+        modal.remove();
+        this.stopAddWaypointMode();
+      }
+    });
+    modal.querySelector('#btn-close-wp-prompt')?.addEventListener('click', () => {
+      modal.remove();
+      this.stopAddWaypointMode();
+    });
+    modal.querySelector('#btn-cancel-wp-prompt')?.addEventListener('click', () => {
+      modal.remove();
+      this.stopAddWaypointMode();
+    });
   }
 
   async exportEditedGpx() {
@@ -1516,7 +1870,11 @@ class GpxCreatorEditor {
     const chosenName = await this.promptGpxFilename(defaultName, 'violet');
     if (!chosenName) return;
 
-    const gpx = this.generateGpxXml(chosenName, this.currentEditCoords, []);
+    if (this.editingTrack) {
+      this.editingTrack.waypoints = this.editWaypoints;
+    }
+
+    const gpx = this.generateGpxXml(chosenName, this.currentEditCoords, this.editWaypoints || []);
     this.downloadGpxFile(`${chosenName}.gpx`, gpx);
     this.showUndoFeedback(`Trace modifiée exportée : ${chosenName}.gpx`);
     this.stopEditMode();
@@ -1918,14 +2276,15 @@ class GpxCreatorEditor {
     let wptXml = '';
     if (waypoints && waypoints.length > 0) {
       wptXml = waypoints.map((wp, idx) => {
-        const letter = String.fromCharCode(65 + idx);
+        const letter = String.fromCharCode(65 + (idx % 26));
         const role = idx === 0 ? 'Départ' : (idx === waypoints.length - 1 && waypoints.length > 1 ? 'Arrivée' : 'Étape');
-        const defaultName = `Point ${letter}${role ? ` (${role})` : ''}`;
-        const finalName = (wp.customName && wp.customName.trim()) ? wp.customName.trim() : defaultName;
+        const defaultName = (wp.name && wp.name.trim()) ? wp.name.trim() : `Point ${letter}${role ? ` (${role})` : ''}`;
+        const finalName = (wp.name && wp.name.trim()) ? wp.name.trim() : ((wp.customName && wp.customName.trim()) ? wp.customName.trim() : defaultName);
         const safeName = this.escapeXml(finalName);
-        const safeDesc = this.escapeXml(wp.customName ? `Point ${letter} - ${role}` : role);
+        const safeDesc = this.escapeXml(wp.desc || (wp.customName ? `Point ${letter} - ${role}` : (wp.name ? wp.name : role)));
+        const eleXml = (wp.ele != null && !isNaN(wp.ele)) ? `\n    <ele>${Number(wp.ele).toFixed(1)}</ele>` : '';
         return `
-  <wpt lat="${wp.lat.toFixed(6)}" lon="${wp.lon.toFixed(6)}">
+  <wpt lat="${wp.lat.toFixed(6)}" lon="${wp.lon.toFixed(6)}">${eleXml}
     <name>${safeName}</name>
     <desc>${safeDesc}</desc>
     <sym>Waypoint</sym>

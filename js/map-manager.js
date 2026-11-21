@@ -94,6 +94,7 @@ class MapManager {
     this.selectionHaloLayer = null;
 
     this.trackLayer = null;
+    this.showWaypointCoords = false;
 
     this.activeTrackPolyline = null;
 
@@ -4837,6 +4838,33 @@ class MapManager {
     });
   }
 
+  /**
+   * Bascule d'affichage des coordonnées GPS des waypoints
+   * Affiche ou masque les coordonnées (lat, lon, ele) dans le badge de chaque waypoint
+   */
+  toggleWaypointCoords() {
+    this.showWaypointCoords = !this.showWaypointCoords;
+    document.body.classList.toggle('show-wpt-coords', this.showWaypointCoords);
+
+    const btn = document.getElementById('btn-toggle-standalone-wp-coords');
+    if (btn) {
+      btn.className = `px-3 py-2 rounded-xl ${this.showWaypointCoords ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
+      btn.innerHTML = `<span>🧭</span> <span>${this.showWaypointCoords ? 'Coordonnées WP : OUI' : 'Coordonnées WP : NON'}</span>`;
+      btn.title = this.showWaypointCoords ? 'Masquer les coordonnées GPS des waypoints' : 'Afficher les coordonnées GPS des waypoints';
+    }
+
+    document.querySelectorAll('.wpt-badge-coords').forEach(el => {
+      el.style.display = this.showWaypointCoords ? 'block' : 'none';
+    });
+
+    if (window.GpxCreatorEditorInstance) {
+      window.GpxCreatorEditorInstance.showWaypointCoords = this.showWaypointCoords;
+      if (typeof window.GpxCreatorEditorInstance.syncEditWaypointsCoordsVisibility === 'function') {
+        window.GpxCreatorEditorInstance.syncEditWaypointsCoordsVisibility();
+      }
+    }
+  }
+
 
 
   // =========================================================================
@@ -6631,6 +6659,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       gpxData.waypoints.forEach(wp => {
         const wptName = wp.name || 'Point d\'intérêt';
         const wptDesc = wp.desc || '';
+        const coordsText = `${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${(wp.ele != null && !isNaN(wp.ele)) ? ` • ${Math.round(wp.ele)} m` : ''}`;
         const wptMarker = L.marker([wp.lat, wp.lon], {
           icon: L.divIcon({
             className: 'standalone-wpt-pin',
@@ -6639,8 +6668,11 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
                 <div style="background:${assignedColor}; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.45);">
                   📍
                 </div>
-                <div class="standalone-wpt-label wp-poi-badge" style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:180px; overflow:hidden; text-overflow:ellipsis;">
-                  ${wptName}
+                <div class="standalone-wpt-label wp-poi-badge" style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:240px; overflow:hidden; text-overflow:ellipsis;">
+                  <span class="wpt-badge-name">${wptName}</span>
+                  <span class="wpt-badge-coords text-[9.5px] text-emerald-300 font-mono font-bold block mt-0.5" style="${this.showWaypointCoords ? 'display:block;' : 'display:none;'}">
+                    📍 ${coordsText}
+                  </span>
                 </div>
               </div>
             `,
@@ -6680,6 +6712,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       ibp: (gpxData.ibp !== undefined) ? gpxData.ibp : null,
       color: assignedColor,
       points: pts,
+      waypoints: (gpxData.waypoints && Array.isArray(gpxData.waypoints)) ? gpxData.waypoints : [],
       waypointMarkers: waypointMarkers,
       startPoint: gpxData.startPoint || { lat: startPt[0], lon: startPt[1] },
       endPoint: gpxData.endPoint || { lat: endPt[0], lon: endPt[1] },
@@ -7105,6 +7138,11 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           <!-- Bouton Masquer/Afficher les Noms des points -->
           <button id="btn-toggle-standalone-wp-names" type="button" class="px-3 py-2 rounded-xl ${this.showWaypointNames !== false ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointNames()" title="Afficher ou masquer les noms des points sur la carte">
             <span>🏷️</span> <span>${this.showWaypointNames !== false ? 'Noms : OUI' : 'Noms : NON'}</span>
+          </button>
+
+          <!-- Bouton Bascule Coordonnées des Waypoints -->
+          <button id="btn-toggle-standalone-wp-coords" type="button" class="px-3 py-2 rounded-xl ${this.showWaypointCoords ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointCoords()" title="Afficher ou masquer les coordonnées GPS des waypoints">
+            <span>🧭</span> <span>${this.showWaypointCoords ? 'Coordonnées WP : OUI' : 'Coordonnées WP : NON'}</span>
           </button>
 
           <!-- Bouton Colorer les Pentes -->
