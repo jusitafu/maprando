@@ -11533,3 +11533,35 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(initScrollElevator, 50);
 }
+
+// =========================================================================
+// GESTION DES POPUPS CHOIX DE MESSAGERIE (GMAIL & OUTLOOK) - MAINTIEN AU CLIC
+// =========================================================================
+
+window.togglePortalMailPopup = function(force) {
+  const popup = document.getElementById('portal-mail-popup');
+  if (!popup) return;
+  const isCurrentlyOpen = popup.classList.contains('is-open');
+  const shouldOpen = (typeof force === 'boolean') ? force : !isCurrentlyOpen;
+  popup.classList.toggle('is-open', shouldOpen);
+};
+
+window.toggleModalMailPopup = function(force) {
+  const popup = document.getElementById('modal-mail-popup');
+  if (!popup) return;
+  const isCurrentlyOpen = popup.classList.contains('is-open');
+  const shouldOpen = (typeof force === 'boolean') ? force : !isCurrentlyOpen;
+  popup.classList.toggle('is-open', shouldOpen);
+};
+
+document.addEventListener('click', (e) => {
+  const portalWrapper = document.getElementById('portal-mail-wrapper');
+  if (portalWrapper && !portalWrapper.contains(e.target)) {
+    window.togglePortalMailPopup(false);
+  }
+  const modalWrapper = document.getElementById('modal-mail-wrapper');
+  if (modalWrapper && !modalWrapper.contains(e.target)) {
+    window.toggleModalMailPopup(false);
+  }
+});
+
