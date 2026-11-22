@@ -1458,8 +1458,8 @@ html_content = f"""<!DOCTYPE html>
           </tr>
           <tr>
             <td style="font-weight: 900; color: #0284c7; text-align: left;">IBP Index</td>
-            <td style="font-weight: 700; text-align: left;">Indice de Bicyclette et Pédestre</td>
-            <td style="text-align: left;">Score scientifique objectif (de 0 à >200) mesurant la difficulté physique d'un parcours selon la distance et les pentes.</td>
+            <td style="font-weight: 700; text-align: left;">Intelligent Benchmark Prediction<br><span style="font-size: 5.8pt; color: #64748b; font-weight: 400;">(Origine Espagne : Index BTT Prediction - VTT, standardisé Hiking HKG pour la marche)</span></td>
+            <td style="text-align: left;">Indice officiel d'effort physique FFRandonnée (score neutre de 0 à plus de 200). Évalue l'effort intrinsèque (distance, dénivelé cumulé et pourcentages de pente) indépendamment de la météo et du marcheur.</td>
           </tr>
           <tr>
             <td style="font-weight: 900; color: #0284c7; text-align: left;">WGS84</td>

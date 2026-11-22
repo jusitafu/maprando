@@ -95,6 +95,7 @@ class MapManager {
 
     this.trackLayer = null;
     this.showWaypointCoords = false;
+    this.showWaypointNames = false;
 
     this.activeTrackPolyline = null;
 
@@ -4789,7 +4790,7 @@ class MapManager {
    * Quand Noms = NON : masque tous les repères et noms de points pour n'avoir QUE la trace seule
    */
   toggleWaypointNames() {
-    this.showWaypointNames = (this.showWaypointNames === false);
+    this.showWaypointNames = !this.showWaypointNames;
     const isHidden = !this.showWaypointNames;
     document.body.classList.toggle('hide-wp-labels', isHidden);
     document.getElementById('map-view')?.classList.toggle('hide-wp-labels', isHidden);
@@ -4799,7 +4800,7 @@ class MapManager {
 
     const standaloneBtn = document.getElementById('btn-toggle-standalone-wp-names');
     if (standaloneBtn) {
-      standaloneBtn.className = `px-3 py-2 rounded-xl ${this.showWaypointNames ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
+      standaloneBtn.className = `px-2.5 py-1.5 rounded-xl ${this.showWaypointNames ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer`;
       standaloneBtn.innerHTML = `<span>🏷️</span> <span>${this.showWaypointNames ? 'Noms : OUI' : 'Noms : NON'}</span>`;
       standaloneBtn.title = this.showWaypointNames ? 'Afficher les points et noms d\'étapes' : 'Masquer les points (trace seule)';
     }
@@ -6848,13 +6849,26 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       this.clearStandaloneGpxTrack();
 
     } else {
-
       this.standaloneHike = this.standaloneTracks[this.standaloneTracks.length - 1];
-
       this.selectedHike = this.standaloneHike;
 
-      this.showStandaloneGpxHud();
+      // Au chargement d'une trace, réinitialiser la position pour centrer parfaitement la fenêtre
+      const hudEl = document.getElementById('standalone-gpx-hud');
+      if (hudEl) {
+        delete hudEl.dataset.userMoved;
+        delete hudEl.dataset.userLeft;
+        delete hudEl.dataset.userTop;
+        hudEl.style.removeProperty('left');
+        hudEl.style.removeProperty('right');
+        hudEl.style.removeProperty('top');
+        hudEl.style.removeProperty('bottom');
+        hudEl.style.removeProperty('transform');
+        hudEl.style.removeProperty('margin-left');
+        hudEl.style.removeProperty('margin-right');
+      }
 
+      this.syncWaypointVisibility();
+      this.showStandaloneGpxHud();
     }
 
   }
@@ -7017,12 +7031,23 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       return;
     }
 
-    // MODE NORMAL AGRANDI (Conforme aux standards ergonomiques 16px)
+    // MODE NORMAL AGRANDI (Centrage automatique garanti en haut de carte)
     const isMoved = hud.dataset.userMoved === 'true';
     if (!isMoved) {
-      hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[96vw] overflow-hidden';
+      hud.className = 'absolute top-4 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[94vw] sm:max-w-3xl overflow-hidden';
+      hud.style.removeProperty('transform');
+      hud.style.setProperty('left', '0', 'important');
+      hud.style.setProperty('right', '0', 'important');
+      hud.style.setProperty('margin-left', 'auto', 'important');
+      hud.style.setProperty('margin-right', 'auto', 'important');
+      hud.style.setProperty('top', '16px', 'important');
+      hud.style.setProperty('width', 'fit-content', 'important');
     } else {
-      hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[96vw] overflow-hidden';
+      hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[94vw] sm:max-w-3xl overflow-hidden';
+      hud.style.removeProperty('margin-left');
+      hud.style.removeProperty('margin-right');
+      hud.style.removeProperty('right');
+      hud.style.setProperty('transform', 'none', 'important');
       if (hud.dataset.userLeft) hud.style.setProperty('left', `${hud.dataset.userLeft}px`, 'important');
       if (hud.dataset.userTop) hud.style.setProperty('top', `${hud.dataset.userTop}px`, 'important');
     }
@@ -7140,9 +7165,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           </button>
         ` : ''}
 
-        <!-- Bouton Masquer/Afficher les Noms des points -->
-        <button id="btn-toggle-standalone-wp-names" type="button" class="px-2.5 py-1.5 rounded-xl ${this.showWaypointNames !== false ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointNames()" title="Afficher ou masquer les noms des points sur la carte">
-          <span>🏷️</span> <span>${this.showWaypointNames !== false ? 'Noms : OUI' : 'Noms : NON'}</span>
+        <!-- Bouton Masquer/Afficher les Noms des points (Par défaut : NON) -->
+        <button id="btn-toggle-standalone-wp-names" type="button" class="px-2.5 py-1.5 rounded-xl ${this.showWaypointNames === true ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointNames()" title="Afficher ou masquer les noms des points sur la carte">
+          <span>🏷️</span> <span>${this.showWaypointNames === true ? 'Noms : OUI' : 'Noms : NON'}</span>
         </button>
 
         <!-- Bouton Bascule Coordonnées des Waypoints -->
