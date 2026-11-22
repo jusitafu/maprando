@@ -11125,12 +11125,26 @@ class AppController {
   }
 
   toggleMinimizePreview() {
+    const panel = document.getElementById('hike-preview-panel');
     const body = document.getElementById('preview-body-content');
     const btn = document.getElementById('btn-minimize-preview');
     if (!body || !btn) return;
     const isMinimized = body.classList.toggle('hidden');
     btn.innerHTML = isMinimized ? '&#x25A1;' : '&minus;';
     btn.title = isMinimized ? 'Agrandir le profil altimétrique' : 'Réduire le profil altimétrique';
+    if (panel) {
+      if (isMinimized) {
+        panel.classList.add('is-minimized');
+        delete panel.dataset.userResized;
+        panel.style.removeProperty('height');
+        panel.style.removeProperty('min-height');
+        panel.style.setProperty('height', 'auto', 'important');
+        panel.style.setProperty('min-height', '0px', 'important');
+      } else {
+        panel.classList.remove('is-minimized');
+        panel.style.removeProperty('height');
+      }
+    }
     if (!isMinimized && window.ElevationProfileInstance) {
       window.ElevationProfileInstance.draw();
     }

@@ -151,6 +151,10 @@ class GpxCreatorEditor {
     }
 
     // Retirer polyline et marqueurs temporaires
+    this.clearReturnPreviews();
+    this.isLoopClosed = false;
+    this.loopReturnCoords = [];
+    this.loopReturnMode = null;
     if (this.createPolyline && this.map) {
       this.map.removeLayer(this.createPolyline);
       this.createPolyline = null;
@@ -317,6 +321,21 @@ class GpxCreatorEditor {
       const isMin = body.classList.toggle('hidden');
       btn.innerHTML = isMin ? '&#x25A1;' : '&minus;';
       btn.title = isMin ? 'Agrandir la fenêtre' : 'Réduire la fenêtre';
+      if (this.createFloatingCard) {
+        if (isMin) {
+          delete this.createFloatingCard.dataset.userResized;
+          this.createFloatingCard.classList.add('is-minimized');
+          this.createFloatingCard.style.removeProperty('height');
+          this.createFloatingCard.style.removeProperty('min-height');
+          this.createFloatingCard.style.setProperty('height', 'auto', 'important');
+          this.createFloatingCard.style.setProperty('min-height', '0px', 'important');
+          this.createFloatingCard.style.setProperty('width', 'fit-content', 'important');
+        } else {
+          this.createFloatingCard.classList.remove('is-minimized');
+          this.createFloatingCard.style.removeProperty('height');
+          this.createFloatingCard.style.removeProperty('width');
+        }
+      }
     });
     document.getElementById('btn-toggle-create-autoroute')?.addEventListener('click', () => {
       this.createAutoRoute = !this.createAutoRoute;
@@ -342,10 +361,7 @@ class GpxCreatorEditor {
     }
 
     document.getElementById('btn-toggle-create-names')?.addEventListener('click', () => this.toggleWaypointNames());
-    document.getElementById('btn-loop-back-to-start')?.addEventListener('click', () => {
-      const panel = document.getElementById('gpx-return-choices-panel');
-      if (panel) panel.classList.toggle('hidden');
-    });
+    document.getElementById('btn-loop-back-to-start')?.addEventListener('click', () => this.previewReturnRoutes());
     document.getElementById('btn-return-direct')?.addEventListener('click', () => this.closeLoopToStart('direct'));
     document.getElementById('btn-return-scenic')?.addEventListener('click', () => this.closeLoopToStart('scenic'));
     document.getElementById('btn-undo-create-point')?.addEventListener('click', () => this.undoLastCreateOperation());
@@ -389,35 +405,42 @@ class GpxCreatorEditor {
 
   saveCreateHistorySnapshot() {
     if (!this.createHistory) this.createHistory = [];
-    const snapshot = this.createWaypoints.map(w => ({
-      lat: w.lat,
-      lon: w.lon,
-      customName: w.customName || ''
-    }));
+    const snapshot = {
+      isLoopClosed: !!this.isLoopClosed,
+      loopReturnMode: this.loopReturnMode,
+      waypoints: this.createWaypoints.map(w => ({
+        lat: w.lat,
+        lon: w.lon,
+        customName: w.customName || '',
+        isLoopClosed: !!w.isLoopClosed
+      }))
+    };
     this.createHistory.push(snapshot);
     if (this.createHistory.length > 30) this.createHistory.shift();
   }
 
   buildWaypointIcon(wp, letter, bgColor) {
     const customName = (wp && wp.customName) ? wp.customName.trim() : '';
-    const labelText = customName || `Point ${letter}`;
+    const isLoopClosed = wp && wp.isLoopClosed;
+    const labelText = customName || (isLoopClosed ? `Départ & Arrivée A (Boucle)` : `Point ${letter}`);
+    const actualBg = isLoopClosed ? 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)' : bgColor;
     const nameBadge = `
-      <div class="wp-poi-badge" style="position:absolute; left:33px; top:2px; white-space:nowrap; background:rgba(15,23,42,0.94); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; border:1.5px solid ${bgColor}; box-shadow:0 3px 8px rgba(0,0,0,0.45); pointer-events:none; display:flex; align-items:center; gap:4px; max-width:200px; overflow:hidden; text-overflow:ellipsis;">
-        <span>${this.escapeHtml(labelText)}</span>
+      <div class="wp-poi-badge" style="position:absolute; left:33px; top:2px; white-space:nowrap; background:rgba(15,23,42,0.94); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:8px; border:1.5px solid ${isLoopClosed ? '#10b981' : bgColor}; box-shadow:0 3px 8px rgba(0,0,0,0.45); pointer-events:none; display:flex; align-items:center; gap:4px; max-width:220px; overflow:hidden; text-overflow:ellipsis;">
+        <span>${isLoopClosed ? '🏁 ' : ''}${this.escapeHtml(labelText)}</span>
       </div>`;
 
     return L.divIcon({
       className: 'custom-wp-pin',
       html: `
-        <div style="position:relative; width:30px; height:30px;">
-          <div style="background:${bgColor}; color:white; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
-            ${letter}
+        <div style="position:relative; width:32px; height:32px;">
+          <div style="background:${actualBg}; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; border:2.5px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.5); cursor:grab;">
+            ${isLoopClosed ? '🏁' : letter}
           </div>
           ${nameBadge}
         </div>
       `,
-      iconSize: [30, 30],
-      iconAnchor: [15, 15]
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
     });
   }
 
@@ -477,9 +500,11 @@ class GpxCreatorEditor {
 
     marker.on('click', async (e) => {
       if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
-      // Si on clique sur le point de départ A et qu'on a déjà posé au moins 2 points -> fermer la boucle !
+      // Si on clique sur le point de départ A et qu'on a déjà posé au moins 2 points -> aperçu des 2 chemins retour !
       if (wp === this.createWaypoints[0] && this.createWaypoints.length >= 2) {
-        await this.closeLoopToStart('direct');
+        if (!this.isLoopClosed) {
+          await this.previewReturnRoutes();
+        }
       }
     });
 
@@ -498,12 +523,12 @@ class GpxCreatorEditor {
   async handleCreateMapClick(latlng) {
     if (this.mode !== 'create' || !this.map || this.isDraggingWaypoint) return;
 
-    // Si on a déjà au moins 2 points et qu'on clique très près du point de départ A -> fermer la boucle vers A !
-    if (this.createWaypoints.length >= 2) {
+    // Si on a déjà au moins 2 points et qu'on clique très près du point de départ A -> aperçu des chemins retour vers A !
+    if (this.createWaypoints.length >= 2 && !this.isLoopClosed) {
       const startWp = this.createWaypoints[0];
       const distToStart = this.map.distance([latlng.lat, latlng.lng], [startWp.lat, startWp.lon]);
       if (distToStart <= 35) {
-        await this.closeLoopToStart('direct');
+        await this.previewReturnRoutes();
         return;
       }
     }
@@ -542,8 +567,9 @@ class GpxCreatorEditor {
       wp.letter = letter;
       const isStart = idx === 0;
       const isEnd = idx === total - 1 && total > 1;
-      const bgColor = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
-      const roleLabel = isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Étape');
+      const isLoop = isStart && this.isLoopClosed;
+      const bgColor = isLoop ? '#059669' : (isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7'));
+      const roleLabel = isLoop ? 'Départ & Arrivée (Boucle fermée)' : (isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Étape'));
       const customName = (wp.customName || '').trim();
 
       wp.marker.setIcon(this.buildWaypointIcon(wp, letter, bgColor));
@@ -556,15 +582,21 @@ class GpxCreatorEditor {
         <div style="font-family:sans-serif; text-align:left; min-width:220px; max-width:260px; padding:3px;">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;">
             <span style="font-weight:900; color:${bgColor}; font-size:13px; display:inline-flex; align-items:center; gap:6px;">
-              <span style="background:${bgColor}; color:white; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${letter}</span>
+              <span style="background:${bgColor}; color:white; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; box-shadow:0 2px 4px rgba(0,0,0,0.2);">${isLoop ? '🏁' : letter}</span>
               Point ${letter}
             </span>
             <span style="font-size:10px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0;">${roleLabel}</span>
           </div>
 
-          ${(isStart && total >= 2) ? `
-            <button type="button" class="btn-close-loop-from-popup" onclick="window.GpxCreatorEditorInstance?.closeLoopToStart('direct');" style="width:100%; background:#10b981; color:white; border:none; padding:7px 10px; border-radius:8px; font-weight:800; font-size:11px; margin-bottom:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-              <span>🔄</span> <span>Fermer la boucle (revenir à A)</span>
+          ${(isStart && total >= 2 && !this.isLoopClosed) ? `
+            <button type="button" class="btn-close-loop-from-popup" onclick="window.GpxCreatorEditorInstance?.previewReturnRoutes();" style="width:100%; background:#10b981; color:white; border:none; padding:7px 10px; border-radius:8px; font-weight:800; font-size:11px; margin-bottom:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+              <span>🔄</span> <span>Retour au départ (choisir le chemin)</span>
+            </button>
+          ` : ''}
+
+          ${(isStart && this.isLoopClosed) ? `
+            <button type="button" class="btn-reopen-loop-from-popup" onclick="window.GpxCreatorEditorInstance?.reopenLoop();" style="width:100%; background:#0284c7; color:white; border:none; padding:7px 10px; border-radius:8px; font-weight:800; font-size:11px; margin-bottom:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+              <span>🔓</span> <span>Rouvrir la boucle pour continuer</span>
             </button>
           ` : ''}
 
@@ -675,8 +707,13 @@ class GpxCreatorEditor {
       let colorClass = 'bg-sky-950/80 text-sky-300 border-sky-700/60';
       let roleLabel = 'Étape';
       if (isStart) {
-        colorClass = 'bg-emerald-950/80 text-emerald-300 border-emerald-700/60';
-        roleLabel = 'Départ';
+        if (this.isLoopClosed) {
+          colorClass = 'bg-emerald-950/90 text-emerald-300 border-emerald-400 ring-2 ring-emerald-400/40';
+          roleLabel = '🏁 Départ & Arrivée';
+        } else {
+          colorClass = 'bg-emerald-950/80 text-emerald-300 border-emerald-700/60';
+          roleLabel = 'Départ';
+        }
       } else if (isEnd) {
         colorClass = 'bg-rose-950/80 text-rose-300 border-rose-700/60';
         roleLabel = 'Arrivée';
@@ -686,7 +723,7 @@ class GpxCreatorEditor {
 
       html += `
         <div class="wp-ribbon-pill flex items-center gap-1.5 px-2 py-1 rounded-lg border ${colorClass} text-[11px] font-bold shadow-sm select-none cursor-pointer hover:brightness-125 transition" data-idx="${idx}" title="Cliquer pour centrer et renommer ce point">
-          <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white shrink-0">${letter}</span>
+          <span class="w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white shrink-0">${isStart && this.isLoopClosed ? '🏁' : letter}</span>
           <span class="text-[10px] opacity-90 font-medium truncate max-w-[110px]">${displayLabel}</span>
           <span class="text-[10px] opacity-60 hover:opacity-100 text-sky-200" title="Modifier le nom">✏️</span>
           ${wp.isBacktrack ? `<span class="px-1 py-0.5 rounded bg-amber-500/30 text-amber-300 text-[9px] border border-amber-500/50 font-bold" title="Demi-tour forcé : supprimez ou déplacez l'étape suivante (${wp.backtrackNext}) pour filer tout droit">↩️ Demi-tour</span>` : ''}
@@ -700,6 +737,11 @@ class GpxCreatorEditor {
         html += `<span class="text-slate-600 text-xs font-bold select-none">➔</span>`;
       }
     });
+
+    if (this.isLoopClosed && total >= 2) {
+      html += `<span class="text-emerald-400 text-xs font-black select-none">➔</span>`;
+      html += `<span class="px-2 py-1 rounded-lg bg-emerald-900/80 border border-emerald-400 text-emerald-200 text-[10px] font-black select-none flex items-center gap-1">🏁 Boucle fermée sur A</span>`;
+    }
 
     listEl.innerHTML = html;
 
@@ -788,44 +830,323 @@ class GpxCreatorEditor {
     });
   }
 
-  async closeLoopToStart(mode = 'direct') {
+  clearReturnPreviews() {
+    if (this.returnPreviewLayers && this.returnPreviewLayers.length > 0) {
+      this.returnPreviewLayers.forEach(l => {
+        try { if (this.map) this.map.removeLayer(l); } catch (e) {}
+      });
+    }
+    this.returnPreviewLayers = [];
+    const panel = document.getElementById('gpx-return-choices-panel');
+    if (panel) panel.classList.add('hidden');
+  }
+
+  async fetchReturnRoute(p1, p2, profile = 'hiking-mountain', altIdx = 0) {
+    const lat1 = Number(p1.lat);
+    const lon1 = Number(p1.lon);
+    const lat2 = Number(p2.lat);
+    const lon2 = Number(p2.lon);
+
+    // 1. Si altIdx == 0 et en France, tester IGN Géoplateforme bdtopo-osrm
+    const isInFrance = (lat1 >= -22 && lat1 <= 52 && lon1 >= -63 && lon1 <= 56);
+    if (altIdx === 0 && isInFrance) {
+      try {
+        const ignUrl = `https://data.geopf.fr/navigation/itineraire?resource=bdtopo-osrm&start=${lon1.toFixed(6)},${lat1.toFixed(6)}&end=${lon2.toFixed(6)},${lat2.toFixed(6)}&profile=pedestrian&optimization=shortest`;
+        const resp = await fetch(ignUrl, { headers: { 'Accept': 'application/json' } });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.geometry && data.geometry.coordinates && data.geometry.coordinates.length > 0) {
+            return data.geometry.coordinates.map(pt => [pt[1], pt[0], 0]);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Requête BRouter multi-alternatives
+    const lonlats = `${lon1.toFixed(6)},${lat1.toFixed(6)}|${lon2.toFixed(6)},${lat2.toFixed(6)}`;
+    const url = `${this.brouterBase}?lonlats=${lonlats}&profile=${profile}&alternativeidx=${altIdx}&format=geojson`;
+    try {
+      const resp = await fetch(url, { headers: { 'Accept': 'application/geo+json' } });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.features && data.features[0] && data.features[0].geometry) {
+          const coords = data.features[0].geometry.coordinates;
+          if (coords && coords.length > 0) {
+            return coords.map(pt => [pt[1], pt[0], pt[2] || 0]);
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 3. Fallback alternatif si altIdx == 1
+    if (altIdx === 1) {
+      try {
+        const urlTrek = `${this.brouterBase}?lonlats=${lonlats}&profile=trekking&alternativeidx=0&format=geojson`;
+        const resp2 = await fetch(urlTrek, { headers: { 'Accept': 'application/geo+json' } });
+        if (resp2.ok) {
+          const data2 = await resp2.json();
+          if (data2 && data2.features && data2.features[0] && data2.features[0].geometry) {
+            const coords2 = data2.features[0].geometry.coordinates;
+            if (coords2 && coords2.length > 0) {
+              return coords2.map(pt => [pt[1], pt[0], pt[2] || 0]);
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 4. Fallback final querySingleLeg
+    return await this.querySingleLeg(p1, p2);
+  }
+
+  async previewReturnRoutes() {
     if (this.mode !== 'create' || !this.map || this.createWaypoints.length < 2) return;
 
     const startWp = this.createWaypoints[0];
     const lastWp = this.createWaypoints[this.createWaypoints.length - 1];
 
-    // Si on est déjà tout proche du départ (< 15 mètres), la boucle est fermée
     const dMeters = this.map.distance([lastWp.lat, lastWp.lon], [startWp.lat, startWp.lon]);
     if (dMeters < 15) {
       if (window.App?.showToast) window.App.showToast('La boucle est déjà fermée sur le départ A !', 'info');
       return;
     }
 
-    this.saveCreateHistorySnapshot();
+    this.clearReturnPreviews();
 
-    // Fermer le panneau de choix si ouvert
-    const panel = document.getElementById('gpx-return-choices-panel');
-    if (panel) panel.classList.add('hidden');
-
-    const prevProfile = this.routingProfile;
-    if (mode === 'scenic' || mode === 'alternative') {
-      this.routingProfile = 'trekking';
-    } else {
-      this.routingProfile = 'hiking-mountain';
+    const loopBtn = document.getElementById('btn-loop-back-to-start');
+    const origBtnHtml = loopBtn ? loopBtn.innerHTML : '';
+    if (loopBtn) {
+      loopBtn.innerHTML = `<span>⏳</span> <span>Calcul des 2 retours...</span>`;
+      loopBtn.classList.add('opacity-70', 'pointer-events-none');
     }
 
-    const arrivalName = (mode === 'scenic' || mode === 'alternative') ? 'Arrivée (Panoramique)' : 'Arrivée (Retour A)';
-    const wp = this.createWaypointObject({ lat: startWp.lat, lng: startWp.lon }, arrivalName);
-    this.createWaypoints.push(wp);
+    try {
+      // Calculer en parallèle les 2 chemins
+      const [coordsDirect, coordsScenic] = await Promise.all([
+        this.fetchReturnRoute(lastWp, startWp, 'hiking-mountain', 0),
+        this.fetchReturnRoute(lastWp, startWp, 'hiking-mountain', 1)
+      ]);
 
+      const finalDirect = coordsDirect || [[lastWp.lat, lastWp.lon, 0], [startWp.lat, startWp.lon, 0]];
+      const finalScenic = coordsScenic || coordsDirect;
+
+      const stats1 = this.computeTrackStats(finalDirect);
+      const stats2 = this.computeTrackStats(finalScenic);
+
+      // 1. Tracer Chemin 1 : Direct (Vert émeraude vif)
+      const latlngs1 = finalDirect.map(c => [c[0], c[1]]);
+      const poly1 = L.polyline(latlngs1, {
+        color: '#10b981',
+        weight: 6,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round',
+        className: 'return-preview-polyline-direct cursor-pointer'
+      }).addTo(this.map);
+
+      // Badge cliquable sur le tracé 1 (au milieu)
+      const midIdx1 = Math.floor(latlngs1.length / 2);
+      const midPt1 = latlngs1[midIdx1] || latlngs1[0];
+      const icon1 = L.divIcon({
+        className: 'custom-return-preview-icon',
+        html: `
+          <div class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-2xl border-2 border-white flex items-center gap-1.5 whitespace-nowrap cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition hover:scale-105 active:scale-95 animate-bounce" title="Cliquer pour choisir le Chemin 1 (Direct)">
+            <span>🥾</span>
+            <span>Chemin 1 : Direct (${stats1.distanceKm.toFixed(2)} km • +${stats1.elevationGain}m)</span>
+            <span class="text-[10px] bg-emerald-800 px-1 py-0.5 rounded text-emerald-200">Choisir</span>
+          </div>
+        `,
+        iconSize: [0, 0]
+      });
+      const badgeMarker1 = L.marker(midPt1, { icon: icon1 }).addTo(this.map);
+
+      poly1.on('click', () => this.applyReturnRoute(finalDirect, 'direct', stats1));
+      badgeMarker1.on('click', () => this.applyReturnRoute(finalDirect, 'direct', stats1));
+
+      this.returnPreviewLayers.push(poly1, badgeMarker1);
+
+      // 2. Tracer Chemin 2 : Alternatif (Ambre / Orange vif tireté)
+      let poly2 = null;
+      let badgeMarker2 = null;
+      const isDistinct = Math.abs(stats1.distanceKm - stats2.distanceKm) > 0.05 || (finalScenic !== finalDirect);
+      if (isDistinct && finalScenic) {
+        const latlngs2 = finalScenic.map(c => [c[0], c[1]]);
+        poly2 = L.polyline(latlngs2, {
+          color: '#f59e0b',
+          weight: 6,
+          opacity: 0.95,
+          dashArray: '8, 8',
+          lineCap: 'round',
+          lineJoin: 'round',
+          className: 'return-preview-polyline-scenic cursor-pointer'
+        }).addTo(this.map);
+
+        const midIdx2 = Math.floor(latlngs2.length / 2);
+        const midPt2 = latlngs2[midIdx2] || latlngs2[0];
+        const icon2 = L.divIcon({
+          className: 'custom-return-preview-icon',
+          html: `
+            <div class="px-2.5 py-1 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs shadow-2xl border-2 border-white flex items-center gap-1.5 whitespace-nowrap cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition hover:scale-105 active:scale-95 animate-pulse" title="Cliquer pour choisir le Chemin 2 (Alternatif)">
+              <span>🌲</span>
+              <span>Chemin 2 : Alternatif (${stats2.distanceKm.toFixed(2)} km • +${stats2.elevationGain}m)</span>
+              <span class="text-[10px] bg-amber-800 px-1 py-0.5 rounded text-amber-200">Choisir</span>
+            </div>
+          `,
+          iconSize: [0, 0]
+        });
+        badgeMarker2 = L.marker(midPt2, { icon: icon2 }).addTo(this.map);
+
+        poly2.on('click', () => this.applyReturnRoute(finalScenic, 'scenic', stats2));
+        badgeMarker2.on('click', () => this.applyReturnRoute(finalScenic, 'scenic', stats2));
+
+        this.returnPreviewLayers.push(poly2, badgeMarker2);
+      }
+
+      // Mettre à jour et afficher le sous-panneau de choix
+      const panel = document.getElementById('gpx-return-choices-panel');
+      if (panel) {
+        panel.innerHTML = `
+          <div class="font-bold text-emerald-200 mb-1.5 flex items-center justify-between">
+            <span>🔄 2 chemins retour tracés sur la carte. Cliquez sur un tracé ou un bouton :</span>
+            <button type="button" id="btn-cancel-return-preview" class="text-emerald-300 hover:text-white font-black text-sm cursor-pointer p-0.5" title="Annuler l'aperçu">✕</button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button id="btn-return-direct" type="button" class="p-2 bg-emerald-800/90 hover:bg-emerald-700 border-2 border-emerald-400 rounded-xl text-left transition cursor-pointer shadow flex flex-col justify-between">
+              <div class="font-black text-xs text-white flex items-center justify-between">
+                <span>🥾 Chemin 1 : Direct</span>
+                <span class="text-[10px] bg-emerald-700 px-1.5 py-0.5 rounded font-bold">${stats1.distanceKm.toFixed(2)} km</span>
+              </div>
+              <div class="text-[10px] text-emerald-200 mt-0.5">+${stats1.elevationGain}m D+ • Plus court et direct</div>
+            </button>
+            ${(isDistinct && finalScenic) ? `
+              <button id="btn-return-scenic" type="button" class="p-2 bg-amber-800/90 hover:bg-amber-700 border-2 border-amber-400 rounded-xl text-left transition cursor-pointer shadow flex flex-col justify-between">
+                <div class="font-black text-xs text-white flex items-center justify-between">
+                  <span>🌲 Chemin 2 : Alternatif</span>
+                  <span class="text-[10px] bg-amber-700 px-1.5 py-0.5 rounded font-bold">${stats2.distanceKm.toFixed(2)} km</span>
+                </div>
+                <div class="text-[10px] text-amber-200 mt-0.5">+${stats2.elevationGain}m D+ • Boucle panoramique</div>
+              </button>
+            ` : `
+              <div class="p-2 bg-slate-800/90 border border-slate-700 rounded-xl text-slate-300 text-[10px] flex items-center justify-center text-center">
+                Chemin unique identifié vers le départ
+              </div>
+            `}
+          </div>
+        `;
+        panel.classList.remove('hidden');
+
+        document.getElementById('btn-cancel-return-preview')?.addEventListener('click', () => {
+          this.clearReturnPreviews();
+        });
+        document.getElementById('btn-return-direct')?.addEventListener('click', () => {
+          this.applyReturnRoute(finalDirect, 'direct', stats1);
+        });
+        document.getElementById('btn-return-scenic')?.addEventListener('click', () => {
+          this.applyReturnRoute(finalScenic, 'scenic', stats2);
+        });
+      }
+
+      if (window.App?.showToast) {
+        window.App.showToast(`2 chemins retour tracés sur la carte ! Cliquez sur le tracé de votre choix pour fermer la boucle.`, 'info');
+      }
+
+    } catch (err) {
+      console.error("Erreur calcul retour au départ:", err);
+      if (window.App?.showToast) {
+        window.App.showToast("Erreur lors du calcul du chemin retour.", "error");
+      }
+    } finally {
+      if (loopBtn) {
+        loopBtn.innerHTML = origBtnHtml;
+        loopBtn.classList.remove('opacity-70', 'pointer-events-none');
+      }
+    }
+  }
+
+  applyReturnRoute(chosenCoords, mode = 'direct', stats = null) {
+    if (!chosenCoords || chosenCoords.length === 0 || this.createWaypoints.length < 2) return;
+
+    this.saveCreateHistorySnapshot();
+    this.clearReturnPreviews();
+
+    const startWp = this.createWaypoints[0];
+    this.isLoopClosed = true;
+    this.loopReturnCoords = chosenCoords;
+    this.loopReturnMode = mode;
+    startWp.isLoopClosed = true;
+
+    // Concaténer le tronçon retour à la trace complète
+    if (!this.createRouteCoords || this.createRouteCoords.length === 0) {
+      this.createRouteCoords = chosenCoords;
+    } else {
+      const lastCoord = this.createRouteCoords[this.createRouteCoords.length - 1];
+      const startChosen = chosenCoords[0];
+      const d = this.haversineDistance(lastCoord[0], lastCoord[1], startChosen[0], startChosen[1]);
+      if (d < 30) {
+        this.createRouteCoords.push(...chosenCoords.slice(1));
+      } else {
+        this.createRouteCoords.push(...chosenCoords);
+      }
+    }
+
+    // Mettre à jour l'icône de A pour indiquer "Départ & Arrivée A (Boucle fermée)"
     this.updateWaypointIcons();
-    await this.recalculateCreatedRoute();
 
-    this.routingProfile = prevProfile;
+    // Mettre à jour la polyline globale sur la carte
+    const latlngs = this.createRouteCoords.map(c => [c[0], c[1]]);
+    const curColor = this.createColor || '#0284c7';
+    if (!this.createPolyline) {
+      this.createPolyline = L.polyline(latlngs, {
+        color: curColor,
+        weight: 5,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(this.map);
+    } else {
+      this.createPolyline.setLatLngs(latlngs);
+      this.createPolyline.setStyle({ color: curColor });
+    }
+
+    // Calcul des statistiques globales sur l'ensemble de la boucle
+    const globalStats = this.computeTrackStats(this.createRouteCoords);
+    const dEl = document.getElementById('gpx-create-dist');
+    if (dEl) dEl.innerText = `${globalStats.distanceKm.toFixed(2)} km`;
+    const eEl = document.getElementById('gpx-create-ele');
+    if (eEl) eEl.innerText = `+${globalStats.elevationGain} m`;
+
+    const tipEl = document.getElementById('gpx-creator-tip');
+    if (tipEl) {
+      tipEl.innerHTML = `🏁 <strong class="text-emerald-300">Boucle fermée avec succès sur le départ A</strong> (${mode === 'scenic' ? 'Sentier alternatif' : 'Sentier direct'}). Vous pouvez exporter votre fichier GPX !`;
+    }
+
+    const exportBtn = document.getElementById('btn-export-created-gpx');
+    if (exportBtn) exportBtn.disabled = false;
+
+    // Actualiser le ruban d'étapes (indiquant Boucle fermée sur A)
+    this.updateWaypointsListUI();
 
     if (window.App?.showToast) {
-      window.App.showToast(`Boucle fermée vers le départ A (${mode === 'scenic' ? 'Sentier alternatif' : 'Sentier direct'})`, 'success');
+      window.App.showToast(`Boucle fermée sur le départ A (${mode === 'scenic' ? 'Sentier alternatif' : 'Sentier direct'})`, 'success');
     }
+  }
+
+  reopenLoop() {
+    this.saveCreateHistorySnapshot();
+    this.isLoopClosed = false;
+    this.loopReturnMode = null;
+    this.loopReturnCoords = [];
+    if (this.createWaypoints[0]) this.createWaypoints[0].isLoopClosed = false;
+    this.clearReturnPreviews();
+    this.updateWaypointIcons();
+    this.recalculateCreatedRoute();
+    if (window.App?.showToast) {
+      window.App.showToast("Boucle rouverte. Vous pouvez ajouter de nouveaux points.", "info");
+    }
+  }
+
+  async closeLoopToStart(mode = 'direct') {
+    await this.previewReturnRoutes();
   }
 
   removeCreateWaypoint(wp) {
@@ -835,6 +1156,12 @@ class GpxCreatorEditor {
     const idx = this.createWaypoints.indexOf(wp);
     if (idx !== -1) {
       this.createWaypoints.splice(idx, 1);
+    }
+    if (this.createWaypoints.length < 2) {
+      this.isLoopClosed = false;
+      this.loopReturnCoords = [];
+      this.loopReturnMode = null;
+      this.clearReturnPreviews();
     }
     this.updateWaypointIcons();
     this.recalculateCreatedRoute();
@@ -851,9 +1178,15 @@ class GpxCreatorEditor {
 
     const tipEl = document.getElementById('gpx-creator-tip');
     if (tipEl) {
-      if (pts.length === 0) tipEl.innerText = '👉 Cliquez sur la carte pour poser le point A (Départ)...';
-      else if (pts.length === 1) tipEl.innerText = `Point A posé. Cliquez pour poser le point B...`;
-      else tipEl.innerText = `Trace en cours (${pts.length} points). Déplacez une lettre ou continuez à cliquer.`;
+      if (this.isLoopClosed) {
+        tipEl.innerHTML = `🏁 <strong class="text-emerald-300">Boucle fermée sur le départ A</strong> (${this.loopReturnMode === 'scenic' ? 'Sentier alternatif' : 'Sentier direct'}). Vous pouvez exporter votre fichier GPX ou continuer !`;
+      } else if (pts.length === 0) {
+        tipEl.innerText = '👉 Cliquez sur la carte pour poser le point A (Départ)...';
+      } else if (pts.length === 1) {
+        tipEl.innerText = `Point A posé. Cliquez pour poser le point B...`;
+      } else {
+        tipEl.innerText = `Trace en cours (${pts.length} points). Déplacez une lettre ou continuez à cliquer.`;
+      }
     }
 
     const exportBtn = document.getElementById('btn-export-created-gpx');
@@ -891,9 +1224,28 @@ class GpxCreatorEditor {
       if (!coords || coords.length === 0) {
         coords = pts.map(p => [p.lat, p.lon, 0]);
       }
+      // Si la boucle est fermée sur A, calculer et ajouter le tronçon retour depuis le dernier waypoint vers A
+      if (this.isLoopClosed && pts.length >= 2) {
+        const startWp = pts[0];
+        const lastWp = pts[pts.length - 1];
+        const returnCoords = await this.fetchReturnRoute(lastWp, startWp, this.routingProfile || 'hiking-mountain', this.loopReturnMode === 'scenic' ? 1 : 0);
+        if (returnCoords && returnCoords.length > 0) {
+          const lastC = coords[coords.length - 1];
+          const firstRet = returnCoords[0];
+          const d = this.haversineDistance(lastC[0], lastC[1], firstRet[0], firstRet[1]);
+          if (d < 30) {
+            coords.push(...returnCoords.slice(1));
+          } else {
+            coords.push(...returnCoords);
+          }
+        }
+      }
     } else {
       // Ligne droite point à point
       coords = pts.map(p => [p.lat, p.lon, 0]);
+      if (this.isLoopClosed && pts.length >= 2) {
+        coords.push([pts[0].lat, pts[0].lon, 0]);
+      }
     }
 
     // Actualiser le ruban d'étapes (affiche d'éventuels badges [↩️ Demi-tour])
@@ -901,7 +1253,7 @@ class GpxCreatorEditor {
 
     // Message d'alerte pédagogique si un demi-tour / antenne est détecté
     const backtrackWp = pts.find(p => p.isBacktrack);
-    if (backtrackWp && tipEl) {
+    if (backtrackWp && tipEl && !this.isLoopClosed) {
       tipEl.innerHTML = `⚠️ <strong class="text-amber-300">Demi-tour forcé au point ${backtrackWp.letter}</strong> : l'étape suivante (<strong>${backtrackWp.backtrackNext}</strong>) est restée sur l'autre chemin. Supprimez-la (bouton ✕) ou déplacez-la.`;
     }
 
@@ -936,6 +1288,12 @@ class GpxCreatorEditor {
       if (this.createWaypoints.length > 0) {
         const last = this.createWaypoints.pop();
         if (last && last.marker && this.map) this.map.removeLayer(last.marker);
+        if (this.createWaypoints.length < 2) {
+          this.isLoopClosed = false;
+          this.loopReturnCoords = [];
+          this.loopReturnMode = null;
+        }
+        this.clearReturnPreviews();
         this.updateWaypointIcons();
         await this.recalculateCreatedRoute();
         this.showUndoFeedback("Dernier point retiré");
@@ -945,14 +1303,20 @@ class GpxCreatorEditor {
       return;
     }
     const prevSnapshot = this.createHistory.pop();
+    const wpList = Array.isArray(prevSnapshot) ? prevSnapshot : (prevSnapshot.waypoints || []);
+    this.isLoopClosed = prevSnapshot.isLoopClosed || false;
+    this.loopReturnMode = prevSnapshot.loopReturnMode || null;
+    this.clearReturnPreviews();
+
     // Nettoyer tous les marqueurs actuels
     this.createWaypoints.forEach(wp => {
       if (wp.marker && this.map) this.map.removeLayer(wp.marker);
     });
     this.createWaypoints = [];
     // Recréer chaque waypoint
-    prevSnapshot.forEach(pt => {
+    wpList.forEach(pt => {
       const wp = this.createWaypointObject(L.latLng(pt.lat, pt.lon), pt.customName || '');
+      if (pt.isLoopClosed) wp.isLoopClosed = true;
       this.createWaypoints.push(wp);
     });
     this.updateWaypointIcons();
@@ -967,6 +1331,10 @@ class GpxCreatorEditor {
   resetCreatePoints() {
     if (this.createWaypoints.length === 0) return;
     this.saveCreateHistorySnapshot();
+    this.clearReturnPreviews();
+    this.isLoopClosed = false;
+    this.loopReturnCoords = [];
+    this.loopReturnMode = null;
     this.createWaypoints.forEach(wp => {
       if (wp.marker && this.map) this.map.removeLayer(wp.marker);
     });
@@ -1415,6 +1783,21 @@ class GpxCreatorEditor {
       const isMin = body.classList.toggle('hidden');
       btn.innerHTML = isMin ? '&#x25A1;' : '&minus;';
       btn.title = isMin ? 'Agrandir la fenêtre' : 'Réduire la fenêtre';
+      if (this.editFloatingCard) {
+        if (isMin) {
+          delete this.editFloatingCard.dataset.userResized;
+          this.editFloatingCard.classList.add('is-minimized');
+          this.editFloatingCard.style.removeProperty('height');
+          this.editFloatingCard.style.removeProperty('min-height');
+          this.editFloatingCard.style.setProperty('height', 'auto', 'important');
+          this.editFloatingCard.style.setProperty('min-height', '0px', 'important');
+          this.editFloatingCard.style.setProperty('width', 'fit-content', 'important');
+        } else {
+          this.editFloatingCard.classList.remove('is-minimized');
+          this.editFloatingCard.style.removeProperty('height');
+          this.editFloatingCard.style.removeProperty('width');
+        }
+      }
     });
     document.getElementById('btn-add-edit-waypoint')?.addEventListener('click', () => this.toggleAddWaypointMode());
     document.getElementById('btn-toggle-edit-wp-names')?.addEventListener('click', () => this.toggleEditWaypointNames());
@@ -2566,8 +2949,10 @@ class GpxCreatorEditor {
     if (waypoints && waypoints.length > 0) {
       wptXml = waypoints.map((wp, idx) => {
         const letter = String.fromCharCode(65 + (idx % 26));
-        const role = idx === 0 ? 'Départ' : (idx === waypoints.length - 1 && waypoints.length > 1 ? 'Arrivée' : 'Étape');
-        const defaultName = (wp.name && wp.name.trim()) ? wp.name.trim() : `Point ${letter}${role ? ` (${role})` : ''}`;
+        const isStart = idx === 0;
+        const isLoop = isStart && (this.isLoopClosed || wp.isLoopClosed);
+        const role = isLoop ? 'Départ & Arrivée' : (isStart ? 'Départ' : (idx === waypoints.length - 1 && waypoints.length > 1 ? 'Arrivée' : 'Étape'));
+        const defaultName = (wp.name && wp.name.trim()) ? wp.name.trim() : (isLoop ? `Point A (Départ & Arrivée)` : `Point ${letter}${role ? ` (${role})` : ''}`);
         const finalName = (wp.name && wp.name.trim()) ? wp.name.trim() : ((wp.customName && wp.customName.trim()) ? wp.customName.trim() : defaultName);
         const safeName = this.escapeXml(finalName);
         const safeDesc = this.escapeXml(wp.desc || (wp.customName ? `Point ${letter} - ${role}` : (wp.name ? wp.name : role)));

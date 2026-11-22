@@ -7000,6 +7000,11 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     } else {
       this.isHudMinimized = !this.isHudMinimized;
     }
+    const hud = document.getElementById('standalone-gpx-hud');
+    if (hud && this.isHudMinimized) {
+      delete hud.dataset.userResized;
+      hud.classList.add('is-minimized');
+    }
     this.showStandaloneGpxHud();
   }
 
@@ -7045,24 +7050,49 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     const count = this.standaloneTracks.length;
 
-    // MODE RÉDUIT (Minimisé pour dégager la carte tout en gardant les traces)
+    // MODE RÉDUIT (Minimisé : n'affiche strictement que la ligne d'en-tête sans hauteur résiduelle)
     if (this.isHudMinimized) {
-      hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-4 sm:px-5 py-2.5 shadow-2xl flex items-center justify-between gap-4 text-sm text-white max-w-[95%]';
+      delete hud.dataset.userResized;
+      hud.classList.add('is-minimized');
+      hud.style.removeProperty('height');
+      hud.style.removeProperty('min-height');
+      hud.style.removeProperty('max-height');
+      hud.style.removeProperty('width');
+      hud.style.removeProperty('min-width');
+      hud.style.setProperty('height', 'auto', 'important');
+      hud.style.setProperty('min-height', '0px', 'important');
+      hud.style.setProperty('width', 'fit-content', 'important');
+      hud.style.setProperty('max-width', '95vw', 'important');
+
+      const isMoved = hud.dataset.userMoved === 'true';
+      if (!isMoved) {
+        hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-3.5 sm:px-4 py-1.5 shadow-2xl flex items-center justify-between gap-3 text-sm text-white';
+        hud.style.setProperty('top', '16px', 'important');
+        hud.style.setProperty('left', '50%', 'important');
+        hud.style.setProperty('transform', 'translateX(-50%)', 'important');
+      } else {
+        hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-3.5 sm:px-4 py-1.5 shadow-2xl flex items-center justify-between gap-3 text-sm text-white';
+        hud.style.removeProperty('transform');
+        if (hud.dataset.userLeft) hud.style.setProperty('left', `${hud.dataset.userLeft}px`, 'important');
+        if (hud.dataset.userTop) hud.style.setProperty('top', `${hud.dataset.userTop}px`, 'important');
+        window.FloatingWindowManagerInstance?.clampWindow(hud);
+      }
+
       hud.innerHTML = `
-        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Cliquer pour agrandir le cartouche">
-          <span class="text-xl">📊</span>
-          <span class="text-amber-400 font-black text-sm sm:text-base uppercase tracking-wider">Traces GPX (${count}/3)</span>
-          <div class="flex items-center gap-2 ml-1">
+        <div class="flex items-center gap-2.5 cursor-pointer select-none" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Cliquer pour agrandir le cartouche">
+          <span class="text-base sm:text-lg">📊</span>
+          <span class="text-amber-400 font-black text-xs sm:text-sm uppercase tracking-wider">Traces GPX (${count}/3)</span>
+          <div class="flex items-center gap-1.5 ml-1">
             ${this.standaloneTracks.map(t => `
-              <span class="w-5 h-5 rounded-full border-2 border-white shadow-md inline-block cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="event.stopPropagation(); window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Trace: ${t.name} (cliquez pour changer de couleur)"></span>
+              <span class="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white shadow-md inline-block cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="event.stopPropagation(); window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Trace: ${t.name} (cliquez pour changer de couleur)"></span>
             `).join('')}
           </div>
-          <span class="text-sm text-slate-200 font-bold hidden sm:inline ml-1">
+          <span class="text-xs text-slate-200 font-bold hidden sm:inline ml-1">
             (${this.standaloneTracks.map(t => `${t.distance} km`).join(' • ')})
           </span>
         </div>
-        <div class="flex items-center gap-2 ml-3 pl-3 border-l-2 border-slate-700">
-          <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire (déjà réduit)" class="hud-win-btn bg-slate-800 text-slate-500 cursor-default" disabled>
+        <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
+          <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire (déjà réduit)" class="hud-win-btn bg-slate-800 text-slate-500 cursor-default opacity-50" disabled>
             &minus;
           </button>
           <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Agrandir / Afficher les détails" class="hud-win-btn bg-emerald-600 hover:bg-emerald-500 text-white shadow-md">
@@ -7074,12 +7104,12 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         </div>
       `;
       hud.classList.remove('hidden');
-    window.FloatingWindowManagerInstance?.enhance(hud);
       window.FloatingWindowManagerInstance?.enhance(hud);
       return;
     }
 
     // MODE NORMAL AGRANDI (Centrage automatique garanti en haut de carte)
+    hud.classList.remove('is-minimized');
     const isMoved = hud.dataset.userMoved === 'true';
     if (!isMoved) {
       hud.className = 'absolute top-4 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[94vw] sm:max-w-3xl overflow-hidden';

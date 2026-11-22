@@ -1593,5 +1593,59 @@ body.show-wpt-coords .wpt-badge-coords,
   white-space: nowrap !important;
 }
 
+/* =========================================================================
+ * MODE RÉDUIT UNIVERSEL DES FENÊTRES FLOTTANTES (Image 2 - stricte ligne unique)
+ * ========================================================================= */
+.movable-floating-window.is-minimized,
+#standalone-gpx-hud.is-minimized,
+#hike-preview-panel.is-minimized,
+#gpx-creator-floating-panel.is-minimized,
+#gpx-editor-floating-panel.is-minimized {
+  height: auto !important;
+  min-height: 0px !important;
+  max-height: none !important;
+  width: fit-content !important;
+  max-width: 95vw !important;
+  padding: 6px 14px !important;
+  overflow: hidden !important;
+}
+
+.movable-floating-window.is-minimized .window-top-resize-handle,
+.movable-floating-window.is-minimized .window-bottom-resize-handle,
+.movable-floating-window.is-minimized .window-corner-resize-handle {
+  display: none !important;
+}
+
+/* =========================================================================
+ * APERÇUS DES CHEMINS DE RETOUR AU DÉPART SUR LA CARTE (Mode Création)
+ * ========================================================================= */
+.custom-return-preview-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.return-preview-polyline-direct {
+  cursor: pointer !important;
+  filter: drop-shadow(0 4px 10px rgba(16, 185, 129, 0.6));
+  transition: stroke-width 0.15s ease, filter 0.15s ease;
+}
+
+.return-preview-polyline-direct:hover {
+  stroke-width: 9px !important;
+  filter: drop-shadow(0 0 16px rgba(16, 185, 129, 0.95)) !important;
+}
+
+.return-preview-polyline-scenic {
+  cursor: pointer !important;
+  filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.6));
+  transition: stroke-width 0.15s ease, filter 0.15s ease;
+}
+
+.return-preview-polyline-scenic:hover {
+  stroke-width: 9px !important;
+  filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.95)) !important;
+}
+
+
 
 

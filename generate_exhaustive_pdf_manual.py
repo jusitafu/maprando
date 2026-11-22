@@ -799,7 +799,7 @@ html_content = f"""<!DOCTYPE html>
         <li><strong>Bouton Cible (🎯) :</strong> centre immédiatement la carte sur la trace concernée.</li>
         <li><strong>Bouton Croix (✕) de suppression individuelle :</strong> retire la trace sélectionnée de l'écran sans affecter les autres traces affichées.</li>
         <li><strong>Bouton « Tout effacer » :</strong> vide la carte de l'ensemble des parcours en 1 clic.</li>
-        <li><strong>Mode Réduit / Développé :</strong> cliquez sur le bouton de réduction pour compacter le panneau en un bandeau discret libérant la vision sur la carte.</li>
+        <li><strong>Mode Réduit compact &amp; Confinement :</strong> cliquez sur le bouton &minus; pour compacter le panneau en une stricte ligne d'en-tête (sans espace vide résiduel). Le gestionnaire universel empêche strictement la fenêtre de sortir de l'écran ou de glisser sous la barre d'outils supérieure.</li>
       </ul>
     </div>
 
@@ -900,9 +900,10 @@ html_content = f"""<!DOCTYPE html>
         Un bouton permet de basculer en mode <em>« Ligne Droite : OUI »</em> si vous traversez des zones hors sentiers répertoriés.
       </p>
 
-      <h3>Ruban Visuel d'Étapes, Waypoints &amp; Suppression en 1 Clic</h3>
+      <h3>Ruban Visuel d'Étapes, Waypoints, Boucles &amp; Suppression en 1 Clic</h3>
       <ul>
         <li><strong>Ruban chronologique &amp; Waypoints d'étape :</strong> les badges <code>[🟢 A Départ] ➔ [🔵 B Étape ✕] ➔ [🔴 C Arrivée ✕]</code> visualisent l'enchaînement de votre parcours. Chaque étape constitue un waypoint balisé personnalisable.</li>
+        <li><strong>Retour au départ &amp; Boucle fermée (2 chemins tracés sur carte) :</strong> un clic sur <strong>« 🔄 Retour au départ »</strong> calcule et <strong>trace immédiatement les 2 options directement sur la carte</strong> : <em>🥾 Chemin 1 : Direct</em> (vert émeraude) et <em>🌲 Chemin 2 : Alternatif</em> (ambre vif tireté) avec badges cliquables. Sélectionner un chemin referme la boucle sur le départ A sans créer de lettre d'arrivée superposée.</li>
         <li><strong>Suppression instantanée d'une étape :</strong> cliquez sur la petite croix <strong>`[✕]`</strong> d'un badge ou faites un clic droit sur sa lettre sur la carte : l'étape est retirée et l'itinéraire est immédiatement recalculé entre les étapes restantes.</li>
         <li><strong>Déplacement libre d'un point à la souris :</strong> attrapez n'importe quel point ($A, B, C...$) et glissez-le vers un autre sentier pour corriger la trajectoire en direct.</li>
         <li><strong>Bouton bascule Coordonnées GPS :</strong> activez en 1 clic l'affichage des coordonnées décimales (lat, lon) et de l'altitude LiDAR sur les pastilles d'étape.</li>

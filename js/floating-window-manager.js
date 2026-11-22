@@ -230,8 +230,27 @@ class FloatingWindowManager {
     e.stopPropagation();
   }
 
+  getHeaderBottom() {
+    // 1. En priorité, le header de l'application cartographique (mode #carte)
+    const mapHeader = document.getElementById('main-map-header') ||
+                      document.querySelector('#main-map-app-container header') ||
+                      document.getElementById('main-header');
+    if (mapHeader && mapHeader.offsetParent !== null) {
+      const rect = mapHeader.getBoundingClientRect();
+      if (rect.bottom > 0) return rect.bottom;
+    }
+    // 2. Sinon, tout header ou nav visible
+    const anyHeader = document.querySelector('header') || document.querySelector('nav');
+    if (anyHeader && anyHeader.offsetParent !== null) {
+      const rect = anyHeader.getBoundingClientRect();
+      if (rect.bottom > 0) return rect.bottom;
+    }
+    return 0;
+  }
+
   // --- REDIMENSIONNEMENT PAR LA BORDURE BASSE (TRACES & HAUTEUR) ---
   startBottomResize(e, el) {
+    if (el.classList.contains('is-minimized')) return;
     const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
     const offsetParent = el.offsetParent || document.body;
     const parentRect = offsetParent.getBoundingClientRect();
@@ -273,6 +292,7 @@ class FloatingWindowManager {
 
   // --- REDIMENSIONNEMENT PAR LA BORDURE HAUTE ---
   startTopResize(e, el) {
+    if (el.classList.contains('is-minimized')) return;
     const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
     const offsetParent = el.offsetParent || document.body;
     const parentRect = offsetParent.getBoundingClientRect();
@@ -319,6 +339,7 @@ class FloatingWindowManager {
 
   // --- REDIMENSIONNEMENT PAR LE COIN INFÉRIEUR DROIT ---
   startCornerResize(e, el) {
+    if (el.classList.contains('is-minimized')) return;
     const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
     const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
     const panelRect = el.getBoundingClientRect();
@@ -369,11 +390,13 @@ class FloatingWindowManager {
       const currentHeight = d.el.offsetHeight || d.panelHeight || 180;
 
       // CONFINEMENT STRICT DANS LE VIEWPORT (Image 2) :
-      // La fenêtre ne doit JAMAIS sortir de la zone d'affichage (minimum 8px de marge sur les 4 côtés)
+      // La fenêtre ne doit JAMAIS sortir de la zone utile (sous la barre d'en-tête, ni au-delà des bords)
+      const headerBottom = this.getHeaderBottom();
+      
       const minMargin = 8;
       const minViewportX = minMargin;
       const maxViewportX = Math.max(minMargin, window.innerWidth - currentWidth - minMargin);
-      const minViewportY = minMargin;
+      const minViewportY = Math.max(minMargin, Math.round(headerBottom) + minMargin);
       const maxViewportY = Math.max(minViewportY, window.innerHeight - currentHeight - minMargin);
 
       const targetViewportX = Math.min(Math.max(minViewportX, d.initialLeft + dx + d.parentLeft), maxViewportX);
@@ -488,11 +511,13 @@ class FloatingWindowManager {
     const h = rect.height;
     if (w <= 0 || h <= 0) return;
 
+    const headerBottom = this.getHeaderBottom();
+
     const minMargin = 8;
     const minX = minMargin;
     const maxX = Math.max(minMargin, window.innerWidth - w - minMargin);
-    const minY = minMargin;
-    const maxY = Math.max(minMargin, window.innerHeight - h - minMargin);
+    const minY = Math.max(minMargin, Math.round(headerBottom) + minMargin);
+    const maxY = Math.max(minY, window.innerHeight - h - minMargin);
 
     const curViewportX = rect.left;
     const curViewportY = rect.top;

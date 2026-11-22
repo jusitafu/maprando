@@ -1902,8 +1902,6 @@ static async exportFichePDF(hike, options = {}) {
           const endLabel = tracksToDraw.length > 1 ? `A${trkIdx + 1}` : 'A';
           ctx.fillText(endLabel, endPix.x, endPix.y + 0.5);
         }
-          ctx.fillText(endLabel, endPix.x, endPix.y + 0.5);
-        }
       });
 
       // 7. Légende élégante en bas à gauche
