@@ -6876,6 +6876,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       lyr.on('click', handleTrackClick);
     });
 
+    trackItem.isNewlyLoaded = true;
     this.standaloneTracks.push(trackItem);
     this.standaloneHike = trackItem;
     this.selectedHike = trackItem;
@@ -7161,9 +7162,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
               🛠️
             </button>
 
-            <!-- Bouton centrer la vue sur cette trace -->
+            <!-- Bouton centrer la vue sur cette trace (clignote au chargement de la trace) -->
 
-            <button type="button" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-base text-slate-100 hover:text-white flex items-center justify-center transition shadow cursor-pointer" onclick="if(window.MapManagerInstance.standaloneTracks[${i}].layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
+            <button type="button" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-base text-slate-100 hover:text-white flex items-center justify-center transition shadow cursor-pointer ${t.isNewlyLoaded ? 'center-btn-pulse-blink ring-2 ring-amber-400' : ''}" onclick="this.classList.remove('center-btn-pulse-blink', 'ring-2', 'ring-amber-400'); if(window.MapManagerInstance.standaloneTracks[${i}]) window.MapManagerInstance.standaloneTracks[${i}].isNewlyLoaded=false; if(window.MapManagerInstance.standaloneTracks[${i}]?.layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
 
               🎯
 
@@ -8209,7 +8210,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         }
 
         const iconHtml = `
-          <div class="heritage-pulse-marker" style="width: 32px; height: 32px;">
+          <div class="heritage-pulse-marker" style="width: 38px; height: 38px;">
             <div class="heritage-pulse-badge" style="background:${gradient}; border-color:${borderColor};">
               ${iconEmoji}
             </div>
@@ -8219,9 +8220,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         const icon = L.divIcon({
           html: iconHtml,
           className: 'heritage-custom-div-icon',
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -18]
+          iconSize: [38, 38],
+          iconAnchor: [19, 19],
+          popupAnchor: [0, -22]
         });
 
         const safeName = name.replace(/'/g, "\\'");

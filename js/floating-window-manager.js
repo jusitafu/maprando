@@ -47,13 +47,17 @@ class FloatingWindowManager {
     window.addEventListener('mouseup', (e) => this.handleGlobalMouseUp(e));
     window.addEventListener('touchmove', (e) => this.handleGlobalMouseMove(e), { passive: false });
     window.addEventListener('touchend', (e) => this.handleGlobalMouseUp(e));
+    window.addEventListener('resize', () => this.clampAllMovedWindows());
   }
 
   scanAndEnhanceAll() {
     const selectors = [
       '#standalone-gpx-hud',
       '#hike-preview-panel',
+      '#elevation-profile-container',
+      '#elevation-chart-container',
       '#gpx-creator-floating-panel',
+      '#gpx-editor-panel',
       '#gpx-editor-floating-panel',
       '#map-bearing-panel',
       '#map-measure-panel',
@@ -62,7 +66,8 @@ class FloatingWindowManager {
       '#map-selection-banner',
       '#screen-calib-modal > div',
       '#map-area-export-modal > div',
-      '#map-legend-modal > div'
+      '#map-legend-modal > div',
+      '.movable-floating-window'
     ];
 
     selectors.forEach(sel => {
@@ -359,18 +364,23 @@ class FloatingWindowManager {
       const dx = clientX - d.startX;
       const dy = clientY - d.startY;
 
-      // Position absolue par rapport à l'offsetParent
-      let newX = d.initialLeft + dx;
-      let newY = d.initialTop + dy;
+      // Dimensions réelles actuelles de la fenêtre
+      const currentWidth = d.el.offsetWidth || d.panelWidth || 320;
+      const currentHeight = d.el.offsetHeight || d.panelHeight || 180;
 
-      // Vérifier que la fenêtre reste visible dans le viewport
-      const viewportX = newX + d.parentLeft;
-      const viewportY = newY + d.parentTop;
+      // CONFINEMENT STRICT DANS LE VIEWPORT (Image 2) :
+      // La fenêtre ne doit JAMAIS sortir de la zone d'affichage (minimum 8px de marge sur les 4 côtés)
+      const minMargin = 8;
+      const minViewportX = minMargin;
+      const maxViewportX = Math.max(minMargin, window.innerWidth - currentWidth - minMargin);
+      const minViewportY = minMargin;
+      const maxViewportY = Math.max(minViewportY, window.innerHeight - currentHeight - minMargin);
 
-      if (viewportX < -d.panelWidth + 60) newX = -d.parentLeft - d.panelWidth + 60;
-      if (viewportX > window.innerWidth - 60) newX = window.innerWidth - 60 - d.parentLeft;
-      if (viewportY < 4) newY = 4 - d.parentTop;
-      if (viewportY > window.innerHeight - 50) newY = window.innerHeight - 50 - d.parentTop;
+      const targetViewportX = Math.min(Math.max(minViewportX, d.initialLeft + dx + d.parentLeft), maxViewportX);
+      const targetViewportY = Math.min(Math.max(minViewportY, d.initialTop + dy + d.parentTop), maxViewportY);
+
+      let newX = targetViewportX - d.parentLeft;
+      let newY = targetViewportY - d.parentTop;
 
       d.targetX = newX;
       d.targetY = newY;
@@ -464,6 +474,67 @@ class FloatingWindowManager {
     if (typeof window.App?.showToast === 'function') {
       window.App.showToast('Fenêtre ajustée automatiquement à son contenu', 'info');
     }
+  }
+
+  /**
+   * Confinement strict d'une fenêtre dans les limites visibles de l'écran (Image 2)
+   */
+  clampWindow(el) {
+    if (!el || el.classList.contains('hidden') || el.style.display === 'none') return;
+    const offsetParent = el.offsetParent || document.body;
+    const parentRect = offsetParent.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    if (w <= 0 || h <= 0) return;
+
+    const minMargin = 8;
+    const minX = minMargin;
+    const maxX = Math.max(minMargin, window.innerWidth - w - minMargin);
+    const minY = minMargin;
+    const maxY = Math.max(minMargin, window.innerHeight - h - minMargin);
+
+    const curViewportX = rect.left;
+    const curViewportY = rect.top;
+
+    const clampedX = Math.min(Math.max(minX, curViewportX), maxX);
+    const clampedY = Math.min(Math.max(minY, curViewportY), maxY);
+
+    if (Math.abs(clampedX - curViewportX) > 1 || Math.abs(clampedY - curViewportY) > 1) {
+      const newLeft = clampedX - parentRect.left;
+      const newTop = clampedY - parentRect.top;
+      el.style.setProperty('left', `${newLeft}px`, 'important');
+      el.style.setProperty('top', `${newTop}px`, 'important');
+      el.dataset.userLeft = String(newLeft);
+      el.dataset.userTop = String(newTop);
+    }
+  }
+
+  /**
+   * Confinement automatique de toutes les fenêtres déplacées par l'utilisateur
+   */
+  clampAllMovedWindows() {
+    const selectors = [
+      '#standalone-gpx-hud',
+      '#hike-preview-panel',
+      '#elevation-profile-container',
+      '#gpx-creator-floating-panel',
+      '#gpx-editor-panel',
+      '#gpx-editor-floating-panel',
+      '#map-bearing-panel',
+      '#map-measure-panel',
+      '#gr-floating-banner',
+      '#gr-color-filter-panel',
+      '#map-selection-banner',
+      '.movable-floating-window'
+    ];
+    selectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        if (el.dataset.userMoved === 'true') {
+          this.clampWindow(el);
+        }
+      });
+    });
   }
 }
 

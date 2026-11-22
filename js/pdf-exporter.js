@@ -1791,7 +1791,13 @@ static async exportFichePDF(hike, options = {}) {
         if (!pts || pts.length === 0) return;
         const curColor = trk.color || trackColor || '#1d4ed8';
 
-        // 1. Bordure d'ombre externe sombre (10px)
+        // 1. Échelle adaptative haute visibilité pour impression (tracé ultra-contrasté et épais)
+        const trkScale = Math.max(1, imgWidth / 680);
+        const outerW = Math.round(14 * trkScale);
+        const haloW = Math.round(10 * trkScale);
+        const mainW = Math.round(6.5 * trkScale);
+
+        // 1. Bordure d'ombre externe sombre (très contrastée)
         ctx.beginPath();
         let first = latLonToPixel(pts[0].lat, pts[0].lon);
         ctx.moveTo(first.x, first.y);
@@ -1799,13 +1805,13 @@ static async exportFichePDF(hike, options = {}) {
           const pt = latLonToPixel(pts[i].lat, pts[i].lon);
           ctx.lineTo(pt.x, pt.y);
         }
-        ctx.strokeStyle = 'rgba(15, 23, 42, 0.45)';
-        ctx.lineWidth = 10;
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
+        ctx.lineWidth = outerW;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // 2. Halo blanc pur (8px)
+        // 2. Halo blanc pur protecteur (contraste absolu sur fond IGN TOP 25)
         ctx.beginPath();
         ctx.moveTo(first.x, first.y);
         for (let i = 1; i < pts.length; i++) {
@@ -1813,12 +1819,12 @@ static async exportFichePDF(hike, options = {}) {
           ctx.lineTo(pt.x, pt.y);
         }
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 8;
+        ctx.lineWidth = haloW;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // 3. Tracé principal avec sa propre couleur (5px)
+        // 3. Tracé principal avec sa propre couleur vive (épaisseur renforcée)
         ctx.beginPath();
         ctx.moveTo(first.x, first.y);
         for (let i = 1; i < pts.length; i++) {
@@ -1826,14 +1832,14 @@ static async exportFichePDF(hike, options = {}) {
           ctx.lineTo(pt.x, pt.y);
         }
         ctx.strokeStyle = curColor;
-        ctx.lineWidth = 5;
+        ctx.lineWidth = mainW;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
 
         // 4. Chevrons directionnels (flèches blanches)
         let accumulatedDist = 0;
-        const arrowSpacing = 65;
+        const arrowSpacing = Math.round(75 * trkScale);
         for (let i = 1; i < pts.length; i++) {
           const p1 = latLonToPixel(pts[i - 1].lat, pts[i - 1].lon);
           const p2 = latLonToPixel(pts[i].lat, pts[i].lon);
@@ -1848,11 +1854,11 @@ static async exportFichePDF(hike, options = {}) {
             ctx.translate(midX, midY);
             ctx.rotate(angle);
             ctx.beginPath();
-            ctx.moveTo(-3.5, -3);
-            ctx.lineTo(2.5, 0);
-            ctx.lineTo(-3.5, 3);
+            ctx.moveTo(-4.5 * trkScale, -3.8 * trkScale);
+            ctx.lineTo(3.2 * trkScale, 0);
+            ctx.lineTo(-4.5 * trkScale, 3.8 * trkScale);
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = Math.max(2, 2.4 * trkScale);
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
@@ -1863,15 +1869,16 @@ static async exportFichePDF(hike, options = {}) {
         // 5. Marqueur de départ
         const sPt = trk.startPoint || { lat: pts[0].lat, lon: pts[0].lon };
         const startPix = latLonToPixel(sPt.lat, sPt.lon);
+        const markerR = Math.max(10, Math.round(11 * trkScale));
         ctx.beginPath();
-        ctx.arc(startPix.x, startPix.y, 9.5, 0, Math.PI * 2);
+        ctx.arc(startPix.x, startPix.y, markerR, 0, Math.PI * 2);
         ctx.fillStyle = tracksToDraw.length > 1 ? curColor : '#10b981';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
+        ctx.lineWidth = Math.max(2.5, Math.round(3 * trkScale));
         ctx.stroke();
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 9px sans-serif';
+        ctx.font = `bold ${Math.round(markerR * 0.95)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const startLabel = tracksToDraw.length > 1 ? `D${trkIdx + 1}` : 'D';
@@ -1882,17 +1889,19 @@ static async exportFichePDF(hike, options = {}) {
           const ePt = trk.endPoint || { lat: pts[pts.length - 1].lat, lon: pts[pts.length - 1].lon };
           const endPix = latLonToPixel(ePt.lat, ePt.lon);
           ctx.beginPath();
-          ctx.arc(endPix.x, endPix.y, 9.5, 0, Math.PI * 2);
+          ctx.arc(endPix.x, endPix.y, markerR, 0, Math.PI * 2);
           ctx.fillStyle = '#ef4444';
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = Math.max(2.5, Math.round(3 * trkScale));
           ctx.stroke();
           ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 9px sans-serif';
+          ctx.font = `bold ${Math.round(markerR * 0.95)}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           const endLabel = tracksToDraw.length > 1 ? `A${trkIdx + 1}` : 'A';
+          ctx.fillText(endLabel, endPix.x, endPix.y + 0.5);
+        }
           ctx.fillText(endLabel, endPix.x, endPix.y + 0.5);
         }
       });

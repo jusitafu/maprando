@@ -14,6 +14,8 @@ class GpxCreatorEditor {
     this.createWaypoints = [];       // [{ lat, lon, marker }]
     this.createRouteCoords = [];      // [[lat, lon, ele], ...]
     this.createPolyline = null;
+    this.createColor = '#0284c7';
+    this.colorPalette = ['#ef4444', '#0284c7', '#10b981', '#f97316', '#8b5cf6', '#06b6d4', '#0f172a'];
     this.createAutoRoute = true;
     this.createFloatingCard = null;
     this.createHistory = [];          // Historique pour annulation (Ctrl+Z)
@@ -219,6 +221,39 @@ class GpxCreatorEditor {
         </div>
       </div>
 
+      <!-- Palette de couleur & Bouton Retour au départ -->
+      <div class="flex items-center justify-between gap-2 mb-2 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-sky-300 font-bold flex items-center gap-1">🎨 <span class="hidden sm:inline">Couleur :</span></span>
+          <div id="gpx-create-color-palette" class="flex items-center gap-1.5">
+            ${this.colorPalette.map(c => `
+              <button type="button" class="w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 ${c === (this.createColor || '#0284c7') ? 'border-white scale-110 shadow-sm ring-2 ring-white/80' : 'border-black/50'} cursor-pointer" style="background-color: ${c};" onclick="window.GpxCreatorEditorInstance.setCreateColor('${c}')" title="Couleur : ${c}"></button>
+            `).join('')}
+          </div>
+        </div>
+        <button id="btn-loop-back-to-start" type="button" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer ${this.createWaypoints.length >= 2 ? '' : 'opacity-40 pointer-events-none'}" title="Fermer la boucle en revenant au point de départ A">
+          <span>🔄</span> <span>Retour au départ</span>
+        </button>
+      </div>
+
+      <!-- Sous-panneau de choix de chemin de retour (1 ou 2 chemins) -->
+      <div id="gpx-return-choices-panel" class="mb-2 p-2.5 bg-emerald-950/95 border-2 border-emerald-500 rounded-xl text-xs text-white hidden animate-in fade-in shadow-xl">
+        <div class="font-bold text-emerald-200 mb-1.5 flex items-center justify-between">
+          <span>🔄 Choisir l'itinéraire retour vers le départ A :</span>
+          <button type="button" onclick="document.getElementById('gpx-return-choices-panel').classList.add('hidden')" class="text-emerald-300 hover:text-white font-black text-sm cursor-pointer">✕</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-return-direct" type="button" class="p-2 bg-emerald-800/90 hover:bg-emerald-700 border border-emerald-400 rounded-lg text-left transition cursor-pointer shadow">
+            <div class="font-black text-xs text-white flex items-center gap-1">🥾 Chemin 1 : Direct</div>
+            <div class="text-[10px] text-emerald-200">Sentier direct / le plus court</div>
+          </button>
+          <button id="btn-return-scenic" type="button" class="p-2 bg-teal-800/90 hover:bg-teal-700 border border-teal-400 rounded-lg text-left transition cursor-pointer shadow">
+            <div class="font-black text-xs text-white flex items-center gap-1">🌲 Chemin 2 : Alternatif</div>
+            <div class="text-[10px] text-teal-200">Sentier panoramique / trekking</div>
+          </button>
+        </div>
+      </div>
+
       <!-- Saisie facultative du nom du prochain point (Point d'Intérêt) -->
       <div class="mb-2 bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
         <label for="input-next-wp-name" class="text-xs text-sky-300 font-bold whitespace-nowrap flex items-center gap-1">
@@ -307,6 +342,12 @@ class GpxCreatorEditor {
     }
 
     document.getElementById('btn-toggle-create-names')?.addEventListener('click', () => this.toggleWaypointNames());
+    document.getElementById('btn-loop-back-to-start')?.addEventListener('click', () => {
+      const panel = document.getElementById('gpx-return-choices-panel');
+      if (panel) panel.classList.toggle('hidden');
+    });
+    document.getElementById('btn-return-direct')?.addEventListener('click', () => this.closeLoopToStart('direct'));
+    document.getElementById('btn-return-scenic')?.addEventListener('click', () => this.closeLoopToStart('scenic'));
     document.getElementById('btn-undo-create-point')?.addEventListener('click', () => this.undoLastCreateOperation());
     document.getElementById('btn-reset-create-points')?.addEventListener('click', () => this.resetCreatePoints());
     document.getElementById('btn-export-created-gpx')?.addEventListener('click', () => this.exportCreatedGpx());
@@ -434,8 +475,12 @@ class GpxCreatorEditor {
       }, 350);
     });
 
-    marker.on('click', (e) => {
+    marker.on('click', async (e) => {
       if (e && e.originalEvent) L.DomEvent.stopPropagation(e.originalEvent);
+      // Si on clique sur le point de départ A et qu'on a déjà posé au moins 2 points -> fermer la boucle !
+      if (wp === this.createWaypoints[0] && this.createWaypoints.length >= 2) {
+        await this.closeLoopToStart('direct');
+      }
     });
 
     marker.on('mousedown', (e) => {
@@ -452,6 +497,16 @@ class GpxCreatorEditor {
 
   async handleCreateMapClick(latlng) {
     if (this.mode !== 'create' || !this.map || this.isDraggingWaypoint) return;
+
+    // Si on a déjà au moins 2 points et qu'on clique très près du point de départ A -> fermer la boucle vers A !
+    if (this.createWaypoints.length >= 2) {
+      const startWp = this.createWaypoints[0];
+      const distToStart = this.map.distance([latlng.lat, latlng.lng], [startWp.lat, startWp.lon]);
+      if (distToStart <= 35) {
+        await this.closeLoopToStart('direct');
+        return;
+      }
+    }
 
     this.saveCreateHistorySnapshot();
 
@@ -506,6 +561,12 @@ class GpxCreatorEditor {
             </span>
             <span style="font-size:10px; font-weight:700; color:#475569; background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0;">${roleLabel}</span>
           </div>
+
+          ${(isStart && total >= 2) ? `
+            <button type="button" class="btn-close-loop-from-popup" onclick="window.GpxCreatorEditorInstance?.closeLoopToStart('direct');" style="width:100%; background:#10b981; color:white; border:none; padding:7px 10px; border-radius:8px; font-weight:800; font-size:11px; margin-bottom:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+              <span>🔄</span> <span>Fermer la boucle (revenir à A)</span>
+            </button>
+          ` : ''}
 
           <div style="margin-bottom:8px;">
             <label style="font-size:11px; font-weight:700; color:#334155; display:block; margin-bottom:3px;">🏷️ Nom / Point d'intérêt :</label>
@@ -668,6 +729,105 @@ class GpxCreatorEditor {
     });
   }
 
+  setCreateColor(color) {
+    this.createColor = color;
+    if (this.createPolyline) {
+      this.createPolyline.setStyle({ color: color });
+    }
+    this.updateCreateColorPaletteUI();
+    if (window.App?.showToast) {
+      window.App.showToast(`Couleur de tracé : ${color}`, 'info');
+    }
+  }
+
+  updateCreateColorPaletteUI() {
+    const container = document.getElementById('gpx-create-color-palette');
+    if (!container) return;
+    const cur = this.createColor || '#0284c7';
+    container.querySelectorAll('button').forEach(btn => {
+      const bg = btn.style.backgroundColor;
+      const isMatch = (bg === cur || btn.getAttribute('title')?.includes(cur));
+      if (isMatch) {
+        btn.className = 'w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 border-white scale-110 shadow-sm ring-2 ring-white/80 cursor-pointer';
+      } else {
+        btn.className = 'w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 border-black/50 cursor-pointer';
+      }
+    });
+  }
+
+  setEditColor(color) {
+    if (!this.editingTrack) return;
+    this.editingTrack.color = color;
+    if (this.editingTrack.polyline) {
+      this.editingTrack.polyline.setStyle({ color: color });
+    }
+    if (this.editingTrack.layer && typeof this.editingTrack.layer.setStyle === 'function') {
+      this.editingTrack.layer.setStyle({ color: color });
+    }
+    if (this.mapManager && typeof this.mapManager.setTrackColor === 'function') {
+      this.mapManager.setTrackColor(this.editingTrack.id, color);
+    }
+    this.updateEditColorPaletteUI();
+    if (window.App?.showToast) {
+      window.App.showToast(`Couleur de la trace modifiée : ${color}`, 'info');
+    }
+  }
+
+  updateEditColorPaletteUI() {
+    const container = document.getElementById('gpx-edit-color-palette');
+    if (!container) return;
+    const cur = this.editingTrack?.color || '#8b5cf6';
+    container.querySelectorAll('button').forEach(btn => {
+      const bg = btn.style.backgroundColor;
+      const isMatch = (bg === cur || btn.getAttribute('title')?.includes(cur));
+      if (isMatch) {
+        btn.className = 'w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 border-white scale-110 shadow-sm ring-2 ring-white/80 cursor-pointer';
+      } else {
+        btn.className = 'w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 border-black/50 cursor-pointer';
+      }
+    });
+  }
+
+  async closeLoopToStart(mode = 'direct') {
+    if (this.mode !== 'create' || !this.map || this.createWaypoints.length < 2) return;
+
+    const startWp = this.createWaypoints[0];
+    const lastWp = this.createWaypoints[this.createWaypoints.length - 1];
+
+    // Si on est déjà tout proche du départ (< 15 mètres), la boucle est fermée
+    const dMeters = this.map.distance([lastWp.lat, lastWp.lon], [startWp.lat, startWp.lon]);
+    if (dMeters < 15) {
+      if (window.App?.showToast) window.App.showToast('La boucle est déjà fermée sur le départ A !', 'info');
+      return;
+    }
+
+    this.saveCreateHistorySnapshot();
+
+    // Fermer le panneau de choix si ouvert
+    const panel = document.getElementById('gpx-return-choices-panel');
+    if (panel) panel.classList.add('hidden');
+
+    const prevProfile = this.routingProfile;
+    if (mode === 'scenic' || mode === 'alternative') {
+      this.routingProfile = 'trekking';
+    } else {
+      this.routingProfile = 'hiking-mountain';
+    }
+
+    const arrivalName = (mode === 'scenic' || mode === 'alternative') ? 'Arrivée (Panoramique)' : 'Arrivée (Retour A)';
+    const wp = this.createWaypointObject({ lat: startWp.lat, lng: startWp.lon }, arrivalName);
+    this.createWaypoints.push(wp);
+
+    this.updateWaypointIcons();
+    await this.recalculateCreatedRoute();
+
+    this.routingProfile = prevProfile;
+
+    if (window.App?.showToast) {
+      window.App.showToast(`Boucle fermée vers le départ A (${mode === 'scenic' ? 'Sentier alternatif' : 'Sentier direct'})`, 'success');
+    }
+  }
+
   removeCreateWaypoint(wp) {
     if (!wp || !this.map) return;
     this.saveCreateHistorySnapshot();
@@ -699,6 +859,15 @@ class GpxCreatorEditor {
     const exportBtn = document.getElementById('btn-export-created-gpx');
     if (exportBtn) {
       exportBtn.disabled = pts.length < 2;
+    }
+
+    const loopBtn = document.getElementById('btn-loop-back-to-start');
+    if (loopBtn) {
+      if (pts.length >= 2) {
+        loopBtn.classList.remove('opacity-40', 'pointer-events-none');
+      } else {
+        loopBtn.classList.add('opacity-40', 'pointer-events-none');
+      }
     }
 
     if (pts.length < 2) {
@@ -740,9 +909,10 @@ class GpxCreatorEditor {
 
     // Dessiner la polyline
     const latlngs = coords.map(c => [c[0], c[1]]);
+    const curColor = this.createColor || '#0284c7';
     if (!this.createPolyline) {
       this.createPolyline = L.polyline(latlngs, {
-        color: '#0284c7',
+        color: curColor,
         weight: 5,
         opacity: 0.95,
         lineCap: 'round',
@@ -750,6 +920,7 @@ class GpxCreatorEditor {
       }).addTo(this.map);
     } else {
       this.createPolyline.setLatLngs(latlngs);
+      this.createPolyline.setStyle({ color: curColor });
     }
 
     // Calcul métriques réelles
@@ -1170,6 +1341,21 @@ class GpxCreatorEditor {
             <span>🏛️</span> <span>${this.mapManager?.heritageActive ? `Patrimoine (${this.mapManager?._heritageCount || 0})` : 'Patrimoine'}</span>
           </button>
         </div>
+      </div>
+
+      <!-- Palette de couleur en mode modification -->
+      <div class="flex items-center justify-between gap-2 mb-2 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800 flex-wrap">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-violet-300 font-bold flex items-center gap-1">🎨 <span class="hidden sm:inline">Couleur trace :</span></span>
+          <div id="gpx-edit-color-palette" class="flex items-center gap-1.5">
+            ${this.colorPalette.map(c => `
+              <button type="button" class="w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 ${c === (this.editingTrack?.color || '#8b5cf6') ? 'border-white scale-110 shadow-sm ring-2 ring-white/80' : 'border-black/50'} cursor-pointer" style="background-color: ${c};" onclick="window.GpxCreatorEditorInstance.setEditColor('${c}')" title="Appliquer cette couleur : ${c}"></button>
+            `).join('')}
+          </div>
+        </div>
+        <span class="text-[11px] text-slate-400 font-semibold truncate max-w-[200px]" title="${this.editingTrack?.name || ''}">
+          ${this.editingTrack?.name || 'Trace en cours'}
+        </span>
       </div>
 
       <!-- Bandeau interactif de reconnexion de tronçon coupé -->
