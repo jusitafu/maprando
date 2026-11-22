@@ -384,7 +384,7 @@ html_content = f"""<!DOCTYPE html>
       </div>
 
       <div style="font-weight: 800; font-size: 9.5pt; color: #0f172a; margin-bottom: 2pt; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 2pt;">
-        📑 SOMMAIRE GÉNÉRAL DES 15 CHAPITRES (16 PAGES)
+        📑 SOMMAIRE GÉNÉRAL DES 16 CHAPITRES (17 PAGES)
       </div>
 
       <div class="toc-grid">
@@ -472,17 +472,23 @@ html_content = f"""<!DOCTYPE html>
           <div class="desc">GNSS/SBAS, LiDAR HD, barème IBP, check-list, secours satellite et montres.</div>
         </div>
 
-        <div class="toc-item" style="grid-column: span 2; border-left-color: #6366f1;">
+        <div class="toc-item" style="border-left-color: #6366f1;">
           <div class="num" style="color: #4f46e5;">Chapitre 15 • Page 16</div>
-          <div class="title">Étude Comparative Complète : Map &amp; Rando vs 9 Solutions Cartographiques &amp; GPX</div>
-          <div class="desc">Banc d'essai face à Cartes.gouv (IGN), Visorando, Hiker (HiiKER.com), Iphigénie, Komoot, Openrunner, GPXStudio, Garmin BaseCamp et VisuGPX.</div>
+          <div class="title">Étude Comparative : 10 Solutions</div>
+          <div class="desc">Banc d'essai face à Cartes.gouv, Visorando, Hiker, Iphigénie, Komoot, Openrunner, GPXStudio, BaseCamp et VisuGPX.</div>
+        </div>
+
+        <div class="toc-item" style="border-left-color: #047857;">
+          <div class="num" style="color: #047857;">Chapitre 16 • Page 17</div>
+          <div class="title">Glossaire des Sigles &amp; Acronymes</div>
+          <div class="desc">Lexique de référence des 22 acronymes officiels de la randonnée, de l'IGN, de la FFR et de la cartographie.</div>
         </div>
       </div>
     </div>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 1 / 16</div>
+      <div class="page-number">Page 1 / 17</div>
     </div>
   </section>
 
@@ -534,7 +540,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 2 / 16</div>
+      <div class="page-number">Page 2 / 17</div>
     </div>
   </section>
 
@@ -581,7 +587,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 3 / 16</div>
+      <div class="page-number">Page 3 / 17</div>
     </div>
   </section>
 
@@ -624,7 +630,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 4 / 16</div>
+      <div class="page-number">Page 4 / 17</div>
     </div>
   </section>
 
@@ -663,7 +669,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 5 / 16</div>
+      <div class="page-number">Page 5 / 17</div>
     </div>
   </section>
 
@@ -707,7 +713,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 6 / 16</div>
+      <div class="page-number">Page 6 / 17</div>
     </div>
   </section>
 
@@ -753,7 +759,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 7 / 16</div>
+      <div class="page-number">Page 7 / 17</div>
     </div>
   </section>
 
@@ -799,7 +805,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 8 / 16</div>
+      <div class="page-number">Page 8 / 17</div>
     </div>
   </section>
 
@@ -860,7 +866,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 9 / 16</div>
+      <div class="page-number">Page 9 / 17</div>
     </div>
   </section>
 
@@ -915,7 +921,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 10 / 16</div>
+      <div class="page-number">Page 10 / 17</div>
     </div>
   </section>
 
@@ -958,7 +964,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 11 / 16</div>
+      <div class="page-number">Page 11 / 17</div>
     </div>
   </section>
 
@@ -1008,7 +1014,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 12 / 16</div>
+      <div class="page-number">Page 12 / 17</div>
     </div>
   </section>
 
@@ -1051,7 +1057,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 13 / 16</div>
+      <div class="page-number">Page 13 / 17</div>
     </div>
   </section>
 
@@ -1100,7 +1106,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 14 / 16</div>
+      <div class="page-number">Page 14 / 17</div>
     </div>
   </section>
 
@@ -1145,7 +1151,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 15 / 16</div>
+      <div class="page-number">Page 15 / 17</div>
     </div>
   </section>
 
@@ -1404,10 +1410,164 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 16 / 16</div>
+      <div class="page-number">Page 16 / 17</div>
     </div>
   </section>
 
+  <!-- ===================================================================== -->
+  <!-- PAGE 17 : GLOSSAIRE DES SIGLES ET ACRONYMES DE LA RANDONNÉE ET CARTOGRAPHIE -->
+  <!-- ===================================================================== -->
+  <section class="page-section">
+    <div class="page-header">
+      <div class="brand">
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+      </div>
+      <div>ANNEXE • GLOSSAIRE DES SIGLES &amp; ACRONYMES</div>
+    </div>
+
+    <div class="page-body">
+      <h2>📖 16. Glossaire &amp; Définitions des Sigles et Acronymes Officiels</h2>
+      <p style="margin-bottom: 4pt;">
+        Ce lexique de référence récapitule l'ensemble des <strong>22 sigles, acronymes et termes techniques</strong> utilisés au sein de <strong>Map &amp; Rando</strong>, de l'<strong>IGN</strong> et de la <strong>Fédération Française de la Randonnée Pédestre</strong>.
+      </p>
+
+      <table class="comp-table" style="font-size: 6.8pt; line-height: 1.18; margin-top: 2pt;">
+        <thead>
+          <tr>
+            <th style="width: 14%; text-align: left; padding: 3pt 4pt;">Sigle / Acronyme</th>
+            <th style="width: 32%; text-align: left; padding: 3pt 4pt;">Signification Officielle</th>
+            <th style="width: 54%; text-align: left; padding: 3pt 4pt;">Rôle &amp; Usage en Randonnée &amp; Cartographie</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">GPX</td>
+            <td style="font-weight: 700; text-align: left;">GPS Exchange Format</td>
+            <td style="text-align: left;">Format universel XML standardisé d'échange pour l'enregistrement et le partage de traces, routes et waypoints GPS.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">IGN</td>
+            <td style="font-weight: 700; text-align: left;">Institut National de l'Information Géographique et Forestière</td>
+            <td style="text-align: left;">Établissement public cartographe officiel en France, producteur de la carte de référence SCAN 25® (1:25 000).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">FFR / FFRandonnée</td>
+            <td style="font-weight: 700; text-align: left;">Fédération Française de la Randonnée Pédestre</td>
+            <td style="text-align: left;">Fédération délégataire nationale assurant la gestion des sentiers balisés et la normalisation des tableaux de marche.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">IBP Index</td>
+            <td style="font-weight: 700; text-align: left;">Indice de Bicyclette et Pédestre</td>
+            <td style="text-align: left;">Score scientifique objectif (de 0 à >200) mesurant la difficulté physique d'un parcours selon la distance et les pentes.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">WGS84</td>
+            <td style="font-weight: 700; text-align: left;">World Geodetic System 1984</td>
+            <td style="text-align: left;">Système géodésique mondial de référence des satellites GPS (coordonnées en degrés décimaux : latitude / longitude).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">UTM</td>
+            <td style="font-weight: 700; text-align: left;">Universal Transverse Mercator</td>
+            <td style="text-align: left;">Projection cartographique cylindrique métrique conforme découpant le globe en 60 fuseaux et coordonnées Est/Nord.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">WP / Waypoint</td>
+            <td style="font-weight: 700; text-align: left;">Point de Repère Géographique</td>
+            <td style="text-align: left;">Repère jalonné ponctuel sur un itinéraire (sommet, col, refuge, source) avec toponyme, altitude et coordonnées GPS.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">POI</td>
+            <td style="font-weight: 700; text-align: left;">Point of Interest</td>
+            <td style="text-align: left;">Point d'intérêt remarquable (patrimoine historique, curiosité géologique, belvédère, équipement) sur la carte.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #047857; text-align: left;">D+</td>
+            <td style="font-weight: 700; text-align: left;">Dénivelé Positif Cumulé</td>
+            <td style="text-align: left;">Somme arithmétique de toutes les ascensions et montées cumulées d'un parcours, exprimée en mètres (+m).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #b91c1c; text-align: left;">D-</td>
+            <td style="font-weight: 700; text-align: left;">Dénivelé Négatif Cumulé</td>
+            <td style="text-align: left;">Somme arithmétique de toutes les descentes cumulées d'un parcours, exprimée en mètres (-m).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">GR®</td>
+            <td style="font-weight: 700; text-align: left;">Grande Randonnée</td>
+            <td style="text-align: left;">Sentier linéaire de plusieurs jours ou semaines balisé blanc et rouge (marque officielle déposée FFRandonnée).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">GRP®</td>
+            <td style="font-weight: 700; text-align: left;">Grande Randonnée de Pays</td>
+            <td style="text-align: left;">Boucle régionale de découverte d'un terroir ou d'un massif balisée jaune et rouge (marque déposée FFRandonnée).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">PR®</td>
+            <td style="font-weight: 700; text-align: left;">Promenade et Randonnée</td>
+            <td style="text-align: left;">Itinéraire pédestre d'une journée ou demi-journée adapté à la balade familiale ou sportive (balisage jaune).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">RGPD</td>
+            <td style="font-weight: 700; text-align: left;">Règlement Général sur la Protection des Données</td>
+            <td style="text-align: left;">Règlement européen (UE 2016/679) protégeant la vie privée et garantissant la confidentialité des données des utilisateurs.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">CGU</td>
+            <td style="font-weight: 700; text-align: left;">Conditions Générales d'Utilisation</td>
+            <td style="text-align: left;">Cadre contractuel et juridique fixant les règles d'utilisation, droits et responsabilités du service en ligne.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">OSM</td>
+            <td style="font-weight: 700; text-align: left;">OpenStreetMap</td>
+            <td style="text-align: left;">Base cartographique vectorielle mondiale collaborative et libre sous licence ouverte ODbL.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">OTM</td>
+            <td style="font-weight: 700; text-align: left;">OpenTopoMap</td>
+            <td style="text-align: left;">Rendu topographique libre avec courbes de niveau et ombrage du relief basé sur les données OSM et SRTM.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">MNT / DEM</td>
+            <td style="font-weight: 700; text-align: left;">Modèle Numérique de Terrain</td>
+            <td style="text-align: left;">Grille altimétrique matricielle représentant le relief terrestre pour le calcul des altitudes et pourcentages de pentes.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">RGE Alti®</td>
+            <td style="font-weight: 700; text-align: left;">Réseau Géodésique et Altimétrique de l'IGN</td>
+            <td style="text-align: left;">Modèle altimétrique national haute résolution au pas de 1 mètre produit par relevés aéroportés LIDAR.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">SRTM</td>
+            <td style="font-weight: 700; text-align: left;">Shuttle Radar Topography Mission</td>
+            <td style="text-align: left;">Mission radar spatiale de la NASA/NGA ayant cartographié le relief mondial à 30 mètres de résolution.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">PDF</td>
+            <td style="font-weight: 700; text-align: left;">Portable Document Format</td>
+            <td style="text-align: left;">Format ouvert normalisé (ISO 32000) pour l'impression haute fidélité à l'échelle et la consultation pérenne hors-ligne.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">CSV</td>
+            <td style="font-weight: 700; text-align: left;">Comma-Separated Values</td>
+            <td style="text-align: left;">Format ouvert de données tabulaires pour export et échange direct avec Excel, LibreOffice et les tableurs.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- ENCADRÉ CONSEIL DE LECTURE CARTO -->
+      <div style="background: #f0fdf4; border: 1.2px solid #86efac; border-radius: 4px; padding: 4pt 6pt; margin-top: 4pt;">
+        <div style="font-weight: 800; font-size: 7.5pt; color: #166534;">💡 Bonnes Pratiques Cartographiques pour la Randonnée</div>
+        <p style="margin: 0; font-size: 6.9pt; color: #1e293b; line-height: 1.2;">
+          Sur le terrain comme lors de la préparation, croisez toujours les coordonnées <strong>WGS84</strong> (utilisées par votre smartphone et balises de détresse) avec le carroyage <strong>UTM</strong> de votre carte papier TOP 25. En cas d'appel aux services de secours (112 ou 114), les deux formats sont immédiatement reconnus par les pelotons de gendarmerie de haute montagne (PGHM) et les CRS secours en montagne.
+        </p>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div class="page-number">Page 17 / 17</div>
+    </div>
+  </section>
 </body>
 </html>
 """

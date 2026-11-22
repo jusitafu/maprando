@@ -3359,8 +3359,7 @@ class MapManager {
 
 
     const utm = MapManager.latLonToUtm(lat, lon);
-
-    utmEl.innerHTML = `<span>🌐</span> <span>${utm.zone}${utm.band} ${utm.easting} E  ${utm.northing} N</span>`;
+    utmEl.innerHTML = `<span>🌐</span> <span>${utm.zone}${utm.band} ${utm.easting} E ${utm.northing} N</span>`;
 
 
 
@@ -7021,9 +7020,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     // MODE NORMAL AGRANDI (Conforme aux standards ergonomiques 16px)
     const isMoved = hud.dataset.userMoved === 'true';
     if (!isMoved) {
-      hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95%] sm:max-w-3xl';
+      hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[96vw] overflow-hidden';
     } else {
-      hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white max-w-[95%] sm:max-w-3xl';
+      hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-slate-700/90 rounded-3xl px-4 sm:px-6 py-3.5 sm:py-4 shadow-2xl flex flex-col gap-3 text-sm text-white w-auto max-w-[96vw] overflow-hidden';
       if (hud.dataset.userLeft) hud.style.setProperty('left', `${hud.dataset.userLeft}px`, 'important');
       if (hud.dataset.userTop) hud.style.setProperty('top', `${hud.dataset.userTop}px`, 'important');
     }
@@ -7117,65 +7116,59 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
 
     hud.innerHTML = `
-
-      <div class="flex items-center justify-between gap-4 pb-2.5 border-b border-slate-800">
-
-        <div class="flex items-center gap-2.5">
-
-          <span class="text-amber-400 font-black text-sm sm:text-base uppercase tracking-wider">Traces GPX (${count}/3)</span>
-
-          <span class="text-xs sm:text-sm text-slate-300 hidden md:inline">Cliquez sur une pastille pour changer de couleur</span>
-
+      <!-- LIGNE 1 : EN-TÊTE FIXE AVEC TITRE ET BOUTONS - ET X TOUJOURS VERROUILLÉS DANS LA FENÊTRE -->
+      <div class="flex items-center justify-between gap-3 pb-2 border-b border-slate-800">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-amber-400 font-black text-sm sm:text-base uppercase tracking-wider whitespace-nowrap">Traces GPX (${count}/3)</span>
+          <span class="text-xs text-slate-400 hidden xl:inline">Cliquez sur une pastille pour changer de couleur</span>
         </div>
-
-        <div class="flex items-center gap-2">
-
-          ${count < 3 ? `
-            <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer">
-              <span class="text-base font-black">+</span> <span>Ajouter trace</span>
-            </button>
-          ` : ''}
-
-          <!-- Bouton Masquer/Afficher les Noms des points -->
-          <button id="btn-toggle-standalone-wp-names" type="button" class="px-3 py-2 rounded-xl ${this.showWaypointNames !== false ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointNames()" title="Afficher ou masquer les noms des points sur la carte">
-            <span>🏷️</span> <span>${this.showWaypointNames !== false ? 'Noms : OUI' : 'Noms : NON'}</span>
+        <div class="flex items-center gap-1.5 flex-shrink-0 ml-auto">
+          <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire la boîte" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
+            &minus;
           </button>
-
-          <!-- Bouton Bascule Coordonnées des Waypoints -->
-          <button id="btn-toggle-standalone-wp-coords" type="button" class="px-3 py-2 rounded-xl ${this.showWaypointCoords ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointCoords()" title="Afficher ou masquer les coordonnées GPS des waypoints">
-            <span>🧭</span> <span>${this.showWaypointCoords ? 'Coordonnées WP : OUI' : 'Coordonnées WP : NON'}</span>
+          <button type="button" onclick="window.MapManagerInstance.clearStandaloneGpxTrack()" title="Fermer et effacer les traces GPX" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
+            &#x2715;
           </button>
-
-          <!-- Bouton Colorer les Pentes -->
-          <button id="btn-toggle-slope-colors" type="button" class="px-3 py-2 rounded-xl ${this.slopeColoringActive ? 'bg-gradient-to-r from-emerald-600 via-amber-600 to-rose-600 text-white ring-2 ring-white font-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleSlopeColoring()" title="Colorer la trace selon les pourcentages de pente du relief">
-            <span>📈</span> <span>${this.slopeColoringActive ? 'Pentes : ON' : 'Pentes'}</span>
-          </button>
-
-          <!-- Bouton Fusionner 2 traces -->
-          ${count >= 2 ? `
-            <button id="btn-merge-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.openMergeModal()" title="Fusionner 2 traces en un seul parcours continu">
-              <span>🔀</span> <span>Fusionner</span>
-            </button>
-          ` : ''}
-
-          <button id="btn-print-standalone-gpx" type="button" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer">
-            <span class="text-base">🖨️</span> <span>Imprimer</span>
-          </button>
-
-          <button id="btn-clear-standalone-gpx" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-700 text-slate-200 hover:text-white font-black text-xs sm:text-sm transition cursor-pointer" title="Fermer toutes les traces">
-            Tout effacer
-          </button>
-
-          <!-- 3 solutions habituelles : - pour réduire, □ pour agrandir, ✕ pour fermer -->
-          <div class="flex items-center gap-1.5 ml-2 pl-2.5 border-l-2 border-slate-700">
-            <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire la boîte" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
-              &minus;
-            </button>
-            <button type="button" onclick="window.MapManagerInstance.clearStandaloneGpxTrack()" title="Fermer et effacer les traces GPX" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
-              &#x2715;
-            </button>
-          </div>
         </div>
+      </div>
+
+      <!-- LIGNE 2 : BARRE D'OUTILS ET ACTIONS WRAPPABLES SANS AUCUN DÉBORDEMENT -->
+      <div class="flex items-center flex-wrap gap-2 pt-0.5">
+        ${count < 3 ? `
+          <button type="button" onclick="document.getElementById('input-quick-gpx-viewer')?.click()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer">
+            <span class="text-sm font-black">+</span> <span>Ajouter trace</span>
+          </button>
+        ` : ''}
+
+        <!-- Bouton Masquer/Afficher les Noms des points -->
+        <button id="btn-toggle-standalone-wp-names" type="button" class="px-2.5 py-1.5 rounded-xl ${this.showWaypointNames !== false ? 'bg-indigo-600 hover:bg-indigo-500 text-white font-bold' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointNames()" title="Afficher ou masquer les noms des points sur la carte">
+          <span>🏷️</span> <span>${this.showWaypointNames !== false ? 'Noms : OUI' : 'Noms : NON'}</span>
+        </button>
+
+        <!-- Bouton Bascule Coordonnées des Waypoints -->
+        <button id="btn-toggle-standalone-wp-coords" type="button" class="px-2.5 py-1.5 rounded-xl ${this.showWaypointCoords ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleWaypointCoords()" title="Afficher ou masquer les coordonnées GPS des waypoints">
+          <span>🧭</span> <span>${this.showWaypointCoords ? 'Coords WP : OUI' : 'Coords WP : NON'}</span>
+        </button>
+
+        <!-- Bouton Colorer les Pentes -->
+        <button id="btn-toggle-slope-colors" type="button" class="px-2.5 py-1.5 rounded-xl ${this.slopeColoringActive ? 'bg-gradient-to-r from-emerald-600 via-amber-600 to-rose-600 text-white ring-2 ring-white font-black' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleSlopeColoring()" title="Colorer la trace selon les pourcentages de pente du relief">
+          <span>📈</span> <span>${this.slopeColoringActive ? 'Pentes : ON' : 'Pentes'}</span>
+        </button>
+
+        <!-- Bouton Fusionner 2 traces -->
+        ${count >= 2 ? `
+          <button id="btn-merge-standalone-gpx" type="button" class="px-2.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.openMergeModal()" title="Fusionner 2 traces en un seul parcours continu">
+            <span>🔀</span> <span>Fusionner</span>
+          </button>
+        ` : ''}
+
+        <button id="btn-print-standalone-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center gap-1 shadow-md transition cursor-pointer">
+          <span class="text-sm">🖨️</span> <span>Imprimer</span>
+        </button>
+
+        <button id="btn-clear-standalone-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-700 text-rose-300 hover:text-white font-black text-xs transition cursor-pointer ml-auto" title="Fermer toutes les traces">
+          Tout effacer
+        </button>
       </div>
 
       <!-- Légende Pentes active -->

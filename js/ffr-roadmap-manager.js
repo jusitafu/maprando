@@ -1652,93 +1652,251 @@ class FfrRoadmapManager {
         <title>Fiche Officielle • Tableau de Marche FFR • ${this.escapeHtml(this.hikeName)}</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <style>
-          @page { size: landscape; margin: 8mm; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10px; color: #1e293b; margin: 0; padding: 4px; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 5px; margin-bottom: 6px; }
+          @page { size: landscape; margin: 6mm 8mm; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 10px;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            background: #e2e8f0;
+          }
+
+          /* BARRE DE CONTRÔLE FLOTTANTE SUR ÉCRAN (AVEC BOUTON IMPRIMER) */
+          .print-control-bar {
+            position: sticky;
+            top: 0;
+            z-index: 10000;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+            border-bottom: 2.5px solid #0284c7;
+          }
+          .btn-print-action {
+            background: #059669;
+            color: #ffffff;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 3px 10px rgba(5,150,105,0.4);
+            transition: all 0.15s ease;
+          }
+          .btn-print-action:hover {
+            background: #047857;
+            transform: translateY(-1px);
+          }
+          .btn-close-action {
+            background: #334155;
+            color: #cbd5e1;
+            border: 1px solid #475569;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+          }
+          .btn-close-action:hover {
+            background: #475569;
+            color: #ffffff;
+          }
+
+          /* FEUILLES PAGES A4 PAYSAGE SÉPARÉES NETTEMENT SANS AUCUN CHEVAUCHEMENT */
+          .print-sheet {
+            background: #ffffff;
+            width: 280mm;
+            min-height: 194mm;
+            margin: 20px auto 30px auto;
+            padding: 8mm 10mm;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.18);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 5px;
+            margin-bottom: 6px;
+          }
           .title { font-size: 14px; font-weight: 900; color: #0f172a; }
           .meta { font-size: 9.5px; color: #475569; margin-top: 2px; }
+
           table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 6px; }
           th { background: #0f172a; color: #ffffff; font-size: 8.5px; font-weight: 800; border: 1px solid #cbd5e1; padding: 3px 2px; text-align: center; }
           td { border: 1px solid #cbd5e1; padding: 2.5px 3.5px; font-size: 8.5px; }
           tr:nth-child(even) { background: #f8fafc; }
-          .section-title { font-size: 10.5px; font-weight: 800; color: #0369a1; margin-top: 4px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
-          
-          /* Disposition Page 1 : Tableau + Profil altimétrique pleine largeur */
-          .profile-box-full { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 6px; background: #ffffff; margin-top: 4px; height: 165px; }
 
-          /* Disposition compacte (si <= 5 points) */
-          .visu-grid { display: flex; gap: 8px; margin-top: 4px; }
-          .profile-box-split { flex: 1.2; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; height: 160px; background: #ffffff; }
-          .map-box-split { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; height: 160px; }
+          .section-title { font-size: 10.5px; font-weight: 800; color: #0369a1; margin-top: 2px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
+          
+          /* Boîte de profil altimétrique isolée et hermétique (zéro débordement) */
+          .profile-box-full {
+            width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 4px 6px;
+            background: #ffffff;
+            margin-top: 6px;
+            height: 130px;
+            overflow: hidden;
+          }
+
+          /* Disposition compacte 1 page (si <= 5 points) */
+          .visu-grid { display: flex; gap: 8px; margin-top: 4px; flex: 1; }
+          .profile-box-split { flex: 1.2; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; height: 155px; background: #ffffff; overflow: hidden; }
+          .map-box-split { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; height: 155px; }
 
           /* Page 2 : Carte pleine page */
-          .page-break { page-break-before: always; break-before: page; margin-top: 10px; }
-          .map-box-full { width: 100%; height: 172mm; min-height: 165mm; border: 2px solid #0284c7; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px; }
+          .map-box-full {
+            width: 100%;
+            height: 165mm;
+            min-height: 160mm;
+            border: 2px solid #0284c7;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-top: 4px;
+            flex: 1;
+          }
+
+          .footer-note {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 4px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 8.5px;
+            color: #64748b;
+          }
 
           .map-print-pin { display: flex; align-items: center; justify-content: center; }
+          .ffr-print-tooltip {
+            background: rgba(255,255,255,0.95) !important;
+            border: 1.5px solid #0284c7 !important;
+            border-radius: 6px !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+            padding: 2px 6px !important;
+          }
+
           @media print {
-            body { padding: 0; }
+            body { background: #ffffff !important; padding: 0 !important; margin: 0 !important; }
             .no-print { display: none !important; }
-            .page-break { page-break-before: always !important; }
+            .print-sheet {
+              width: 100% !important;
+              max-width: none !important;
+              min-height: 190mm !important;
+              height: 190mm !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              page-break-after: always !important;
+              break-after: page !important;
+            }
+            .print-sheet:last-child {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
           }
         </style>
       </head>
       <body>
-        <!-- ==================== PAGE 1 : TABLEAU & PROFIL ==================== -->
-        <div class="header">
-          <div>
-            <div class="title">📋 Fiche Officielle • Tableau de Marche FFRandonnée : ${this.escapeHtml(this.hikeName)}</div>
-            <div class="meta">
-              Animateur : <strong>${this.escapeHtml(this.animatorName || 'Animateur FFR')}</strong> • 
-              Heure de départ : <strong>${this.startTime}</strong> • 
-              Distance : <strong>${this.points[this.points.length - 1]?.cumulDist || 0} km</strong> • 
-              D+ : <strong>+${this.points[this.points.length - 1]?.cumulDPlus || 0} m</strong> • 
-              Arrivée estimée : <strong>${this.points[this.points.length - 1]?.heureArrivee || '--:--'}</strong>
+        <!-- BANDEAU SUPÉRIEUR D'ACTION FIXE SUR ÉCRAN (AVEC BOUTON D'IMPRESSION) -->
+        <div class="no-print print-control-bar">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 22px;">📋</span>
+            <div>
+              <div style="font-weight: 900; font-size: 14px; letter-spacing: 0.3px;">Fiche Officielle • Tableau de Marche FFRandonnée</div>
+              <div style="font-size: 11px; color: #94a3b8;">${this.escapeHtml(this.hikeName)} • 2 Pages A4 Paysage</div>
             </div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Map &amp; Rando by JLDApps 2026</div>
-            <div style="font-size:8px; color:#64748b;">${isMultiPage ? 'Page 1 / 2 • Tableau &amp; Profil' : 'Édité le ' + new Date().toLocaleDateString('fr-FR')}</div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button type="button" onclick="window.print()" class="btn-print-action">
+              <span style="font-size: 16px;">🖨️</span> <span>Imprimer la Fiche Topo</span>
+            </button>
+            <button type="button" onclick="window.close()" class="btn-close-action">
+              ✕ Fermer
+            </button>
           </div>
         </div>
 
-        <!-- 1. TABLEAU DE MARCHE OFFICIEL -->
-        <table>
-          <thead>
-            <tr>
-              <th>N°</th>
-              <th>Désignation (Waypoint)</th>
-              <th>Azimut</th>
-              <th>Alt.</th>
-              <th>Dist.</th>
-              <th>Vitesse</th>
-              <th>Temps</th>
-              <th style="background:#065f46;">Arrivée</th>
-              <th style="background:#92400e;">Pause</th>
-              <th>Déniv.</th>
-              <th>Pente</th>
-              <th>D+ cum.</th>
-              <th>D- cum.</th>
-              <th>Dist. cum.</th>
-              <th>Information / Consignes</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
-
         ${isMultiPage ? `
-          <!-- Profil Altimétrique Normalisé Pleine Largeur -->
-          <div class="profile-box-full">
-            <div class="section-title">▲ Profil Altimétrique Normalisé avec Repères des Jalons</div>
-            <div style="height: 140px; width: 100%;">
-              ${svgProfile}
+          <!-- ==================== FEUILLE 1 : TABLEAU & PROFIL ==================== -->
+          <div class="print-sheet">
+            <div class="header">
+              <div>
+                <div class="title">📋 Fiche Officielle • Tableau de Marche FFRandonnée : ${this.escapeHtml(this.hikeName)}</div>
+                <div class="meta">
+                  Animateur : <strong>${this.escapeHtml(this.animatorName || 'Animateur FFR')}</strong> • 
+                  Heure de départ : <strong>${this.startTime}</strong> • 
+                  Distance : <strong>${this.points[this.points.length - 1]?.cumulDist || 0} km</strong> • 
+                  D+ : <strong>+${this.points[this.points.length - 1]?.cumulDPlus || 0} m</strong> • 
+                  Arrivée estimée : <strong>${this.points[this.points.length - 1]?.heureArrivee || '--:--'}</strong>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Map &amp; Rando by JLDApps 2026</div>
+                <div style="font-size:8px; color:#64748b;">Page 1 / 2 • Tableau &amp; Profil</div>
+              </div>
+            </div>
+
+            <!-- 1. TABLEAU DE MARCHE OFFICIEL -->
+            <table>
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Désignation (Waypoint)</th>
+                  <th>Azimut</th>
+                  <th>Alt.</th>
+                  <th>Dist.</th>
+                  <th>Vitesse</th>
+                  <th>Temps</th>
+                  <th style="background:#065f46;">Arrivée</th>
+                  <th style="background:#92400e;">Pause</th>
+                  <th>Déniv.</th>
+                  <th>Pente</th>
+                  <th>D+ cum.</th>
+                  <th>D- cum.</th>
+                  <th>Dist. cum.</th>
+                  <th>Information / Consignes</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <!-- Profil Altimétrique Normalisé Pleine Largeur Hermétique -->
+            <div class="profile-box-full">
+              <div class="section-title">▲ Profil Altimétrique Normalisé avec Repères des Jalons</div>
+              <div style="height: 105px; width: 100%; overflow: hidden;">
+                ${svgProfile}
+              </div>
+            </div>
+
+            <div class="footer-note">
+              <div>Map &amp; Rando by JLDApps 2026 • Document Certifié Conforme aux Normes FFRandonnée</div>
+              <div><strong>Page 1 / 2</strong> • Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
             </div>
           </div>
 
-          <!-- ==================== PAGE 2 : CARTE PLEINE PAGE ==================== -->
-          <div class="page-break">
+          <!-- ==================== FEUILLE 2 : CARTE PLEINE PAGE ==================== -->
+          <div class="print-sheet">
             <div class="header">
               <div>
                 <div class="title">🗺️ Fiche Officielle • Carte Topographique &amp; Jalons : ${this.escapeHtml(this.hikeName)}</div>
@@ -1750,23 +1908,76 @@ class FfrRoadmapManager {
                 </div>
               </div>
               <div style="text-align:right;">
-                <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Page 2 / 2 • Carte Pleine Page</div>
-                <div style="font-size:8px; color:#64748b;">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+                <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Map &amp; Rando by JLDApps 2026</div>
+                <div style="font-size:8px; color:#64748b;">Page 2 / 2 • Carte Pleine Page</div>
               </div>
             </div>
 
             <div id="print-map" class="map-box-full"></div>
+
+            <div class="footer-note">
+              <div>Fond cartographique OpenStreetMap &amp; Relevés Topographiques • Grand Format Animateur</div>
+              <div><strong>Page 2 / 2</strong> • Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+            </div>
           </div>
         ` : `
-          <!-- Disposition compacte 1 page -->
-          <div class="visu-grid">
-            <div class="profile-box-split">
-              <div class="section-title">▲ Profil Altimétrique Normalisé avec Repères des Jalons</div>
-              <div style="height: 135px; width: 100%;">
-                ${svgProfile}
+          <!-- Disposition compacte 1 feuille -->
+          <div class="print-sheet">
+            <div class="header">
+              <div>
+                <div class="title">📋 Fiche Officielle • Tableau de Marche FFRandonnée : ${this.escapeHtml(this.hikeName)}</div>
+                <div class="meta">
+                  Animateur : <strong>${this.escapeHtml(this.animatorName || 'Animateur FFR')}</strong> • 
+                  Distance : <strong>${this.points[this.points.length - 1]?.cumulDist || 0} km</strong> • 
+                  D+ : <strong>+${this.points[this.points.length - 1]?.cumulDPlus || 0} m</strong> • 
+                  Arrivée estimée : <strong>${this.points[this.points.length - 1]?.heureArrivee || '--:--'}</strong>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Map &amp; Rando by JLDApps 2026</div>
+                <div style="font-size:8px; color:#64748b;">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
               </div>
             </div>
-            <div class="map-box-split" id="print-map"></div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>N°</th>
+                  <th>Désignation (Waypoint)</th>
+                  <th>Azimut</th>
+                  <th>Alt.</th>
+                  <th>Dist.</th>
+                  <th>Vitesse</th>
+                  <th>Temps</th>
+                  <th style="background:#065f46;">Arrivée</th>
+                  <th style="background:#92400e;">Pause</th>
+                  <th>Déniv.</th>
+                  <th>Pente</th>
+                  <th>D+ cum.</th>
+                  <th>D- cum.</th>
+                  <th>Dist. cum.</th>
+                  <th>Information / Consignes</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+
+            <div class="visu-grid">
+              <div class="profile-box-split">
+                <div class="section-title">▲ Profil Altimétrique Normalisé</div>
+                <div style="height: 125px; width: 100%; overflow: hidden;">
+                  ${svgProfile}
+                </div>
+              </div>
+              <div class="map-box-split" id="print-map"></div>
+            </div>
+
+            <div class="footer-note">
+              <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+              <div>Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+            </div>
           </div>
         `}
 

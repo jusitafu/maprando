@@ -302,7 +302,7 @@ html, body {
 }
 
 #map-coords-hud {
-  max-width: calc(100% - 600px) !important;
+  max-width: calc(100% - 410px) !important;
   overflow: hidden !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;
@@ -1071,22 +1071,23 @@ path.bearing-preview-line {
  * STANDARDS ERGONOMIQUES POUR LES POLICES PÉRIPHÉRIQUES (WCAG / ERGONOMIE)
  * ========================================================================= */
 #map-coords-hud {
-  font-size: 15px !important;
-  padding: 10px 18px !important;
-  border-radius: 18px !important;
+  font-size: 13px !important;
+  padding: 7px 14px !important;
+  border-radius: 16px !important;
+  max-width: calc(100% - 410px) !important;
 }
 
 #map-coords-hud label,
 #map-coords-hud span,
 #map-coords-hud input {
-  font-size: 15px !important;
+  font-size: 13px !important;
 }
 
 #map-hud-scale-input {
-  font-size: 16px !important;
+  font-size: 13px !important;
   font-weight: 900 !important;
-  width: 95px !important;
-  padding: 4px 8px !important;
+  width: 78px !important;
+  padding: 2px 6px !important;
 }
 
 #btn-open-screen-calib {
