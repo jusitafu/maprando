@@ -4129,6 +4129,30 @@ class MapManager {
 
 
 
+  resetAllMapTools() {
+
+    // Réinitialisation intégrale des outils interactifs temporaires (Caps, Mesures, Zones)
+
+    this.clearBearingVisuals();
+
+    this.cancelBearingMeasurement();
+
+    this.cancelMeasurePath();
+
+    this.resetMeasurePath();
+
+    this.cancelAreaSelection();
+
+    if (this.clickModeActive) {
+
+      this.setClickMode(false);
+
+    }
+
+  }
+
+
+
   removeSingleBearing(capNum) {
 
     if (!this.bearingMeasurements) return;

@@ -714,6 +714,7 @@ class AppController {
     if (btnCloseMapBearing) {
       btnCloseMapBearing.addEventListener('click', () => {
         if (window.MapManagerInstance) {
+          window.MapManagerInstance.clearBearingVisuals();
           window.MapManagerInstance.cancelBearingMeasurement();
         }
       });
@@ -751,6 +752,7 @@ class AppController {
       btnCloseMapMeasure.addEventListener('click', () => {
         if (window.MapManagerInstance) {
           window.MapManagerInstance.cancelMeasurePath();
+          window.MapManagerInstance.resetMeasurePath();
         }
       });
     }

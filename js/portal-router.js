@@ -399,6 +399,7 @@
       if (viewName === 'accueil' || viewName === 'guides' || viewName === 'randonner') {
         if (window.MapManagerInstance) {
           window.MapManagerInstance.clearStandaloneGpxTrack();
+          window.MapManagerInstance.resetAllMapTools();
           if (viewName !== 'randonner' || !params.get('hike')) {
             window.MapManagerInstance.deselectHike();
           }
@@ -431,6 +432,11 @@
         // =====================================================================
         if (viewMapContainer) viewMapContainer.classList.remove('hidden');
         if (lockModal) lockModal.classList.add('hidden');
+
+        // Réinitialiser systématiquement les outils temporaires (caps, mesures, zone d'impression)
+        if (window.MapManagerInstance) {
+          window.MapManagerInstance.resetAllMapTools();
+        }
 
         this.applyFreeMapMode(true);
 

@@ -3234,7 +3234,7 @@
                 <button type="button" id="btn-minimize-map-bearing" onclick="window.MapManagerInstance?.toggleMinimizeBearing()" title="Réduire la boîte cap (ou agrandir)" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
                   &minus;
                 </button>
-                <button type="button" id="btn-close-map-bearing" onclick="window.MapManagerInstance?.cancelBearingMeasurement()" title="Fermer la boîte et effacer les caps" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
+                <button type="button" id="btn-close-map-bearing" onclick="window.MapManagerInstance?.clearBearingVisuals(); window.MapManagerInstance?.cancelBearingMeasurement();" title="Fermer la boîte et effacer les caps" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
                   &#x2715;
                 </button>
               </div>
@@ -3289,7 +3289,7 @@
                   <span>➕</span>
                   <span id="btn-restart-map-bearing-text">Nouveau cap (1/3)</span>
                 </button>
-                <button id="btn-cancel-map-bearing" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 rounded-xl text-xs font-bold transition cursor-pointer" title="Effacer tous les caps mesurés">
+                <button id="btn-cancel-map-bearing" onclick="window.MapManagerInstance?.clearBearingVisuals();" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 rounded-xl text-xs font-bold transition cursor-pointer" title="Effacer tous les caps mesurés">
                   Effacer tout
                 </button>
               </div>
@@ -3305,7 +3305,7 @@
               </div>
               <div class="flex items-center gap-1.5">
                 <button type="button" id="btn-minimize-map-measure" onclick="window.MapManagerInstance?.toggleMinimizeMeasure()" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition cursor-pointer" title="Réduire la boîte mesure (ou agrandir)">&minus;</button>
-                <button id="btn-close-map-measure" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Fermer la boîte mesure">✕</button>
+                <button id="btn-close-map-measure" onclick="window.MapManagerInstance?.cancelMeasurePath(); window.MapManagerInstance?.resetMeasurePath();" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Fermer la boîte mesure">✕</button>
               </div>
             </div>
 
