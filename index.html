@@ -131,7 +131,7 @@
         <div class="flex flex-col">
           <div class="flex items-baseline gap-2">
             <span class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase leading-none">Map &amp; Rando</span>
-            <span class="text-xs sm:text-sm font-normal text-emerald-300/80 font-medium leading-none">by JLDApps</span>
+            <button type="button" class="btn-open-jldapps-modal text-xs sm:text-sm font-semibold text-emerald-300/90 hover:text-emerald-200 transition underline underline-offset-4 decoration-emerald-500/50 hover:decoration-emerald-300 cursor-pointer bg-transparent border-0 p-0 text-left leading-none" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">by JLDApps</button>
           </div>
           <span class="text-[11px] text-slate-300 font-semibold tracking-wider uppercase leading-tight mt-0.5">La cartographie au service de vos pas</span>
         </div>
@@ -167,7 +167,7 @@
       <div class="text-center max-w-4xl mx-auto mb-2.5 sm:mb-3 p-3.5 sm:p-4 rounded-3xl bg-slate-950/75 backdrop-blur-xl border border-slate-700/60 shadow-2xl">
         <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 mb-3 shadow-sm">
           <span class="text-xs sm:text-sm font-black uppercase tracking-wider">Map &amp; Rando</span>
-          <span class="text-xs text-slate-300 font-light">by JLDApps</span>
+          <button type="button" class="btn-open-jldapps-modal text-xs text-slate-300 hover:text-white font-medium transition underline underline-offset-2 decoration-slate-400/50 hover:decoration-white cursor-pointer bg-transparent border-0 p-0 inline leading-none" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">by JLDApps</button>
         </div>
         <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white mb-1.5 leading-tight drop-shadow-xl">
           La cartographie au service de vos pas
@@ -363,7 +363,7 @@
 
         <span class="text-white font-bold">Map &amp; Rando</span>
         <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ3.0 (22/11/2026)</span>
-        &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
+        &bull; <button type="button" class="btn-open-jldapps-modal text-slate-400 hover:text-emerald-300 transition underline underline-offset-2 cursor-pointer p-0 bg-transparent border-0 inline" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">JLDApps 2026</button> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
 
@@ -2669,6 +2669,235 @@
           J'ai compris &bull; Fermer
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL : AUTRES APPLICATIONS DE JLDAPPS (WaterMetrics & FuelCoPilot)       -->
+  <!-- ========================================================================= -->
+  <div id="modal-jldapps" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-slate-900 border-2 border-emerald-500/60 rounded-3xl max-w-5xl w-full p-5 sm:p-8 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto text-slate-200">
+      
+      <!-- En-tête Modale -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider mb-1.5 border border-emerald-400/30">
+            <span>🚀 Écosystème Logiciel JLDApps 2026 &bull; Sanary-sur-Mer</span>
+          </div>
+          <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+            <span>📱</span> <span>Autres applications de JLDApps</span>
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1">
+            Découvrez nos applications mobiles innovantes, gratuites et conçues au service de vos déplacements et de votre santé.
+          </p>
+        </div>
+        
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button type="button" id="btn-close-modal-jldapps" onclick="document.getElementById('modal-jldapps').classList.add('hidden')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-1.5 rounded-xl text-base font-bold cursor-pointer transition" title="Fermer la fenêtre (Échap)">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Grille des 2 Applications : Présentation en miroir harmonieuse & haut de gamme -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        
+        <!-- ================= APP 1 : WATERMETRICS ================= -->
+        <div class="rounded-3xl bg-slate-950/80 border-2 border-sky-500/50 p-5 sm:p-6 shadow-xl flex flex-col justify-between hover:border-sky-400 transition-all duration-300 relative overflow-hidden group">
+          <!-- Glow d'arrière plan subtil -->
+          <div class="absolute -top-12 -right-12 w-44 h-44 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div>
+            <!-- Header Carte WaterMetrics avec Logo officiel -->
+            <div class="flex items-start gap-4 mb-4">
+              <img src="images/logo_watermetrics.png" alt="Logo WaterMetrics" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shadow-xl border-2 border-sky-400/40 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                  <span class="px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/40 text-[10px] font-black uppercase tracking-wider">
+                    💧 Qualité de l'Eau
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <span>🧪</span> <span>Test Play Store</span>
+                  </span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  WaterMetrics
+                </h3>
+                <p class="text-xs text-sky-200/90 font-medium">
+                  Qualité de l'eau du robinet &amp; conformité sanitaire
+                </p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+              Vérifiez instantanément la qualité de l'eau du robinet et la conformité des analyses sanitaires officielles dans votre commune et lors de vos voyages.
+            </p>
+
+            <!-- Caractéristiques Clés -->
+            <div class="space-y-2.5 mb-5 text-xs text-slate-300 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
+              <div class="flex items-start gap-2.5">
+                <span class="text-sky-400 text-sm mt-0.5">🌐</span>
+                <div class="flex-1 min-w-0">
+                  <strong class="text-white">Couverture géographique :</strong>
+                  <div class="flex flex-wrap gap-1.5 mt-1">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇫🇷 France</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇮🇹 Italie</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇪🇸 Espagne</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇬🇧 Royaume-Uni</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🏝️ Territoires associés</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5 pt-2 border-t border-slate-800">
+                <span class="text-sky-400 text-sm mt-0.5">🗣️</span>
+                <div class="flex-1 min-w-0">
+                  <strong class="text-white">Appli multilingue intelligente :</strong>
+                  <span class="block text-slate-300 mt-0.5 text-[11.5px]">Langue de l'interface automatiquement déterminée et configurée par géolocalisation.</span>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5 pt-2 border-t border-slate-800">
+                <span class="text-sky-400 text-sm mt-0.5">🔬</span>
+                <div class="flex-1 min-w-0">
+                  <strong class="text-white">Analyses officielles de santé publique :</strong>
+                  <span class="block text-slate-300 mt-0.5 text-[11.5px]">Conformité microbiologique, nitrates, dureté, chlore, métaux lourds et micropolluants certifiés ARS &amp; ministères.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone d'Action & Liens WaterMetrics -->
+          <div class="pt-3 border-t border-slate-800 space-y-2.5">
+            <a href="https://play.google.com/store/apps/details?id=fr.aquacheck.app" target="_blank" rel="noopener" class="w-full inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-sky-950/50 transition cursor-pointer border border-sky-300/40">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 0 1-.61-.914c-.035-.12-.054-.247-.054-.378V3.106c0-.13.02-.257.054-.378.115-.395.347-.73.609-.914zm11.233 11.233l2.25 2.25-11.83 6.83 9.58-9.08zm0-2.094L5.262 1.873l11.83 6.83-2.25 2.25zm1.468 1.047l3.242 1.872a1.472 1.472 0 0 1 0 2.556l-3.242 1.872-2.122-2.122 2.122-2.178z"/>
+              </svg>
+              <span>Voir sur le Google Play Store</span>
+            </a>
+
+            <!-- Bloc Invitation Testeur Bêta -->
+            <div class="bg-sky-950/40 border border-sky-800/60 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div class="text-[11px] text-sky-200 leading-snug">
+                <strong class="text-white font-bold">🧪 Application en test sur le Google Play Store :</strong><br>
+                Pour devenir testeur et installer l'application, envoyez un e-mail à :
+              </div>
+              <a href="mailto:aquacheckjld@gmail.com?subject=Inscription%20Test%20PlayStore%20WaterMetrics&body=Bonjour%20JLDApps%2C%0A%0AJe%20souhaite%20participer%20aux%20tests%20de%20l%27application%20WaterMetrics%20sur%20le%20Google%20Play%20Store.%0AMon%20adresse%20email%20Google%20Play%20est%20%3A%20" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition flex-shrink-0 shadow-sm cursor-pointer border border-sky-300/40">
+                <span>✉️</span> <span>aquacheckjld@gmail.com</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= APP 2 : FUELCOPILOT ================= -->
+        <div class="rounded-3xl bg-slate-950/80 border-2 border-amber-500/50 p-5 sm:p-6 shadow-xl flex flex-col justify-between hover:border-amber-400 transition-all duration-300 relative overflow-hidden group">
+          <!-- Glow d'arrière plan subtil -->
+          <div class="absolute -top-12 -right-12 w-44 h-44 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div>
+            <!-- Header Carte FuelCoPilot avec Logo officiel -->
+            <div class="flex items-start gap-4 mb-4">
+              <img src="images/logo_fuelcopilot.png" alt="Logo FuelCoPilot" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shadow-xl border-2 border-amber-400/40 object-cover flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase tracking-wider">
+                    ⛽ Carburant &amp; Électrique
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                    <span>🧪</span> <span>Test Play Store</span>
+                  </span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  FuelCoPilot
+                </h3>
+                <p class="text-xs text-amber-200/90 font-medium">
+                  Optimisation prix carburants &amp; recharge électrique
+                </p>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-4">
+              Définissez votre trajet routier et choisissez les stations-service pratiquant les meilleurs prix pour votre carburant, y compris la recharge électrique sur autoroute.
+            </p>
+
+            <!-- Caractéristiques Clés -->
+            <div class="space-y-2.5 mb-5 text-xs text-slate-300 bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
+              <div class="flex items-start gap-2.5">
+                <span class="text-amber-400 text-sm mt-0.5">🗺️</span>
+                <div class="flex-1 min-w-0">
+                  <strong class="text-white">Itinéraires (départ &amp; arrivée) dans 13 pays :</strong>
+                  <div class="flex flex-wrap gap-1.5 mt-1">
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇫🇷 France</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇪🇸 Espagne</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇮🇹 Italie</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇬🇧 Royaume-Uni</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇩🇪 Allemagne</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇳🇱 Pays-Bas</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇧🇪 Belgique</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇵🇹 Portugal</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇦🇹 Autriche</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇭🇷 Croatie</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇨🇭 Suisse</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇸🇮 Slovénie</span>
+                    <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 border border-slate-700 text-[11px] font-semibold">🇱🇺 Luxembourg</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5 pt-2 border-t border-slate-800">
+                <span class="text-amber-400 text-sm mt-0.5">🗣️</span>
+                <div class="flex-1 min-w-0">
+                  <strong class="text-white">Appli multilingue &bull; 9 langues par géolocalisation :</strong>
+                  <span class="block text-slate-300 mt-0.5 text-[11.5px]">Français, Néerlandais, Allemand, Italien, Espagnol, Portugais, Slovène, Croate et Anglais.</span>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5 pt-2 border-t border-slate-800">
+                <span class="text-amber-400 text-sm mt-0.5">⚡</span>
+                <div class="flex-1 min-w-0">
+                  <strong class="text-white">Carburants &amp; Bornes de recharge électrique :</strong>
+                  <span class="block text-slate-300 mt-0.5 text-[11.5px]">Prix en temps réel des carburants et géolocalisation des hubs de recharge rapide le long de votre route.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zone d'Action & Liens FuelCoPilot -->
+          <div class="pt-3 border-t border-slate-800 space-y-2.5">
+            <a href="https://play.google.com/store/apps/details?id=fr.jldapps.fuelpilot" target="_blank" rel="noopener" class="w-full inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-emerald-600 hover:from-amber-500 hover:to-emerald-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-amber-950/50 transition cursor-pointer border border-amber-300/40">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3.609 1.814L13.792 12 3.61 22.186a1.986 1.986 0 0 1-.61-.914c-.035-.12-.054-.247-.054-.378V3.106c0-.13.02-.257.054-.378.115-.395.347-.73.609-.914zm11.233 11.233l2.25 2.25-11.83 6.83 9.58-9.08zm0-2.094L5.262 1.873l11.83 6.83-2.25 2.25zm1.468 1.047l3.242 1.872a1.472 1.472 0 0 1 0 2.556l-3.242 1.872-2.122-2.122 2.122-2.178z"/>
+              </svg>
+              <span>Voir sur le Google Play Store</span>
+            </a>
+
+            <!-- Bloc Invitation Testeur Bêta -->
+            <div class="bg-amber-950/40 border border-amber-800/60 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div class="text-[11px] text-amber-200 leading-snug">
+                <strong class="text-white font-bold">🧪 Application en test sur le Google Play Store :</strong><br>
+                Pour devenir testeur et installer l'application, envoyez un e-mail à :
+              </div>
+              <a href="mailto:aquacheckjld@gmail.com?subject=Inscription%20Test%20PlayStore%20FuelCoPilot&body=Bonjour%20JLDApps%2C%0A%0AJe%20souhaite%20participer%20aux%20tests%20de%20l%27application%20FuelCoPilot%20sur%20le%20Google%20Play%20Store.%0AMon%20adresse%20email%20Google%20Play%20est%20%3A%20" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition flex-shrink-0 shadow-sm cursor-pointer border border-amber-300/40">
+                <span>✉️</span> <span>aquacheckjld@gmail.com</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Modale -->
+      <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400">
+        <div>
+          Applications mobiles éditées par <strong>JLDApps 2026</strong> &bull; Sanary-sur-Mer (Var 83)
+        </div>
+        <button type="button" onclick="document.getElementById('modal-jldapps').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs transition cursor-pointer border border-slate-700 hover:border-emerald-400 shadow-md">
+          Fermer la fenêtre
+        </button>
+      </div>
+
     </div>
   </div>
 

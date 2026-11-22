@@ -1714,10 +1714,10 @@ class FfrRoadmapManager {
           /* FEUILLES PAGES A4 PAYSAGE SÉPARÉES NETTEMENT SANS AUCUN CHEVAUCHEMENT */
           .print-sheet {
             background: #ffffff;
-            width: 280mm;
-            min-height: 194mm;
-            margin: 20px auto 30px auto;
-            padding: 8mm 10mm;
+            width: 284mm;
+            min-height: 196mm;
+            margin: 15px auto 25px auto;
+            padding: 6mm 8mm;
             box-shadow: 0 6px 25px rgba(0,0,0,0.18);
             border-radius: 8px;
             overflow: hidden;
@@ -1732,9 +1732,9 @@ class FfrRoadmapManager {
             align-items: center;
             border-bottom: 2px solid #0284c7;
             padding-bottom: 5px;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
           }
-          .title { font-size: 14px; font-weight: 900; color: #0f172a; }
+          .title { font-size: 13.5px; font-weight: 900; color: #0f172a; }
           .meta { font-size: 9.5px; color: #475569; margin-top: 2px; }
 
           table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 6px; }
@@ -1761,15 +1761,16 @@ class FfrRoadmapManager {
           .profile-box-split { flex: 1.2; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; height: 155px; background: #ffffff; overflow: hidden; }
           .map-box-split { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; height: 155px; }
 
-          /* Page 2 : Carte pleine page */
+          /* Page 2 : Carte pleine page IGN TOP 25 */
           .map-box-full {
             width: 100%;
-            height: 165mm;
-            min-height: 160mm;
+            height: 172mm;
+            min-height: 168mm;
             border: 2px solid #0284c7;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            margin-top: 4px;
+            margin-top: 3px;
+            margin-bottom: 2px;
             flex: 1;
           }
 
@@ -1799,15 +1800,20 @@ class FfrRoadmapManager {
             .print-sheet {
               width: 100% !important;
               max-width: none !important;
-              min-height: 190mm !important;
-              height: 190mm !important;
+              min-height: 195mm !important;
+              height: 195mm !important;
               margin: 0 !important;
-              padding: 0 !important;
+              padding: 4mm 6mm !important;
               box-shadow: none !important;
               border-radius: 0 !important;
               page-break-after: always !important;
               break-after: page !important;
             }
+            .map-box-full {
+              height: 174mm !important;
+              min-height: 170mm !important;
+            }
+          }
             .print-sheet:last-child {
               page-break-after: avoid !important;
               break-after: avoid !important;
@@ -1916,7 +1922,7 @@ class FfrRoadmapManager {
             <div id="print-map" class="map-box-full"></div>
 
             <div class="footer-note">
-              <div>Fond cartographique OpenStreetMap &amp; Relevés Topographiques • Grand Format Animateur</div>
+              <div>Fond cartographique officiel IGN TOP 25 (SCAN 25®) &amp; Relevés Topographiques • Grand Format Animateur</div>
               <div><strong>Page 2 / 2</strong> • Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
             </div>
           </div>
@@ -1975,7 +1981,7 @@ class FfrRoadmapManager {
             </div>
 
             <div class="footer-note">
-              <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+              <div>Fond cartographique officiel IGN TOP 25 (SCAN 25®) • Map &amp; Rando by JLDApps 2026</div>
               <div>Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
             </div>
           </div>
@@ -1987,8 +1993,31 @@ class FfrRoadmapManager {
             try {
               const latlngs = ${latlngsJson};
               const markers = ${markersJson};
-              const map = L.map('print-map', { zoomControl: false, attributionControl: false });
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+              
+              // Initialisation avec zoom fractionnaire haute précision (zoomSnap: 0.05)
+              // pour permettre à la trace de s'ajuster au millimètre près et occuper 100% du format A4
+              const map = L.map('print-map', { 
+                zoomControl: false, 
+                attributionControl: false,
+                zoomSnap: 0.05,
+                zoomDelta: 0.1
+              });
+
+              // Fond IGN TOP 25 officiel Géoplateforme (SCAN 25®)
+              const ignTop25Url = 'https://data.geopf.fr/private/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fjpeg&apikey=ign_scan_ws';
+              const top25Layer = L.tileLayer(ignTop25Url, {
+                maxZoom: 19,
+                maxNativeZoom: 18,
+                attribution: 'IGN France - Carte TOP 25 (SCAN 25®)'
+              }).addTo(map);
+
+              // Sécurité : bascule automatique transparente sur OpenStreetMap si hors de France métropolitaine ou coupure IGN
+              top25Layer.on('tileerror', function() {
+                if (!map._hasOsmFallback) {
+                  map._hasOsmFallback = true;
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+                }
+              });
 
               if (latlngs.length > 0) {
                 // Tracé contrasté visible pour l'animateur
@@ -2016,12 +2045,18 @@ class FfrRoadmapManager {
                   });
                 });
 
+                // Calcul du cadrage pour que la trace GPX occupe le MAXIMUM de la page
                 const bounds = L.latLngBounds(latlngs);
                 setTimeout(function() {
                   map.invalidateSize();
-                  map.fitBounds(bounds, { padding: [40, 40] });
+                  map.fitBounds(bounds, { padding: [12, 12], maxZoom: 17 });
                 }, 350);
               }
+            } catch(e) {
+              console.error('Erreur rendu carte impression:', e);
+            }
+          };
+        </script>
             } catch(e) {
               console.error('Erreur rendu carte impression:', e);
             }

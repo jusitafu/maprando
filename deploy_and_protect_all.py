@@ -27,7 +27,8 @@ def validate_dom_architecture(html_path):
         "main-map-app-container",
         "guides-view",
         "modal-mode-emploi",
-        "modal-cgu"
+        "modal-cgu",
+        "modal-jldapps"
     ]
     
     dom_errors = []
@@ -47,7 +48,7 @@ def validate_dom_architecture(html_path):
     # 2. Vérifier que guides-view ne contient pas de conteneurs tiers
     guides_el = soup.find(id="guides-view")
     if guides_el:
-        for forbidden in ["main-map-app-container", "modal-mode-emploi", "modal-cgu"]:
+        for forbidden in ["main-map-app-container", "modal-mode-emploi", "modal-cgu", "modal-jldapps"]:
             if guides_el.find(id=forbidden):
                 dom_errors.append(f"Pollution DOM critique : #{forbidden} est imbriqué à l'intérieur de #guides-view !")
                 

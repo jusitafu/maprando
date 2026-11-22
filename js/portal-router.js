@@ -310,6 +310,23 @@
         });
       }
 
+      // Modale Autres applications JLDApps (WaterMetrics & FuelCoPilot)
+      const modalJldapps = document.getElementById('modal-jldapps');
+      document.querySelectorAll('.btn-open-jldapps-modal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (modalJldapps) modalJldapps.classList.remove('hidden');
+        });
+      });
+      if (modalJldapps) {
+        modalJldapps.addEventListener('click', (e) => {
+          if (e.target === modalJldapps) {
+            modalJldapps.classList.add('hidden');
+          }
+        });
+      }
+
       // Modale Mode d'emploi détaillé (à gauche de CGU)
       const btnOpenModeEmploi = document.getElementById('btn-open-mode-emploi');
       const modalModeEmploi = document.getElementById('modal-mode-emploi');
@@ -392,6 +409,8 @@
       if (viewPortal) viewPortal.classList.add('hidden');
       if (viewMapContainer) viewMapContainer.classList.add('hidden');
       if (viewGuides) viewGuides.classList.add('hidden');
+      const modalJldapps = document.getElementById('modal-jldapps');
+      if (modalJldapps) modalJldapps.classList.add('hidden');
 
       if (viewName !== 'accueil') { this.pauseMusic(); }
 
