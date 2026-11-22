@@ -434,10 +434,15 @@
 
         this.applyFreeMapMode(true);
 
-        // Rafraîchir Leaflet
+        // Rafraîchir Leaflet et garantir une netteté topographique optimale
         setTimeout(() => {
           if (window.MapManagerInstance && window.MapManagerInstance.map) {
-            window.MapManagerInstance.map.invalidateSize();
+            const map = window.MapManagerInstance.map;
+            map.invalidateSize();
+            // Si aucune trace standalone n'est chargée, centrer sur une vue topographique idéale au 1:25 000
+            if (!window.MapManagerInstance.standaloneTracks || window.MapManagerInstance.standaloneTracks.length === 0) {
+              map.setView([43.125, 5.800], 13.5);
+            }
           }
         }, 150);
 
@@ -543,6 +548,10 @@
           maprandoBranding.classList.remove('hidden');
           maprandoBranding.classList.add('flex');
         }
+        const centerPillText = document.getElementById('header-center-pill-text');
+        if (centerPillText) {
+          centerPillText.textContent = "Outils Cartographiques & GPX";
+        }
         // Masquer complètement l'IBP index et le Mode d'emploi RandoFinder en mode Carte & Outils
         // Masquer complètement l'IBP index et le Mode d'emploi RandoFinder en mode Carte & Outils
         if (ibpLegend) {
@@ -626,6 +635,10 @@
         if (maprandoBranding) {
           maprandoBranding.classList.add('hidden');
           maprandoBranding.classList.remove('flex');
+        }
+        const centerPillText = document.getElementById('header-center-pill-text');
+        if (centerPillText) {
+          centerPillText.textContent = "Rando Finder";
         }
         // Restaurer l'interface club complète
         if (searchFilterBar) searchFilterBar.classList.remove('hidden');
