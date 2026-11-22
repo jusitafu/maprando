@@ -4847,20 +4847,42 @@ class MapManager {
   }
 
   syncWaypointVisibility() {
-    const isHidden = (this.showWaypointNames === false);
+    const showNames = !!this.showWaypointNames;
+    const showCoords = !!this.showWaypointCoords;
+    const shouldShowBadge = showNames || showCoords;
+
     if (this.standaloneTracks) {
       this.standaloneTracks.forEach(t => {
         if (t.waypointMarkers && Array.isArray(t.waypointMarkers)) {
           t.waypointMarkers.forEach(m => {
             const el = m.getElement();
-            if (el) el.style.display = isHidden ? 'none' : '';
+            if (el) {
+              el.style.display = '';
+              const badge = el.querySelector('.standalone-wpt-label, .wp-poi-badge');
+              const nameEl = el.querySelector('.wpt-badge-name');
+              const coordsEl = el.querySelector('.wpt-badge-coords');
+
+              if (badge) {
+                badge.style.display = shouldShowBadge ? 'block' : 'none';
+              }
+              if (nameEl) {
+                nameEl.style.display = showNames ? 'block' : 'none';
+              }
+              if (coordsEl) {
+                coordsEl.style.display = showCoords ? 'block' : 'none';
+              }
+            }
           });
         }
       });
     }
-    document.querySelectorAll('.standalone-wpt-pin, .custom-wp-pin').forEach(el => {
-      el.style.display = isHidden ? 'none' : '';
-    });
+
+    // Synchroniser avec l'éditeur GPX
+    if (window.GpxCreatorEditorInstance && typeof window.GpxCreatorEditorInstance.syncEditWaypointsVisibility === 'function') {
+      window.GpxCreatorEditorInstance.showWaypointNames = showNames;
+      window.GpxCreatorEditorInstance.showWaypointCoords = showCoords;
+      window.GpxCreatorEditorInstance.syncEditWaypointsVisibility();
+    }
   }
 
   /**
@@ -4873,21 +4895,12 @@ class MapManager {
 
     const btn = document.getElementById('btn-toggle-standalone-wp-coords');
     if (btn) {
-      btn.className = `px-3 py-2 rounded-xl ${this.showWaypointCoords ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs sm:text-sm flex items-center gap-1.5 shadow-md transition cursor-pointer`;
-      btn.innerHTML = `<span>🧭</span> <span>${this.showWaypointCoords ? 'Coordonnées WP : OUI' : 'Coordonnées WP : NON'}</span>`;
+      btn.className = `px-2.5 py-1.5 rounded-xl ${this.showWaypointCoords ? 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium'} text-xs flex items-center gap-1 shadow-md transition cursor-pointer`;
+      btn.innerHTML = `<span>🧭</span> <span>${this.showWaypointCoords ? 'Coords WP : OUI' : 'Coords WP : NON'}</span>`;
       btn.title = this.showWaypointCoords ? 'Masquer les coordonnées GPS des waypoints' : 'Afficher les coordonnées GPS des waypoints';
     }
 
-    document.querySelectorAll('.wpt-badge-coords').forEach(el => {
-      el.style.display = this.showWaypointCoords ? 'block' : 'none';
-    });
-
-    if (window.GpxCreatorEditorInstance) {
-      window.GpxCreatorEditorInstance.showWaypointCoords = this.showWaypointCoords;
-      if (typeof window.GpxCreatorEditorInstance.syncEditWaypointsCoordsVisibility === 'function') {
-        window.GpxCreatorEditorInstance.syncEditWaypointsCoordsVisibility();
-      }
-    }
+    this.syncWaypointVisibility();
   }
 
 

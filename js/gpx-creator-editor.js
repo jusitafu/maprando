@@ -17,7 +17,8 @@ class GpxCreatorEditor {
     this.createAutoRoute = true;
     this.createFloatingCard = null;
     this.createHistory = [];          // Historique pour annulation (Ctrl+Z)
-    this.showWaypointNames = true;     // Bascule d'affichage des noms / badges de waypoints
+    this.showWaypointNames = false;    // Bascule d'affichage des noms / badges de waypoints (par défaut NON)
+    this.showWaypointCoords = false;   // Bascule d'affichage des coordonnées GPS des waypoints (par défaut NON)
 
     // État Édition
     this.editingTrack = null;         // Reference vers la trace dans standaloneTracks
@@ -38,6 +39,10 @@ class GpxCreatorEditor {
   init(mapManager) {
     this.mapManager = mapManager;
     this.map = mapManager ? mapManager.map : null;
+    if (mapManager) {
+      this.showWaypointNames = !!mapManager.showWaypointNames;
+      this.showWaypointCoords = !!mapManager.showWaypointCoords;
+    }
 
     const btnCreate = document.getElementById('btn-create-gpx');
     const btnEdit = document.getElementById('btn-edit-gpx');
@@ -859,6 +864,20 @@ class GpxCreatorEditor {
     // Sauvegarder l'état au démarrage du mode édition
     this.editHistory = [];
 
+    // Synchroniser l'état des étiquettes depuis MapManager
+    if (this.mapManager) {
+      this.showWaypointNames = !!this.mapManager.showWaypointNames;
+      this.showWaypointCoords = !!this.mapManager.showWaypointCoords;
+    }
+
+    // Masquer temporairement les marqueurs standalone de cette trace pour éviter les doublons visuels
+    if (this.editingTrack && this.editingTrack.waypointMarkers) {
+      this.editingTrack.waypointMarkers.forEach(m => {
+        const el = m.getElement();
+        if (el) el.style.display = 'none';
+      });
+    }
+
     // Charger et afficher les waypoints de la trace s'ils existent
     this.editWaypoints = (this.editingTrack && this.editingTrack.waypoints && Array.isArray(this.editingTrack.waypoints))
       ? JSON.parse(JSON.stringify(this.editingTrack.waypoints))
@@ -871,6 +890,7 @@ class GpxCreatorEditor {
 
     // Afficher le panneau flottant d'édition
     this.showEditFloatingPanel();
+    this.syncEditWaypointsVisibility();
   }
 
   stopEditMode() {
@@ -938,13 +958,10 @@ class GpxCreatorEditor {
             `);
             this.editingTrack.layer.addLayer(wptMarker);
             this.editingTrack.waypointMarkers.push(wptMarker);
-            if (this.mapManager && this.mapManager.showWaypointNames === false) {
-              setTimeout(() => {
-                const el = wptMarker.getElement();
-                if (el) el.style.display = 'none';
-              }, 0);
-            }
           });
+          if (this.mapManager && typeof this.mapManager.syncWaypointVisibility === 'function') {
+            this.mapManager.syncWaypointVisibility();
+          }
         }
       }
     }
@@ -1133,7 +1150,10 @@ class GpxCreatorEditor {
           <button id="btn-add-edit-waypoint" type="button" class="px-2.5 py-1 bg-indigo-900/80 hover:bg-indigo-800 border border-indigo-600/80 text-indigo-200 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer" title="Ajouter un waypoint (étape/POI) en cliquant sur la trace">
             <span>📍</span> <span>+ Waypoint</span>
           </button>
-          <button id="btn-toggle-edit-wp-coords" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${(this.showWaypointCoords || this.mapManager?.showWaypointCoords) ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Afficher ou masquer les coordonnées GPS des waypoints">
+          <button id="btn-toggle-edit-wp-names" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${(this.showWaypointNames || this.mapManager?.showWaypointNames) ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-700 text-slate-300 font-medium'}" title="Afficher ou masquer les noms des points sur la carte">
+            <span>🏷️</span> <span>Noms : ${(this.showWaypointNames || this.mapManager?.showWaypointNames) ? 'OUI' : 'NON'}</span>
+          </button>
+          <button id="btn-toggle-edit-wp-coords" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${(this.showWaypointCoords || this.mapManager?.showWaypointCoords) ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-700 text-slate-300 font-medium'}" title="Afficher ou masquer les coordonnées GPS des waypoints">
             <span>🧭</span> <span>Coordonnées : ${(this.showWaypointCoords || this.mapManager?.showWaypointCoords) ? 'OUI' : 'NON'}</span>
           </button>
           <button id="btn-box-cut-track" type="button" class="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/80 text-rose-300 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition flex items-center gap-1 shadow-sm cursor-pointer" title="Sélectionner une portion de trace à supprimer avec un rectangle (clic maintenu + glisser)">
@@ -1204,6 +1224,7 @@ class GpxCreatorEditor {
       btn.title = isMin ? 'Agrandir la fenêtre' : 'Réduire la fenêtre';
     });
     document.getElementById('btn-add-edit-waypoint')?.addEventListener('click', () => this.toggleAddWaypointMode());
+    document.getElementById('btn-toggle-edit-wp-names')?.addEventListener('click', () => this.toggleEditWaypointNames());
     document.getElementById('btn-toggle-edit-wp-coords')?.addEventListener('click', () => this.toggleEditWaypointCoords());
     document.getElementById('btn-box-cut-track')?.addEventListener('click', () => this.toggleBoxCutMode());
     document.getElementById('btn-reconnect-split-track')?.addEventListener('click', () => this.reconnectCutParts());
@@ -1607,19 +1628,21 @@ class GpxCreatorEditor {
     if (!this.map) return;
     const wptName = wp.name || `Waypoint ${idx + 1}`;
     const coordsText = `${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${(wp.ele != null && !isNaN(wp.ele)) ? ` • ${Math.round(wp.ele)} m` : ''}`;
-    const isCoordsVisible = this.showWaypointCoords || this.mapManager?.showWaypointCoords;
+    const isNamesVisible = !!(this.showWaypointNames ?? this.mapManager?.showWaypointNames);
+    const isCoordsVisible = !!(this.showWaypointCoords ?? this.mapManager?.showWaypointCoords);
+    const isBadgeVisible = isNamesVisible || isCoordsVisible;
 
     const marker = L.marker([wp.lat, wp.lon], {
       icon: L.divIcon({
         className: 'edit-wpt-pin',
         html: `
           <div style="position:relative; width:28px; height:28px; cursor:pointer;">
-            <div style="background:#10b981; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; border:2.5px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.5);">
+            <div style="background:#10b981; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; border:2.5px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.5);" title="Point d'arrêt / Waypoint : ${wptName}">
               📍
             </div>
-            <div class="edit-wpt-label wp-poi-badge" style="position:absolute; left:32px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.95); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; border:1px solid #10b981; box-shadow:0 2px 8px rgba(0,0,0,0.4); max-width:240px; overflow:hidden; text-overflow:ellipsis;">
-              <span class="wpt-badge-name">${wptName}</span>
-              <span class="wpt-badge-coords text-[9.5px] text-emerald-300 font-mono font-bold block mt-0.5" style="${isCoordsVisible ? 'display:block;' : 'display:none;'}">
+            <div class="edit-wpt-label" style="position:absolute; left:32px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.95); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; border:1px solid #10b981; box-shadow:0 2px 8px rgba(0,0,0,0.4); max-width:240px; overflow:hidden; text-overflow:ellipsis; display:${isBadgeVisible ? 'block' : 'none'};">
+              <span class="wpt-badge-name" style="display:${isNamesVisible ? 'block' : 'none'};">${wptName}</span>
+              <span class="wpt-badge-coords text-[9.5px] text-emerald-300 font-mono font-bold mt-0.5" style="display:${isCoordsVisible ? 'block' : 'none'};">
                 📍 ${coordsText}
               </span>
             </div>
@@ -1654,24 +1677,69 @@ class GpxCreatorEditor {
     this.showUndoFeedback(`Waypoint « ${removed[0]?.name || ''} » supprimé`);
   }
 
-  syncEditWaypointsCoordsVisibility() {
-    const isCoordsVisible = this.showWaypointCoords || this.mapManager?.showWaypointCoords;
-    document.querySelectorAll('.edit-wpt-label .wpt-badge-coords').forEach(el => {
-      el.style.display = isCoordsVisible ? 'block' : 'none';
+  syncEditWaypointsVisibility() {
+    const isNamesVisible = !!(this.showWaypointNames ?? this.mapManager?.showWaypointNames);
+    const isCoordsVisible = !!(this.showWaypointCoords ?? this.mapManager?.showWaypointCoords);
+    const isBadgeVisible = isNamesVisible || isCoordsVisible;
+
+    // 1. Bouton Noms dans le panneau d'édition
+    const btnNames = document.getElementById('btn-toggle-edit-wp-names');
+    if (btnNames) {
+      btnNames.className = `px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${isNamesVisible ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-700 text-slate-300 font-medium'}`;
+      btnNames.innerHTML = `<span>🏷️</span> <span>Noms : ${isNamesVisible ? 'OUI' : 'NON'}</span>`;
+      btnNames.title = isNamesVisible ? 'Masquer les noms des points sur la carte' : 'Afficher les noms des points sur la carte';
+    }
+
+    // 2. Bouton Coordonnées dans le panneau d'édition
+    const btnCoords = document.getElementById('btn-toggle-edit-wp-coords');
+    if (btnCoords) {
+      btnCoords.className = `px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${isCoordsVisible ? 'bg-emerald-600 text-white font-bold ring-2 ring-emerald-300' : 'bg-slate-700 text-slate-300 font-medium'}`;
+      btnCoords.innerHTML = `<span>🧭</span> <span>Coordonnées : ${isCoordsVisible ? 'OUI' : 'NON'}</span>`;
+      btnCoords.title = isCoordsVisible ? 'Masquer les coordonnées GPS des waypoints' : 'Afficher les coordonnées GPS des waypoints';
+    }
+
+    // 3. Marqueurs de waypoints en mode édition
+    document.querySelectorAll('.edit-wpt-pin').forEach(pin => {
+      const badge = pin.querySelector('.edit-wpt-label');
+      const nameEl = pin.querySelector('.wpt-badge-name');
+      const coordsEl = pin.querySelector('.wpt-badge-coords');
+
+      if (badge) {
+        badge.style.display = isBadgeVisible ? 'block' : 'none';
+        badge.style.visibility = isBadgeVisible ? 'visible' : 'hidden';
+        badge.style.opacity = isBadgeVisible ? '1' : '0';
+      }
+      if (nameEl) {
+        nameEl.style.display = isNamesVisible ? 'block' : 'none';
+      }
+      if (coordsEl) {
+        coordsEl.style.display = isCoordsVisible ? 'block' : 'none';
+      }
     });
-    const btn = document.getElementById('btn-toggle-edit-wp-coords');
-    if (btn) {
-      btn.className = `px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${isCoordsVisible ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`;
-      btn.innerHTML = `<span>🧭</span> <span>Coordonnées : ${isCoordsVisible ? 'OUI' : 'NON'}</span>`;
+  }
+
+  toggleEditWaypointNames() {
+    this.showWaypointNames = !this.showWaypointNames;
+    if (this.mapManager) {
+      this.mapManager.showWaypointNames = this.showWaypointNames;
+    }
+    const isHidden = !this.showWaypointNames;
+    document.body.classList.toggle('hide-wp-labels', isHidden);
+    this.syncEditWaypointsVisibility();
+    if (typeof this.mapManager?.syncWaypointVisibility === 'function') {
+      this.mapManager.syncWaypointVisibility();
     }
   }
 
   toggleEditWaypointCoords() {
-    if (typeof this.mapManager?.toggleWaypointCoords === 'function') {
-      this.mapManager.toggleWaypointCoords();
-    } else {
-      this.showWaypointCoords = !this.showWaypointCoords;
-      this.syncEditWaypointsCoordsVisibility();
+    this.showWaypointCoords = !this.showWaypointCoords;
+    if (this.mapManager) {
+      this.mapManager.showWaypointCoords = this.showWaypointCoords;
+    }
+    document.body.classList.toggle('show-wpt-coords', this.showWaypointCoords);
+    this.syncEditWaypointsVisibility();
+    if (typeof this.mapManager?.syncWaypointVisibility === 'function') {
+      this.mapManager.syncWaypointVisibility();
     }
   }
 

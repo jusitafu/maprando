@@ -1456,23 +1456,18 @@ path.bearing-preview-line {
 }
 
 /* Bascule d'affichage des étiquettes / noms et repères de waypoints (A, B, C / POIs) */
-/* Quand Noms = NON : masque complètement tous les marqueurs de points pour n'avoir QUE la trace seule */
-.hide-wp-labels .custom-wp-pin,
-.hide-wp-labels .standalone-wpt-pin,
-.hide-wp-labels .wp-poi-badge,
-.hide-wp-labels .standalone-wpt-label,
-.hide-wp-labels .leaflet-marker-icon.custom-wp-pin,
-.hide-wp-labels .leaflet-marker-icon.standalone-wpt-pin,
-body.hide-wp-labels .custom-wp-pin,
-body.hide-wp-labels .standalone-wpt-pin,
-body.hide-wp-labels .wp-poi-badge,
-body.hide-wp-labels .standalone-wpt-label,
-body.hide-wp-labels .leaflet-marker-icon.custom-wp-pin,
-body.hide-wp-labels .leaflet-marker-icon.standalone-wpt-pin {
+/* Quand Noms = NON et Coords = NON : masque les étiquettes de texte des waypoints */
+body.hide-wp-labels:not(.show-wpt-coords) .standalone-wpt-label,
+body.hide-wp-labels:not(.show-wpt-coords) .wp-poi-badge,
+.hide-wp-labels:not(.show-wpt-coords) .standalone-wpt-label,
+.hide-wp-labels:not(.show-wpt-coords) .wp-poi-badge {
   display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+}
+
+/* Masquage spécifique du nom seul quand hide-wp-labels est actif */
+body.hide-wp-labels .wpt-badge-name,
+.hide-wp-labels .wpt-badge-name {
+  display: none !important;
 }
 
 /* Bascule d'affichage des coordonnées GPS des Waypoints */
