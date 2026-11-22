@@ -362,7 +362,7 @@
         </div>
 
         <span class="text-white font-bold">Map &amp; Rando</span>
-        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ2.5 (22/11/2026)</span>
+        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ3.0 (22/11/2026)</span>
         &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
@@ -1775,10 +1775,10 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ2.5 (22/11/2026) &bull; JLDAPPS 2026</span>
+            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ3.0 (22/11/2026) &bull; JLDAPPS 2026</span>
           </div>
           <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ2.5 (22/11/2026)</span></span>
+            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ3.0 (22/11/2026)</span></span>
           </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -1981,6 +1981,17 @@
                 <li><strong>🧭 Bouton bascule « Coordonnées des waypoints » :</strong> basculez en 1 clic l'affichage complet des coordonnées GPS décimales (Latitude, Longitude) et de l'altitude Z directement sur les badges visuels de la carte pour chaque waypoint.</li>
                 <li><strong>✂️ Supprimer une zone par rectangle &amp; Reconnexion automatique :</strong> tracez un rectangle à la souris sur la carte pour supprimer tous les points inclus. Le système <strong>reconnecte immédiatement les 2 extrémités coupées par les sentiers réels</strong> via auto-routage (bouton de secours <em>« 🥾 Relier par sentiers »</em>), évitant toute ligne droite hors chemin.</li>
                 <li><strong>Nommage intelligent au téléchargement :</strong> boîte de dialogue personnalisable proposant le format officiel <code>YYYYMMDDHHMM - Commune - Dist - D+</code>.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-2">
+              <div class="font-extrabold text-amber-300 flex items-center gap-1.5"><span>📋</span> Tableau de Marche FFRandonnée (Outil Encadrants &amp; Fiche Topo)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>Déclencheur discret animateur :</strong> accessible via le bouton discret <code class="text-amber-300 bg-slate-800 px-1 py-0.5 rounded">📋</code> situé dans la barre d'outils supérieure dès qu'une trace est affichée.</li>
+                <li><strong>Étape 1 • Calage interactif sur carte pleine page :</strong> les fenêtres secondaires sont automatiquement masquées pour offrir une visibilité plein écran de la carte et de la trace. Des points d'arrêt initiaux sont automatiquement proposés (départ, arrivée, POIs/waypoints et jalons réguliers tous les ~1,5 km). Déplacez n'importe quel jalon à la souris par glisser-déposer avec <strong>accrochage magnétique le long du tracé GPX</strong>. Cliquez sur un repère pour le renommer (saisie libre ou 8 suggestions rapides : Sommet, Refuge, Source, Col, Belvédère, Parking, Pique-nique, Danger). Bouton <em>« 📍 + Ajouter un arrêt »</em> pour insérer un jalon supplémentaire et <em>« 🗑️ »</em> pour supprimer. Validez via le bouton vert <strong>« ✅ Valider &amp; Générer le tableau »</strong>.</li>
+                <li><strong>Étape 2 • Tableau de marche normé FFR :</strong> tableau transposé synchronisé avec le profil altimétrique SVG et la mini-carte dynamique. Vitesse moyenne paramétrable par tronçon (pré-remplie à <strong>3,2 km/h</strong> selon la norme FFRandonnée). Heure de départ réglable (09:30 par défaut).</li>
+                <li><strong>Ligne « Pause (Mn) » après chaque heure d'arrivée :</strong> chaque tronçon comporte une ligne de pause (pré-remplie à <strong>10 minutes</strong> par défaut pour les étapes intermédiaires, 0 pour départ/arrivée, entièrement modifiable) avec <strong>recalcul dynamique en cascade</strong> des heures d'arrivée suivantes. Champ d'information libre pour les consignes d'encadrement et de sécurité.</li>
+                <li><strong>Exports &amp; Fiche Topo Paysage :</strong> bouton <em>« ✏️ Ajuster sur carte »</em> pour corriger les jalons à tout moment, <strong>« 💾 Export GPX »</strong> enrichi avec balises <code>&lt;wpt&gt;</code> officielles (nom, altitude, description), <strong>« 📥 CSV »</strong> normé et <strong>« 🖨️ Fiche Topo »</strong> pour imprimer la fiche d'encadrement complète en paysage (tableau, carte IGN et profil altimétrique avec points d'arrêt).</li>
               </ul>
             </div>
 
@@ -2317,16 +2328,30 @@
                     <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold" title="Gestion des waypoints Garmin">Oui (Waypoints)</td>
                     <td class="py-2.5 px-2.5 text-center text-amber-300" title="Point d'intérêt posé manuellement à l'œil nu sans magnétisme automatique sur la trace">Manuel (sans magnétisme)</td>
                   </tr>
+                  <!-- Row 15 : Tableau de Marche FFR -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Tableau de Marche FFR en 2 étapes</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300" title="Étape 1 calage magnétique sur carte pleine page + Étape 2 tableau de marche avec pauses 10 mn, profil SVG et export Fiche Topo"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Calage plein écran + Pauses + Topo)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400" title="Fiche horaire basique">Partiel (Fiche)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Roadbook payant Premium">Payant (Roadbook)</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Rappel des 8 Atouts Majeurs -->
+          <!-- Rappel des 9 Atouts Majeurs -->
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
             <div class="font-extrabold text-amber-300 flex items-center gap-2 text-xs sm:text-sm">
               <span>🌟</span>
-              <span>Rappel des 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
+              <span>Rappel des 9 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 pt-1">
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">1. Gratuité &amp; Immédiateté IGN :</strong> Zéro création de compte, zéro abonnement pour l'IGN TOP 25®.</div>
@@ -2337,6 +2362,7 @@
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles (3232OT, etc.) sur toute la France.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">7. Nommage Auto Normalisé à l'Export :</strong> Génération normalisée <code class="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">YYYYMMDDHHMM - Ville - Distance - D+XXX m</code> avec détection de la commune de départ.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">8. Atelier Waypoints Intelligent :</strong> Création et ajout par clic magnétique sur trace, suggestions rapides (refuge, source, sommet) et bascule des coordonnées GPS.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-amber-500/40 col-span-1 sm:col-span-2"><strong class="text-amber-300">9. Tableau de Marche FFR en 2 Étapes :</strong> Calage magnétique des arrêts sur carte pleine page, calcul à 3,2 km/h avec pauses de 10 mn en cascade, export GPX et Fiche Topo paysage.</div>
             </div>
           </div>
         </section>
@@ -2370,7 +2396,7 @@
               </svg>
             </button>
           </div>
-          Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ2.5 (22/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
+          Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ3.0 (22/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
         </span>
         <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg">
           Fermer le Mode d'emploi
@@ -7858,7 +7884,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/pdf-exporter.js?v=171"></script>
   <script src="js/gr-manager.js?v=157"></script>
   <script src="js/gpx-creator-editor.js?v=172"></script>
-  <script src="js/ffr-roadmap-manager.js?v=173"></script>
+  <script src="js/ffr-roadmap-manager.js?v=190"></script>
   <script src="js/floating-window-manager.js?v=157"></script>
 
   <script src="js/portal-router.js?v=157"></script>

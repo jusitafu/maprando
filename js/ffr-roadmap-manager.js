@@ -2,17 +2,26 @@
  * Module Tableau de Marche Officiel - Fédération Française de Randonnée (FFRandonnée)
  * Map & Rando by JLDApps 2026
  * 
- * Fonctionnalités :
- * - Analyse intelligente de la trace GPX active : en moyenne 1 point tous les 1.5 km (max 1.5 km)
- * - Détection des points clés (virages en épingle, virages à 90°, cols, sommets, POIs nommés)
- * - Calcul de l'azimut de sortie immédiat du sentier (cap tangentiel à 30-50m du point)
- * - Affichage 3 niveaux en regard vertical :
- *     1. Tableau transposé (lignes <-> colonnes avec défilement horizontal)
- *     2. Profil altimétrique aligné verticalement avec repères
- *     3. Carte Leaflet interactive affichée en dessous avec points numérotés
- * - Vitesses et pauses modifiables en direct avec recalcul instantané des temps et horaires
- * - Synchronisation interactive triple (Tableau <-> Profil altimétrique <-> Carte)
- * - Export CSV officiel FFRandonnée et impression / PDF paysage
+ * Nouvelle logique en 2 étapes :
+ * - ÉTAPE 1 : Calage visuel des points d'arrêt sur la carte pleine page
+ *     - Affichage de la trace sur la carte épurée
+ *     - Proposition automatique des points d'arrêt (~1 pt tous les 1.5 km, départ, arrivée, POIs)
+ *     - Déplacement magnétique des points le long de la trace GPX
+ *     - Renommage en Waypoints (avec boîte de dialogue et pastilles de suggestions)
+ *     - Ajout de nouveaux points d'arrêt par clic sur la trace (+ Ajouter un arrêt)
+ *     - Suppression de points d'arrêt inutiles (✕)
+ *     - Bandeau de validation flottant : « ✅ Valider et générer le tableau de marche »
+ * 
+ * - ÉTAPE 2 : Tableau de marche généré & personnalisé
+ *     - Vitesse moyenne personnalisable par tronçon (pré-remplie à 3.2 km/h)
+ *     - Heure de départ modifiable en tête
+ *     - Ligne « Pause (mn) » placée immédiatement après « Heure d'arrivée » (pré-remplie à 10 mn par défaut)
+ *     - Recalcul dynamique en cascade des heures d'arrivée
+ *     - Champ Informations / Remarques modifiable par étape
+ *     - Bouton « ✏️ Modifier les arrêts sur carte » pour revenir ajuster à tout moment
+ *     - Export GPX enrichi avec les Waypoints d'arrêt (<wpt>)
+ *     - Export CSV officiel FFRandonnée
+ *     - Impression / Fiche Topo complète (Tableau officiel + Carte Leaflet + Profil altimétrique normalisé)
  */
 
 class FfrRoadmapManager {
@@ -20,6 +29,7 @@ class FfrRoadmapManager {
     this.modalEl = null;
     this.currentTrack = null;
     this.points = [];
+    this.calibratedPoints = [];
     this.startTime = "09:30:00";
     this.refSpeed = 3.2; // km/h
     this.animatorName = "";
@@ -28,13 +38,20 @@ class FfrRoadmapManager {
     this.miniMapMarkers = [];
     this.mapHighlightMarker = null;
 
+    // État du mode calage sur la carte
+    this.isCalibrating = false;
+    this.isAddingStop = false;
+    this.calibrationLayerGroup = null;
+    this.calibrationBarEl = null;
+    this.hiddenElementsBeforeCalibration = [];
+
     this.initTrigger();
   }
 
   initTrigger() {
     const btn = document.getElementById('btn-ffr-roadmap');
     if (btn) {
-      btn.addEventListener('click', () => this.openRoadmapModal());
+      btn.addEventListener('click', () => this.startRoadmapWorkflow());
     }
   }
 
@@ -69,7 +86,7 @@ class FfrRoadmapManager {
   }
 
   addMinutesToTime(timeStr, minutesToAdd) {
-    const parts = timeStr.split(':').map(Number);
+    const parts = (timeStr || "09:30:00").split(':').map(Number);
     const d = new Date();
     d.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
     d.setTime(d.getTime() + Math.round(minutesToAdd * 60 * 1000));
@@ -77,16 +94,33 @@ class FfrRoadmapManager {
   }
 
   /**
-   * Analyse intelligente de la trace GPX :
-   * Règle stricte demandée : En moyenne 1 point tous les ~1.5 km (max 1.5 km par tronçon)
+   * Point d'entrée : lance le workflow du Tableau de Marche FFR
    */
-  analyzeTrack(track) {
-    const rawPts = track.points || [];
-    if (rawPts.length < 2) return [];
+  startRoadmapWorkflow() {
+    const mapMgr = window.MapManagerInstance;
+    const track = mapMgr?.standaloneHike || (mapMgr?.standaloneTracks && mapMgr.standaloneTracks[0]) || mapMgr?.currentHike;
 
-    // 1. Calculer les distances cumulées le long de la trace
+    if (!track || !track.points || track.points.length < 2) {
+      alert("⚠️ Aucune trace GPX n'est actuellement affichée sur la carte.\n\nVeuillez d'abord charger ou sélectionner une trace GPX pour générer son Tableau de Marche FFR.");
+      return;
+    }
+
+    this.currentTrack = track;
+    this.hikeName = track.name || 'Randonnée';
+    this.animatorName = window.AuthManagerInstance?.getCurrentUser()?.username || 'Animateur FFR';
+
+    // Démarrer l'Étape 1 : Calage visuel sur la carte pleine page
+    this.startCalibrationMode(track);
+  }
+
+  /**
+   * Prépare les points de la trace avec distances cumulées
+   */
+  prepareTrackPoints(track) {
+    const rawPts = track.points || [];
     const trackPts = [];
     let cumDist = 0;
+
     for (let i = 0; i < rawPts.length; i++) {
       const p = rawPts[i];
       const lat = p.lat !== undefined ? p.lat : p[0];
@@ -99,8 +133,6 @@ class FfrRoadmapManager {
       trackPts.push({ lat, lon, ele, dist: cumDist, idx: i });
     }
 
-    const totalDistance = trackPts[trackPts.length - 1].dist;
-
     // Lissage des altitudes (moyenne mobile 5 points)
     for (let i = 0; i < trackPts.length; i++) {
       let sum = 0, count = 0;
@@ -111,10 +143,35 @@ class FfrRoadmapManager {
           count++;
         }
       }
-      trackPts[i].smoothEle = count > 0 ? sum / count : trackPts[i].ele;
+      trackPts[i].smoothEle = count > 0 ? Math.round(sum / count) : Math.round(trackPts[i].ele);
     }
 
-    // 2. Détection des particularités du terrain le long du tracé
+    return trackPts;
+  }
+
+  /**
+   * Trouve le point le plus proche sur la trace pour un lat/lon donné
+   */
+  findNearestTrackPoint(lat, lon, trackPts) {
+    let bestIdx = 0;
+    let minD = Infinity;
+    for (let i = 0; i < trackPts.length; i++) {
+      const d = this.calculateHaversine(lat, lon, trackPts[i].lat, trackPts[i].lon);
+      if (d < minD) {
+        minD = d;
+        bestIdx = i;
+      }
+    }
+    return trackPts[bestIdx];
+  }
+
+  /**
+   * Détection automatique initiale des points clés (~1 pt / 1.5 km)
+   */
+  detectInitialStopPoints(trackPts) {
+    const totalDistance = trackPts[trackPts.length - 1].dist;
+
+    // Détection des particularités de terrain (virages, crêtes, cols)
     const stepMeters = 35;
     for (let i = 5; i < trackPts.length - 5; i++) {
       let prevI = i - 1;
@@ -140,13 +197,13 @@ class FfrRoadmapManager {
         trackPts[i].feature = 'Sommet / Crête';
         trackPts[i].featureScore = 8;
       } else if (pCurr.smoothEle < pPrev.smoothEle - 6 && pCurr.smoothEle < pNext.smoothEle - 6) {
-        trackPts[i].feature = 'Col / Bas de vallon';
+        trackPts[i].feature = 'Col / Vallon';
         trackPts[i].featureScore = 8;
       }
     }
 
-    // Intégrer les Waypoints / POIs explicites du GPX
-    const waypoints = track.waypoints || [];
+    // Intégrer les Waypoints explicites du GPX si présents
+    const waypoints = this.currentTrack.waypoints || [];
     waypoints.forEach(wp => {
       let bestIdx = -1;
       let minD = Infinity;
@@ -163,20 +220,16 @@ class FfrRoadmapManager {
       }
     });
 
-    // 3. SELECTION STRICTE : En moyenne 1 point tous les ~1.5 km (max 1.5 km par tronçon)
-    const selectedIndices = [0]; // Point 0 (Départ)
+    // Sélection : ~1 point tous les 1.5 km
+    const selectedIndices = [0]; // Point 0 : Départ
     let currentIdx = 0;
 
     while (currentIdx < trackPts.length - 1) {
       const currentDist = trackPts[currentIdx].dist;
       const remainingDist = totalDistance - currentDist;
 
-      // S'il reste 1.5 km ou moins jusqu'au bout, le prochain point est directement l'Arrivée !
-      if (remainingDist <= 1.5) {
-        break;
-      }
+      if (remainingDist <= 1.5) break;
 
-      // Fenêtre de recherche : entre currentDist + 1.1 km et currentDist + 1.48 km (STRICTEMENT <= 1.5 km !)
       const targetMinDist = currentDist + 1.0;
       const targetIdealDist = currentDist + 1.35;
       const targetMaxDist = currentDist + 1.48;
@@ -203,15 +256,10 @@ class FfrRoadmapManager {
         if (d > targetMaxDist) break;
       }
 
-      // Sélectionner la meilleure particularité (sommet, col, épingle, POI) trouvée dans la tranche de 1.5 km
       let chosenIdx = (bestCandidateIdx !== -1 && bestScore > 0) ? bestCandidateIdx : closestToIdealIdx;
-
-      // Si aucun point n'est tombé dans la fenêtre, chercher le point le plus proche sous 1.48 km
       if (chosenIdx === -1) {
         let safeIdx = currentIdx + 1;
-        while (safeIdx < trackPts.length - 1 && trackPts[safeIdx].dist - currentDist <= 1.45) {
-          safeIdx++;
-        }
+        while (safeIdx < trackPts.length - 1 && trackPts[safeIdx].dist - currentDist <= 1.45) safeIdx++;
         chosenIdx = safeIdx;
       }
 
@@ -219,28 +267,478 @@ class FfrRoadmapManager {
       currentIdx = chosenIdx;
     }
 
-    // Toujours ajouter l'Arrivée à la fin
+    // Toujours ajouter l'arrivée
     selectedIndices.push(trackPts.length - 1);
 
-    // 4. Construction des fiches points avec calcul de l'azimut de sortie immédiat
+    // Créer la liste des objets points calibrés
+    return selectedIndices.map((ptIdx, i) => {
+      const pt = trackPts[ptIdx];
+      const isStart = i === 0;
+      const isEnd = i === selectedIndices.length - 1;
+      let designation = `Point ${i}`;
+      if (isStart) designation = 'Départ';
+      else if (isEnd) designation = 'Arrivée';
+      else if (pt.poiName) designation = pt.poiName;
+      else if (pt.feature) designation = pt.feature;
+      else designation = `Point de repère (km ${pt.dist.toFixed(1)})`;
+
+      return {
+        id: 'stop_' + i + '_' + Date.now(),
+        lat: pt.lat,
+        lon: pt.lon,
+        ele: pt.smoothEle,
+        trackIdx: pt.idx,
+        cumulDist: pt.dist,
+        designation: designation,
+        isStart: isStart,
+        isEnd: isEnd,
+        vitesse: this.refSpeed, // 3.2 km/h
+        pause: (isStart || isEnd) ? 0 : 10, // 10 mn par défaut pour les arrêts intermédiaires
+        info: isStart ? 'Rassemblement et consignes' : (isEnd ? 'Fin de la randonnée' : '')
+      };
+    });
+  }
+
+  // =========================================================================
+  // ÉTAPE 1 : MODE CALAGE VISUEL DES POINTS D'ARRÊT SUR CARTE PLEINE PAGE
+  // =========================================================================
+
+  startCalibrationMode(track) {
+    const mapMgr = window.MapManagerInstance;
+    if (!mapMgr || !mapMgr.map) return;
+
+    this.isCalibrating = true;
+    this.isAddingStop = false;
+
+    // Fermer ou masquer les fenêtres secondaires pour laisser la carte en pleine page
+    this.hiddenElementsBeforeCalibration = [];
+    const elementsToHide = [
+      '#floating-track-list',
+      '#elevation-profile-container',
+      '#slope-legend-container',
+      '#btn-toggle-profile'
+    ];
+    elementsToHide.forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el && !el.classList.contains('hidden')) {
+        el.classList.add('hidden');
+        this.hiddenElementsBeforeCalibration.push(el);
+      }
+    });
+
+    // Basculer vers la vue carte principale si nécessaire
+    const portalContainer = document.getElementById('portal-home');
+    const mainMapContainer = document.getElementById('main-map-app-container');
+    if (portalContainer && !portalContainer.classList.contains('hidden')) {
+      portalContainer.classList.add('hidden');
+    }
+    if (mainMapContainer && mainMapContainer.classList.contains('hidden')) {
+      mainMapContainer.classList.remove('hidden');
+    }
+
+    this.trackPts = this.prepareTrackPoints(track);
+
+    // Si on a déjà des points calibrés (ex: retour depuis l'étape 2), on les conserve, sinon on détecte
+    if (!this.calibratedPoints || this.calibratedPoints.length === 0) {
+      this.calibratedPoints = this.detectInitialStopPoints(this.trackPts);
+    }
+
+    // Centrer la carte sur la trace avec un bon cadrage
+    const latlngs = this.trackPts.map(p => [p.lat, p.lon]);
+    mapMgr.map.fitBounds(L.latLngBounds(latlngs), { padding: [70, 70] });
+
+    // Afficher les marqueurs interactifs sur la carte
+    this.renderCalibrationMarkers();
+
+    // Afficher le bandeau de commande flottant en haut
+    this.renderCalibrationControlBar();
+  }
+
+  /**
+   * Affiche les marqueurs déplaçables et cliquables sur la carte principale
+   */
+  renderCalibrationMarkers() {
+    const mapMgr = window.MapManagerInstance;
+    if (!mapMgr || !mapMgr.map) return;
+
+    if (this.calibrationLayerGroup) {
+      this.calibrationLayerGroup.clearLayers();
+    } else {
+      this.calibrationLayerGroup = L.layerGroup().addTo(mapMgr.map);
+    }
+
+    this.calibratedPoints.forEach((pt, idx) => {
+      const isStart = idx === 0;
+      const isEnd = idx === this.calibratedPoints.length - 1;
+      const color = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
+      const numLabel = isStart ? 'D' : (isEnd ? 'A' : idx);
+
+      const icon = L.divIcon({
+        className: 'ffr-calib-pin',
+        html: `
+          <div style="background:${color}; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; border:2.5px solid white; box-shadow:0 4px 12px rgba(0,0,0,0.6); cursor:grab;" title="Glisser pour déplacer sur la trace • Cliquer pour modifier">
+            ${numLabel}
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const marker = L.marker([pt.lat, pt.lon], {
+        icon: icon,
+        draggable: true,
+        zIndexOffset: isStart || isEnd ? 1000 : 500
+      });
+
+      // Déplacement magnétique le long de la trace GPX
+      marker.on('drag', (e) => {
+        const nearest = this.findNearestTrackPoint(e.latlng.lat, e.latlng.lng, this.trackPts);
+        marker.setLatLng([nearest.lat, nearest.lon]);
+        pt.lat = nearest.lat;
+        pt.lon = nearest.lon;
+        pt.ele = nearest.smoothEle;
+        pt.trackIdx = nearest.idx;
+        pt.cumulDist = nearest.dist;
+      });
+
+      marker.on('dragend', () => {
+        // Re-trier les points par distance cumulée le long de la trace pour maintenir l'ordre chronologique
+        this.reorderCalibratedPoints();
+        this.renderCalibrationMarkers();
+        this.updateCalibrationCounter();
+      });
+
+      // Clic pour renommer ou supprimer
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        this.openEditStopPointDialog(pt, idx);
+      });
+
+      this.calibrationLayerGroup.addLayer(marker);
+    });
+  }
+
+  /**
+   * Réordonne les points par ordre chronologique de la trace et renumérote
+   */
+  reorderCalibratedPoints() {
+    if (this.calibratedPoints.length < 2) return;
+
+    // Le départ (indice 0) et l'arrivée (dernier) restent aux extrémités
+    const startPt = this.calibratedPoints.find(p => p.isStart) || this.calibratedPoints[0];
+    const endPt = this.calibratedPoints.find(p => p.isEnd) || this.calibratedPoints[this.calibratedPoints.length - 1];
+    const intermediates = this.calibratedPoints.filter(p => !p.isStart && !p.isEnd);
+
+    // Trier les intermédiaires par leur distance cumulée
+    intermediates.sort((a, b) => a.cumulDist - b.cumulDist);
+
+    this.calibratedPoints = [startPt, ...intermediates, endPt];
+    this.calibratedPoints.forEach((p, i) => {
+      p.num = i;
+      p.isStart = (i === 0);
+      p.isEnd = (i === this.calibratedPoints.length - 1);
+    });
+  }
+
+  /**
+   * Boîte de dialogue pour renommer le point d'arrêt en Waypoint ou le supprimer
+   */
+  openEditStopPointDialog(pt, idx) {
+    const isStart = idx === 0;
+    const isEnd = idx === this.calibratedPoints.length - 1;
+
+    const existingModal = document.getElementById('modal-edit-ffr-stop');
+    if (existingModal) existingModal.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'modal-edit-ffr-stop';
+    dialog.className = 'fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150';
+    dialog.innerHTML = `
+      <div class="bg-slate-900 border-2 border-emerald-500 rounded-2xl max-w-sm w-full p-5 shadow-2xl text-white space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full ${isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600')} text-white font-black text-xs flex items-center justify-center">
+              ${isStart ? 'D' : (isEnd ? 'A' : idx)}
+            </span>
+            <h3 class="font-extrabold text-sm text-white">
+              ${isStart ? 'Point de Départ' : (isEnd ? 'Point d\'Arrivée' : 'Modifier le Jalon ' + idx)}
+            </h3>
+          </div>
+          <button type="button" class="btn-close-edit text-slate-400 hover:text-white font-bold p-1">✕</button>
+        </div>
+
+        <div class="text-xs text-slate-300 space-y-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 mb-1">Nom du Waypoint / Désignation :</label>
+            <input type="text" id="input-edit-stop-name" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-white font-bold text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none" value="${this.escapeHtml(pt.designation)}" />
+          </div>
+
+          <!-- Suggestions rapides d'icônes et toponymes -->
+          <div>
+            <span class="text-[10px] text-slate-400 font-semibold mb-1 block">Suggestions rapides :</span>
+            <div class="flex flex-wrap gap-1.5 pt-0.5">
+              ${['🏔️ Sommet', '🏕️ Refuge', '💧 Source', '🧭 Col', '👁️ Belvédère', '🅿️ Parking', '🍴 Pique-nique', '⚠️ Danger'].map(chip => `
+                <button type="button" class="chip-suggestion px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] text-slate-200 border border-slate-700 transition cursor-pointer">
+                  ${chip}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <span>Altitude : <strong class="text-white">${pt.ele} m</strong></span>
+            <span>Position : <strong class="text-sky-400">km ${pt.cumulDist.toFixed(2)}</strong></span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
+          ${(!isStart && !isEnd) ? `
+            <button type="button" id="btn-delete-stop-pt" class="px-3 py-1.5 rounded-xl bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+              <span>🗑️</span> <span>Supprimer</span>
+            </button>
+          ` : '<div></div>'}
+          <div class="flex items-center gap-2">
+            <button type="button" class="btn-close-edit px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition cursor-pointer">
+              Annuler
+            </button>
+            <button type="button" id="btn-save-stop-name" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition cursor-pointer shadow">
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(dialog);
+
+    const inputName = dialog.querySelector('#input-edit-stop-name');
+    inputName?.focus();
+
+    dialog.querySelectorAll('.chip-suggestion').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (inputName) {
+          const current = inputName.value.trim();
+          inputName.value = chip.innerText.trim();
+        }
+      });
+    });
+
+    dialog.querySelectorAll('.btn-close-edit').forEach(b => {
+      b.addEventListener('click', () => dialog.remove());
+    });
+
+    dialog.querySelector('#btn-save-stop-name')?.addEventListener('click', () => {
+      const newName = inputName?.value.trim();
+      if (newName) {
+        pt.designation = newName;
+      }
+      dialog.remove();
+      this.renderCalibrationMarkers();
+    });
+
+    dialog.querySelector('#btn-delete-stop-pt')?.addEventListener('click', () => {
+      if (confirm(`Confirmez-vous la suppression du point d'arrêt "${pt.designation}" ?`)) {
+        this.calibratedPoints.splice(idx, 1);
+        this.reorderCalibratedPoints();
+        dialog.remove();
+        this.renderCalibrationMarkers();
+        this.updateCalibrationCounter();
+      }
+    });
+  }
+
+  /**
+   * Bandeau de commande supérieur flottant sur la carte
+   */
+  renderCalibrationControlBar() {
+    if (this.calibrationBarEl) this.calibrationBarEl.remove();
+
+    const bar = document.createElement('div');
+    bar.id = 'ffr-calibration-bar';
+    bar.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1050] bg-slate-900/95 border-2 border-emerald-500/80 rounded-2xl p-2 sm:px-4 shadow-2xl flex flex-wrap items-center gap-2 sm:gap-3 text-white backdrop-blur-md animate-in slide-in-from-top-4 duration-200';
+    bar.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="w-7 h-7 rounded-xl bg-emerald-600 flex items-center justify-center text-sm font-black shadow">📋</span>
+        <div>
+          <div class="text-xs font-black text-white flex items-center gap-2">
+            <span>Tableau de Marche FFR</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/40">Étape 1/2 : Calage des Arrêts</span>
+          </div>
+          <div id="ffr-calibration-counter" class="text-[11px] text-slate-300">
+            ${this.calibratedPoints.length} jalons • Glissez un point sur la trace pour le caler • Clic pour renommer
+          </div>
+        </div>
+      </div>
+
+      <div class="h-6 w-px bg-slate-700 hidden sm:block"></div>
+
+      <div class="flex items-center gap-2">
+        <button id="btn-ffr-add-stop" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer" title="Cliquer puis cliquer sur la trace pour ajouter un point d'arrêt">
+          <span>📍</span> <span>+ Ajouter un arrêt</span>
+        </button>
+
+        <button id="btn-ffr-validate-calibration" type="button" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition flex items-center gap-1.5 shadow-lg shadow-emerald-950/60 cursor-pointer">
+          <span>✅</span> <span>Valider &amp; Générer le tableau</span>
+        </button>
+
+        <button id="btn-ffr-cancel-calibration" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-white text-xs font-bold transition cursor-pointer" title="Quitter sans générer">
+          ✕ Annuler
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(bar);
+    this.calibrationBarEl = bar;
+
+    // Bouton Ajouter un arrêt
+    const btnAdd = bar.querySelector('#btn-ffr-add-stop');
+    btnAdd?.addEventListener('click', () => {
+      this.isAddingStop = !this.isAddingStop;
+      if (this.isAddingStop) {
+        btnAdd.classList.add('bg-amber-600', 'text-white', 'border-amber-400');
+        btnAdd.classList.remove('bg-slate-800', 'text-sky-300');
+        btnAdd.innerHTML = '<span>🎯</span> <span>Cliquez sur la trace...</span>';
+        if (window.MapManagerInstance?.map) {
+          window.MapManagerInstance.map.getContainer().style.cursor = 'crosshair';
+        }
+      } else {
+        this.resetAddStopBtn(btnAdd);
+      }
+    });
+
+    // Écouteur de clic sur la carte pour ajouter un arrêt
+    const map = window.MapManagerInstance?.map;
+    if (map) {
+      this.mapClickHandler = (e) => {
+        if (!this.isAddingStop) return;
+        const nearest = this.findNearestTrackPoint(e.latlng.lat, e.latlng.lng, this.trackPts);
+        const newPt = {
+          id: 'stop_' + Date.now(),
+          lat: nearest.lat,
+          lon: nearest.lon,
+          ele: nearest.smoothEle,
+          trackIdx: nearest.idx,
+          cumulDist: nearest.dist,
+          designation: `Point d'arrêt (km ${nearest.dist.toFixed(1)})`,
+          isStart: false,
+          isEnd: false,
+          vitesse: this.refSpeed,
+          pause: 10,
+          info: ''
+        };
+        this.calibratedPoints.push(newPt);
+        this.reorderCalibratedPoints();
+        this.renderCalibrationMarkers();
+        this.updateCalibrationCounter();
+        this.resetAddStopBtn(btnAdd);
+      };
+      map.on('click', this.mapClickHandler);
+    }
+
+    // Bouton Valider
+    bar.querySelector('#btn-ffr-validate-calibration')?.addEventListener('click', () => {
+      this.finishCalibrationAndOpenRoadmap();
+    });
+
+    // Bouton Annuler
+    bar.querySelector('#btn-ffr-cancel-calibration')?.addEventListener('click', () => {
+      this.cancelCalibrationMode();
+    });
+  }
+
+  resetAddStopBtn(btn) {
+    this.isAddingStop = false;
+    if (btn) {
+      btn.classList.remove('bg-amber-600', 'text-white', 'border-amber-400');
+      btn.classList.add('bg-slate-800', 'text-sky-300');
+      btn.innerHTML = '<span>📍</span> <span>+ Ajouter un arrêt</span>';
+    }
+    if (window.MapManagerInstance?.map) {
+      window.MapManagerInstance.map.getContainer().style.cursor = '';
+    }
+  }
+
+  updateCalibrationCounter() {
+    const counter = document.getElementById('ffr-calibration-counter');
+    if (counter) {
+      counter.innerText = `${this.calibratedPoints.length} jalons • Glissez un point sur la trace pour le caler • Clic pour renommer`;
+    }
+  }
+
+  cancelCalibrationMode() {
+    this.isCalibrating = false;
+    this.isAddingStop = false;
+
+    if (this.calibrationLayerGroup) {
+      this.calibrationLayerGroup.clearLayers();
+    }
+    if (this.calibrationBarEl) {
+      this.calibrationBarEl.remove();
+      this.calibrationBarEl = null;
+    }
+
+    const map = window.MapManagerInstance?.map;
+    if (map && this.mapClickHandler) {
+      map.off('click', this.mapClickHandler);
+      map.getContainer().style.cursor = '';
+    }
+
+    // Restaurer les éléments masqués
+    this.hiddenElementsBeforeCalibration.forEach(el => {
+      el.classList.remove('hidden');
+    });
+    this.hiddenElementsBeforeCalibration = [];
+  }
+
+  finishCalibrationAndOpenRoadmap() {
+    // Nettoyer l'affichage de l'étape 1
+    if (this.calibrationLayerGroup) {
+      this.calibrationLayerGroup.clearLayers();
+    }
+    if (this.calibrationBarEl) {
+      this.calibrationBarEl.remove();
+      this.calibrationBarEl = null;
+    }
+    const map = window.MapManagerInstance?.map;
+    if (map && this.mapClickHandler) {
+      map.off('click', this.mapClickHandler);
+      map.getContainer().style.cursor = '';
+    }
+
+    // Calculer les données complètes du tableau de marche
+    this.generateRoadmapFromCalibratedPoints();
+
+    // Ouvrir la modale Tableau de Marche (Étape 2)
+    this.renderRoadmapModal();
+  }
+
+  // =========================================================================
+  // ÉTAPE 2 : TABLEAU DE MARCHE GÉNÉRÉ & PERSONNALISÉ
+  // =========================================================================
+
+  generateRoadmapFromCalibratedPoints() {
+    this.reorderCalibratedPoints();
+
+    const pts = this.calibratedPoints;
     const roadmapPoints = [];
     let cumulDPlus = 0;
     let cumulDMoins = 0;
 
-    for (let i = 0; i < selectedIndices.length; i++) {
-      const ptIdx = selectedIndices[i];
-      const pt = trackPts[ptIdx];
+    for (let i = 0; i < pts.length; i++) {
+      const pt = pts[i];
       const isStart = i === 0;
-      const isEnd = i === selectedIndices.length - 1;
+      const isEnd = i === pts.length - 1;
 
-      // Azimut de sortie immédiat du sentier (sur 30 à 50 mètres le long de la trace réelle)
+      // Azimut de sortie immédiat du sentier (sur 30 à 50 mètres)
       let exitAzimuth = '-';
       if (!isEnd) {
-        let fwdIdx = ptIdx + 1;
-        while (fwdIdx < trackPts.length - 1 && (trackPts[fwdIdx].dist - pt.dist) * 1000 < 45) {
+        let fwdIdx = pt.trackIdx + 1;
+        while (fwdIdx < this.trackPts.length - 1 && (this.trackPts[fwdIdx].dist - pt.cumulDist) * 1000 < 45) {
           fwdIdx++;
         }
-        exitAzimuth = this.calculateBearing(pt.lat, pt.lon, trackPts[fwdIdx].lat, trackPts[fwdIdx].lon);
+        if (fwdIdx < this.trackPts.length) {
+          exitAzimuth = this.calculateBearing(pt.lat, pt.lon, this.trackPts[fwdIdx].lat, this.trackPts[fwdIdx].lon);
+        }
       }
 
       // Métriques relatives au tronçon précédent
@@ -250,47 +748,38 @@ class FfrRoadmapManager {
 
       if (!isStart) {
         const prevPt = roadmapPoints[i - 1];
-        distTroncon = Math.round((pt.dist - prevPt.cumulDist) * 100) / 100;
-        deniveleTroncon = Math.round(pt.smoothEle - prevPt.altitude);
+        distTroncon = Math.round((pt.cumulDist - prevPt.cumulDist) * 100) / 100;
+        deniveleTroncon = Math.round(pt.ele - prevPt.altitude);
         if (distTroncon > 0) {
           pentePct = Math.round((deniveleTroncon / (distTroncon * 1000)) * 100);
         }
-      }
 
-      // Cumuls D+ et D- réels le long du sentier
-      if (!isStart) {
-        const prevIdx = selectedIndices[i - 1];
-        for (let s = prevIdx + 1; s <= ptIdx; s++) {
-          const diff = trackPts[s].ele - trackPts[s - 1].ele;
+        // Cumuls D+ et D- réels
+        const prevIdx = pts[i - 1].trackIdx;
+        const curIdx = pt.trackIdx;
+        for (let s = prevIdx + 1; s <= curIdx; s++) {
+          const diff = this.trackPts[s].ele - this.trackPts[s - 1].ele;
           if (diff > 0) cumulDPlus += diff;
           else cumulDMoins += Math.abs(diff);
         }
       }
 
-      // Désignation du point
-      let designation = `Point ${i}`;
-      if (isStart) designation = 'Départ';
-      else if (isEnd) designation = 'Arrivée';
-      else if (pt.poiName) designation = pt.poiName;
-      else if (pt.feature) designation = pt.feature;
-      else designation = `Point de repère (km ${pt.dist.toFixed(1)})`;
-
       roadmapPoints.push({
         num: i,
-        designation: designation,
+        designation: pt.designation || (isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Point ' + i)),
         azimuth: exitAzimuth,
-        altitude: Math.round(pt.smoothEle),
+        altitude: Math.round(pt.ele),
         distTroncon: distTroncon,
-        vitesse: this.refSpeed,
-        pause: (isStart ? 0 : (i === Math.floor(selectedIndices.length / 2) ? 40 : 0)), // 40 min par défaut à mi-parcours (pique-nique)
+        vitesse: pt.vitesse || this.refSpeed, // 3.2 km/h pré-rempli
+        pause: pt.pause !== undefined ? pt.pause : (isStart || isEnd ? 0 : 10), // 10 mn pré-rempli
         deniveleTroncon: deniveleTroncon,
         pentePct: pentePct,
         cumulDPlus: Math.round(cumulDPlus),
         cumulDMoins: Math.round(cumulDMoins),
-        cumulDist: Math.round(pt.dist * 100) / 100,
+        cumulDist: Math.round(pt.cumulDist * 100) / 100,
         tempsTronconMin: 0,
         heureArrivee: '',
-        info: isStart ? 'Rassemblement et consignes' : (isEnd ? 'Fin de la randonnée' : ''),
+        info: pt.info || (isStart ? 'Rassemblement et consignes' : (isEnd ? 'Fin de la randonnée' : '')),
         lat: pt.lat,
         lon: pt.lon
       });
@@ -302,7 +791,7 @@ class FfrRoadmapManager {
   }
 
   /**
-   * Recalcule tous les temps de marche et heures d'arrivée
+   * Recalcule tous les temps de marche et heures d'arrivée avec les pauses en cascade
    */
   recalculateTimes() {
     let currentHeure = this.startTime;
@@ -310,43 +799,29 @@ class FfrRoadmapManager {
     for (let i = 0; i < this.points.length; i++) {
       const p = this.points[i];
       if (i === 0) {
-        p.tempsTronconMin = p.pause || 0;
+        p.tempsTronconMin = 0;
         p.heureArrivee = this.startTime;
+        // La pause au départ (si > 0) décale l'heure de départ effectif
+        if (p.pause > 0) {
+          currentHeure = this.addMinutesToTime(currentHeure, p.pause);
+        }
       } else {
         const vit = p.vitesse > 0 ? p.vitesse : this.refSpeed;
         const tempsMarcheMin = (p.distTroncon / vit) * 60;
         const tempsDPlusMin = (p.deniveleTroncon > 0) ? (p.deniveleTroncon / 300) * 60 : 0;
-        p.tempsTronconMin = Math.round(tempsMarcheMin + tempsDPlusMin + (p.pause || 0));
-        currentHeure = this.addMinutesToTime(currentHeure, p.tempsTronconMin);
-        p.heureArrivee = currentHeure;
+        p.tempsTronconMin = Math.round(tempsMarcheMin + tempsDPlusMin);
+
+        // L'heure d'arrivée est l'heure de départ de l'étape précédente + le temps de marche
+        p.heureArrivee = this.addMinutesToTime(currentHeure, p.tempsTronconMin);
+
+        // La pause de l'étape s'ajoute pour fixer l'heure de départ vers l'étape suivante (Option 2B)
+        const pauseMin = p.pause || 0;
+        currentHeure = this.addMinutesToTime(p.heureArrivee, pauseMin);
       }
     }
   }
 
-  /**
-   * Ouverture du modal Tableau de Marche FFR
-   */
-  openRoadmapModal() {
-    const mapMgr = window.MapManagerInstance;
-    const track = mapMgr?.standaloneHike || (mapMgr?.standaloneTracks && mapMgr.standaloneTracks[0]) || mapMgr?.currentHike;
-
-    if (!track) {
-      alert("⚠️ Aucune trace GPX n'est actuellement affichée sur la carte.\n\nVeuillez d'abord charger une trace GPX pour générer son Tableau de Marche FFR.");
-      return;
-    }
-
-    this.currentTrack = track;
-    this.hikeName = track.name || 'Randonnée';
-    this.animatorName = window.AuthManagerInstance?.getCurrentUser()?.username || 'Animateur FFR';
-
-    // Analyse avec la règle : ~1 point tous les 1.5 km
-    this.analyzeTrack(track);
-
-    // Rendu du modal complet 3 niveaux (Tableau, Profil, Carte)
-    this.renderModal();
-  }
-
-  renderModal() {
+  renderRoadmapModal() {
     if (this.modalEl) this.modalEl.remove();
 
     const modal = document.createElement('div');
@@ -362,7 +837,7 @@ class FfrRoadmapManager {
           <div>
             <h2 class="text-sm sm:text-base font-black text-white flex items-center gap-2">
               <span>Tableau de Marche FFRandonnée</span>
-              <span class="px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 text-[10px] font-bold border border-emerald-700/50">Moyenne 1 pt / 1.5 km</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 text-[10px] font-bold border border-emerald-700/50">${this.points.length} jalons validés</span>
             </h2>
             <div class="text-[11px] text-slate-400 flex items-center gap-2.5">
               <span>Rando : <strong class="text-slate-200">${this.escapeHtml(this.hikeName)}</strong></span>
@@ -371,12 +846,12 @@ class FfrRoadmapManager {
               <span>•</span>
               <span>D+ : <strong class="text-emerald-400">+${this.points[this.points.length - 1]?.cumulDPlus || 0} m</strong></span>
               <span>•</span>
-              <span>Points : <strong class="text-amber-400">${this.points.length} jalons</strong></span>
+              <span>Arrivée estimée : <strong class="text-amber-400">${this.points[this.points.length - 1]?.heureArrivee || '--:--'}</strong></span>
             </div>
           </div>
         </div>
 
-        <!-- Paramètres rapides (Heure départ, Vitesse réf, Actions) -->
+        <!-- Paramètres et Actions -->
         <div class="flex items-center gap-2 flex-wrap">
           <div class="flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-xl border border-slate-700 text-xs">
             <span class="text-slate-400 font-semibold text-[11px]">Départ :</span>
@@ -389,12 +864,24 @@ class FfrRoadmapManager {
             <span class="text-slate-500 text-[10px]">km/h</span>
           </div>
 
-          <button id="btn-ffr-export-csv" type="button" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer" title="Télécharger le fichier CSV officiel FFR">
-            <span>📥</span> <span>Export CSV</span>
+          <!-- Bouton pour revenir caler sur la carte -->
+          <button id="btn-ffr-re-calibrate" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer" title="Revenir ajuster les points d'arrêt sur la carte pleine page">
+            <span>✏️</span> <span>Ajuster sur carte</span>
           </button>
 
-          <button id="btn-ffr-print" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer" title="Imprimer le tableau de marche">
-            <span>🖨️</span> <span>Imprimer</span>
+          <!-- Export GPX enrichi avec les Waypoints d'arrêt -->
+          <button id="btn-ffr-export-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer" title="Télécharger le fichier GPX enrichi des Waypoints d'arrêt">
+            <span>💾</span> <span>Export GPX</span>
+          </button>
+
+          <!-- Export CSV -->
+          <button id="btn-ffr-export-csv" type="button" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer" title="Télécharger le fichier CSV officiel FFR">
+            <span>📥</span> <span>CSV</span>
+          </button>
+
+          <!-- Fiche Topo Complète / Impression -->
+          <button id="btn-ffr-print" type="button" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer" title="Imprimer la fiche topo complète (Tableau, Profil et Carte)">
+            <span>🖨️</span> <span>Fiche Topo</span>
           </button>
 
           <button id="btn-ffr-close" type="button" class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm transition cursor-pointer" title="Fermer">✕</button>
@@ -412,7 +899,7 @@ class FfrRoadmapManager {
         <div id="ffr-aligned-profile-container" class="h-32 sm:h-36 bg-slate-900/90 rounded-xl border border-slate-800 p-2 flex flex-col flex-shrink-0 relative">
           <div class="flex items-center justify-between text-[11px] text-slate-400 px-2 pb-0.5 border-b border-slate-800/60">
             <span class="font-bold text-emerald-300 flex items-center gap-1.5">
-              <span>▲</span> <span>Profil Altimétrique &amp; Repères Verticaux des Points</span>
+              <span>▲</span> <span>Profil Altimétrique &amp; Repères Verticaux des Jalons</span>
             </span>
             <span class="text-[10px] text-slate-500">Survol = synchronisation Profil / Carte</span>
           </div>
@@ -471,23 +958,22 @@ class FfrRoadmapManager {
     ]);
 
     if (latlngs.length > 0) {
-      // Tracé avec halo blanc et trait violet/bleu
       L.polyline(latlngs, { color: '#ffffff', weight: 6, opacity: 0.9 }).addTo(miniMap);
       L.polyline(latlngs, { color: '#0284c7', weight: 4, opacity: 1.0 }).addTo(miniMap);
 
-      // Pastilles des points 0..N
       this.miniMapMarkers = [];
       this.points.forEach((p, idx) => {
         const isStart = idx === 0;
         const isEnd = idx === this.points.length - 1;
         const color = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
+        const numLabel = isStart ? 'D' : (isEnd ? 'A' : p.num);
 
         const m = L.marker([p.lat, p.lon], {
           icon: L.divIcon({
             className: 'ffr-map-pin',
             html: `
               <div style="background:${color}; color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:10px; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.5); cursor:pointer;">
-                ${p.num}
+                ${numLabel}
               </div>
             `,
             iconSize: [22, 22],
@@ -500,7 +986,8 @@ class FfrRoadmapManager {
             <div style="font-weight:900; color:${color}; font-size:12px;">Point ${p.num} : ${this.escapeHtml(p.designation)}</div>
             <div style="font-size:11px; color:#475569; margin-top:2px;">Altitude : <strong>${p.altitude} m</strong></div>
             <div style="font-size:11px; color:#475569;">Azimut départ : <strong>${p.azimuth}°</strong></div>
-            <div style="font-size:11px; color:#475569;">Heure : <strong>${p.heureArrivee}</strong></div>
+            <div style="font-size:11px; color:#475569;">Arrivée : <strong>${p.heureArrivee}</strong></div>
+            ${p.pause > 0 ? `<div style="font-size:11px; color:#d97706;">Pause : <strong>${p.pause} mn</strong></div>` : ''}
           </div>
         `);
 
@@ -518,7 +1005,8 @@ class FfrRoadmapManager {
   }
 
   /**
-   * Génère le HTML du tableau transposé (Lignes = Métriques, Colonnes = Points 0..N)
+   * Génère le HTML du tableau transposé
+   * Nouvelle disposition demandée : ligne « Pause (Mn) » placée juste après « Heure arrivée »
    */
   buildTransposedTableHtml() {
     const totalPoints = this.points.length;
@@ -526,19 +1014,20 @@ class FfrRoadmapManager {
 
     const rows = [
       { key: 'num', label: 'Points N°', header: true },
-      { key: 'designation', label: 'Désignation', isEditableText: true },
+      { key: 'designation', label: 'Désignation (Waypoint)', isEditableText: true },
       { key: 'azimuth', label: 'Azimut (°)', isBadge: true },
       { key: 'altitude', label: 'Altitude (M)', suffix: ' m' },
       { key: 'distTroncon', label: 'Dist. tronçon (kM)', suffix: ' km' },
-      { key: 'vitesse', label: 'Vitesse (Km/H)', isEditableSpeed: true },
-      { key: 'pause', label: 'Pauses (Mn)', isEditablePause: true },
       { key: 'deniveleTroncon', label: 'Dénivelé (M)', formatDenivele: true },
       { key: 'pentePct', label: 'Pente (%)', formatPente: true },
+      { key: 'vitesse', label: 'Vitesse moy. (Km/H)', isEditableSpeed: true },
+      { key: 'tempsTronconMin', label: 'Temps Tronçon (Mn)', suffix: ' mn', isHighlight: true },
+      { key: 'heureArrivee', label: 'Heure arrivée', isTime: true },
+      // LIGNE PAUSE DEMANDÉE IMMÉDIATEMENT APRÈS HEURE ARRIVÉE (Option 2B)
+      { key: 'pause', label: 'Pause (Mn)', isEditablePause: true },
       { key: 'cumulDPlus', label: 'D+ cumulé (M)', prefix: '+' },
       { key: 'cumulDMoins', label: 'D- cumulé (M)', prefix: '-' },
       { key: 'cumulDist', label: 'Dist. cumulée (kM)', suffix: ' km', isHighlight: true },
-      { key: 'tempsTronconMin', label: 'Temps Tronçon (Mn)', suffix: ' mn', isHighlight: true },
-      { key: 'heureArrivee', label: 'Heure arrivée', isTime: true },
       { key: 'info', label: 'Information', isEditableInfo: true }
     ];
 
@@ -569,7 +1058,7 @@ class FfrRoadmapManager {
           const badgeBg = isStart ? 'bg-emerald-600' : (isEnd ? 'bg-rose-600' : 'bg-sky-600');
           cellContent = `
             <div class="flex items-center justify-center gap-1.5 cursor-pointer ffr-btn-center-point" data-idx="${cIdx}" title="Cliquer pour centrer sur la carte">
-              <span class="w-5 h-5 rounded-full ${badgeBg} text-white font-black text-[10px] flex items-center justify-center shadow">${p.num}</span>
+              <span class="w-5 h-5 rounded-full ${badgeBg} text-white font-black text-[10px] flex items-center justify-center shadow">${isStart ? 'D' : (isEnd ? 'A' : p.num)}</span>
               <span class="font-extrabold text-white text-[11px]">${isStart ? 'Départ' : (isEnd ? 'Arrivée' : 'Pt ' + p.num)}</span>
             </div>
           `;
@@ -580,7 +1069,7 @@ class FfrRoadmapManager {
         } else if (row.isEditableSpeed) {
           cellContent = isStart ? '<span class="text-slate-600">-</span>' : `<input type="number" step="0.1" min="1" max="10" class="ffr-input-cell ffr-edit-speed bg-slate-900/90 text-amber-300 font-bold text-[11px] px-1.5 py-0.5 rounded border border-slate-700/80 w-16 text-center focus:border-amber-400 focus:outline-none" data-idx="${cIdx}" value="${p.vitesse}" />`;
         } else if (row.isEditablePause) {
-          cellContent = isStart ? '<span class="text-slate-600">-</span>' : `<input type="number" step="1" min="0" max="180" class="ffr-input-cell ffr-edit-pause bg-slate-900/90 text-amber-300 font-bold text-[11px] px-1.5 py-0.5 rounded border border-slate-700/80 w-16 text-center focus:border-amber-400 focus:outline-none" data-idx="${cIdx}" value="${p.pause}" />`;
+          cellContent = `<input type="number" step="5" min="0" max="180" class="ffr-input-cell ffr-edit-pause bg-amber-950/40 text-amber-300 font-bold text-[11px] px-1.5 py-0.5 rounded border border-amber-600/60 w-16 text-center focus:border-amber-400 focus:outline-none shadow-xs" data-idx="${cIdx}" value="${p.pause || 0}" title="Durée de la pause à cette étape (en minutes)" />`;
         } else if (row.formatDenivele) {
           const val = p.deniveleTroncon;
           const color = val > 0 ? 'text-emerald-400' : (val < 0 ? 'text-rose-400' : 'text-slate-400');
@@ -646,7 +1135,6 @@ class FfrRoadmapManager {
     const plotWidth = width - paddingLeft - paddingRight;
     const plotHeight = height - paddingTop - paddingBottom;
 
-    // Échantillonner la courbe de dénivelé
     let pathD = '';
     const numSamples = Math.min(rawPts.length, 300);
     const step = Math.max(1, Math.floor(rawPts.length / numSamples));
@@ -665,7 +1153,6 @@ class FfrRoadmapManager {
 
     const areaD = `${pathD} L ${(paddingLeft + plotWidth).toFixed(1)} ${(paddingTop + plotHeight).toFixed(1)} L ${paddingLeft} ${(paddingTop + plotHeight).toFixed(1)} Z`;
 
-    // Repères verticaux pour chaque point
     let pinsSvg = '';
     this.points.forEach((p, idx) => {
       const x = paddingLeft + (p.cumulDist / totalDist) * plotWidth;
@@ -673,6 +1160,7 @@ class FfrRoadmapManager {
       const isStart = idx === 0;
       const isEnd = idx === this.points.length - 1;
       const pinColor = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
+      const pinLabel = isStart ? 'D' : (isEnd ? 'A' : p.num);
 
       pinsSvg += `
         <!-- Ligne guide verticale -->
@@ -681,7 +1169,7 @@ class FfrRoadmapManager {
         <!-- Pastille numérotée sur la courbe -->
         <g class="ffr-pin-group ffr-pin-${idx} cursor-pointer" data-idx="${idx}" transform="translate(${x.toFixed(1)}, ${y.toFixed(1)})">
           <circle r="8" fill="${pinColor}" stroke="#ffffff" stroke-width="1.8" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.5))" />
-          <text text-anchor="middle" dy="3.2" fill="#ffffff" font-size="8.5" font-weight="900" font-family="sans-serif">${p.num}</text>
+          <text text-anchor="middle" dy="3.2" fill="#ffffff" font-size="8.5" font-weight="900" font-family="sans-serif">${pinLabel}</text>
         </g>
       `;
     });
@@ -711,13 +1199,19 @@ class FfrRoadmapManager {
   }
 
   /**
-   * Événements du modal
+   * Événements de la modale Étape 2
    */
   bindModalEvents() {
     if (!this.modalEl) return;
 
     this.modalEl.querySelector('#btn-ffr-close')?.addEventListener('click', () => {
       this.closeModal();
+    });
+
+    // Revenir caler les arrêts sur la carte
+    this.modalEl.querySelector('#btn-ffr-re-calibrate')?.addEventListener('click', () => {
+      this.closeModal();
+      this.startCalibrationMode(this.currentTrack);
     });
 
     this.modalEl.querySelector('#ffr-input-start-time')?.addEventListener('change', (e) => {
@@ -741,7 +1235,10 @@ class FfrRoadmapManager {
     this.modalEl.querySelectorAll('.ffr-edit-name').forEach(inp => {
       inp.addEventListener('change', () => {
         const idx = parseInt(inp.getAttribute('data-idx'), 10);
-        if (this.points[idx]) this.points[idx].designation = inp.value;
+        if (this.points[idx]) {
+          this.points[idx].designation = inp.value;
+          if (this.calibratedPoints[idx]) this.calibratedPoints[idx].designation = inp.value;
+        }
       });
     });
 
@@ -751,6 +1248,7 @@ class FfrRoadmapManager {
         const v = parseFloat(inp.value);
         if (this.points[idx] && !isNaN(v) && v > 0) {
           this.points[idx].vitesse = v;
+          if (this.calibratedPoints[idx]) this.calibratedPoints[idx].vitesse = v;
           this.recalculateTimes();
           this.refreshTableAndProfile();
         }
@@ -763,6 +1261,7 @@ class FfrRoadmapManager {
         const p = parseInt(inp.value, 10);
         if (this.points[idx] && !isNaN(p) && p >= 0) {
           this.points[idx].pause = p;
+          if (this.calibratedPoints[idx]) this.calibratedPoints[idx].pause = p;
           this.recalculateTimes();
           this.refreshTableAndProfile();
         }
@@ -772,7 +1271,10 @@ class FfrRoadmapManager {
     this.modalEl.querySelectorAll('.ffr-edit-info').forEach(inp => {
       inp.addEventListener('change', () => {
         const idx = parseInt(inp.getAttribute('data-idx'), 10);
-        if (this.points[idx]) this.points[idx].info = inp.value;
+        if (this.points[idx]) {
+          this.points[idx].info = inp.value;
+          if (this.calibratedPoints[idx]) this.calibratedPoints[idx].info = inp.value;
+        }
       });
     });
 
@@ -798,10 +1300,17 @@ class FfrRoadmapManager {
       pinEl.addEventListener('mouseleave', () => this.setHighlightIdx(idx, false));
     });
 
+    // Bouton Export GPX enrichi
+    this.modalEl.querySelector('#btn-ffr-export-gpx')?.addEventListener('click', () => {
+      this.exportEnrichedGpx();
+    });
+
+    // Bouton Export CSV
     this.modalEl.querySelector('#btn-ffr-export-csv')?.addEventListener('click', () => {
       this.exportCsv();
     });
 
+    // Bouton Fiche Topo (Impression / PDF)
     this.modalEl.querySelector('#btn-ffr-print')?.addEventListener('click', () => {
       this.printRoadmap();
     });
@@ -836,7 +1345,6 @@ class FfrRoadmapManager {
       pin.setAttribute('r', active ? '10' : '8');
     }
 
-    // Mettre en valeur le marqueur sur la mini-carte
     if (this.miniMapMarkers && this.miniMapMarkers[idx]) {
       const m = this.miniMapMarkers[idx];
       const el = m.getElement();
@@ -854,7 +1362,6 @@ class FfrRoadmapManager {
     this.scrollToColumn(idx);
     this.setHighlightIdx(idx, true);
 
-    // Pan sur la mini-carte
     if (this.miniMap) {
       this.miniMap.panTo([pt.lat, pt.lon], { animate: true });
       if (this.miniMapMarkers && this.miniMapMarkers[idx]) {
@@ -862,7 +1369,6 @@ class FfrRoadmapManager {
       }
     }
 
-    // Pan sur la carte principale
     const map = window.MapManagerInstance?.map;
     if (map) {
       map.panTo([pt.lat, pt.lon], { animate: true });
@@ -891,6 +1397,55 @@ class FfrRoadmapManager {
       this.modalEl.remove();
       this.modalEl = null;
     }
+
+    // Restaurer les fenêtres masquées avant le calage
+    this.hiddenElementsBeforeCalibration.forEach(el => {
+      el.classList.remove('hidden');
+    });
+    this.hiddenElementsBeforeCalibration = [];
+  }
+
+  /**
+   * Export de la trace GPX enrichie avec les Waypoints d'arrêt (<wpt>)
+   */
+  exportEnrichedGpx() {
+    const track = this.currentTrack;
+    if (!track) return;
+
+    let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    gpx += `<gpx version="1.1" creator="Map &amp; Rando by JLDApps 2026 - Tableau de Marche FFR" xmlns="http://www.topografix.com/GPX/1/1">\n`;
+    gpx += `  <metadata>\n    <name>${this.escapeXml(this.hikeName)} (Waypoints FFR)</name>\n    <time>${new Date().toISOString()}</time>\n  </metadata>\n`;
+
+    // 1. Waypoints balisés (<wpt>)
+    this.points.forEach(p => {
+      gpx += `  <wpt lat="${Number(p.lat).toFixed(6)}" lon="${Number(p.lon).toFixed(6)}">\n`;
+      if (p.altitude) gpx += `    <ele>${p.altitude}</ele>\n`;
+      gpx += `    <name>${this.escapeXml(p.designation || ('Point ' + p.num))}</name>\n`;
+      gpx += `    <desc>Jalon ${p.num} • Arrivée estimée: ${p.heureArrivee}${p.pause > 0 ? ' (Pause ' + p.pause + ' mn)' : ''} • Dist: ${p.cumulDist} km</desc>\n`;
+      gpx += `    <sym>Waypoint</sym>\n`;
+      gpx += `  </wpt>\n`;
+    });
+
+    // 2. Tracé vectoriel (<trk>)
+    gpx += `  <trk>\n    <name>${this.escapeXml(this.hikeName)}</name>\n    <trkseg>\n`;
+    const rawPts = track.points || [];
+    rawPts.forEach(p => {
+      const lat = p.lat !== undefined ? p.lat : p[0];
+      const lon = p.lon !== undefined ? (p.lon !== undefined ? p.lon : p.lng) : p[1];
+      const ele = p.ele !== undefined ? p.ele : (p[2] || 0);
+      gpx += `      <trkpt lat="${Number(lat).toFixed(6)}" lon="${Number(lon).toFixed(6)}"><ele>${Number(ele).toFixed(1)}</ele></trkpt>\n`;
+    });
+    gpx += `    </trkseg>\n  </trk>\n</gpx>`;
+
+    const blob = new Blob([gpx], { type: 'application/gpx+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${this.hikeName.replace(/[^a-zA-Z0-9_-]/g, '_')}_Tableau_de_Marche_FFR.gpx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   /**
@@ -901,18 +1456,18 @@ class FfrRoadmapManager {
     csv += `,Rando :,"${this.escapeCsv(this.hikeName)}",,,,,Tableau de marche,,,,,,Heure Départ   ==>  ,${this.startTime},\n`;
     csv += `,Animateur,"${this.escapeCsv(this.animatorName)}",,,,,,,,,,,,,\n`;
     csv += `,,,,,,,,,,,,,,,\n`;
-    csv += `Points N°,Désignation,,Azimut  (°),Altitude  (M),Distance du point précédent (kM),Vitesse  (Km/H),Pauses  (Mn),Dénivelé (M),Pente (%),Dénivelé cumulé >0       (M),Dénivelé cumulé <0        (M),Distance cumulée (kM),Temps Tronçon (Mn),Heure arrivée,Information\n`;
+    csv += `Points N°,Désignation,Azimut (°),Altitude (M),Distance tronçon (kM),Vitesse (Km/H),Temps Tronçon (Mn),Heure arrivée,Pause (Mn),Dénivelé (M),Pente (%),D+ cumulé (M),D- cumulé (M),Distance cumulée (kM),Information\n`;
 
     this.points.forEach(p => {
       const isStart = p.num === 0;
       const az = p.azimuth !== '-' ? p.azimuth : '';
       const dist = isStart ? '' : p.distTroncon;
       const vit = isStart ? '' : p.vitesse;
-      const pau = (p.pause > 0) ? p.pause : '';
+      const pau = (p.pause > 0) ? p.pause : 0;
       const deniv = isStart ? '' : p.deniveleTroncon;
       const pente = isStart ? '' : p.pentePct;
 
-      csv += `${p.num},"${this.escapeCsv(p.designation)}",,${az},${p.altitude},${dist},${vit},${pau},${deniv},${pente},${p.cumulDPlus},${p.cumulDMoins},${p.cumulDist},${p.tempsTronconMin},${p.heureArrivee},"${this.escapeCsv(p.info)}"\n`;
+      csv += `${p.num},"${this.escapeCsv(p.designation)}",${az},${p.altitude},${dist},${vit},${p.tempsTronconMin},${p.heureArrivee},${pau},${deniv},${pente},${p.cumulDPlus},${p.cumulDMoins},${p.cumulDist},"${this.escapeCsv(p.info)}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -927,7 +1482,8 @@ class FfrRoadmapManager {
   }
 
   /**
-   * Impression / Export PDF en mode paysage propre
+   * Fiche Topo Complète : Impression / Export PDF en mode paysage
+   * Comprend : Le Tableau de marche officiel, le Profil altimétrique normalisé avec jalons et la Carte du tracé
    */
   printRoadmap() {
     const printWindow = window.open('', '_blank');
@@ -937,79 +1493,149 @@ class FfrRoadmapManager {
     this.points.forEach(p => {
       rowsHtml += `
         <tr>
-          <td style="font-weight:bold; text-align:center;">${p.num}</td>
+          <td style="font-weight:bold; text-align:center;">${p.num === 0 ? 'D' : (p.num === this.points.length - 1 ? 'A' : p.num)}</td>
           <td style="font-weight:bold;">${this.escapeHtml(p.designation)}</td>
           <td style="text-align:center; font-family:monospace;">${p.azimuth !== '-' ? p.azimuth + '°' : '-'}</td>
           <td style="text-align:center;">${p.altitude} m</td>
           <td style="text-align:center;">${p.num === 0 ? '-' : p.distTroncon + ' km'}</td>
-          <td style="text-align:center;">${p.num === 0 ? '-' : p.vitesse}</td>
-          <td style="text-align:center;">${p.pause > 0 ? p.pause + ' mn' : '-'}</td>
+          <td style="text-align:center;">${p.num === 0 ? '-' : p.vitesse + ' km/h'}</td>
+          <td style="text-align:center; font-weight:bold;">${p.tempsTronconMin} mn</td>
+          <td style="text-align:center; font-family:monospace; font-weight:bold; background:#f0fdf4;">${p.heureArrivee}</td>
+          <td style="text-align:center; font-weight:bold; color:#d97706; background:#fffbeb;">${p.pause > 0 ? p.pause + ' mn' : '-'}</td>
           <td style="text-align:center;">${p.num === 0 ? '-' : (p.deniveleTroncon > 0 ? '+' : '') + p.deniveleTroncon + ' m'}</td>
           <td style="text-align:center;">${p.num === 0 ? '-' : (p.pentePct > 0 ? '+' : '') + p.pentePct + ' %'}</td>
           <td style="text-align:center; color:#047857;">+${p.cumulDPlus} m</td>
           <td style="text-align:center; color:#b91c1c;">-${p.cumulDMoins} m</td>
           <td style="text-align:center; font-weight:bold;">${p.cumulDist} km</td>
-          <td style="text-align:center; font-weight:bold;">${p.tempsTronconMin} mn</td>
-          <td style="text-align:center; font-family:monospace; font-weight:bold; background:#f0fdf4;">${p.heureArrivee}</td>
           <td>${this.escapeHtml(p.info)}</td>
         </tr>
       `;
     });
 
+    const svgProfile = this.buildSvgProfileHtml();
+    const rawPts = this.currentTrack?.points || [];
+    const latlngsJson = JSON.stringify(rawPts.map(p => [
+      p.lat !== undefined ? p.lat : p[0],
+      p.lon !== undefined ? (p.lon !== undefined ? p.lon : p.lng) : p[1]
+    ]));
+    const markersJson = JSON.stringify(this.points.map(p => ({
+      num: p.num === 0 ? 'D' : (p.num === this.points.length - 1 ? 'A' : p.num),
+      lat: p.lat,
+      lon: p.lon,
+      desig: p.designation,
+      isStart: p.num === 0,
+      isEnd: p.num === this.points.length - 1
+    })));
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Tableau de Marche FFR - ${this.escapeHtml(this.hikeName)}</title>
+        <title>Fiche Tableau de Marche FFR • ${this.escapeHtml(this.hikeName)}</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <style>
-          @page { size: landscape; margin: 10mm; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 10px; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 12px; }
-          .title { font-size: 16px; font-weight: 900; color: #0f172a; }
-          .meta { font-size: 11px; color: #475569; }
-          table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-          th { background: #f1f5f9; color: #0f172a; font-size: 10px; font-weight: 800; border: 1px solid #cbd5e1; padding: 5px 4px; text-align: center; }
-          td { border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 10px; }
+          @page { size: landscape; margin: 8mm; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10px; color: #1e293b; margin: 0; padding: 5px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 8px; }
+          .title { font-size: 15px; font-weight: 900; color: #0f172a; }
+          .meta { font-size: 10px; color: #475569; margin-top: 2px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 8px; }
+          th { background: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; border: 1px solid #cbd5e1; padding: 4px 3px; text-align: center; }
+          td { border: 1px solid #cbd5e1; padding: 3px 4px; font-size: 9px; }
           tr:nth-child(even) { background: #f8fafc; }
+          .section-title { font-size: 11px; font-weight: 800; color: #0369a1; margin-top: 6px; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+          .visu-grid { display: flex; gap: 8px; margin-top: 4px; }
+          .profile-box { flex: 1.2; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; height: 160px; background: #ffffff; }
+          .map-box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; height: 160px; }
         </style>
       </head>
       <body>
         <div class="header">
           <div>
-            <div class="title">Tableau de Marche FFRandonnée • ${this.escapeHtml(this.hikeName)}</div>
-            <div class="meta">Animateur : <strong>${this.escapeHtml(this.animatorName || 'Animateur')}</strong> • Heure de départ : <strong>${this.startTime}</strong> • Tronçons ≤ 1.5 km</div>
+            <div class="title">📋 Fiche Officielle • Tableau de Marche FFRandonnée : ${this.escapeHtml(this.hikeName)}</div>
+            <div class="meta">
+              Animateur : <strong>${this.escapeHtml(this.animatorName || 'Animateur FFR')}</strong> • 
+              Heure de départ : <strong>${this.startTime}</strong> • 
+              Distance : <strong>${this.points[this.points.length - 1]?.cumulDist || 0} km</strong> • 
+              D+ : <strong>+${this.points[this.points.length - 1]?.cumulDPlus || 0} m</strong> • 
+              Arrivée estimée : <strong>${this.points[this.points.length - 1]?.heureArrivee || '--:--'}</strong>
+            </div>
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:bold; color:#0284c7;">Map &amp; Rando by JLDApps</div>
-            <div style="font-size:9px; color:#64748b;">Généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+            <div style="font-weight:bold; color:#0284c7; font-size:11px;">Map &amp; Rando by JLDApps 2026</div>
+            <div style="font-size:8.5px; color:#64748b;">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
           </div>
         </div>
+
+        <!-- 1. TABLEAU DE MARCHE OFFICIEL -->
         <table>
           <thead>
             <tr>
               <th>N°</th>
-              <th>Désignation</th>
+              <th>Désignation (Waypoint)</th>
               <th>Azimut</th>
               <th>Alt.</th>
               <th>Dist.</th>
               <th>Vitesse</th>
-              <th>Pause</th>
+              <th>Temps</th>
+              <th style="background:#065f46;">Arrivée</th>
+              <th style="background:#92400e;">Pause</th>
               <th>Déniv.</th>
               <th>Pente</th>
               <th>D+ cum.</th>
               <th>D- cum.</th>
               <th>Dist. cum.</th>
-              <th>Temps</th>
-              <th>Arrivée</th>
-              <th>Information</th>
+              <th>Information / Consignes</th>
             </tr>
           </thead>
           <tbody>
             ${rowsHtml}
           </tbody>
         </table>
+
+        <!-- 2. PROFIL ALTIMÉTRIQUE NORMALISÉ & CARTE EN REGARD -->
+        <div class="visu-grid">
+          <div class="profile-box">
+            <div class="section-title">▲ Profil Altimétrique Normalisé avec Repères des Jalons</div>
+            <div style="height: 135px; width: 100%;">
+              ${svgProfile}
+            </div>
+          </div>
+          <div class="map-box" id="print-map"></div>
+        </div>
+
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
-          window.onload = function() { window.print(); }
+          window.onload = function() {
+            try {
+              const latlngs = ${latlngsJson};
+              const markers = ${markersJson};
+              const map = L.map('print-map', { zoomControl: false, attributionControl: false });
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+              if (latlngs.length > 0) {
+                L.polyline(latlngs, { color: '#ffffff', weight: 5, opacity: 0.9 }).addTo(map);
+                L.polyline(latlngs, { color: '#0284c7', weight: 3, opacity: 1.0 }).addTo(map);
+
+                markers.forEach(m => {
+                  const color = m.isStart ? '#10b981' : (m.isEnd ? '#ef4444' : '#0284c7');
+                  L.marker([m.lat, m.lon], {
+                    icon: L.divIcon({
+                      className: 'print-pin',
+                      html: '<div style="background:'+color+'; color:white; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:9px; border:1.5px solid white; box-shadow:0 1px 4px rgba(0,0,0,0.5);">' + m.num + '</div>',
+                      iconSize: [18, 18],
+                      iconAnchor: [9, 9]
+                    })
+                  }).addTo(map);
+                });
+
+                map.fitBounds(L.latLngBounds(latlngs), { padding: [15, 15] });
+              }
+            } catch(e) {
+              console.error(e);
+            }
+            setTimeout(function() { window.print(); }, 600);
+          }
         </script>
       </body>
       </html>
@@ -1025,6 +1651,16 @@ class FfrRoadmapManager {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  escapeXml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 
   escapeCsv(str) {

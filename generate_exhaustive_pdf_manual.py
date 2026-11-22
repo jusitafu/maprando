@@ -360,14 +360,14 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>GUIDE OFFICIEL DE L'UTILISATEUR</div>
     </div>
 
     <div class="page-body">
       <div style="text-align: center; margin-top: 6pt; margin-bottom: 8pt;">
-        <div class="badge badge-green" style="font-size: 8pt; padding: 2px 10px; margin-bottom: 4pt;">MANUEL TECHNIQUE OFFICIEL • VERSION ᾳ2.5 (22/11/2026) • ÉDITION 2026</div>
+        <div class="badge badge-green" style="font-size: 8pt; padding: 2px 10px; margin-bottom: 4pt;">MANUEL TECHNIQUE OFFICIEL • VERSION ᾳ3.0 (22/11/2026) • ÉDITION 2026</div>
         <h1 style="font-size: 18pt; margin-bottom: 2pt; color: #047857;">Map &amp; Rando by JLDApps</h1>
         <div style="font-size: 10.5pt; font-weight: 700; color: #0369a1; margin-bottom: 4pt;">Mode d'Emploi Détaillé de l'Application</div>
         <p style="text-align: center; max-width: 480pt; margin: 0 auto; color: #475569; font-size: 8.5pt;">
@@ -493,7 +493,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 1 • ÉCRAN D'ACCUEIL</div>
     </div>
@@ -545,7 +545,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 2 • CARTOTHÈQUE OFFICIELLE</div>
     </div>
@@ -592,7 +592,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 3 • CARTE DES CALANQUES</div>
     </div>
@@ -635,7 +635,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 4 • BANDEAU HUD & REPERES</div>
     </div>
@@ -674,7 +674,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 5 • RECHERCHE UNIVERSELLE</div>
     </div>
@@ -718,7 +718,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 6 • OUTILS DE MESURE</div>
     </div>
@@ -764,7 +764,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 7 • MULTI-TRACES GPX</div>
     </div>
@@ -810,7 +810,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 8 • PENTES &amp; FUSION DE TRACES GPX</div>
     </div>
@@ -871,7 +871,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 9 • CRÉATEUR D'ITINÉRAIRE GPX</div>
     </div>
@@ -926,7 +926,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 10 • MODIFICATION DE TRACE GPX</div>
     </div>
@@ -969,7 +969,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 11 • PROFIL ALTIMÉTRIQUE</div>
     </div>
@@ -1019,7 +1019,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 12 • IMPRESSION HAUTE DÉFINITION</div>
     </div>
@@ -1062,7 +1062,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 13 • MODULE RANDONNER</div>
     </div>
@@ -1111,7 +1111,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 14 • GUIDES &amp; SAVOIRS</div>
     </div>
@@ -1156,7 +1156,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ2.5 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 15 • ÉTUDE COMPARATIVE DU MARCHÉ</div>
     </div>
@@ -1367,37 +1367,53 @@ html_content = f"""<!DOCTYPE html>
             <td class="td-ok">Oui (Waypoints)</td>
             <td class="td-warn">Manuel (hors trace)</td>
           </tr>
+          <tr>
+            <td><strong>Tableau de Marche FFR (2 étapes)</strong></td>
+            <td class="td-hl">Oui (Calage plein écran + Pauses)</td>
+            <td class="td-dim">Fiche simple</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Payant</td>
+          </tr>
         </tbody>
       </table>
 
-      <!-- LES 8 FONCTIONNALITÉS EXCLUSIVES -->
-      <div style="font-weight: 800; font-size: 7.8pt; color: #047857; margin-bottom: 2pt;">
-        🌟 Les 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
+      <!-- LES 9 FONCTIONNALITÉS EXCLUSIVES -->
+      <div style="font-weight: 800; font-size: 7.6pt; color: #047857; margin-bottom: 2pt;">
+        🌟 Les 9 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.2pt; font-size: 7.1pt; line-height: 1.15;">
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2pt; font-size: 6.9pt; line-height: 1.13;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>1. Gratuité &amp; Immédiateté IGN :</strong> Zéro compte, zéro abonnement pour le SCAN 25®.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>2. Découpe &amp; Reconnexion Auto :</strong> Rectangle Supprimer zone et recouture intelligente par sentiers.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>3. Détection de Demi-Tour Forcé :</strong> Détection automatique temps réel des boucles involontaires.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>4. Outil Cap 3 Visées + Auto-Pan :</strong> Visées azimutales simultanées et défilement fluide vers les sommets.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>5. Échelle Vraie 1:25k Écran :</strong> Étalonnage certifié (4 cm à la règle sur écran = 1 km terrain).
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles IGN sur toute la France.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>7. Nommage Auto Normalisé à l'Export :</strong> Nommé <code>YYYYMMDDHHMM - Commune - Distance - D+XXXm</code>.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
           <strong>8. Atelier Waypoints Intelligent :</strong> Création &amp; clic sur trace, suggestions rapides et coords GPS.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #a7f3d0; padding: 1.8pt 3pt; border-radius: 3px; grid-column: span 2;">
+          <strong>9. Tableau de Marche FFR en 2 Étapes :</strong> Calage magnétique des arrêts sur carte pleine page, calcul à 3,2 km/h avec pauses de 10 mn en cascade, export GPX et Fiche Topo paysage.
         </div>
       </div>
     </div>
