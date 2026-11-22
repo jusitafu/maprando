@@ -481,7 +481,7 @@ html_content = f"""<!DOCTYPE html>
         <div class="toc-item" style="border-left-color: #047857;">
           <div class="num" style="color: #047857;">Chapitre 16 • Page 17</div>
           <div class="title">Glossaire des Sigles &amp; Acronymes</div>
-          <div class="desc">Lexique de référence des 25 acronymes officiels de la randonnée, de l'IGN, de la FFR et de la cartographie.</div>
+          <div class="desc">Lexique exhaustif de référence des 65 acronymes officiels de la randonnée, de l'IGN, de la FFR et de la cartographie.</div>
         </div>
       </div>
     </div>
@@ -1462,150 +1462,368 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-body">
       <h2>📖 16. Glossaire &amp; Définitions des Sigles et Acronymes Officiels</h2>
       <p style="margin-bottom: 4pt;">
-        Ce lexique de référence récapitule l'ensemble des <strong>25 sigles, acronymes et termes techniques</strong> utilisés au sein de <strong>Map &amp; Rando</strong>, de l'<strong>IGN</strong> et de la <strong>Fédération Française de la Randonnée Pédestre</strong>.
+        Ce lexique de référence récapitule l'ensemble des <strong>65 sigles, acronymes et termes techniques</strong> utilisés au sein de <strong>Map &amp; Rando</strong>, de l'<strong>IGN</strong> et de la <strong>Fédération Française de la Randonnée Pédestre</strong>.
       </p>
 
-      <table class="comp-table" style="font-size: 6.3pt; line-height: 1.15; margin-top: 2pt;">
+                  <!-- GRILLE DES 65 SIGLES EN 2 COLONNES HAUTE DENSITÉ -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4pt; margin-top: 1pt;">
+        <div>
+      <table class="comp-table" style="font-size: 4.7pt; line-height: 1.04; margin-top: 1pt; margin-bottom: 1pt;">
         <thead>
           <tr>
-            <th style="width: 14%; text-align: left; padding: 2.5pt 4pt;">Sigle / Acronyme</th>
-            <th style="width: 32%; text-align: left; padding: 2.5pt 4pt;">Signification Officielle</th>
-            <th style="width: 54%; text-align: left; padding: 2.5pt 4pt;">Rôle &amp; Usage en Randonnée &amp; Cartographie</th>
+            <th style="width: 17%; text-align: left; padding: 1pt 2pt; font-size: 4.8pt;">Sigle</th>
+            <th style="width: 35%; text-align: left; padding: 1pt 2pt; font-size: 4.8pt;">Signification</th>
+            <th style="width: 48%; text-align: left; padding: 1pt 2pt; font-size: 4.8pt;">Usage Rando / Carto</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">GPS</td>
-            <td style="font-weight: 700; text-align: left;">Global Positioning System</td>
-            <td style="text-align: left;">Système mondial de positionnement par satellites fournissant en continu la localisation (WGS84), l'altitude et la vitesse.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">ACT</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Administration du Cadastre et de la Topographie</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Organisme public luxembourgeois produisant la carte topographique d'État du Grand-Duché (ACT 1:20 000).</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">GNSS</td>
-            <td style="font-weight: 700; text-align: left;">Global Navigation Satellite System</td>
-            <td style="text-align: left;">Ensemble officiel des constellations de satellites de géo-positionnement : GPS (USA), Galileo (UE), Glonass (RU), Beidou (CN).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">BKG</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Bundesamt für Kartographie und Geodäsie</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Agence fédérale allemande de cartographie produisant la carte topographique officielle BKG basemap.de.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">GPX</td>
-            <td style="font-weight: 700; text-align: left;">GPS Exchange Format</td>
-            <td style="text-align: left;">Format universel XML standardisé d'échange pour l'enregistrement et le partage de traces, routes et waypoints GPS.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">BTT</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Bici Todo Terreno (VTT en espagnol)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Profil d'activité VTT dans le calcul IBP Index et le balisage des sentiers VTT en Espagne.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">XML</td>
-            <td style="font-weight: 700; text-align: left;">Extensible Markup Language</td>
-            <td style="text-align: left;">Langage informatique de balisage universel et structuré servant de fondation technique au standard de fichier GPX.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">CAI</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Club Alpino Italiano</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Club Alpin Italien gérant le réseau officiel des sentiers balisés, refuges et toponymie en Italie.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">IGN</td>
-            <td style="font-weight: 700; text-align: left;">Institut National de l'Information Géographique et Forestière</td>
-            <td style="text-align: left;">Établissement public cartographe officiel en France, producteur de la carte de référence SCAN 25® (1:25 000).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">CGU</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Conditions Générales d'Utilisation</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Cadre contractuel fixant les règles d'utilisation de l'application et la gratuité des accès IGN.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">FFR / FFRandonnée</td>
-            <td style="font-weight: 700; text-align: left;">Fédération Française de la Randonnée Pédestre</td>
-            <td style="text-align: left;">Fédération délégataire nationale assurant la gestion des sentiers balisés et la normalisation des tableaux de marche.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">CN</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Carte Nationale / Courbe de Niveau</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Cartographie d'État suisse Swisstopo 1:25 000 ou ligne reliant les points d'égale altitude sur la carte.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">IBP Index</td>
-            <td style="font-weight: 700; text-align: left;">Intelligent Benchmark Prediction<br><span style="font-size: 5.8pt; color: #64748b; font-weight: 400;">(Origine Espagne : Index BTT Prediction - VTT, standardisé Hiking HKG pour la marche)</span></td>
-            <td style="text-align: left;">Indice officiel d'effort physique FFRandonnée (score neutre de 0 à plus de 200). Évalue l'effort intrinsèque (distance, dénivelé cumulé et pourcentages de pente) indépendamment de la météo et du marcheur.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">CNIG</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Centro Nacional de Información Geográfica</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Institut géographique national espagnol éditant le Mapa Topográfico Nacional 1:25 000 (MTN25).</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">WGS84</td>
-            <td style="font-weight: 700; text-align: left;">World Geodetic System 1984</td>
-            <td style="text-align: left;">Système géodésique mondial de référence des satellites GPS (coordonnées en degrés décimaux : latitude / longitude).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">CRS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Compagnies Républicaines de Sécurité</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Sections spécialisées de secours en haute montagne de la Police Nationale (Alpes et Pyrénées) avec le PGHM.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">UTM</td>
-            <td style="font-weight: 700; text-align: left;">Universal Transverse Mercator</td>
-            <td style="text-align: left;">Projection cartographique cylindrique métrique conforme découpant le globe en 60 fuseaux et coordonnées Est/Nord.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">CSV</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Comma-Separated Values</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Format universel de données tabulaires pour export des tableaux de marche vers Excel et tableurs.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">WP / Waypoint</td>
-            <td style="font-weight: 700; text-align: left;">Point de Repère Géographique</td>
-            <td style="text-align: left;">Repère jalonné ponctuel sur un itinéraire (sommet, col, refuge, source) avec toponyme, altitude et coordonnées GPS.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">D+</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Dénivelé Positif Cumulé</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Somme arithmétique de toutes les dénivellations positives gravies sur le parcours (altimétrie LiDAR HD).</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">POI</td>
-            <td style="font-weight: 700; text-align: left;">Point of Interest</td>
-            <td style="text-align: left;">Point d'intérêt remarquable (patrimoine historique, curiosité géologique, belvédère, équipement) sur la carte.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">D-</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Dénivelé Négatif Cumulé</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Somme arithmétique des dénivellations négatives descendues, déterminante pour l'effort articulaire.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #047857; text-align: left;">D+</td>
-            <td style="font-weight: 700; text-align: left;">Dénivelé Positif Cumulé</td>
-            <td style="text-align: left;">Somme arithmétique de toutes les ascensions et montées cumulées d'un parcours, exprimée en mètres (+m).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">DEM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Digital Elevation Model</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Équivalent international du MNT (Modèle Numérique de Terrain) pour le calcul des altitudes et pentes.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #b91c1c; text-align: left;">D-</td>
-            <td style="font-weight: 700; text-align: left;">Dénivelé Négatif Cumulé</td>
-            <td style="text-align: left;">Somme arithmétique de toutes les descentes cumulées d'un parcours, exprimée en mètres (-m).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">EGNOS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">European Geostationary Navigation Overlay Service</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Système d'augmentation satellitaire SBAS européen corrigeant le signal GPS à moins de 1 m de précision.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">GR®</td>
-            <td style="font-weight: 700; text-align: left;">Grande Randonnée</td>
-            <td style="text-align: left;">Sentier linéaire de plusieurs jours ou semaines balisé blanc et rouge (marque officielle déposée FFRandonnée).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">ESRI</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Environmental Systems Research Institute</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Leader mondial des SIG fournissant l'imagerie satellite mondiale Esri World Imagery haute résolution.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">GRP®</td>
-            <td style="font-weight: 700; text-align: left;">Grande Randonnée de Pays</td>
-            <td style="text-align: left;">Boucle régionale de découverte d'un terroir ou d'un massif balisée jaune et rouge (marque déposée FFRandonnée).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">FFR</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Fédération Française de la Randonnée Pédestre</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Fédération délégataire homologuant les GR®, GRP®, PR® et normalisant les fiches tableaux de marche.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">PR®</td>
-            <td style="font-weight: 700; text-align: left;">Promenade et Randonnée</td>
-            <td style="text-align: left;">Itinéraire pédestre d'une journée ou demi-journée adapté à la balade familiale ou sportive (balisage jaune).</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">FR</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">France / République Française</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Code pays officiel (ISO 3166-1 alpha-2) désignant la cartographie d'État prioritaire IGN France.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">RGPD</td>
-            <td style="font-weight: 700; text-align: left;">Règlement Général sur la Protection des Données</td>
-            <td style="text-align: left;">Règlement européen (UE 2016/679) protégeant la vie privée et garantissant la confidentialité des données des utilisateurs.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">GB</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Great Britain / Royaume-Uni</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Code territorial du Royaume-Uni (territoires couverts par WaterMetrics et FuelCoPilot).</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">CGU</td>
-            <td style="font-weight: 700; text-align: left;">Conditions Générales d'Utilisation</td>
-            <td style="text-align: left;">Cadre contractuel et juridique fixant les règles d'utilisation, droits et responsabilités du service en ligne.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">GNSS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Global Navigation Satellite System</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Ensemble des constellations mondiales de géolocalisation : GPS (USA), Galileo (UE), GLONASS, Beidou.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">OSM</td>
-            <td style="font-weight: 700; text-align: left;">OpenStreetMap</td>
-            <td style="text-align: left;">Base cartographique vectorielle mondiale collaborative et libre sous licence ouverte ODbL.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">GPS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Global Positioning System</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Constellation satellitaire américaine fournissant en continu position (WGS84), altitude et horodatage.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">OTM</td>
-            <td style="font-weight: 700; text-align: left;">OpenTopoMap</td>
-            <td style="text-align: left;">Rendu topographique libre avec courbes de niveau et ombrage du relief basé sur les données OSM et SRTM.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">GPX</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">GPS Exchange Format</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Format standard mondial XML ouvert pour l'enregistrement, l'échange et l'édition de traces, routes et waypoints.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">MNT / DEM</td>
-            <td style="font-weight: 700; text-align: left;">Modèle Numérique de Terrain</td>
-            <td style="text-align: left;">Grille altimétrique matricielle représentant le relief terrestre pour le calcul des altitudes et pourcentages de pentes.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">GR®</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Sentier de Grande Randonnée</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Marque déposée FFRandonnée pour les parcours linéaires au long cours balisés en blanc et rouge.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">RGE Alti®</td>
-            <td style="font-weight: 700; text-align: left;">Réseau Géodésique et Altimétrique de l'IGN</td>
-            <td style="text-align: left;">Modèle altimétrique national haute résolution au pas de 1 mètre produit par relevés aéroportés LIDAR.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">GRP®</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Sentier de Grande Randonnée de Pays</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Marque déposée FFRandonnée pour les boucles de découverte de moyenne distance balisées en jaune et rouge.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">SRTM</td>
-            <td style="font-weight: 700; text-align: left;">Shuttle Radar Topography Mission</td>
-            <td style="text-align: left;">Mission radar spatiale de la NASA/NGA ayant cartographié le relief mondial à 30 mètres de résolution.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">HD</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Haute Définition</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Résolution supérieure des dalles cartographiques vectorielles, photographies aériennes et profils d'élévation.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">PDF</td>
-            <td style="font-weight: 700; text-align: left;">Portable Document Format</td>
-            <td style="text-align: left;">Format ouvert normalisé (ISO 32000) pour l'impression haute fidélité à l'échelle et la consultation pérenne hors-ligne.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">HKG</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Hiking (Randonnée pédestre)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Code d'activité international de l'IBP Index dédié spécifiquement à la marche à pied et au trail.</td>
           </tr>
           <tr>
-            <td style="font-weight: 900; color: #0284c7; text-align: left;">CSV</td>
-            <td style="font-weight: 700; text-align: left;">Comma-Separated Values</td>
-            <td style="text-align: left;">Format ouvert de données tabulaires pour export et échange direct avec Excel, LibreOffice et les tableurs.</td>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">HUD</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Heads-Up Display (Affichage tête haute)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Bandeau d'information cartographique flottant affichant l'échelle, les coordonnées, l'altitude et la commune.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">IBP</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Intelligent Benchmark Prediction</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Indice officiel de cotation d'effort de la FFRandonnée évaluant la difficulté physique d'une trace GPX (1 à 5).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">IGM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Istituto Geografico Militare</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Institut géographique militaire italien, cartographe d'État historique en Italie.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">IGN</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Institut National de l'Information Géographique et Forestière</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Opérateur cartographique public d'État éditant les cartes officielles TOP 25® et le RGE Alti®.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">ISO</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">International Organization for Standardization</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Organisation mondiale de normalisation (norme ISO 3166 codes pays, ISO 32000 format PDF).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">IT</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Italie / Repubblica Italiana</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Code pays officiel désignant la cartographie topographique et le réseau de sentiers CAI.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">JSON</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">JavaScript Object Notation</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Format informatique structuré léger utilisé pour les requêtes d'altimétrie et le géocodage.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">LiDAR</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Light Detection and Ranging</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Télédétection laser aéroportée IGN modélisant le relief à travers la forêt avec une précision de 1 m.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">MNT</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Modèle Numérique de Terrain</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Grille altimétrique matricielle représentant le relief nu de la terre pour calculer altitudes et pentes.</td>
           </tr>
         </tbody>
       </table>
+        </div>
+        <div>
+      <table class="comp-table" style="font-size: 4.7pt; line-height: 1.04; margin-top: 1pt; margin-bottom: 1pt;">
+        <thead>
+          <tr>
+            <th style="width: 17%; text-align: left; padding: 1pt 2pt; font-size: 4.8pt;">Sigle</th>
+            <th style="width: 35%; text-align: left; padding: 1pt 2pt; font-size: 4.8pt;">Signification</th>
+            <th style="width: 48%; text-align: left; padding: 1pt 2pt; font-size: 4.8pt;">Usage Rando / Carto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">MTN</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Mapa Topográfico Nacional (Espagne)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Cartographie d'État espagnole au 1:25 000 (MTN25) du CNIG couvrant les Pyrénées et la péninsule.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">NASA</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">National Aeronautics and Space Administration</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Agence spatiale civile américaine conceptrice de la mission navette spatiale d'élévation radar SRTM.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">NGA</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">National Geospatial-Intelligence Agency</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Agence géospatiale américaine partenaire de la NASA pour la validation des données d'altitude mondiales SRTM.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">NGI</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">National Geographic Institute (Belgique)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Dénomination de l'IGN belge en néerlandais et anglais, cartographie officielle 1:25 000 (Ardennes, Fagnes).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">NO</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Norvège (Norge) / Direction Nord</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Code pays officiel (cartographie officielle Kartverket) ou direction cardinale du pôle Nord (0° / 360°).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">ÖAV / OAV</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Österreichischer Alpenverein</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Club Alpin Autrichien gérant l'entretien des sentiers balisés alpins et des refuges de montagne.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">ODbL</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Open Database License</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Licence juridique ouverte régissant l'utilisation et le partage des données de la base OpenStreetMap.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">OSM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">OpenStreetMap</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Base de données cartographique vectorielle mondiale collaborative et libre sous licence ODbL.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">OTM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">OpenTopoMap</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Rendu topographique libre simulant le style d'État-Major avec courbes de niveau basé sur OSM et SRTM.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">PC</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Personal Computer (Ordinateur Personnel)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Environnement de bureau permettant l'édition complète à la souris et au clavier (Ctrl+Z, découpe).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">PDF</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Portable Document Format</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Format ouvert de document normé (ISO 32000) pour l'impression haute fidélité à l'échelle (1:25 000 A4/A3).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">PGHM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Peloton de Gendarmerie de Haute Montagne</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Unité d'élite de la Gendarmerie nationale pour le secours et la recherche de personnes en montagne.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">PIN</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Repère / Épingle de géolocalisation</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Marqueur ponctuel symbolisant un jalon numéroté, une étape ou un repère sur la carte.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">POI</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Point of Interest (Point d'Intérêt)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Repère remarquable géolocalisé : sommet, col, source, monument historique, refuge ou danger.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">PR®</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Promenade et Randonnée</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Marque déposée FFRandonnée pour les itinéraires en boucle d'une journée ou demi-journée balisés en jaune.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">PRO</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Version Professionnelle / Payante</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Désigne les abonnements payants des applications concurrentes dont les équivalents sont gratuits ici.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">RGE</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Réseau Géodésique et Altimétrique (RGE Alti®)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Base altimétrique officielle de référence de l'IGN à 1 mètre de précision issue de survols LiDAR.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">RGPD</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Règlement Général sur la Protection des Données</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Législation européenne garantissant la confidentialité absolue et l'absence de traçage publicitaire.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">RU</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Royaume-Uni (territoire d'application / UK)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Zone géographique couverte par les applications partenaires WaterMetrics et FuelCoPilot.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">SBAS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Satellite-Based Augmentation System</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Système d'augmentation satellitaire géostationnaire (EGNOS en Europe) améliorant la précision GNSS.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">SE</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Sud-Est (orientation / cap azimutal)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Orientation cardinale vers le Sud-Est (135°) ou région géographique couverte.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">SIM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Subscriber Identity Module</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Puce téléphonique mobile permettant la connexion aux relais GSM pour les appels d'urgence (112).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">SMS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Short Message Service</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Texto court utilisable pour alerter les secours au numéro d'urgence national 114 en zone de réseau faible.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">SOS</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Signal de Détresse Universel</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Appel de détresse en morse (··· --- ···) et fonction d'urgence satellitaire intégrée aux montres/balises.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">SRTM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Shuttle Radar Topography Mission</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Mission radar de la navette spatiale ayant cartographié le relief mondial à une résolution de 30 mètres.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">UE</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Union Européenne</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Cadre territorial et réglementaire pour les directives d'eau potable et la protection des données.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">USA</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">United States of America</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Pays gestionnaire de la constellation satellitaire NAVSTAR GPS et des données d'élévation SRTM.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">UTM</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Universal Transverse Mercator</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Projection cartographique universelle quadrillant le globe en fuseaux métriques (carroyage kilométrique).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">VTT</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Vélo Tout-Terrain</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Pratique cycliste tout-terrain distinguée de la marche à pied dans les calculs d'effort et les cartes.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">WGS84</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">World Geodetic System 1984</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Système géodésique mondial de référence utilisé par le GPS pour exprimer les coordonnées (lat/lon).</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">WP</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Waypoint (Point de passage)</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Point de repère géoréférencé avec nom, coordonnées décimales et altitude, inclus dans l'export GPX.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left; white-space: nowrap; font-size: 4.9pt;">XML</td>
+            <td style="font-weight: 700; text-align: left; font-size: 4.7pt;">Extensible Markup Language</td>
+            <td style="text-align: left; font-size: 4.6pt; color: #334155;">Langage informatique balisé ouvert servant de structure textuelle normalisée aux fichiers GPX.</td>
+          </tr>
+        </tbody>
+      </table>
+        </div>
+      </div>
 
       <!-- ENCADRÉ CONSEIL DE LECTURE CARTO -->
-      <div style="background: #f0fdf4; border: 1.2px solid #86efac; border-radius: 4px; padding: 4pt 6pt; margin-top: 4pt;">
-        <div style="font-weight: 800; font-size: 7.5pt; color: #166534;">💡 Bonnes Pratiques Cartographiques pour la Randonnée</div>
-        <p style="margin: 0; font-size: 6.9pt; color: #1e293b; line-height: 1.2;">
+      <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 3px; padding: 2pt 4pt; margin-top: 2pt;">
+        <div style="font-weight: 800; font-size: 6.5pt; color: #166534;">💡 Bonnes Pratiques Cartographiques pour la Randonnée</div>
+        <p style="margin: 0; font-size: 5.6pt; color: #1e293b; line-height: 1.15;">
           Sur le terrain comme lors de la préparation, croisez toujours les coordonnées <strong>WGS84</strong> (utilisées par votre smartphone et balises de détresse) avec le carroyage <strong>UTM</strong> de votre carte papier TOP 25. En cas d'appel aux services de secours (112 ou 114), les deux formats sont immédiatement reconnus par les pelotons de gendarmerie de haute montagne (PGHM) et les CRS secours en montagne.
         </p>
       </div>
