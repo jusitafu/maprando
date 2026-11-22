@@ -7947,57 +7947,276 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           }
         }
 
-        // Catégorisation et Iconographie
+        // Catégorisation, Iconographie et Identification précise en français
         let iconEmoji = '🏛️';
         let categoryName = 'Patrimoine historique';
+        let specificType = 'Édifice patrimonial';
         let gradient = 'linear-gradient(135deg, #d97706, #b45309)';
         let borderColor = '#fef3c7';
 
-        if (historic === 'castle' || historic === 'fort' || historic === 'city_gate') {
-          iconEmoji = '🏰';
-          categoryName = 'Château & Fortification';
+        // 1. Mémoriaux, monuments et commémoration
+        if (historic === 'memorial' || tags.memorial) {
+          iconEmoji = '🎖️';
+          categoryName = 'Mémorial & Commémoration';
+          const mem = tags.memorial;
+          if (mem === 'war_memorial') specificType = 'Monument aux morts';
+          else if (mem === 'stele') specificType = 'Stèle commémorative';
+          else if (mem === 'plaque') specificType = 'Plaque commémorative';
+          else if (mem === 'cenotaph') specificType = 'Cénotaphe';
+          else specificType = 'Mémorial commémoratif';
           gradient = 'linear-gradient(135deg, #b45309, #78350f)';
           borderColor = '#fde68a';
-        } else if (historic === 'church' || historic === 'chapel' || historic === 'wayside_cross' || historic === 'wayside_shrine' || historic === 'monastery') {
+        } else if (historic === 'monument') {
+          iconEmoji = '🏛️';
+          categoryName = 'Monument historique';
+          specificType = 'Monument historique';
+          gradient = 'linear-gradient(135deg, #d97706, #92400e)';
+          borderColor = '#fef3c7';
+        }
+        // 2. Châteaux, fortifications et militaire
+        else if (historic === 'castle') {
+          iconEmoji = '🏰';
+          categoryName = 'Château & Forteresse';
+          specificType = 'Château historique';
+          gradient = 'linear-gradient(135deg, #b45309, #78350f)';
+          borderColor = '#fde68a';
+        } else if (historic === 'fort') {
+          iconEmoji = '🏰';
+          categoryName = 'Fortification militaire';
+          specificType = 'Fort militaire';
+          gradient = 'linear-gradient(135deg, #9a3412, #6c2710)';
+          borderColor = '#fed7aa';
+        } else if (historic === 'battery') {
+          iconEmoji = '🛡️';
+          categoryName = 'Batterie militaire';
+          specificType = 'Batterie militaire côtière';
+          gradient = 'linear-gradient(135deg, #9a3412, #6c2710)';
+          borderColor = '#fed7aa';
+        } else if (historic === 'bunker' || historic === 'pillbox') {
+          iconEmoji = '🛡️';
+          categoryName = 'Casemate & Blockhaus';
+          specificType = 'Blockhaus / Casemate';
+          gradient = 'linear-gradient(135deg, #57534e, #292524)';
+          borderColor = '#e7e5e4';
+        } else if (historic === 'cannon') {
+          iconEmoji = '⚔️';
+          categoryName = 'Artillerie historique';
+          specificType = 'Canon historique';
+          gradient = 'linear-gradient(135deg, #78350f, #451a03)';
+          borderColor = '#fef3c7';
+        } else if (historic === 'city_gate' || historic === 'citywalls') {
+          iconEmoji = '🏰';
+          categoryName = 'Rempart & Porte historique';
+          specificType = 'Porte historique / Rempart';
+          gradient = 'linear-gradient(135deg, #b45309, #78350f)';
+          borderColor = '#fde68a';
+        }
+        // 3. Édifices religieux, oratoires, calvaires
+        else if (historic === 'church' || tags.building === 'church') {
           iconEmoji = '⛪';
-          categoryName = 'Édifice religieux & Oratoire';
+          categoryName = 'Édifice religieux';
+          specificType = 'Église historique';
           gradient = 'linear-gradient(135deg, #4338ca, #312e81)';
           borderColor = '#e0e7ff';
-        } else if (historic === 'ruins' || historic === 'archaeological_site' || historic === 'tomb') {
+        } else if (historic === 'chapel' || tags.building === 'chapel') {
+          iconEmoji = '⛪';
+          categoryName = 'Chapelle';
+          specificType = 'Chapelle historique';
+          gradient = 'linear-gradient(135deg, #4338ca, #312e81)';
+          borderColor = '#e0e7ff';
+        } else if (historic === 'wayside_shrine') {
+          iconEmoji = '⛪';
+          categoryName = 'Oratoire';
+          specificType = 'Oratoire traditionnel';
+          gradient = 'linear-gradient(135deg, #4f46e5, #3730a3)';
+          borderColor = '#e0e7ff';
+        } else if (historic === 'wayside_cross') {
+          iconEmoji = '✝️';
+          categoryName = 'Calvaire & Croix';
+          specificType = 'Croix de chemin / Calvaire';
+          gradient = 'linear-gradient(135deg, #6366f1, #4338ca)';
+          borderColor = '#e0e7ff';
+        } else if (historic === 'monastery' || historic === 'abbey') {
+          iconEmoji = '⛪';
+          categoryName = 'Abbaye & Monastère';
+          specificType = 'Abbaye / Monastère';
+          gradient = 'linear-gradient(135deg, #3730a3, #1e1b4b)';
+          borderColor = '#c7d2fe';
+        }
+        // 4. Ruines, archéologie, mégalithes
+        else if (historic === 'ruins') {
           iconEmoji = '🪨';
-          categoryName = 'Ruine & Archéologie';
+          categoryName = 'Ruines historiques';
+          specificType = tags.ruins === 'castle' ? 'Ruines de château' : 'Vestiges / Ruines historiques';
           gradient = 'linear-gradient(135deg, #78716c, #44403c)';
           borderColor = '#f5f5f4';
-        } else if (isViewpoint) {
-          iconEmoji = '👁️';
-          categoryName = 'Belvédère & Panorama';
+        } else if (historic === 'archaeological_site') {
+          iconEmoji = '🪨';
+          categoryName = 'Site archéologique';
+          specificType = 'Site archéologique';
+          gradient = 'linear-gradient(135deg, #78716c, #44403c)';
+          borderColor = '#f5f5f4';
+        } else if (historic === 'dolmen') {
+          iconEmoji = '🪨';
+          categoryName = 'Mégalithe & Dolmen';
+          specificType = 'Dolmen préhistorique';
+          gradient = 'linear-gradient(135deg, #78716c, #292524)';
+          borderColor = '#f5f5f4';
+        } else if (historic === 'menhir') {
+          iconEmoji = '🪨';
+          categoryName = 'Mégalithe & Menhir';
+          specificType = 'Menhir préhistorique';
+          gradient = 'linear-gradient(135deg, #78716c, #292524)';
+          borderColor = '#f5f5f4';
+        } else if (historic === 'tomb') {
+          iconEmoji = '🪦';
+          categoryName = 'Sépulture historique';
+          specificType = 'Tombe / Sépulture historique';
+          gradient = 'linear-gradient(135deg, #57534e, #292524)';
+          borderColor = '#e7e5e4';
+        }
+        // 5. Petit patrimoine rural, moulins, fours, lavoirs
+        else if (historic === 'mill' || historic === 'windmill' || historic === 'watermill') {
+          iconEmoji = '🌾';
+          categoryName = 'Moulin traditionnel';
+          specificType = historic === 'windmill' ? 'Moulin à vent' : (historic === 'watermill' ? 'Moulin à eau' : 'Moulin historique');
+          gradient = 'linear-gradient(135deg, #d97706, #92400e)';
+          borderColor = '#fde68a';
+        } else if (historic === 'lime_kiln') {
+          iconEmoji = '🛖';
+          categoryName = 'Four à chaux';
+          specificType = 'Ancien four à chaux';
+          gradient = 'linear-gradient(135deg, #ea580c, #9a3412)';
+          borderColor = '#fed7aa';
+        } else if (historic === 'washhouse') {
+          iconEmoji = '💧';
+          categoryName = 'Lavoir traditionnel';
+          specificType = 'Lavoir d\'époque';
           gradient = 'linear-gradient(135deg, #0284c7, #0369a1)';
           borderColor = '#bae6fd';
-        } else if (natural === 'cave_entrance') {
-          iconEmoji = '🕳️';
-          categoryName = 'Grotte & Cavité naturelle';
+        } else if (historic === 'fountain' || tags.amenity === 'fountain') {
+          iconEmoji = '💧';
+          categoryName = 'Fontaine historique';
+          specificType = 'Fontaine d\'époque';
+          gradient = 'linear-gradient(135deg, #0284c7, #0369a1)';
+          borderColor = '#bae6fd';
+        } else if (historic === 'tower') {
+          iconEmoji = '🗼';
+          categoryName = 'Tour de guet / Donjon';
+          specificType = 'Tour de guet historique';
+          gradient = 'linear-gradient(135deg, #b45309, #78350f)';
+          borderColor = '#fde68a';
+        } else if (historic === 'building' || historic === 'manor') {
+          iconEmoji = '🛖';
+          categoryName = 'Bâti remarquable & Borie';
+          specificType = tags.building === 'hut' ? 'Borie en pierre sèche' : 'Bâti traditionnel remarquable';
+          gradient = 'linear-gradient(135deg, #ea580c, #c2410c)';
+          borderColor = '#ffedd5';
+        } else if (historic === 'aqueduct') {
+          iconEmoji = '🏛️';
+          categoryName = 'Aqueduc';
+          specificType = 'Aqueduc historique';
+          gradient = 'linear-gradient(135deg, #0284c7, #1e3a8a)';
+          borderColor = '#bfdbfe';
+        } else if (historic === 'bridge') {
+          iconEmoji = '🌉';
+          categoryName = 'Pont historique';
+          specificType = 'Pont d\'époque';
           gradient = 'linear-gradient(135deg, #475569, #1e293b)';
           borderColor = '#cbd5e1';
-        } else if (natural === 'waterfall' || tags.amenity === 'fountain') {
+        } else if (historic === 'milestone' || historic === 'boundary_stone') {
+          iconEmoji = '🪧';
+          categoryName = 'Borne historique';
+          specificType = 'Borne historique / Milliaire';
+          gradient = 'linear-gradient(135deg, #78716c, #44403c)';
+          borderColor = '#f5f5f4';
+        }
+        // 6. Tourisme & Panoramas
+        else if (isViewpoint) {
+          iconEmoji = '👁️';
+          categoryName = 'Belvédère & Point de vue';
+          specificType = 'Belvédère / Table d\'orientation';
+          gradient = 'linear-gradient(135deg, #0284c7, #0369a1)';
+          borderColor = '#bae6fd';
+        } else if (isAttraction) {
+          iconEmoji = tourism === 'artwork' ? '🎨' : '🌟';
+          categoryName = tourism === 'artwork' ? 'Œuvre d\'art & Sculpture' : 'Curiosité touristique';
+          specificType = tourism === 'artwork' ? 'Sculpture / Œuvre d\'art' : 'Site touristique d\'intérêt';
+          gradient = 'linear-gradient(135deg, #9333ea, #6b21a8)';
+          borderColor = '#f3e8ff';
+        } else if (tourism === 'museum') {
+          iconEmoji = '🏛️';
+          categoryName = 'Musée & Exposition';
+          specificType = 'Musée / Espace culturel';
+          gradient = 'linear-gradient(135deg, #7c3aed, #4c1d95)';
+          borderColor = '#ede9fe';
+        }
+        // 7. Curiosités naturelles
+        else if (natural === 'cave_entrance') {
+          iconEmoji = '🕳️';
+          categoryName = 'Grotte & Cavité naturelle';
+          specificType = 'Entrée de grotte / Aven';
+          gradient = 'linear-gradient(135deg, #475569, #1e293b)';
+          borderColor = '#cbd5e1';
+        } else if (natural === 'waterfall') {
           iconEmoji = '💧';
-          categoryName = 'Cascade & Source remarquable';
+          categoryName = 'Cascade remarquable';
+          specificType = 'Cascade naturelle';
           gradient = 'linear-gradient(135deg, #0d9488, #0f766e)';
           borderColor = '#ccfbf1';
         } else if (natural === 'peak') {
           iconEmoji = '⛰️';
           categoryName = 'Sommet remarquable';
+          specificType = 'Sommet / Pic';
           gradient = 'linear-gradient(135deg, #059669, #047857)';
           borderColor = '#d1fae5';
-        } else if (historic === 'building' || historic === 'manor' || historic === 'tower') {
-          iconEmoji = '🛖';
-          categoryName = 'Bâti remarquable & Borie';
-          gradient = 'linear-gradient(135deg, #ea580c, #c2410c)';
-          borderColor = '#ffedd5';
+        } else if (natural === 'stone' || natural === 'rock') {
+          iconEmoji = '🪨';
+          categoryName = 'Rocher remarquable';
+          specificType = 'Rocher singulier / Chaos rocheux';
+          gradient = 'linear-gradient(135deg, #78716c, #44403c)';
+          borderColor = '#f5f5f4';
+        } else if (isHeritage) {
+          iconEmoji = '🏛️';
+          categoryName = 'Patrimoine classé';
+          specificType = 'Édifice ou site classé';
+          gradient = 'linear-gradient(135deg, #d97706, #b45309)';
+          borderColor = '#fef3c7';
         }
 
-        const name = tags.name || tags['name:fr'] || categoryName;
+        const rawName = tags.name || tags['name:fr'];
+        const isUnnamed = !rawName;
+        const name = rawName || specificType || categoryName;
         const description = tags.description || tags.note || '';
         const start_date = tags.start_date ? `Époque : ${tags.start_date}` : '';
+
+        // Détermination du lien vers la page descriptive
+        let descriptiveUrl = null;
+        let descriptiveSource = '';
+
+        if (tags.wikipedia) {
+          const parts = tags.wikipedia.split(':');
+          const lang = parts.length > 1 ? parts[0] : 'fr';
+          const pageTitle = parts.length > 1 ? parts.slice(1).join(':') : parts[0];
+          descriptiveUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
+          descriptiveSource = 'Wikipédia';
+        } else if (tags.wikidata) {
+          descriptiveUrl = `https://www.wikidata.org/wiki/${tags.wikidata}`;
+          descriptiveSource = 'Wikidata';
+        } else if (tags['ref:mhs'] || tags['mhs:ref']) {
+          const ref = tags['ref:mhs'] || tags['mhs:ref'];
+          descriptiveUrl = `https://www.pop.culture.gouv.fr/notice/merimee/${ref}`;
+          descriptiveSource = 'Base Mérimée (Ministère de la Culture)';
+        } else if (tags.website || tags.url) {
+          descriptiveUrl = tags.website || tags.url;
+          descriptiveSource = 'Site officiel';
+        } else {
+          // Page descriptive intelligente : recherche encyclopédique ciblée avec le contexte local
+          const cityCtx = this.currentCity || tags['addr:city'] || '';
+          const searchTerms = rawName ? `${rawName} ${cityCtx}` : `${specificType} ${cityCtx}`;
+          descriptiveUrl = `https://fr.wikipedia.org/w/index.php?search=${encodeURIComponent(searchTerms.trim())}`;
+          descriptiveSource = 'Wikipédia (Recherche)';
+        }
 
         count++;
 
@@ -8029,12 +8248,26 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
         const safeName = name.replace(/'/g, "\\'");
         const popupHtml = `
-          <div class="p-1 min-w-[220px] max-w-[280px] text-slate-800">
-            <div class="flex items-center gap-2 font-black text-xs text-amber-700 border-b border-amber-200/80 pb-1 mb-1.5 uppercase tracking-wide">
+          <div class="p-1 min-w-[220px] max-w-[290px] text-slate-800">
+            <div class="flex items-center gap-1.5 font-black text-xs text-amber-700 border-b border-amber-200/80 pb-1.5 mb-1.5 uppercase tracking-wide">
               <span>${iconEmoji}</span> <span>${categoryName}</span>
             </div>
-            <div class="font-black text-sm text-slate-900 leading-snug">${name}</div>
-            ${description ? `<div class="text-[11.5px] text-slate-600 mt-1 italic leading-tight">${description}</div>` : ''}
+            
+            <!-- Nom cliquable ouvrant la page descriptive -->
+            <a href="${descriptiveUrl}" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-1.5 text-slate-900 hover:text-amber-600 transition font-black text-sm leading-snug cursor-pointer" title="Cliquer pour ouvrir la page descriptive (${descriptiveSource})">
+              <span class="group-hover:underline underline-offset-2 decoration-amber-500">${name}</span>
+              <span class="text-xs text-amber-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform flex-shrink-0" title="Ouvrir la page descriptive">↗</span>
+            </a>
+            ${isUnnamed ? `<div class="text-[10.5px] text-slate-400 italic mt-0.5">Élément répertorié sur le sentier</div>` : ''}
+
+            <!-- Bouton lien vers la page descriptive -->
+            <div class="mt-1.5">
+              <a href="${descriptiveUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 text-[10.5px] font-bold transition shadow-xs cursor-pointer" title="Ouvrir la page documentaire (${descriptiveSource})">
+                <span>📖</span> <span>Page descriptive (${descriptiveSource}) ↗</span>
+              </a>
+            </div>
+
+            ${description ? `<div class="text-[11.5px] text-slate-600 mt-1.5 italic leading-tight bg-slate-50 p-1.5 rounded-lg border border-slate-100">${description}</div>` : ''}
             ${start_date ? `<div class="text-[11px] text-amber-800 font-semibold mt-1">⏳ ${start_date}</div>` : ''}
             ${distMsg}
             <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
