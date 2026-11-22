@@ -271,6 +271,51 @@ html_content = f"""<!DOCTYPE html>
   .badge-amber {{ background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }}
 
   /* Cover Grid */
+  .comp-table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6.8pt;
+    line-height: 1.12;
+    margin-top: 3pt;
+    margin-bottom: 3pt;
+  }}
+  .comp-table th, .comp-table td {{
+    border: 1px solid #cbd5e1;
+    padding: 1.8pt 2.5pt;
+    text-align: center;
+  }}
+  .comp-table th {{
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-weight: 700;
+    font-size: 6.8pt;
+    text-transform: uppercase;
+  }}
+  .comp-table th.th-hl {{
+    background-color: #065f46;
+    color: #6ee7b7;
+    font-size: 7.2pt;
+    border: 1.5px solid #059669;
+  }}
+
+  .comp-table td:first-child {{
+    text-align: left;
+    background-color: #f8fafc;
+    font-weight: 600;
+  }}
+  .comp-table td.td-hl {{
+    background-color: #ecfdf5;
+    color: #047857;
+    font-weight: 800;
+    border-left: 1.5px solid #059669;
+    border-right: 1.5px solid #059669;
+  }}
+
+  .comp-table td.td-ok {{ color: #059669; font-weight: 700; }}
+  .comp-table td.td-no {{ color: #dc2626; font-weight: 600; }}
+  .comp-table td.td-warn {{ color: #d97706; }}
+  .comp-table td.td-dim {{ color: #64748b; }}
+
   .toc-grid {{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -314,15 +359,15 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section first-page">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>GUIDE OFFICIEL DE L'UTILISATEUR</div>
     </div>
 
     <div class="page-body">
       <div style="text-align: center; margin-top: 6pt; margin-bottom: 8pt;">
-        <div class="badge badge-green" style="font-size: 8pt; padding: 2px 10px; margin-bottom: 4pt;">MANUEL TECHNIQUE &amp; PRATIQUE OFFICIEL • ÉDITION 2026</div>
+        <div class="badge badge-green" style="font-size: 8pt; padding: 2px 10px; margin-bottom: 4pt;">MANUEL TECHNIQUE OFFICIEL • VERSION ᾳ2.4 (22/11/2026) • ÉDITION 2026</div>
         <h1 style="font-size: 18pt; margin-bottom: 2pt; color: #047857;">Map &amp; Rando by JLDApps</h1>
         <div style="font-size: 10.5pt; font-weight: 700; color: #0369a1; margin-bottom: 4pt;">Mode d'Emploi Détaillé de l'Application</div>
         <p style="text-align: center; max-width: 480pt; margin: 0 auto; color: #475569; font-size: 8.5pt;">
@@ -339,7 +384,7 @@ html_content = f"""<!DOCTYPE html>
       </div>
 
       <div style="font-weight: 800; font-size: 9.5pt; color: #0f172a; margin-bottom: 2pt; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 2pt;">
-        📑 SOMMAIRE GÉNÉRAL DES 14 CHAPITRES (15 PAGES)
+        📑 SOMMAIRE GÉNÉRAL DES 15 CHAPITRES (16 PAGES)
       </div>
 
       <div class="toc-grid">
@@ -426,12 +471,18 @@ html_content = f"""<!DOCTYPE html>
           <div class="title">Guides &amp; Savoirs — 6 Fiches &amp; Sécurité</div>
           <div class="desc">GNSS/SBAS, LiDAR HD, barème IBP, check-list, secours satellite et montres.</div>
         </div>
+
+        <div class="toc-item" style="grid-column: span 2; border-left-color: #6366f1;">
+          <div class="num" style="color: #4f46e5;">Chapitre 15 • Page 16</div>
+          <div class="title">Étude Comparative Complète : Map &amp; Rando vs 9 Solutions Cartographiques &amp; GPX</div>
+          <div class="desc">Banc d'essai face à Cartes.gouv (IGN), Visorando, Hiker (HiiKER.com), Iphigénie, Komoot, Openrunner, GPXStudio, Garmin BaseCamp et VisuGPX.</div>
+        </div>
       </div>
     </div>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 1 / 15</div>
+      <div class="page-number">Page 1 / 16</div>
     </div>
   </section>
 
@@ -441,8 +492,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 1 • ÉCRAN D'ACCUEIL</div>
     </div>
@@ -470,15 +521,20 @@ html_content = f"""<!DOCTYPE html>
         Un bouton discret situé en haut à droite permet d'activer une musique d'ambiance pastorale (vents, cloches et guitare acoustique). Ce lecteur respecte scrupuleusement le choix de l'utilisateur : il ne démarre jamais automatiquement, mémorise son état et se coupe immédiatement au clic.
       </p>
 
-      <div class="callout warning">
+      <div class="callout warning" style="margin-bottom: 5pt;">
         <div class="callout-title">🚨 Rappel des Numéros d'Urgence en Pleine Nature</div>
         En pied de page, deux boutons d'appel direct rappellent le <strong>112</strong> (numéro d'urgence européen accessible même sans carte SIM ni code PIN) et le <strong>114</strong> (numéro d'urgence national accessible par SMS en zone de couverture minimale).
+      </div>
+
+      <div class="callout" style="border-left-color: #10b981; background: #f0fdf4; padding: 4pt 7pt;">
+        <div class="callout-title" style="color: #047857;">✉️ Contact Direct Développeur (RandoFinder)</div>
+        Dans le bandeau inférieur (footer) de l'accueil et du mode d'emploi, une enveloppe discrète <strong>✉️</strong> permet de contacter directement l'auteur à <code>aquacheckjld@gmail.com</code> avec l'objet prérempli <em>« RandoFinder »</em> pour tout retour, suggestion technique ou partenariat cartographique.
       </div>
     </div>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 2 / 15</div>
+      <div class="page-number">Page 2 / 16</div>
     </div>
   </section>
 
@@ -488,8 +544,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 2 • CARTOTHÈQUE OFFICIELLE</div>
     </div>
@@ -525,7 +581,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 3 / 15</div>
+      <div class="page-number">Page 3 / 16</div>
     </div>
   </section>
 
@@ -535,8 +591,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 3 • CARTE DES CALANQUES</div>
     </div>
@@ -568,7 +624,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 4 / 15</div>
+      <div class="page-number">Page 4 / 16</div>
     </div>
   </section>
 
@@ -578,8 +634,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 4 • BANDEAU HUD & REPERES</div>
     </div>
@@ -607,7 +663,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 5 / 15</div>
+      <div class="page-number">Page 5 / 16</div>
     </div>
   </section>
 
@@ -617,8 +673,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 5 • RECHERCHE UNIVERSELLE</div>
     </div>
@@ -651,7 +707,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 6 / 15</div>
+      <div class="page-number">Page 6 / 16</div>
     </div>
   </section>
 
@@ -661,8 +717,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 6 • OUTILS DE MESURE</div>
     </div>
@@ -697,7 +753,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 7 / 15</div>
+      <div class="page-number">Page 7 / 16</div>
     </div>
   </section>
 
@@ -707,8 +763,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 7 • MULTI-TRACES GPX</div>
     </div>
@@ -732,6 +788,7 @@ html_content = f"""<!DOCTYPE html>
       <h3>Fonctionnalités de Chaque Ligne de Trace</h3>
       <ul>
         <li><strong>Pastille de couleur personnalisable :</strong> cliquez sur la pastille circulaire ou directement sur l'une des touches de la palette de <strong>7 couleurs vives</strong> (rouge, bleu, vert, orange, violet, cyan, noir) pour modifier instantanément la couleur du tracé et de son point de départ sur la carte afin de distinguer clairement des variantes d'itinéraires.</li>
+        <li><strong>Décalage parallèle automatique (anti-superposition) :</strong> lorsque 2 ou 3 traces partagent un même tronçon (ex. passerelle, aller-retour commun), un décalage vectoriel intelligent (offset 3.5 à 5 px) est appliqué automatiquement en temps réel. Chaque trace reste ainsi parfaitement visible en parallèle côte à côte avec son halo protecteur, sans qu'aucune ne masque les autres, même enregistrées en sens inverses !</li>
         <li><strong>Données physiques clés :</strong> distance totale (km), dénivelé cumulé positif (D+ en mètres) et <strong>Indice IBP Index officiel</strong> calculé automatiquement.</li>
         <li><strong>Bouton Cible (🎯) :</strong> centre immédiatement la carte sur la trace concernée.</li>
         <li><strong>Bouton Croix (✕) de suppression individuelle :</strong> retire la trace sélectionnée de l'écran sans affecter les autres traces affichées.</li>
@@ -742,7 +799,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 8 / 15</div>
+      <div class="page-number">Page 8 / 16</div>
     </div>
   </section>
 
@@ -752,8 +809,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 8 • PENTES &amp; FUSION DE TRACES GPX</div>
     </div>
@@ -803,7 +860,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 9 / 15</div>
+      <div class="page-number">Page 9 / 16</div>
     </div>
   </section>
 
@@ -813,8 +870,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 9 • CRÉATEUR D'ITINÉRAIRE GPX</div>
     </div>
@@ -837,11 +894,12 @@ html_content = f"""<!DOCTYPE html>
         Un bouton permet de basculer en mode <em>« Ligne Droite : OUI »</em> si vous traversez des zones hors sentiers répertoriés.
       </p>
 
-      <h3>Ruban Visuel d'Étapes &amp; Suppression en 1 Clic</h3>
+      <h3>Ruban Visuel d'Étapes, Waypoints &amp; Suppression en 1 Clic</h3>
       <ul>
-        <li><strong>Ruban chronologique des étapes :</strong> les badges <code>[🟢 A Départ] ➔ [🔵 B Étape ✕] ➔ [🔴 C Arrivée ✕]</code> visualisent exactement l'enchaînement de votre parcours.</li>
+        <li><strong>Ruban chronologique &amp; Waypoints d'étape :</strong> les badges <code>[🟢 A Départ] ➔ [🔵 B Étape ✕] ➔ [🔴 C Arrivée ✕]</code> visualisent l'enchaînement de votre parcours. Chaque étape constitue un waypoint balisé personnalisable.</li>
         <li><strong>Suppression instantanée d'une étape :</strong> cliquez sur la petite croix <strong>`[✕]`</strong> d'un badge ou faites un clic droit sur sa lettre sur la carte : l'étape est retirée et l'itinéraire est immédiatement recalculé entre les étapes restantes.</li>
         <li><strong>Déplacement libre d'un point à la souris :</strong> attrapez n'importe quel point ($A, B, C...$) et glissez-le vers un autre sentier pour corriger la trajectoire en direct.</li>
+        <li><strong>Bouton bascule Coordonnées GPS :</strong> activez en 1 clic l'affichage des coordonnées décimales (lat, lon) et de l'altitude LiDAR sur les pastilles d'étape.</li>
       </ul>
 
       <h3>Annulation par Raccourci Clavier Universel CTRL + Z</h3>
@@ -857,7 +915,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 10 / 15</div>
+      <div class="page-number">Page 10 / 16</div>
     </div>
   </section>
 
@@ -867,51 +925,40 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 10 • MODIFICATION DE TRACE GPX</div>
     </div>
 
     <div class="page-body">
-      <h2>🛠️ 10. Modification de Trace GPX (Déviation, Suppression de Zone &amp; Reconnexion Auto)</h2>
+      <h2>🛠️ 10. Modification de Trace GPX &amp; 📍 Ajout de Waypoints sur le Parcours</h2>
       <p>
-        Vous disposez d'une trace GPX existante mais vous souhaitez éviter un tronçon difficile, contourner un obstacle ou emprunter une variante panoramique ? Le bouton violet <strong>🛠️ Modifier une trace GPX</strong> transforme votre trace en un objet malléable et interactif.
+        Vous disposez d'une trace GPX existante mais vous souhaitez éviter un tronçon difficile, contourner un obstacle ou enrichir le parcours de repères ? Le bouton violet <strong>🛠️ Modifier une trace GPX</strong> transforme votre trace en un objet malléable et interactif.
       </p>
 
       <div class="figure-box">
         <img src="{fig7c_b64}" alt="Modification de Trace GPX">
-        <div class="figure-caption">Figure 9 : Panneau flottant Modification de Trace GPX avec poignées de manipulation le long du parcours (D, 1, 2, 3... A), magnétisme auto-routage vers un sentier voisin, annulation par CTRL+Z et export du GPX modifié.</div>
+        <div class="figure-caption">Figure 9 : Panneau flottant Modification de Trace GPX avec poignées de manipulation le long du parcours (D, 1, 2, 3... A), ajout de Waypoints par clic magnétique sur trace, boîte de dialogue avec suggestions, annulation par CTRL+Z et export du GPX.</div>
       </div>
 
-      <h3>Poignées de Manipulation Réparties le Long de la Trace</h3>
-      <p>
-        Dès l'activation, Map &amp; Rando dispose automatiquement des <strong>poignées circulaires déplaçables</strong> réparties sur le tracé : <strong>D</strong> (Départ vert), <strong>1, 2, 3...</strong> (numéros intermédiaires violets) et <strong>A</strong> (Arrivée rouge).
-      </p>
-
-      <h3>Magnétisme Auto-Routage vers les Sentiers Voisins</h3>
+      <h3>Poignées Dynamiques, Auto-Routage &amp; 📍 Ajout de Waypoints sur Trace</h3>
       <ul>
-        <li><strong>Tirer un point vers un chemin voisin :</strong> attrapez avec la souris l'une des poignées et glissez-la vers un sentier parallèle ou une variante.</li>
-        <li><strong>Recalcul automatique du tronçon :</strong> grâce à l'algorithme d'auto-routage activé par défaut (<em>Auto-routage : OUI</em>), le système reconnecte la poignée déplacée aux poignées adjacentes amont et aval en <strong>suivant scrupuleusement la géométrie du nouveau sentier</strong>.</li>
-        <li><strong>Recalcul en direct des métriques :</strong> le panneau affiche instantanément la nouvelle distance modifiée et le nouveau dénivelé D+ recalculé.</li>
+        <li><strong>Poignées déplaçables (D, 1, 2... A) :</strong> glissez un point vers un sentier voisin : le tracé se recalcule instantanément en épousant fidèlement les chemins de liaison IGN BD TOPO® avec mise à jour du kilométrage et du dénivelé.</li>
+        <li><strong>Bouton « 📍 + Waypoint » &amp; Clic sur la trace :</strong> cliquez sur le bouton puis sur la trace : un repère est instantanément inséré et magnétisé sur le parcours avec boîte de dialogue et 8 pastilles rapides (Sommet, Refuge, Source, Col, Belvédère, Parking, Pique-nique, Danger).</li>
+        <li><strong>Bascule Coordonnées GPS :</strong> affichez/masquez sur les badges les coordonnées décimales (lat, lon) et l'altitude. Les waypoints sont exportés dans la balise <code>&lt;wpt&gt;</code> du GPX.</li>
       </ul>
 
       <h3>✂️ Découpage de Zone &amp; Reconnexion Automatique par Sentiers</h3>
       <ul>
-        <li><strong>Outil « Supprimer zone » (Rectangle de coupe) :</strong> cliquez sur le bouton rouge <em>« ✂️ Supprimer zone »</em> puis étirez un rectangle à la souris sur la carte englobant le tronçon à retirer : tous les points inclus sont instantanément coupés.</li>
-        <li><strong>Reconnexion intelligente par les sentiers :</strong> grâce au moteur d'auto-routage activé par défaut, Map &amp; Rando <strong>reconnecte immédiatement les 2 extrémités coupées en empruntant les vrais sentiers de liaison IGN BD TOPO®</strong> (avec bouton de secours <em>« 🥾 Relier par sentiers »</em>), évitant toute ligne droite artificielle à travers le relief.</li>
-      </ul>
-
-      <h3>Annulation CTRL + Z &amp; Export Intelligent Normalisé</h3>
-      <ul>
-        <li><strong>Annulation multi-niveaux par CTRL + Z :</strong> chaque suppression de zone ou déplacement est annulable instantanément avec <strong>Ctrl+Z</strong> ou le bouton <em>« Rétablir l'original »</em>.</li>
-        <li><strong>Export avec dialogue de nommage normalisé :</strong> cliquez sur <em>« 💾 Télécharger le GPX modifié »</em> pour ouvrir la boîte de dialogue proposant le format officiel <code>YYYYMMDDHHMM - Commune - Dist - D+</code> personnalisable.</li>
+        <li><strong>Outil « Supprimer zone » (Rectangle de coupe) :</strong> étirez un rectangle sur la trace : tous les points inclus sont coupés, et le système <strong>reconnecte immédiatement les 2 extrémités par les sentiers réels</strong> via auto-routage (secours : <em>« 🥾 Relier par sentiers »</em>).</li>
+        <li><strong>Annulation CTRL + Z &amp; Export normalisé :</strong> historique 30 niveaux via <strong>Ctrl+Z</strong> et téléchargement normalisé <code>YYYYMMDDHHMM - Commune - Dist - D+</code>.</li>
       </ul>
     </div>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 11 / 15</div>
+      <div class="page-number">Page 11 / 16</div>
     </div>
   </section>
 
@@ -921,8 +968,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 11 • PROFIL ALTIMÉTRIQUE</div>
     </div>
@@ -961,7 +1008,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 12 / 15</div>
+      <div class="page-number">Page 12 / 16</div>
     </div>
   </section>
 
@@ -971,8 +1018,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 12 • IMPRESSION HAUTE DÉFINITION</div>
     </div>
@@ -988,9 +1035,9 @@ html_content = f"""<!DOCTYPE html>
         <div class="figure-caption">Figure 11 : Boîte de dialogue d'impression A4/A3 avec carroyage UTM kilométrique, cartouche officiel et millésime papier IGN TOP 25.</div>
       </div>
 
-      <h3>Sélection par Rectangle Glissé, 2 Clics ou Cadrage Automatique</h3>
+      <h3>Sélection par Rectangle Glissé, 2 Clics &amp; Défilement Continu Hors-Écran</h3>
       <p>
-        Cliquez sur le bouton <strong>🖨️ Imprimer une zone</strong> (en bas à droite). Vous pouvez soit <strong>étirer directement un rectangle à la souris par glisser-déposer</strong>, soit cliquer deux coins opposés sur la carte, soit laisser l'outil cadrer automatiquement vos traces GPX affichées.
+        Cliquez sur le bouton <strong>🖨️ Imprimer une zone</strong>. Étirez directement un rectangle à la souris par glisser-déposer ou cliquez sur deux coins opposés. Pour sélectionner une zone dépassant de votre écran, <strong>approchez simplement la souris du bord de l'affichage : la carte défile automatiquement et en continu au-delà de l'écran</strong> (ou utilisez les flèches du clavier ou le clic-droit pour translater la carte).
       </p>
 
       <h3>Paramètres de la Boîte d'Impression</h3>
@@ -1004,7 +1051,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 13 / 15</div>
+      <div class="page-number">Page 13 / 16</div>
     </div>
   </section>
 
@@ -1014,8 +1061,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 13 • MODULE RANDONNER</div>
     </div>
@@ -1053,7 +1100,7 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 14 / 15</div>
+      <div class="page-number">Page 14 / 16</div>
     </div>
   </section>
 
@@ -1063,8 +1110,8 @@ html_content = f"""<!DOCTYPE html>
   <section class="page-section">
     <div class="page-header">
       <div class="brand">
-        <img src="{logo_b64}" alt="Map & Rando">
-        <span>Map &amp; Rando • JLDApps 2026</span>
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
       </div>
       <div>CHAPITRE 14 • GUIDES &amp; SAVOIRS</div>
     </div>
@@ -1098,7 +1145,266 @@ html_content = f"""<!DOCTYPE html>
 
     <div class="page-footer">
       <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
-      <div class="page-number">Page 15 / 15</div>
+      <div class="page-number">Page 15 / 16</div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- PAGE 16 : ÉTUDE COMPARATIVE DES 10 SOLUTIONS (INCLUANT HIKER.COM)     -->
+  <!-- ===================================================================== -->
+  <section class="page-section">
+    <div class="page-header">
+      <div class="brand">
+        <span style="font-size: 11pt; line-height: 1;">🗺️</span>
+        <span>Map &amp; Rando ᾳ2.4 (22/11/2026) • JLDApps 2026</span>
+      </div>
+      <div>CHAPITRE 15 • ÉTUDE COMPARATIVE DU MARCHÉ</div>
+    </div>
+
+    <div class="page-body">
+      <h2>⚖️ 15. Étude Comparative Complète : Map &amp; Rando vs 9 Solutions Cartographiques &amp; GPX</h2>
+      <p style="margin-bottom: 3pt;">
+        Analyse objective face aux 9 solutions de référence du marché : <strong>Cartes.gouv (IGN)</strong>, <strong>Iphigénie</strong>, <strong>Visorando</strong>, <strong>Hiker (HiiKER.com)</strong>, <strong>Openrunner</strong>, <strong>Komoot</strong>, <strong>GPXStudio</strong>, <strong>Garmin BaseCamp</strong> et <strong>VisuGPX</strong>.
+      </p>
+
+      <!-- TABLEAU COMPARATIF COMPACT -->
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Fonctionnalités Clés</th>
+            <th class="th-hl" style="width: 13%;">Map &amp; Rando</th>
+            <th>Cartes.gouv</th>
+            <th>Iphigénie</th>
+            <th>Visorando</th>
+            <th>Hiker (HiiKER)</th>
+            <th>Openrunner</th>
+            <th>Komoot</th>
+            <th>GPXStudio</th>
+            <th>BaseCamp</th>
+            <th>VisuGPX</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Carte IGN TOP 25 (1:25k)</strong></td>
+            <td class="td-hl">Gratuit &amp; Illimité</td>
+            <td class="td-ok">Gratuit</td>
+            <td class="td-no">25 €/an</td>
+            <td class="td-no">25 €/an</td>
+            <td class="td-no">PRO+ (~35 €/an)</td>
+            <td class="td-no">30 €/an</td>
+            <td class="td-dim">Non (OSM)</td>
+            <td class="td-warn">Clé requise</td>
+            <td class="td-no">120-300 €</td>
+            <td class="td-no">10 €/an</td>
+          </tr>
+          <tr>
+            <td><strong>Sans compte / Accès direct</strong></td>
+            <td class="td-hl">Oui (Immédiat)</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non (Requis)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui (PC)</td>
+            <td class="td-warn">Non (édit)</td>
+          </tr>
+          <tr>
+            <td><strong>Routage Piéton Hybride</strong></td>
+            <td class="td-hl">IGN + BRouter</td>
+            <td class="td-dim">IGN seul</td>
+            <td class="td-dim">Manuel (pt/pt)</td>
+            <td class="td-dim">Standard</td>
+            <td class="td-dim">Standard</td>
+            <td class="td-dim">OSM</td>
+            <td class="td-dim">Komoot</td>
+            <td class="td-ok">BRouter</td>
+            <td class="td-dim">Garmin</td>
+            <td class="td-dim">BRouter</td>
+          </tr>
+          <tr>
+            <td><strong>Déplacement dynamique points</strong></td>
+            <td class="td-hl">Oui (Temps réel)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-warn">Limité</td>
+            <td class="td-warn">Limité</td>
+            <td class="td-warn">Limité</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui</td>
+          </tr>
+          <tr>
+            <td><strong>Détection auto demi-tour</strong></td>
+            <td class="td-hl">Oui (Exclusif)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+          </tr>
+          <tr>
+            <td><strong>Découpe trace par rectangle</strong></td>
+            <td class="td-hl">Oui (Direct)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-dim">Scission</td>
+            <td class="td-no">Non</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-dim">Profil</td>
+          </tr>
+          <tr>
+            <td><strong>Reconnexion auto tronçon coupé</strong></td>
+            <td class="td-hl">Oui (Exclusif)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-warn">Manuel (redessin)</td>
+            <td class="td-warn">Manuel (redessin)</td>
+            <td class="td-warn">Manuel (redessin)</td>
+          </tr>
+          <tr>
+            <td><strong>Nommage auto normalisé GPX</strong></td>
+            <td class="td-hl">Oui (Exclusif)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+          </tr>
+          <tr>
+            <td><strong>Superposition multi-traces GPX</strong></td>
+            <td class="td-hl">1 à 3 traces</td>
+            <td class="td-no">Non</td>
+            <td class="td-warn">Complexe</td>
+            <td class="td-no">1 seule</td>
+            <td class="td-no">1 active</td>
+            <td class="td-no">Payant</td>
+            <td class="td-no">Non</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui</td>
+            <td class="td-ok">Oui</td>
+          </tr>
+          <tr>
+            <td><strong>Outil Cap (3 visées) + Auto-Pan</strong></td>
+            <td class="td-hl">Oui (Exclusif)</td>
+            <td class="td-dim">1 angle</td>
+            <td class="td-dim">Basique</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-dim">Mesure</td>
+            <td class="td-no">Non</td>
+          </tr>
+          <tr>
+            <td><strong>Échelle 1:25k vraie (étalonnée écran)</strong></td>
+            <td class="td-hl">Oui (Exclusif)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+          </tr>
+          <tr>
+            <td><strong>Carroyage dalles papier TOP 25</strong></td>
+            <td class="td-hl">Oui (Exclusif)</td>
+            <td class="td-dim">Texte seul</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+          </tr>
+          <tr>
+            <td><strong>Export PDF A4/A3 HD 1:25k en 1 clic</strong></td>
+            <td class="td-hl">Oui (Direct)</td>
+            <td class="td-dim">2 clics</td>
+            <td class="td-dim">Complexe</td>
+            <td class="td-dim">Figé</td>
+            <td class="td-dim">Non (GPX)</td>
+            <td class="td-no">Payant</td>
+            <td class="td-dim">Basique</td>
+            <td class="td-dim">Non</td>
+            <td class="td-dim">Impression</td>
+            <td class="td-no">Payant</td>
+          </tr>
+          <tr>
+            <td><strong>Gestion Waypoints (Création &amp; Clic trace)</strong></td>
+            <td class="td-hl">Oui (Création+Clic+GPS)</td>
+            <td class="td-dim">Création seule</td>
+            <td class="td-dim">Manuel (hors trace)</td>
+            <td class="td-warn">Manuel (hors trace)</td>
+            <td class="td-no">Payant (PRO)</td>
+            <td class="td-warn">Manuel (hors trace)</td>
+            <td class="td-dim">Points repère</td>
+            <td class="td-ok">Oui (Waypoints)</td>
+            <td class="td-ok">Oui (Waypoints)</td>
+            <td class="td-warn">Manuel (hors trace)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- LES 8 FONCTIONNALITÉS EXCLUSIVES -->
+      <div style="font-weight: 800; font-size: 7.8pt; color: #047857; margin-bottom: 2pt;">
+        🌟 Les 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.2pt; font-size: 7.1pt; line-height: 1.15;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>1. Gratuité &amp; Immédiateté IGN :</strong> Zéro compte, zéro abonnement pour le SCAN 25®.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>2. Découpe &amp; Reconnexion Auto :</strong> Rectangle Supprimer zone et recouture intelligente par sentiers.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>3. Détection de Demi-Tour Forcé :</strong> Détection automatique temps réel des boucles involontaires.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>4. Outil Cap 3 Visées + Auto-Pan :</strong> Visées azimutales simultanées et défilement fluide vers les sommets.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>5. Échelle Vraie 1:25k Écran :</strong> Étalonnage certifié (4 cm à la règle sur écran = 1 km terrain).
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles IGN sur toute la France.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>7. Nommage Auto Normalisé à l'Export :</strong> Nommé <code>YYYYMMDDHHMM - Commune - Distance - D+XXXm</code>.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>8. Atelier Waypoints Intelligent :</strong> Création &amp; clic sur trace, suggestions rapides et coords GPS.
+        </div>
+      </div>
+    </div>
+
+    <div class="page-footer">
+      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div class="page-number">Page 16 / 16</div>
     </div>
   </section>
 

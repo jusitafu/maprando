@@ -83,7 +83,7 @@ def sync_and_protect(commit_msg):
     print("\n✓ index.html synchronisé")
 
     # 2. Synchroniser les dossiers complets
-    for folder in ["images", "audio", "docs", "js"]:
+    for folder in ["images", "audio", "docs", "js", "css"]:
         src_dir = os.path.join(MAPRANDO_DIR, folder)
         dst_dir = os.path.join(RANDOFINDER_DIR, folder)
         if os.path.exists(src_dir):
@@ -98,7 +98,8 @@ def sync_and_protect(commit_msg):
         "Legende_IGN_Top25.pdf",
         "legende-carte-ign-a-imprimer.pdf",
         "favicon.ico",
-        "site.webmanifest"
+        "site.webmanifest",
+        "generate_exhaustive_pdf_manual.py"
     ]
     for rf in root_files:
         s = os.path.join(MAPRANDO_DIR, rf)
@@ -141,7 +142,7 @@ def sync_and_protect(commit_msg):
         print(f"✓ Intégrité validée : les {len(found_assets)} ressources statiques existent dans les 2 dépôts.")
 
     # 5. Git Add, Commit et Push sur les deux dépôts
-    track_patterns = ["index.html", "images", "audio", "docs", "js", "Mode_d_emploi_RandoFinder.pdf", "Legende_IGN_Top25.pdf", "legende-carte-ign-a-imprimer.pdf", "deploy_and_protect_all.py"]
+    track_patterns = ["index.html", "images", "audio", "docs", "js", "css", "Mode_d_emploi_RandoFinder.pdf", "Legende_IGN_Top25.pdf", "legende-carte-ign-a-imprimer.pdf", "generate_exhaustive_pdf_manual.py", "deploy_and_protect_all.py"]
     for repo_name, repo_dir in [("maprando", MAPRANDO_DIR), ("randofinder_update", RANDOFINDER_DIR)]:
         print(f"\n📦 Git déploiement pour {repo_name}...")
         for pattern in track_patterns:
