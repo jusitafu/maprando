@@ -362,7 +362,7 @@
         </div>
 
         <span class="text-white font-bold">Map &amp; Rando</span>
-        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ2.2 (21/11/2026)</span>
+        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ2.3 (22/11/2026)</span>
         &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
@@ -1775,10 +1775,10 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ2.2 (21/11/2026) &bull; JLDAPPS 2026</span>
+            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ2.3 (22/11/2026) &bull; JLDAPPS 2026</span>
           </div>
           <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ2.2 (21/11/2026)</span></span>
+            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ2.3 (22/11/2026)</span></span>
           </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -1974,10 +1974,11 @@
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-blue-500/40 space-y-2">
-              <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>✏️</span> Créer &amp; <span>🛠️</span> Modifier une trace GPX (Auto-Routage Sentiers)</div>
+              <div class="font-extrabold text-blue-300 flex items-center gap-1.5"><span>✏️</span> Créer, <span>🛠️</span> Modifier une trace GPX &amp; <span>📍</span> Gestion des Waypoints (POIs)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>✏️ Créer un GPX :</strong> déposez vos étapes (A départ, B, C... étapes, arrivée) : le tracé épouse automatiquement les sentiers réels de randonnée (IGN BD TOPO® / BRouter). Ruban d'étapes visuel, déplacement fluide de points, annulation par <strong>Ctrl+Z</strong> et export GPX.</li>
-                <li><strong>🛠️ Modifier une trace GPX :</strong> poignées de manipulation dynamiques (D, 1, 2... A) réparties sur la trace pour dévier l'itinéraire vers les sentiers voisins avec recalcul instantané de la distance et du D+.</li>
+                <li><strong>✏️ Créer un GPX avec Waypoints/Étapes :</strong> déposez vos étapes successives (A départ, B, C... étapes, arrivée) : le tracé épouse automatiquement les sentiers réels de randonnée (IGN BD TOPO® / BRouter). Chaque étape peut être nommée, déplacée magnétiquement à la souris ou supprimée en 1 clic. Ruban chronologique interactif, annulation par <strong>Ctrl+Z</strong> et export GPX certifié.</li>
+                <li><strong>🛠️ Modifier une trace GPX &amp; 📍 Ajout de Waypoints sur la trace :</strong> poignées dynamiques (D, 1, 2... A) pour dévier le parcours sur les sentiers voisins. Le bouton <strong>« 📍 + Waypoint »</strong> permet de <strong>cliquer n'importe où le long de la trace existante</strong> pour déposer un repère d'intérêt avec magnétisme automatique sur le parcours, boîte de dialogue personnalisée et 8 pastilles de suggestions rapides (🏔️ Sommet, 🏕️ Refuge, 💧 Source, 🧭 Col, 👁️ Belvédère, 🅿️ Parking, 🍴 Pique-nique, ⚠️ Danger). Les waypoints sont inclus dans l'export XML <code>&lt;wpt&gt;</code> avec altitude exacte.</li>
+                <li><strong>🧭 Bouton bascule « Coordonnées des waypoints » :</strong> basculez en 1 clic l'affichage complet des coordonnées GPS décimales (Latitude, Longitude) et de l'altitude Z directement sur les badges visuels de la carte pour chaque waypoint.</li>
                 <li><strong>✂️ Supprimer une zone par rectangle &amp; Reconnexion automatique :</strong> tracez un rectangle à la souris sur la carte pour supprimer tous les points inclus. Le système <strong>reconnecte immédiatement les 2 extrémités coupées par les sentiers réels</strong> via auto-routage (bouton de secours <em>« 🥾 Relier par sentiers »</em>), évitant toute ligne droite hors chemin.</li>
                 <li><strong>Nommage intelligent au téléchargement :</strong> boîte de dialogue personnalisable proposant le format officiel <code>YYYYMMDDHHMM - Commune - Dist - D+</code>.</li>
               </ul>
@@ -2302,16 +2303,30 @@
                     <td class="py-2.5 px-2.5 text-center text-slate-400">Impression PC</td>
                     <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (PDF TOP25)</td>
                   </tr>
+                  <!-- Row 14 : Waypoints & POIs -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Gestion des Waypoints (Création &amp; Clic trace)</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Création + Clic + GPS)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Création seule</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Manuel</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Manuel (hors trace)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold">Payant (PRO)</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Manuel</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Points de repère</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold">Oui (Waypoints)</td>
+                    <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold">Oui (Waypoints)</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300">Manuel</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Rappel des 7 Atouts Exclusifs -->
+          <!-- Rappel des 8 Atouts Majeurs -->
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
             <div class="font-extrabold text-amber-300 flex items-center gap-2 text-xs sm:text-sm">
               <span>🌟</span>
-              <span>Rappel des 7 Fonctionnalités Uniques au Monde de Map &amp; Rando</span>
+              <span>Rappel des 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 pt-1">
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">1. Gratuité &amp; Immédiateté IGN :</strong> Zéro création de compte, zéro abonnement pour l'IGN TOP 25®.</div>
@@ -2320,7 +2335,8 @@
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">4. Outil Cap à 3 Visées + Auto-Pan :</strong> Visée azimutale avec défilement automatique vers les sommets lointains.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">5. Échelle Vraie 1:25 000 Écran :</strong> Étalonnage physique garantissant 4 cm mesurés à la règle = 1 km sur le terrain.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles (3232OT, etc.) sur toute la France.</div>
-              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800 sm:col-span-2"><strong class="text-white">7. Nommage Auto Normalisé à l'Export :</strong> Génération normalisée <code class="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">YYYYMMDDHHMM - Ville - Distance - D+XXX m</code> avec détection de la commune de départ.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">7. Nommage Auto Normalisé à l'Export :</strong> Génération normalisée <code class="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">YYYYMMDDHHMM - Ville - Distance - D+XXX m</code> avec détection de la commune de départ.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">8. Atelier Waypoints Intelligent :</strong> Création et ajout par clic magnétique sur trace, suggestions rapides (refuge, source, sommet) et bascule des coordonnées GPS.</div>
             </div>
           </div>
         </section>
@@ -2354,7 +2370,7 @@
               </svg>
             </button>
           </div>
-          Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ2.2 (21/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
+          Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ2.3 (22/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
         </span>
         <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg">
           Fermer le Mode d'emploi
@@ -2451,6 +2467,32 @@
           <p>
             L'accès à Map &amp; Rando est totalement libre, gratuit et sans abonnement obligatoire. Pour pérenniser l'hébergement haute performance et le développement des outils, certains liens vers du matériel outdoor recommandé (chaussures, bâtons, sécurité, chargeurs) sont affiliés auprès d'enseignes partenaires (Amazon, Décathlon, Au Vieux Campeur). Ces commissions d'apporteur d'affaires ne génèrent <strong>aucun surcoût pour l'utilisateur</strong>.
           </p>
+        </div>
+
+        <div>
+          <h4 class="font-extrabold text-white text-sm mb-1.5 flex items-center gap-2">
+            <span class="text-cyan-400">6.</span> Protection des Données Personnelles &amp; Conformité RGPD (Règlement UE 2016/679)
+          </h4>
+          <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-cyan-500/30 text-xs text-slate-300 space-y-2.5">
+            <p>
+              <strong>Responsable du traitement :</strong> JLDApps 2026 &bull; Sanary-sur-Mer (Var 83), contact délégué : <a href="mailto:aquacheckjld@gmail.com" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">aquacheckjld@gmail.com</a>.
+            </p>
+            <p>
+              <strong>Architecture « Privacy by Design » &amp; Minimisation absolue :</strong> L'accès et l'utilisation de l'ensemble des fonctionnalités de <strong>Map &amp; Rando</strong> s'effectuent sans aucune création de compte, sans mot de passe, sans collecte obligatoire d'e-mail et sans aucun profilage publicitaire ou comportemental.
+            </p>
+            <p>
+              <strong>Traitement 100% Local des Traces GPX &amp; Waypoints :</strong> Conformément au principe de minimisation des données (Art. 5 du RGPD), l'ensemble des fichiers GPX téléversés, analysés, créés ou modifiés (tracés vectoriels, profils altimétriques, repères/waypoints créés ou ajoutés par clic sur trace, coordonnées GPS et altitudes LiDAR) sont traités <strong>exclusivement en mémoire vive (RAM) et dans le stockage local (LocalStorage) de votre propre navigateur web</strong>. Aucun tracé de randonnée, aucun point d'intérêt ni historique de navigation n'est téléversé, analysé ou conservé sur un serveur distant externe.
+            </p>
+            <p>
+              <strong>Zéro Cookie Publicitaire &amp; Respect de la Vie Privée :</strong> L'application n'utilise <strong>aucun cookie publicitaire, marketing ou de pistage tiers</strong>. Seuls les réglages techniques strictement indispensables au fonctionnement ergonomique (fonds de carte favoris, calibration d'écran « 📏 1 cm vrai », traces locales en cours de session) sont conservés sur votre terminal.
+            </p>
+            <p>
+              <strong>Géolocalisation Éphémère de Terrain :</strong> Lorsque vous activez la fonction de géolocalisation GPS en randonnée, votre position instantanée est exploitée uniquement en local par votre navigateur pour positionner le curseur sur la carte. Vos coordonnées géographiques ne sont jamais archivées, ni transmises à un serveur, ni cédées à des tiers.
+            </p>
+            <p>
+              <strong>Exercice des Droits RGPD (Articles 15 à 22) :</strong> Vous conservez à tout instant la maîtrise intégrale de vos données. L'utilisateur peut exercer son droit d'accès, d'effacement intégral et d'oubli immédiat par un simple clic sur le bouton <em>« Tout effacer »</em> de l'application ou en purgeant le cache de son navigateur. Pour toute demande d'assistance ou question relative à la protection de vos données personnelles, vous pouvez écrire directement à <a href="mailto:aquacheckjld@gmail.com" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">aquacheckjld@gmail.com</a>.
+            </p>
+          </div>
         </div>
 
         <div class="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
