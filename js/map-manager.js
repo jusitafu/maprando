@@ -6727,7 +6727,11 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           <div style="font-family:sans-serif; text-align:left; min-width:140px; padding:3px;">
             <div style="font-weight:900; color:${assignedColor}; font-size:13px; margin-bottom:2px;">📍 ${wptName}</div>
             ${wptDesc ? `<div style="font-size:11px; color:#475569; margin-bottom:4px;">${wptDesc}</div>` : ''}
-            <div style="font-size:10px; color:#94a3b8;">${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${wp.ele ? ` • ${Math.round(wp.ele)} m` : ''}</div>
+            <div style="margin-top:4px; padding-top:4px; border-top:1px solid #f1f5f9;">
+              <button type="button" title="Cliquer pour copier les coordonnées GPS (${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)})" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; font-size:10px; font-family:monospace; color:#334155; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="window.MapManagerInstance.copyGpsCoords(${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)}, this)">
+                <span>📋</span> <span>${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${wp.ele ? ` • ${Math.round(wp.ele)} m` : ''}</span>
+              </button>
+            </div>
           </div>
         `);
         trackLayer.addLayer(wptMarker);
@@ -7730,8 +7734,10 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
               ${access}
             </div>
             ${distMsg}
-            <div class="mt-2 pt-1 border-t border-slate-100 text-[10px] text-slate-400 font-mono">
-              ${lat.toFixed(5)}, ${lon.toFixed(5)}
+            <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+              <button type="button" title="Cliquer pour copier la position GPS (${lat.toFixed(5)}, ${lon.toFixed(5)})" class="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 text-[10px] font-mono font-bold flex items-center gap-1 transition cursor-pointer" onclick="window.MapManagerInstance.copyGpsCoords(${lat.toFixed(5)}, ${lon.toFixed(5)}, this)">
+                <span>📋</span> <span>${lat.toFixed(5)}, ${lon.toFixed(5)}</span>
+              </button>
             </div>
           </div>
         `;
@@ -8232,7 +8238,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
             ${start_date ? `<div class="text-[11px] text-amber-800 font-semibold mt-1">⏳ ${start_date}</div>` : ''}
             ${distMsg}
             <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-              <span class="text-[10px] text-slate-400 font-mono">${lat.toFixed(5)}, ${lon.toFixed(5)}</span>
+              <button type="button" title="Cliquer pour copier les coordonnées GPS (${lat.toFixed(5)}, ${lon.toFixed(5)})" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 text-[10.5px] font-mono font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 group" onclick="window.MapManagerInstance.copyGpsCoords(${lat.toFixed(5)}, ${lon.toFixed(5)}, this)"><span style="font-size: 12px;">📋</span> <span>${lat.toFixed(5)}, ${lon.toFixed(5)}</span></button>
               <button type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow transition cursor-pointer flex items-center gap-1" onclick="window.MapManagerInstance.addHeritageAsWaypoint('${safeName}', ${lat}, ${lon})">
                 <span>➕</span> <span>Jalon</span>
               </button>
@@ -8293,6 +8299,55 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         editBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition bg-slate-700 text-amber-200 hover:text-white flex items-center gap-1';
         editBtn.innerHTML = `<span>🏛️</span> <span>Patrimoine</span>`;
       }
+    }
+  }
+
+  copyGpsCoords(lat, lon, btnEl) {
+    const coordsStr = `${Number(lat).toFixed(5)}, ${Number(lon).toFixed(5)}`;
+    const showFeedback = () => {
+      if (btnEl) {
+        const origHtml = btnEl.innerHTML;
+        const origClass = btnEl.className;
+        btnEl.innerHTML = `<span>✅</span> <span class="font-bold text-emerald-700">Copié !</span>`;
+        btnEl.classList.remove('bg-slate-100', 'text-slate-700');
+        btnEl.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-800');
+        setTimeout(() => {
+          btnEl.innerHTML = origHtml;
+          btnEl.className = origClass;
+        }, 1800);
+      }
+      const msg = `📋 Position GPS copiée : ${coordsStr}`;
+      if (window.App && typeof window.App.showToast === 'function') {
+        window.App.showToast(msg, 'info');
+      } else if (window.GpxCreatorEditorInstance && typeof window.GpxCreatorEditorInstance.showUndoFeedback === 'function') {
+        window.GpxCreatorEditorInstance.showUndoFeedback(msg);
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(coordsStr).then(showFeedback).catch(() => {
+        this._fallbackCopyText(coordsStr);
+        showFeedback();
+      });
+    } else {
+      this._fallbackCopyText(coordsStr);
+      showFeedback();
+    }
+  }
+
+  _fallbackCopyText(text) {
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    } catch (e) {
+      console.warn('Echec copie presse-papier :', e);
     }
   }
 
@@ -9165,3 +9220,11 @@ Cliquer pour recadrer toute la feuille">
 
 window.MapManager = MapManager;
 
+
+if (typeof window !== 'undefined') {
+  window.copyGpsCoords = function(lat, lon, btnEl) {
+    if (window.MapManagerInstance && typeof window.MapManagerInstance.copyGpsCoords === 'function') {
+      window.MapManagerInstance.copyGpsCoords(lat, lon, btnEl);
+    }
+  };
+}

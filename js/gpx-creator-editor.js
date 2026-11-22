@@ -953,7 +953,11 @@ class GpxCreatorEditor {
               <div style="font-family:sans-serif; text-align:left; min-width:140px; padding:3px;">
                 <div style="font-weight:900; color:${assignedColor}; font-size:13px; margin-bottom:2px;">📍 ${wptName}</div>
                 ${wptDesc ? `<div style="font-size:11px; color:#475569; margin-bottom:4px;">${wptDesc}</div>` : ''}
-                <div style="font-size:10px; color:#94a3b8;">${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${wp.ele ? ` • ${Math.round(wp.ele)} m` : ''}</div>
+                <div style="margin-top:4px; padding-top:4px; border-top:1px solid #f1f5f9;">
+                <button type="button" title="Cliquer pour copier les coordonnées GPS (${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)})" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:2px 6px; font-size:10px; font-family:monospace; color:#334155; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="window.copyGpsCoords ? window.copyGpsCoords(${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)}, this) : (window.MapManagerInstance && window.MapManagerInstance.copyGpsCoords(${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)}, this))">
+                  <span>📋</span> <span>${wp.lat.toFixed(5)}°, ${wp.lon.toFixed(5)}°${wp.ele ? ` • ${Math.round(wp.ele)} m` : ''}</span>
+                </button>
+              </div>
               </div>
             `);
             this.editingTrack.layer.addLayer(wptMarker);
@@ -1867,7 +1871,7 @@ class GpxCreatorEditor {
 
         <p class="text-xs text-slate-300 mb-2">
           Point sélectionné sur la trace :
-          <span class="font-mono text-emerald-300 font-bold ml-1">${point.lat.toFixed(5)}°, ${point.lng.toFixed(5)}°${eleText}</span>
+          <button type="button" title="Cliquer pour copier les coordonnées GPS (${point.lat.toFixed(5)}, ${point.lng.toFixed(5)})" class="inline-flex items-center gap-1 font-mono text-emerald-300 hover:text-emerald-200 font-bold ml-1 px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-emerald-400 cursor-pointer transition text-[11px]" onclick="window.copyGpsCoords ? window.copyGpsCoords(${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}, this) : (window.MapManagerInstance && window.MapManagerInstance.copyGpsCoords(${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}, this))"><span>📋</span> <span>${point.lat.toFixed(5)}°, ${point.lng.toFixed(5)}°${eleText}</span></button>
         </p>
 
         <label class="block text-xs font-bold text-slate-200 mb-1.5" for="input-wp-name">

@@ -1094,6 +1094,7 @@ html_content = f"""<!DOCTYPE html>
         <li><strong>Centre de recherche &amp; Curseur de rayon :</strong> définissez votre point de départ (adresse, GPS ou clic carte) et ajustez le rayon de 10 km jusqu'au monde entier.</li>
         <li><strong>Difficulté IBP Index (Niveaux 1 à 5 FFRandonnée) :</strong> filtrez en un clic les sorties faciles, moyennes ou très sportives.</li>
         <li><strong>Colonne 👤 « Ajoutée par » :</strong> le tableau affiche clairement le nom ou le pseudonyme de l'adhérent ayant partagé le fichier GPX.</li>
+        <li><strong>📄 Fiche Topo FFRandonnée A4 Pleine Page sur fond IGN TOP 25 :</strong> le bouton <em>« 📄 Fiche Topo FFRandonnée »</em> génère un document officiel en 2 pages : <strong>Page 1 — Tableau de marche officiel à 7 colonnes</strong> (jalons, distances, dénivelés, temps calculés selon les règles FFR, azimuts), et <strong>Page 2 — Carte grand format animateur sur fond officiel IGN TOP 25® (SCAN 25®)</strong> avec zoom fractionnaire haute précision (<code>zoomSnap: 0.05</code>) calibré pour que la trace occupe <strong>100% de la surface utile A4 Paysage</strong>.</li>
         <li><strong>Téléchargement &amp; Fiches Topo :</strong> téléchargez le fichier <code>.gpx</code> brut pour votre montre ou exportez la <strong>Fiche Randonnée PDF détaillée</strong>.</li>
         <li><strong>Onglet « Charger une randonnée » :</strong> déposez un nouveau fichier GPX, renseignez votre nom d'utilisateur et profitez du calcul automatique certifié de l'IBP et de l'anti-doublon spatial.</li>
       </ul>
@@ -1373,12 +1374,38 @@ html_content = f"""<!DOCTYPE html>
             <td class="td-ok">Oui (Waypoints)</td>
             <td class="td-warn">Manuel (hors trace)</td>
           </tr>
+          <tr>
+            <td><strong>Patrimoine clignotant &amp; Jalon 1-clic</strong></td>
+            <td class="td-hl">Oui (Halos radar + Jalon)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-dim">Manuel</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-warn">Points simples</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+          </tr>
+          <tr>
+            <td><strong>Fiche Topo A4 fond TOP 25 plein format</strong></td>
+            <td class="td-hl">Oui (Inclus &amp; Pleine page)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Payant (Format figé)</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Payant (Format figé)</td>
+            <td class="td-dim">Fiche simple (non IGN)</td>
+            <td class="td-no">Non</td>
+            <td class="td-dim">Impression</td>
+            <td class="td-no">Payant</td>
+          </tr>
         </tbody>
       </table>
 
       <!-- LES 8 FONCTIONNALITÉS EXCLUSIVES -->
       <div style="font-weight: 800; font-size: 7.8pt; color: #047857; margin-bottom: 2pt;">
-        🌟 Les 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
+        🌟 Les 10 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.2pt; font-size: 7.1pt; line-height: 1.15;">
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
@@ -1404,6 +1431,12 @@ html_content = f"""<!DOCTYPE html>
         </div>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>8. Atelier Waypoints Intelligent :</strong> Création &amp; clic sur trace, suggestions rapides et coords GPS.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>9. Patrimoine Clignotant &amp; Jalon 1 Clic :</strong> Halos radar dorés (@keyframes heritage-glow-pulse), calcul métrique de distance à la trace et insertion directe en jalon officiel.
+        </div>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
+          <strong>10. Fiche Topo Pleine Page TOP 25 :</strong> Format A4 paysage haute précision, trace occupant 100% de la page sur fond officiel IGN SCAN 25® et tableau de marche 7 colonnes.
         </div>
       </div>
     </div>

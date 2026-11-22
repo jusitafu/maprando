@@ -1856,6 +1856,7 @@
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div class="font-extrabold text-slate-200 flex items-center gap-1.5"><span>🧭</span> Éléments Visuels du Bandeau Supérieur</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>📱 Modale « Autres applications JLDApps » :</strong> sur un clic sur la mention <code>by JLDApps</code> (sur l'accueil ou dans l'en-tête de la carte), une fenêtre modale élégante présente les applications mobiles partenaires : <strong>WaterMetrics</strong> (contrôle qualité de l'eau du robinet en France, Italie, Espagne, Royaume-Uni) et <strong>FuelCoPilot</strong> (optimisation de trajets et prix des carburants / bornes électriques dans 13 pays européens), avec leurs logos officiels et contacts bêta-testeurs.</li>
                 <li><strong>Logo &amp; Titre Map &amp; Rando :</strong> identification claire de la plateforme cartographique officielle du club.</li>
                 <li><strong>Bouton Musique d'ambiance 🎵 :</strong> active/coupe une bande originale relaxante au piano. Icône sobre et élégante : barrée quand le son est coupé, nette sans barre quand la musique joue. Pause automatique dès l'accès aux cartes.</li>
                 <li><strong>Bouton « Mode d'emploi » 📖 :</strong> ouvre instantanément cette documentation détaillée interactive.</li>
@@ -1992,7 +1993,29 @@
                 <li><strong>Cartouche officiel &amp; Carroyage UTM :</strong> carroyage kilométrique universel avec valeurs en marge, déclinaison magnétique et mention automatique de la référence et du millésime de la carte papier IGN TOP 25 (ex. <code>3245 ET - Éd. 2023</code>).</li>
               </ul>
             </div>
-          </div>
+          
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-2">
+              <div class="font-extrabold text-amber-400 flex items-center gap-1.5"><span>🏛️</span> Module Patrimoine &amp; Curiosités Touristiques (Symbologie Clignotante)</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>🏛️ Détection spatiale en 1 clic :</strong> disponible via le bouton <strong>« 🏛️ Curiosités &amp; Patrimoine »</strong> dans l'Atelier GPX et le bouton <strong>« 🏛️ Patrimoine »</strong> du bandeau HUD GPX autonome. Une requête d'analyse territoriale instantanée scanne l'emprise exacte du tracé.</li>
+                <li><strong>✨ Symbologie animée clignotante :</strong> déploiement d'une symbologie visuelle haute visibilité avec <strong>halos d'ondes radar dorées et ambrées pulsantes</strong> (<code>@keyframes heritage-glow-pulse</code>) et pastille thématique contrastée.</li>
+                <li><strong>🏰 Typologie précise en français :</strong> identification claire et lisible sans jargon : <em>Châteaux, Mémoriaux, Forts et Batteries militaires côtières, Oratoires et Chapelles, Dolmens et Menhirs, Grottes et Gouffres, Belvédères et Tables d'orientation, etc.</em></li>
+                <li><strong>📏 Fiche descriptive &amp; Distance métrique :</strong> un clic sur la pastille ouvre une fiche synthétique avec le nom de l'élément, sa catégorie, ses coordonnées GPS et le <strong>calcul en temps réel de la distance exacte à la trace GPX</strong> (ex: <em>À ~22 m de votre trace GPX</em>).</li>
+                <li><strong>➕ Bouton « Jalon » direct :</strong> en un seul clic sur <strong>« ➕ Jalon »</strong> dans la fiche du monument, la curiosité patrimoniale est intégrée directement comme <strong>jalon officiel numéroté de la randonnée</strong>, inséré dans l'ordre chronologique de la trace et reporté sur la Fiche Topo FFRandonnée.</li>
+              </ul>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-emerald-500/40 space-y-2">
+              <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>📄</span> Fiche Topo FFRandonnée A4 Paysage sur fond IGN TOP 25 Pleine Page</div>
+              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <li><strong>📄 Édition de la Fiche Officielle :</strong> accessible via le bouton <strong>« 📄 Fiche Topo FFRandonnée »</strong> du HUD GPX ou du catalogue club.</li>
+                <li><strong>Page 1 — Tableau de Marche FFRandonnée :</strong> tableau réglementaire 7 colonnes (Jalons Départ, 1, 2... Arrivée, distances partielles et cumulées, altimétries, dénivelés partiels, temps de marche théoriques calculés selon les règles de la Fédération, azimuts et descriptions).</li>
+                <li><strong>Page 2 — Carte Topo Grand Format Animateur :</strong> affichage direct sur la cartographie officielle <strong>IGN TOP 25® (SCAN 25®)</strong> haute résolution via la Géoplateforme nationale.</li>
+                <li><strong>📐 Zoom fractionnaire &amp; Emprise 100% de la feuille :</strong> moteur de cadrage ultra-précis à zoom fractionnaire (<code>zoomSnap: 0.05</code>, marge réduite à 12 px) calibré pour que <strong>la trace GPX occupe la totalité de la surface imprimable A4 Paysage</strong> (174 mm de hauteur utile), pour un confort maximal de lecture sur le terrain.</li>
+                <li><strong>🔄 Redondance automatique :</strong> bascule transparente vers OpenStreetMap en cas d'itinéraire hors des frontières françaises ou d'indisponibilité momentanée du serveur national.</li>
+              </ul>
+            </div>
+</div>
         </section>
 
         <!-- =============================================================== -->
@@ -2317,6 +2340,34 @@
                     <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold" title="Gestion des waypoints Garmin">Oui (Waypoints)</td>
                     <td class="py-2.5 px-2.5 text-center text-amber-300" title="Point d'intérêt posé manuellement à l'œil nu sans magnétisme automatique sur la trace">Manuel (sans magnétisme)</td>
                   </tr>
+                  <!-- Row 15 : Patrimoine Clignotant & Jalon -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Patrimoine clignotant &amp; Jalon 1-clic</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300" title="Halos dorés clignotants pulsants, distance à la trace en mètres et conversion en Jalon officiel en 1 clic"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Halos radar + Jalon)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400" title="Couche POI statique sans interaction avec la trace">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400" title="POIs textuels créés manuellement">Manuel</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-amber-300" title="Points d'intérêt communautaires simples">Points simples</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                  </tr>
+                  <!-- Row 16 : Fiche Topo Pleine Page TOP 25 -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Fiche Topo A4 fond TOP 25 pleine page</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300" title="Tableau de marche FFR 7 colonnes + Carte A4 paysage 100% pleine page sur fond IGN TOP 25 avec zoom fractionnaire"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Inclus &amp; Pleine page)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Fiche PDF propriétaire payante (carte partielle)">Payant (Format figé)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Fiche PDF payante">Payant (Format figé)</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400" title="Fiche résumé basique sans fond IGN">Fiche simple (non IGN)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400">Impression basique</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Fiche payante">Payant (PDF TOP25)</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -2326,7 +2377,7 @@
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
             <div class="font-extrabold text-amber-300 flex items-center gap-2 text-xs sm:text-sm">
               <span>🌟</span>
-              <span>Rappel des 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
+              <span>Rappel des 10 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 pt-1">
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">1. Gratuité &amp; Immédiateté IGN :</strong> Zéro création de compte, zéro abonnement pour l'IGN TOP 25®.</div>
@@ -2337,6 +2388,8 @@
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles (3232OT, etc.) sur toute la France.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">7. Nommage Auto Normalisé à l'Export :</strong> Génération normalisée <code class="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">YYYYMMDDHHMM - Ville - Distance - D+XXX m</code> avec détection de la commune de départ.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">8. Atelier Waypoints Intelligent :</strong> Création et ajout par clic magnétique sur trace, suggestions rapides (refuge, source, sommet) et bascule des coordonnées GPS.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">9. Patrimoine Clignotant &amp; Jalon 1 Clic :</strong> Halos radar dorés (@keyframes heritage-glow-pulse), calcul de proximité métrique et intégration immédiate en jalon de randonnée.</div>
+              <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">10. Fiche Topo Pleine Page TOP 25 :</strong> Format A4 paysage haute précision, trace occupant 100% de la page sur fond officiel IGN SCAN 25® et tableau de marche 7 colonnes.</div>
             </div>
           </div>
         </section>
