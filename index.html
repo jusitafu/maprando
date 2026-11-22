@@ -1984,17 +1984,6 @@
               </ul>
             </div>
 
-            <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/40 space-y-2">
-              <div class="font-extrabold text-amber-300 flex items-center gap-1.5"><span>📋</span> Tableau de Marche FFRandonnée (Outil Encadrants &amp; Fiche Topo)</div>
-              <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
-                <li><strong>Déclencheur discret animateur :</strong> accessible via le bouton discret <code class="text-amber-300 bg-slate-800 px-1 py-0.5 rounded">📋</code> situé dans la barre d'outils supérieure dès qu'une trace est affichée.</li>
-                <li><strong>Étape 1 • Calage interactif sur carte pleine page :</strong> les fenêtres secondaires sont automatiquement masquées pour offrir une visibilité plein écran de la carte et de la trace. Des points d'arrêt initiaux sont automatiquement proposés (départ, arrivée, POIs/waypoints et jalons réguliers tous les ~1,5 km). Déplacez n'importe quel jalon à la souris par glisser-déposer avec <strong>accrochage magnétique le long du tracé GPX</strong>. Cliquez sur un repère pour le renommer (saisie libre ou 8 suggestions rapides : Sommet, Refuge, Source, Col, Belvédère, Parking, Pique-nique, Danger). Bouton <em>« 📍 + Ajouter un arrêt »</em> pour insérer un jalon supplémentaire et <em>« 🗑️ »</em> pour supprimer. Validez via le bouton vert <strong>« ✅ Valider &amp; Générer le tableau »</strong>.</li>
-                <li><strong>Étape 2 • Tableau de marche normé FFR :</strong> tableau transposé synchronisé avec le profil altimétrique SVG et la mini-carte dynamique. Vitesse moyenne paramétrable par tronçon (pré-remplie à <strong>3,2 km/h</strong> selon la norme FFRandonnée). Heure de départ réglable (09:30 par défaut).</li>
-                <li><strong>Ligne « Pause (Mn) » après chaque heure d'arrivée :</strong> chaque tronçon comporte une ligne de pause (pré-remplie à <strong>10 minutes</strong> par défaut pour les étapes intermédiaires, 0 pour départ/arrivée, entièrement modifiable) avec <strong>recalcul dynamique en cascade</strong> des heures d'arrivée suivantes. Champ d'information libre pour les consignes d'encadrement et de sécurité.</li>
-                <li><strong>Exports &amp; Fiche Topo Paysage :</strong> bouton <em>« ✏️ Ajuster sur carte »</em> pour corriger les jalons à tout moment, <strong>« 💾 Export GPX »</strong> enrichi avec balises <code>&lt;wpt&gt;</code> officielles (nom, altitude, description), <strong>« 📥 CSV »</strong> normé et <strong>« 🖨️ Fiche Topo »</strong> pour imprimer la fiche d'encadrement complète en paysage (tableau, carte IGN et profil altimétrique avec points d'arrêt).</li>
-              </ul>
-            </div>
-
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🖨️</span> Impression Haute Définition (« Imprimer une zone »)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
@@ -2328,30 +2317,16 @@
                     <td class="py-2.5 px-2.5 text-center text-emerald-400 font-bold" title="Gestion des waypoints Garmin">Oui (Waypoints)</td>
                     <td class="py-2.5 px-2.5 text-center text-amber-300" title="Point d'intérêt posé manuellement à l'œil nu sans magnétisme automatique sur la trace">Manuel (sans magnétisme)</td>
                   </tr>
-                  <!-- Row 15 : Tableau de Marche FFR -->
-                  <tr class="hover:bg-slate-800/40 transition">
-                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Tableau de Marche FFR en 2 étapes</td>
-                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300" title="Étape 1 calage magnétique sur carte pleine page + Étape 2 tableau de marche avec pauses 10 mn, profil SVG et export Fiche Topo"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Calage plein écran + Pauses + Topo)</span></td>
-                    <td class="py-2.5 px-2.5 text-center text-slate-400" title="Fiche horaire basique">Partiel (Fiche)</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
-                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Roadbook payant Premium">Payant (Roadbook)</td>
-                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Rappel des 9 Atouts Majeurs -->
+          <!-- Rappel des 8 Atouts Majeurs -->
           <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
             <div class="font-extrabold text-amber-300 flex items-center gap-2 text-xs sm:text-sm">
               <span>🌟</span>
-              <span>Rappel des 9 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
+              <span>Rappel des 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando</span>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300 pt-1">
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">1. Gratuité &amp; Immédiateté IGN :</strong> Zéro création de compte, zéro abonnement pour l'IGN TOP 25®.</div>
@@ -2362,7 +2337,6 @@
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles (3232OT, etc.) sur toute la France.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">7. Nommage Auto Normalisé à l'Export :</strong> Génération normalisée <code class="text-emerald-300 bg-slate-900 px-1 py-0.5 rounded">YYYYMMDDHHMM - Ville - Distance - D+XXX m</code> avec détection de la commune de départ.</div>
               <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800"><strong class="text-white">8. Atelier Waypoints Intelligent :</strong> Création et ajout par clic magnétique sur trace, suggestions rapides (refuge, source, sommet) et bascule des coordonnées GPS.</div>
-              <div class="p-2 rounded-lg bg-slate-950/60 border border-amber-500/40 col-span-1 sm:col-span-2"><strong class="text-amber-300">9. Tableau de Marche FFR en 2 Étapes :</strong> Calage magnétique des arrêts sur carte pleine page, calcul à 3,2 km/h avec pauses de 10 mn en cascade, export GPX et Fiche Topo paysage.</div>
             </div>
           </div>
         </section>
@@ -3115,11 +3089,8 @@
                 <span id="map-bearing-panel-title" class="text-xs font-bold text-white uppercase tracking-wider">Mesure de Cap (1 à 3)</span>
               </div>
               <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
-                <button type="button" id="btn-minimize-map-bearing" onclick="window.MapManagerInstance?.toggleMinimizeBearing(true)" title="Réduire la boîte cap" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
+                <button type="button" id="btn-minimize-map-bearing" onclick="window.MapManagerInstance?.toggleMinimizeBearing()" title="Réduire la boîte cap (ou agrandir)" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
                   &minus;
-                </button>
-                <button type="button" id="btn-maximize-map-bearing" onclick="window.MapManagerInstance?.toggleMinimizeBearing(false)" title="Agrandir / Pleine taille" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
-                  &#x25A1;
                 </button>
                 <button type="button" id="btn-close-map-bearing" onclick="window.MapManagerInstance?.cancelBearingMeasurement()" title="Fermer la boîte et effacer les caps" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
                   &#x2715;
@@ -3183,16 +3154,29 @@
             </div>
           </div>
 
-          <!-- FLOATING PATH MEASURE<!-- FLOATING PATH MEASURE TOOL BOX (clics successifs) -->
+          <!-- FLOATING PATH MEASURE TOOL BOX (clics successifs) -->
           <div id="map-measure-panel" class="hidden absolute top-3 sm:top-4 right-2 sm:right-16 z-30 bg-slate-900/95 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border border-indigo-500/50 backdrop-blur-md w-[calc(100%-1rem)] sm:w-80 max-w-sm animate-in fade-in zoom-in-95 duration-200">
             <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
               <div class="flex items-center gap-2">
                 <span class="text-base text-indigo-400">📏</span>
                 <span class="text-xs font-bold text-white uppercase tracking-wider">Mesure de trajet</span>
               </div>
-              <button id="btn-close-map-measure" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Fermer la boîte mesure">✕</button>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="btn-minimize-map-measure" onclick="window.MapManagerInstance?.toggleMinimizeMeasure()" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition cursor-pointer" title="Réduire la boîte mesure (ou agrandir)">&minus;</button>
+                <button id="btn-close-map-measure" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Fermer la boîte mesure">✕</button>
+              </div>
             </div>
 
+            <!-- Contenu Réduit Compact -->
+            <div id="map-measure-minimized-content" class="hidden py-1">
+              <div class="flex items-center justify-between gap-2 text-xs font-bold text-indigo-300 cursor-pointer" onclick="window.MapManagerInstance?.toggleMinimizeMeasure(false)" title="Cliquer pour agrandir les détails">
+                <span>Distance :</span>
+                <span id="map-measure-min-dist" class="font-mono text-white text-sm">0.00 km</span>
+              </div>
+            </div>
+
+            <!-- Contenu Complet Détaillé -->
+            <div id="map-measure-body-content">
             <!-- Instructions -->
             <div id="map-measure-instruction" class="text-[11px] text-slate-300 mb-2.5 flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-xl border border-slate-700/60">
               <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
@@ -3242,6 +3226,7 @@
                 <span>✔</span>
                 <span>Terminer</span>
               </button>
+            </div>
             </div>
           </div>
 
@@ -3425,87 +3410,55 @@
 
               </div>
 
-              <div class="flex items-center gap-1 flex-shrink-0">
-
+              <div class="flex items-center gap-1.5 flex-shrink-0">
                 <button id="preview-btn-download" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition flex items-center gap-1 whitespace-nowrap" title="Télécharger GPX / Fiche PDF">
-
                   <span>📥</span> Télécharger
-
                 </button>
-
+                <button type="button" id="btn-minimize-preview" onclick="window.App?.toggleMinimizePreview()" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-300 flex items-center justify-center font-black text-sm transition cursor-pointer" title="Réduire le profil altimétrique (ou agrandir)">
+                  &minus;
+                </button>
                 <button id="btn-close-preview" class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition" title="Fermer / Effacer le tracé">
-
                   ✕
-
                 </button>
-
               </div>
 
             </div>
 
-
+            <!-- Body Content (Réductible) -->
+            <div id="preview-body-content" class="space-y-2">
 
             <!-- Metrics Pills -->
-
             <div class="grid grid-cols-5 gap-1.5 text-center text-xs">
-
               <div class="bg-slate-100/90 p-1.5 rounded-lg">
-
                 <span class="text-[10px] text-slate-400 block font-medium">Distance</span>
-
                 <span id="preview-dist" class="font-bold text-slate-800"></span>
-
               </div>
-
               <div class="bg-emerald-50 p-1.5 rounded-lg border border-emerald-100">
-
                 <span class="text-[10px] text-emerald-600 block font-medium">Dénivelé D+</span>
-
                 <span id="preview-dplus" class="font-bold text-emerald-700"></span>
-
               </div>
-
               <div id="preview-ibp-box" class="p-1.5 rounded-lg border transition-colors flex flex-col justify-center items-center">
-
                 <span class="text-[10px] block font-medium opacity-80">IBP Index</span>
-
                 <span id="preview-ibp" class="font-black text-xs flex items-center justify-center gap-1"></span>
-
               </div>
-
               <div class="bg-slate-100/90 p-1.5 rounded-lg">
-
                 <span class="text-[10px] text-slate-400 block font-medium">Altitudes</span>
-
                 <span id="preview-alt" class="font-bold text-slate-800 text-[10px]"></span>
-
               </div>
-
               <div class="bg-slate-100/90 p-1.5 rounded-lg">
-
                 <span class="text-[10px] text-slate-400 block font-medium">Durée est.</span>
-
                 <span id="preview-duration" class="font-bold text-slate-800"></span>
-
               </div>
-
             </div>
 
-
-
             <!-- Elevation Profile Canvas -->
-
             <div class="border-t border-slate-100 pt-2">
-
               <div class="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1">
-
                 <span>Profil altimétrique (survoler pour synchroniser)</span>
-
                 <span id="preview-dmoins" class="text-rose-500"></span>
-
               </div>
-
               <div id="elevation-chart-container" class="w-full h-28 bg-slate-50 rounded-lg border border-slate-200 overflow-hidden relative"></div>
+            </div>
 
             </div>
 

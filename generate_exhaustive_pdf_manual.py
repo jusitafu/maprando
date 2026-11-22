@@ -1367,53 +1367,37 @@ html_content = f"""<!DOCTYPE html>
             <td class="td-ok">Oui (Waypoints)</td>
             <td class="td-warn">Manuel (hors trace)</td>
           </tr>
-          <tr>
-            <td><strong>Tableau de Marche FFR (2 étapes)</strong></td>
-            <td class="td-hl">Oui (Calage plein écran + Pauses)</td>
-            <td class="td-dim">Fiche simple</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Non</td>
-            <td class="td-no">Payant</td>
-          </tr>
         </tbody>
       </table>
 
-      <!-- LES 9 FONCTIONNALITÉS EXCLUSIVES -->
-      <div style="font-weight: 800; font-size: 7.6pt; color: #047857; margin-bottom: 2pt;">
-        🌟 Les 9 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
+      <!-- LES 8 FONCTIONNALITÉS EXCLUSIVES -->
+      <div style="font-weight: 800; font-size: 7.8pt; color: #047857; margin-bottom: 2pt;">
+        🌟 Les 8 Piliers Majeurs &amp; Exclusifs de Map &amp; Rando
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2pt; font-size: 6.9pt; line-height: 1.13;">
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.2pt; font-size: 7.1pt; line-height: 1.15;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>1. Gratuité &amp; Immédiateté IGN :</strong> Zéro compte, zéro abonnement pour le SCAN 25®.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>2. Découpe &amp; Reconnexion Auto :</strong> Rectangle Supprimer zone et recouture intelligente par sentiers.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>3. Détection de Demi-Tour Forcé :</strong> Détection automatique temps réel des boucles involontaires.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>4. Outil Cap 3 Visées + Auto-Pan :</strong> Visées azimutales simultanées et défilement fluide vers les sommets.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>5. Échelle Vraie 1:25k Écran :</strong> Étalonnage certifié (4 cm à la règle sur écran = 1 km terrain).
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>6. Carroyage Dalles Papier TOP 25 :</strong> Références commerciales officielles IGN sur toute la France.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>7. Nommage Auto Normalisé à l'Export :</strong> Nommé <code>YYYYMMDDHHMM - Commune - Distance - D+XXXm</code>.
         </div>
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 1.8pt 3pt; border-radius: 3px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 2pt 3.5pt; border-radius: 3px;">
           <strong>8. Atelier Waypoints Intelligent :</strong> Création &amp; clic sur trace, suggestions rapides et coords GPS.
-        </div>
-        <div style="background: #f8fafc; border: 1px solid #a7f3d0; padding: 1.8pt 3pt; border-radius: 3px; grid-column: span 2;">
-          <strong>9. Tableau de Marche FFR en 2 Étapes :</strong> Calage magnétique des arrêts sur carte pleine page, calcul à 3,2 km/h avec pauses de 10 mn en cascade, export GPX et Fiche Topo paysage.
         </div>
       </div>
     </div>

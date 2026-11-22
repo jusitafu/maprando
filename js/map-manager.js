@@ -4161,82 +4161,83 @@ class MapManager {
 
 
 
-  toggleMinimizeBearing(minimized) {
-
-    this.isBearingMinimized = !!minimized;
+  toggleMinimizeBearing(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.isBearingMinimized = forceState;
+    } else {
+      this.isBearingMinimized = !this.isBearingMinimized;
+    }
 
     const panel = document.getElementById('map-bearing-panel');
-
     const fullContent = document.getElementById('map-bearing-full-content');
-
     const minContent = document.getElementById('map-bearing-minimized-content');
-
     const btnMin = document.getElementById('btn-minimize-map-bearing');
-
-    const btnMax = document.getElementById('btn-maximize-map-bearing');
-
-
 
     if (!panel) return;
 
-
-
     if (this.isBearingMinimized) {
-
       if (fullContent) fullContent.classList.add('hidden');
-
       if (minContent) minContent.classList.remove('hidden');
-
       panel.classList.remove('sm:w-88', 'max-w-sm');
-
       panel.classList.add('sm:w-auto', 'max-w-[95vw]');
-
       if (btnMin) {
-
-        btnMin.classList.add('opacity-40', 'cursor-default');
-
-        btnMin.classList.remove('hover:bg-slate-700', 'cursor-pointer');
-
+        btnMin.innerHTML = '&#x25A1;';
+        btnMin.title = "Agrandir à la taille d'origine";
+        btnMin.classList.add('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
+        btnMin.classList.remove('bg-slate-800', 'text-slate-200');
       }
-
-      if (btnMax) {
-
-        btnMax.classList.remove('opacity-40');
-
-        btnMax.classList.add('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
-
-      }
-
     } else {
-
       if (fullContent) fullContent.classList.remove('hidden');
-
       if (minContent) minContent.classList.add('hidden');
-
       panel.classList.add('sm:w-88', 'max-w-sm');
-
       panel.classList.remove('sm:w-auto', 'max-w-[95vw]');
-
       if (btnMin) {
-
-        btnMin.classList.remove('opacity-40', 'cursor-default');
-
-        btnMin.classList.add('hover:bg-slate-700', 'cursor-pointer');
-
+        btnMin.innerHTML = '&minus;';
+        btnMin.title = "Réduire la boîte cap";
+        btnMin.classList.remove('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
+        btnMin.classList.add('bg-slate-800', 'text-slate-200');
       }
-
-      if (btnMax) {
-
-        btnMax.classList.remove('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
-
-        btnMax.classList.add('bg-slate-800', 'text-slate-200');
-
-      }
-
     }
 
     this.renderBearingListUI();
+  }
 
+  toggleMinimizeMeasure(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.isMeasureMinimized = forceState;
+    } else {
+      this.isMeasureMinimized = !this.isMeasureMinimized;
+    }
+
+    const panel = document.getElementById('map-measure-panel');
+    const bodyContent = document.getElementById('map-measure-body-content');
+    const minContent = document.getElementById('map-measure-minimized-content');
+    const btnMin = document.getElementById('btn-minimize-map-measure');
+    const minDist = document.getElementById('map-measure-min-dist');
+    const totalDist = document.getElementById('map-measure-total-dist');
+
+    if (!panel) return;
+
+    if (this.isMeasureMinimized) {
+      if (bodyContent) bodyContent.classList.add('hidden');
+      if (minContent) minContent.classList.remove('hidden');
+      if (minDist && totalDist) minDist.innerText = totalDist.innerText;
+      if (btnMin) {
+        btnMin.innerHTML = '&#x25A1;';
+        btnMin.title = "Agrandir à la taille d'origine";
+        btnMin.classList.add('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
+        btnMin.classList.remove('bg-slate-800', 'text-slate-300');
+      }
+    } else {
+      if (bodyContent) bodyContent.classList.remove('hidden');
+      if (minContent) minContent.classList.add('hidden');
+      if (btnMin) {
+        btnMin.innerHTML = '&minus;';
+        btnMin.title = "Réduire la boîte mesure";
+        btnMin.classList.remove('bg-emerald-600', 'text-white', 'hover:bg-emerald-500');
+        btnMin.classList.add('bg-slate-800', 'text-slate-300');
+      }
+    }
   }
 
 
@@ -7169,9 +7170,6 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           <div class="flex items-center gap-1.5 ml-2 pl-2.5 border-l-2 border-slate-700">
             <button type="button" onclick="window.MapManagerInstance.toggleMinimizeHud(true)" title="Réduire la boîte" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
               &minus;
-            </button>
-            <button type="button" onclick="window.MapManagerInstance.autoFitHud()" title="Ajuster la taille / Afficher toutes les randonnées (ou double-clic sur l'en-tête)" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
-              &#x25A1;
             </button>
             <button type="button" onclick="window.MapManagerInstance.clearStandaloneGpxTrack()" title="Fermer et effacer les traces GPX" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
               &#x2715;

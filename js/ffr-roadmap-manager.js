@@ -25,6 +25,24 @@
  */
 
 class FfrRoadmapManager {
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  escapeXml(str) {
+    return this.escapeHtml(str);
+  }
+
+  escapeCsv(str) {
+    if (!str) return '';
+    return String(str).replace(/"/g, '""');
+  }
   constructor() {
     this.modalEl = null;
     this.currentTrack = null;
@@ -171,7 +189,12 @@ class FfrRoadmapManager {
   detectInitialStopPoints(trackPts) {
     const totalDistance = trackPts[trackPts.length - 1].dist;
 
-    // Détection des particularités de terrain (virages, crêtes, cols)
+    // Détection enrichie des points remarquables sur le trajet :
+    // 1) Sommets / Crêtes (point haut après côte et avant redescente)
+    // 2) Virages en épingle (angle aigu >= 110°)
+    // 3) Virages marqués (75° à 110°)
+    // 4) Cols / Vallons (creux avant remontée)
+    // 5) Waypoints / POI GPX existants
     const stepMeters = 35;
     for (let i = 5; i < trackPts.length - 5; i++) {
       let prevI = i - 1;
@@ -179,23 +202,39 @@ class FfrRoadmapManager {
       let nextI = i + 1;
       while (nextI < trackPts.length - 1 && (trackPts[nextI].dist - trackPts[i].dist) * 1000 < stepMeters) nextI++;
 
+      // Fenêtre plus large pour détecter le profil de côte préalable + redescente
+      let farPrevI = i - 1;
+      while (farPrevI > 0 && (trackPts[i].dist - trackPts[farPrevI].dist) * 1000 < 160) farPrevI--;
+      let farNextI = i + 1;
+      while (farNextI < trackPts.length - 1 && (trackPts[farNextI].dist - trackPts[i].dist) * 1000 < 160) farNextI++;
+
       const pPrev = trackPts[prevI];
       const pCurr = trackPts[i];
       const pNext = trackPts[nextI];
+      const pFarPrev = trackPts[farPrevI];
+      const pFarNext = trackPts[farNextI];
 
       const bIn = this.calculateBearing(pPrev.lat, pPrev.lon, pCurr.lat, pCurr.lon);
       const bOut = this.calculateBearing(pCurr.lat, pCurr.lon, pNext.lat, pNext.lon);
       const angleDiff = Math.abs(((bOut - bIn + 540) % 360) - 180);
 
-      if (angleDiff >= 120) {
+      // Côte préalable d'au moins +6m et redescente d'au moins -5m -> Point haut après côte
+      const eleGainBefore = pCurr.smoothEle - pFarPrev.smoothEle;
+      const eleDropAfter = pCurr.smoothEle - pFarNext.smoothEle;
+      const isPeakAfterClimb = (eleGainBefore >= 6 && eleDropAfter >= 5);
+
+      if (isPeakAfterClimb) {
+        trackPts[i].feature = `Point haut (${Math.round(pCurr.smoothEle)}m)`;
+        trackPts[i].featureScore = 14;
+      } else if (angleDiff >= 110) {
         trackPts[i].feature = 'Virage en épingle';
-        trackPts[i].featureScore = 9;
-      } else if (angleDiff >= 72 && angleDiff <= 115) {
+        trackPts[i].featureScore = 11;
+      } else if (angleDiff >= 75 && angleDiff < 110) {
         trackPts[i].feature = 'Virage à 90°';
         trackPts[i].featureScore = 7;
       } else if (pCurr.smoothEle > pPrev.smoothEle + 6 && pCurr.smoothEle > pNext.smoothEle + 6) {
-        trackPts[i].feature = 'Sommet / Crête';
-        trackPts[i].featureScore = 8;
+        trackPts[i].feature = `Sommet / Crête (${Math.round(pCurr.smoothEle)}m)`;
+        trackPts[i].featureScore = 9;
       } else if (pCurr.smoothEle < pPrev.smoothEle - 6 && pCurr.smoothEle < pNext.smoothEle - 6) {
         trackPts[i].feature = 'Col / Vallon';
         trackPts[i].featureScore = 8;
@@ -203,7 +242,7 @@ class FfrRoadmapManager {
     }
 
     // Intégrer les Waypoints explicites du GPX si présents
-    const waypoints = this.currentTrack.waypoints || [];
+    const waypoints = (this.currentTrack && this.currentTrack.waypoints) ? this.currentTrack.waypoints : [];
     waypoints.forEach(wp => {
       let bestIdx = -1;
       let minD = Infinity;
@@ -215,12 +254,12 @@ class FfrRoadmapManager {
         }
       }
       if (bestIdx !== -1 && minD < 0.25) {
-        trackPts[bestIdx].poiName = wp.name || 'Point d\'intérêt';
-        trackPts[bestIdx].featureScore = 15;
+        trackPts[bestIdx].poiName = wp.name || 'Carrefour / Repère';
+        trackPts[bestIdx].featureScore = 16;
       }
     });
 
-    // Sélection : ~1 point tous les 1.5 km
+    // Règle stricte : les points d'arrêt suggérés ne doivent pas être espacés de moins d'1.5 km
     const selectedIndices = [0]; // Point 0 : Départ
     let currentIdx = 0;
 
@@ -228,14 +267,24 @@ class FfrRoadmapManager {
       const currentDist = trackPts[currentIdx].dist;
       const remainingDist = totalDistance - currentDist;
 
-      if (remainingDist <= 1.5) break;
+      // Si la distance restante est inférieure à 3.0 km, impossible de créer un point intermédiaire
+      // sans qu'un des deux tronçons fasse moins d'1.5 km -> on termine directement sur l'arrivée.
+      if (remainingDist < 3.0) {
+        break;
+      }
 
-      const targetMinDist = currentDist + 1.0;
-      const targetIdealDist = currentDist + 1.35;
-      const targetMaxDist = currentDist + 1.48;
+      // Intervalle de sélection : [currentDist + 1.50, min(currentDist + 2.50, totalDistance - 1.50)]
+      const targetMinDist = currentDist + 1.50;
+      const targetMaxDist = Math.min(currentDist + 2.60, totalDistance - 1.50);
+
+      if (targetMaxDist < targetMinDist) {
+        break;
+      }
+
+      const targetIdealDist = Math.min(currentDist + 1.90, targetMaxDist);
 
       let bestCandidateIdx = -1;
-      let bestScore = -1;
+      let bestScore = 0;
       let closestToIdealIdx = -1;
       let minDiffToIdeal = Infinity;
 
@@ -259,12 +308,17 @@ class FfrRoadmapManager {
       let chosenIdx = (bestCandidateIdx !== -1 && bestScore > 0) ? bestCandidateIdx : closestToIdealIdx;
       if (chosenIdx === -1) {
         let safeIdx = currentIdx + 1;
-        while (safeIdx < trackPts.length - 1 && trackPts[safeIdx].dist - currentDist <= 1.45) safeIdx++;
+        while (safeIdx < trackPts.length - 1 && trackPts[safeIdx].dist - currentDist < 1.50) safeIdx++;
         chosenIdx = safeIdx;
       }
 
-      selectedIndices.push(chosenIdx);
-      currentIdx = chosenIdx;
+      // Vérification anti-régression : distance >= 1.49 km
+      if (trackPts[chosenIdx].dist - currentDist >= 1.49) {
+        selectedIndices.push(chosenIdx);
+        currentIdx = chosenIdx;
+      } else {
+        break;
+      }
     }
 
     // Toujours ajouter l'arrivée
@@ -307,6 +361,8 @@ class FfrRoadmapManager {
     const mapMgr = window.MapManagerInstance;
     if (!mapMgr || !mapMgr.map) return;
 
+    this.currentTrack = track;
+    this.hikeName = track?.name || 'Randonnée';
     this.isCalibrating = true;
     this.isAddingStop = false;
 
@@ -373,6 +429,15 @@ class FfrRoadmapManager {
       const color = isStart ? '#10b981' : (isEnd ? '#ef4444' : '#0284c7');
       const numLabel = isStart ? 'D' : (isEnd ? 'A' : idx);
 
+      const prevLabel = (idx - 1 === 0) ? 'D' : (idx - 1);
+      const currLabel = isEnd ? 'A' : idx;
+      let distPrevText = '';
+      if (idx > 0) {
+        const prevPt = this.calibratedPoints[idx - 1];
+        const segD = Math.abs(pt.cumulDist - prevPt.cumulDist);
+        distPrevText = `distance ${prevLabel}-${currLabel} : ${segD.toFixed(1).replace('.', ',')} km`;
+      }
+
       const icon = L.divIcon({
         className: 'ffr-calib-pin',
         html: `
@@ -390,7 +455,19 @@ class FfrRoadmapManager {
         zIndexOffset: isStart || isEnd ? 1000 : 500
       });
 
-      // Déplacement magnétique le long de la trace GPX
+      // Tooltip affichant la distance depuis le point précédent
+      const tooltipContent = isStart
+        ? `<div style="font-weight:900; font-size:12px;">🏁 Départ (0 km)</div><div style="font-size:11px; color:#475569;">${this.escapeHtml(pt.designation)}</div>`
+        : `<div style="font-weight:900; font-size:12px; color:#0284c7;">📍 ${distPrevText}</div><div style="font-size:11px; font-weight:700; color:#0f172a;">${this.escapeHtml(pt.designation)}</div><div style="font-size:10px; color:#64748b;">Cumul: ${pt.cumulDist.toFixed(1).replace('.', ',')} km • Alt: ${pt.ele} m</div>`;
+
+      marker.bindTooltip(tooltipContent, {
+        direction: 'top',
+        offset: [0, -16],
+        className: 'ffr-marker-tooltip',
+        opacity: 0.95
+      });
+
+      // Déplacement magnétique le long de la trace GPX avec mise à jour en direct de la pastille
       marker.on('drag', (e) => {
         const nearest = this.findNearestTrackPoint(e.latlng.lat, e.latlng.lng, this.trackPts);
         marker.setLatLng([nearest.lat, nearest.lon]);
@@ -399,6 +476,16 @@ class FfrRoadmapManager {
         pt.ele = nearest.smoothEle;
         pt.trackIdx = nearest.idx;
         pt.cumulDist = nearest.dist;
+
+        if (idx > 0) {
+          const prevPt = this.calibratedPoints[idx - 1];
+          const liveSegD = Math.abs(pt.cumulDist - prevPt.cumulDist);
+          const liveDistText = `distance ${prevLabel}-${currLabel} : ${liveSegD.toFixed(1).replace('.', ',')} km`;
+          marker.setTooltipContent(
+            `<div style="font-weight:900; font-size:12px; color:#0284c7;">📍 ${liveDistText}</div><div style="font-size:11px; font-weight:700; color:#0f172a;">${this.escapeHtml(pt.designation)}</div><div style="font-size:10px; color:#64748b;">Cumul: ${pt.cumulDist.toFixed(1).replace('.', ',')} km • Alt: ${pt.ele} m</div>`
+          );
+          marker.openTooltip();
+        }
       });
 
       marker.on('dragend', () => {
@@ -447,6 +534,23 @@ class FfrRoadmapManager {
     const isStart = idx === 0;
     const isEnd = idx === this.calibratedPoints.length - 1;
 
+    const prevLabel = (idx - 1 === 0) ? 'D' : (idx - 1);
+    const currLabel = isEnd ? 'A' : (isStart ? 'D' : idx);
+    let distBadgeHtml = '';
+    if (idx > 0) {
+      const prevPt = this.calibratedPoints[idx - 1];
+      const segD = Math.abs(pt.cumulDist - prevPt.cumulDist);
+      const distPrevText = `distance ${prevLabel}-${currLabel} : ${segD.toFixed(1).replace('.', ',')} km`;
+      distBadgeHtml = `
+        <div class="px-3.5 py-2.5 rounded-xl bg-sky-950/80 border-2 border-sky-400 text-sky-200 text-xs font-black flex items-center justify-between shadow-lg">
+          <span class="flex items-center gap-1.5">
+            <span class="text-base">📏</span> <span class="text-sm font-black text-sky-300">${distPrevText}</span>
+          </span>
+          <span class="text-slate-400 text-[11px] font-medium">Cumul: ${pt.cumulDist.toFixed(1).replace('.', ',')} km</span>
+        </div>
+      `;
+    }
+
     const existingModal = document.getElementById('modal-edit-ffr-stop');
     if (existingModal) existingModal.remove();
 
@@ -466,6 +570,8 @@ class FfrRoadmapManager {
           </div>
           <button type="button" class="btn-close-edit text-slate-400 hover:text-white font-bold p-1">✕</button>
         </div>
+
+        ${distBadgeHtml}
 
         <div class="text-xs text-slate-300 space-y-2">
           <div>
@@ -517,7 +623,6 @@ class FfrRoadmapManager {
     dialog.querySelectorAll('.chip-suggestion').forEach(chip => {
       chip.addEventListener('click', () => {
         if (inputName) {
-          const current = inputName.value.trim();
           inputName.value = chip.innerText.trim();
         }
       });
@@ -547,9 +652,6 @@ class FfrRoadmapManager {
     });
   }
 
-  /**
-   * Bandeau de commande supérieur flottant sur la carte
-   */
   renderCalibrationControlBar() {
     if (this.calibrationBarEl) this.calibrationBarEl.remove();
 
@@ -1490,7 +1592,7 @@ class FfrRoadmapManager {
     if (!printWindow) return;
 
     let rowsHtml = '';
-    this.points.forEach(p => {
+    this.points.forEach((p, idx) => {
       rowsHtml += `
         <tr>
           <td style="font-weight:bold; text-align:center;">${p.num === 0 ? 'D' : (p.num === this.points.length - 1 ? 'A' : p.num)}</td>
@@ -1518,38 +1620,71 @@ class FfrRoadmapManager {
       p.lat !== undefined ? p.lat : p[0],
       p.lon !== undefined ? (p.lon !== undefined ? p.lon : p.lng) : p[1]
     ]));
-    const markersJson = JSON.stringify(this.points.map(p => ({
-      num: p.num === 0 ? 'D' : (p.num === this.points.length - 1 ? 'A' : p.num),
-      lat: p.lat,
-      lon: p.lon,
-      desig: p.designation,
-      isStart: p.num === 0,
-      isEnd: p.num === this.points.length - 1
-    })));
+
+    // Inclure la distance depuis le point précédent dans markersJson pour affichage sur la carte imprimée
+    const markersJson = JSON.stringify(this.points.map((p, idx) => {
+      const prevLabel = (idx - 1 === 0) ? 'D' : (idx - 1);
+      const currLabel = (idx === this.points.length - 1) ? 'A' : (idx === 0 ? 'D' : idx);
+      let distPrev = '';
+      if (idx > 0) {
+        distPrev = `distance ${prevLabel}-${currLabel} : ${p.distTroncon} km`;
+      }
+      return {
+        num: p.num === 0 ? 'D' : (p.num === this.points.length - 1 ? 'A' : p.num),
+        lat: p.lat,
+        lon: p.lon,
+        desig: p.designation,
+        distPrev: distPrev,
+        cumulDist: p.cumulDist,
+        isStart: p.num === 0,
+        isEnd: p.num === this.points.length - 1
+      };
+    }));
+
+    // Règle d'or : si le tableau dépasse 5 étapes (moins de la moitié de la page disponible),
+    // la carte du tracé est placée PLEINE PAGE sur la page suivante (Page 2 A4 paysage) !
+    const isMultiPage = this.points.length > 5;
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Fiche Tableau de Marche FFR • ${this.escapeHtml(this.hikeName)}</title>
+        <title>Fiche Officielle • Tableau de Marche FFR • ${this.escapeHtml(this.hikeName)}</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <style>
           @page { size: landscape; margin: 8mm; }
-          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10px; color: #1e293b; margin: 0; padding: 5px; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 8px; }
-          .title { font-size: 15px; font-weight: 900; color: #0f172a; }
-          .meta { font-size: 10px; color: #475569; margin-top: 2px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 8px; }
-          th { background: #0f172a; color: #ffffff; font-size: 9px; font-weight: 800; border: 1px solid #cbd5e1; padding: 4px 3px; text-align: center; }
-          td { border: 1px solid #cbd5e1; padding: 3px 4px; font-size: 9px; }
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10px; color: #1e293b; margin: 0; padding: 4px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 5px; margin-bottom: 6px; }
+          .title { font-size: 14px; font-weight: 900; color: #0f172a; }
+          .meta { font-size: 9.5px; color: #475569; margin-top: 2px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 6px; }
+          th { background: #0f172a; color: #ffffff; font-size: 8.5px; font-weight: 800; border: 1px solid #cbd5e1; padding: 3px 2px; text-align: center; }
+          td { border: 1px solid #cbd5e1; padding: 2.5px 3.5px; font-size: 8.5px; }
           tr:nth-child(even) { background: #f8fafc; }
-          .section-title { font-size: 11px; font-weight: 800; color: #0369a1; margin-top: 6px; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+          .section-title { font-size: 10.5px; font-weight: 800; color: #0369a1; margin-top: 4px; margin-bottom: 2px; display: flex; align-items: center; gap: 4px; }
+          
+          /* Disposition Page 1 : Tableau + Profil altimétrique pleine largeur */
+          .profile-box-full { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 6px; background: #ffffff; margin-top: 4px; height: 165px; }
+
+          /* Disposition compacte (si <= 5 points) */
           .visu-grid { display: flex; gap: 8px; margin-top: 4px; }
-          .profile-box { flex: 1.2; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; height: 160px; background: #ffffff; }
-          .map-box { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; height: 160px; }
+          .profile-box-split { flex: 1.2; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px; height: 160px; background: #ffffff; }
+          .map-box-split { flex: 1; border: 1px solid #cbd5e1; border-radius: 6px; height: 160px; }
+
+          /* Page 2 : Carte pleine page */
+          .page-break { page-break-before: always; break-before: page; margin-top: 10px; }
+          .map-box-full { width: 100%; height: 172mm; min-height: 165mm; border: 2px solid #0284c7; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 4px; }
+
+          .map-print-pin { display: flex; align-items: center; justify-content: center; }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always !important; }
+          }
         </style>
       </head>
       <body>
+        <!-- ==================== PAGE 1 : TABLEAU & PROFIL ==================== -->
         <div class="header">
           <div>
             <div class="title">📋 Fiche Officielle • Tableau de Marche FFRandonnée : ${this.escapeHtml(this.hikeName)}</div>
@@ -1562,8 +1697,8 @@ class FfrRoadmapManager {
             </div>
           </div>
           <div style="text-align:right;">
-            <div style="font-weight:bold; color:#0284c7; font-size:11px;">Map &amp; Rando by JLDApps 2026</div>
-            <div style="font-size:8.5px; color:#64748b;">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+            <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Map &amp; Rando by JLDApps 2026</div>
+            <div style="font-size:8px; color:#64748b;">${isMultiPage ? 'Page 1 / 2 • Tableau &amp; Profil' : 'Édité le ' + new Date().toLocaleDateString('fr-FR')}</div>
           </div>
         </div>
 
@@ -1593,16 +1728,47 @@ class FfrRoadmapManager {
           </tbody>
         </table>
 
-        <!-- 2. PROFIL ALTIMÉTRIQUE NORMALISÉ & CARTE EN REGARD -->
-        <div class="visu-grid">
-          <div class="profile-box">
+        ${isMultiPage ? `
+          <!-- Profil Altimétrique Normalisé Pleine Largeur -->
+          <div class="profile-box-full">
             <div class="section-title">▲ Profil Altimétrique Normalisé avec Repères des Jalons</div>
-            <div style="height: 135px; width: 100%;">
+            <div style="height: 140px; width: 100%;">
               ${svgProfile}
             </div>
           </div>
-          <div class="map-box" id="print-map"></div>
-        </div>
+
+          <!-- ==================== PAGE 2 : CARTE PLEINE PAGE ==================== -->
+          <div class="page-break">
+            <div class="header">
+              <div>
+                <div class="title">🗺️ Fiche Officielle • Carte Topographique &amp; Jalons : ${this.escapeHtml(this.hikeName)}</div>
+                <div class="meta">
+                  Animateur : <strong>${this.escapeHtml(this.animatorName || 'Animateur FFR')}</strong> • 
+                  Distance : <strong>${this.points[this.points.length - 1]?.cumulDist || 0} km</strong> • 
+                  D+ : <strong>+${this.points[this.points.length - 1]?.cumulDPlus || 0} m</strong> • 
+                  <strong>${this.points.length} jalons répertoriés</strong> (Départ D, ${this.points.length - 2} étapes balisées, Arrivée A)
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-weight:bold; color:#0284c7; font-size:10.5px;">Page 2 / 2 • Carte Pleine Page</div>
+                <div style="font-size:8px; color:#64748b;">Édité le ${new Date().toLocaleDateString('fr-FR')}</div>
+              </div>
+            </div>
+
+            <div id="print-map" class="map-box-full"></div>
+          </div>
+        ` : `
+          <!-- Disposition compacte 1 page -->
+          <div class="visu-grid">
+            <div class="profile-box-split">
+              <div class="section-title">▲ Profil Altimétrique Normalisé avec Repères des Jalons</div>
+              <div style="height: 135px; width: 100%;">
+                ${svgProfile}
+              </div>
+            </div>
+            <div class="map-box-split" id="print-map"></div>
+          </div>
+        `}
 
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <script>
@@ -1614,60 +1780,50 @@ class FfrRoadmapManager {
               L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
               if (latlngs.length > 0) {
-                L.polyline(latlngs, { color: '#ffffff', weight: 5, opacity: 0.9 }).addTo(map);
-                L.polyline(latlngs, { color: '#0284c7', weight: 3, opacity: 1.0 }).addTo(map);
+                // Tracé contrasté visible pour l'animateur
+                L.polyline(latlngs, { color: '#ffffff', weight: 6, opacity: 0.95 }).addTo(map);
+                L.polyline(latlngs, { color: '#0284c7', weight: 3.5, opacity: 1.0 }).addTo(map);
 
                 markers.forEach(m => {
                   const color = m.isStart ? '#10b981' : (m.isEnd ? '#ef4444' : '#0284c7');
-                  L.marker([m.lat, m.lon], {
-                    icon: L.divIcon({
-                      className: 'print-pin',
-                      html: '<div style="background:'+color+'; color:white; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:9px; border:1.5px solid white; box-shadow:0 1px 4px rgba(0,0,0,0.5);">' + m.num + '</div>',
-                      iconSize: [18, 18],
-                      iconAnchor: [9, 9]
-                    })
-                  }).addTo(map);
+                  const pinIcon = L.divIcon({
+                    className: 'map-print-pin',
+                    html: '<div style="background:' + color + '; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; border:2.5px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.6);">' + m.num + '</div>',
+                    iconSize: [26, 26],
+                    iconAnchor: [13, 13]
+                  });
+                  const marker = L.marker([m.lat, m.lon], { icon: pinIcon }).addTo(map);
+
+                  const labelHtml = '<div style="font-weight:900; font-size:11px; color:#0f172a;">' + m.num + ' • ' + m.desig + '</div>' + 
+                    (m.distPrev ? '<div style="font-size:10px; font-weight:800; color:#0284c7;">' + m.distPrev + '</div>' : '');
+
+                  marker.bindTooltip(labelHtml, {
+                    permanent: true,
+                    direction: 'top',
+                    offset: [0, -14],
+                    className: 'ffr-print-tooltip'
+                  });
                 });
 
-                map.fitBounds(L.latLngBounds(latlngs), { padding: [15, 15] });
+                const bounds = L.latLngBounds(latlngs);
+                setTimeout(function() {
+                  map.invalidateSize();
+                  map.fitBounds(bounds, { padding: [40, 40] });
+                }, 350);
               }
             } catch(e) {
-              console.error(e);
+              console.error('Erreur rendu carte impression:', e);
             }
-            setTimeout(function() { window.print(); }, 600);
-          }
+          };
         </script>
       </body>
       </html>
     `);
     printWindow.document.close();
   }
-
-  escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  escapeXml(str) {
-    if (!str) return '';
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
-
-  escapeCsv(str) {
-    if (!str) return '';
-    return String(str).replace(/"/g, '""');
-  }
 }
 
-// Instance globale
-window.FfrRoadmapManagerInstance = new FfrRoadmapManager();
+// Initialisation globale
+if (typeof window !== 'undefined') {
+  window.FfrRoadmapManagerInstance = new FfrRoadmapManager();
+}

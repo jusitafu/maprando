@@ -194,8 +194,13 @@ class GpxCreatorEditor {
           <span class="text-xl">✏️</span>
           <span class="font-extrabold text-sm sm:text-base text-sky-300">Créateur d'Itinéraire GPX</span>
         </div>
-        <button id="btn-close-gpx-creator" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800" title="Quitter le mode création">✕</button>
+        <div class="flex items-center gap-1.5">
+          <button id="btn-minimize-gpx-creator" type="button" class="text-slate-400 hover:text-white text-base font-black w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Réduire la fenêtre">&minus;</button>
+          <button id="btn-close-gpx-creator" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Quitter le mode création">✕</button>
+        </div>
       </div>
+
+      <div id="gpx-creator-body-content">
 
       <div class="text-xs text-slate-300 mb-2 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60">
         <span id="gpx-creator-tip">👉 Cliquez sur la carte pour poser le point A (Départ)...</span>
@@ -256,6 +261,7 @@ class GpxCreatorEditor {
         <span class="leading-tight">🖐️ <strong>Déplacez une lettre</strong> pour changer le tracé • <strong>Cliquez</strong> pour la renommer.</span>
         <span class="text-[10px] text-sky-300 font-semibold whitespace-nowrap">Annuler : <strong>Ctrl+Z</strong></span>
       </div>
+          </div>
     `;
 
     parent.appendChild(card);
@@ -264,6 +270,14 @@ class GpxCreatorEditor {
 
     // Événements du panneau
     document.getElementById('btn-close-gpx-creator')?.addEventListener('click', () => this.stopCreateMode());
+    document.getElementById('btn-minimize-gpx-creator')?.addEventListener('click', () => {
+      const body = document.getElementById('gpx-creator-body-content');
+      const btn = document.getElementById('btn-minimize-gpx-creator');
+      if (!body || !btn) return;
+      const isMin = body.classList.toggle('hidden');
+      btn.innerHTML = isMin ? '&#x25A1;' : '&minus;';
+      btn.title = isMin ? 'Agrandir la fenêtre' : 'Réduire la fenêtre';
+    });
     document.getElementById('btn-toggle-create-autoroute')?.addEventListener('click', () => {
       this.createAutoRoute = !this.createAutoRoute;
       const b = document.getElementById('btn-toggle-create-autoroute');
@@ -1105,8 +1119,13 @@ class GpxCreatorEditor {
           <span class="text-xl">🛠️</span>
           <span class="font-extrabold text-sm sm:text-base text-violet-300">Modification de Trace GPX</span>
         </div>
-        <button id="btn-close-gpx-editor" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800" title="Quitter le mode édition">✕</button>
+        <div class="flex items-center gap-1.5">
+          <button id="btn-minimize-gpx-editor" type="button" class="text-slate-400 hover:text-white text-base font-black w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Réduire la fenêtre">&minus;</button>
+          <button id="btn-close-gpx-editor" type="button" class="text-slate-400 hover:text-white text-lg font-bold w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-800 transition cursor-pointer" title="Quitter le mode édition">✕</button>
+        </div>
       </div>
+
+      <div id="gpx-editor-body-content">
 
       <div class="text-xs text-slate-300 mb-2.5 bg-slate-800/80 p-2 rounded-xl flex items-center justify-between gap-2 border border-slate-700/60 flex-wrap">
         <span id="gpx-editor-tip" class="leading-tight">👉 <strong>Faites glisser une poignée</strong>, ajoutez un <strong>Waypoint</strong> ou <strong>Supprimer zone</strong>.</span>
@@ -1167,6 +1186,7 @@ class GpxCreatorEditor {
         <span class="leading-tight">🖐️ <strong>Glissez une poignée</strong> ou <strong>supprimez une zone par rectangle</strong>.</span>
         <span class="text-[10px] text-violet-300 font-semibold whitespace-nowrap">Annuler : <strong>Ctrl+Z</strong></span>
       </div>
+          </div>
     `;
 
     parent.appendChild(card);
@@ -1175,6 +1195,14 @@ class GpxCreatorEditor {
 
     // Événements du panneau
     document.getElementById('btn-close-gpx-editor')?.addEventListener('click', () => this.stopEditMode());
+    document.getElementById('btn-minimize-gpx-editor')?.addEventListener('click', () => {
+      const body = document.getElementById('gpx-editor-body-content');
+      const btn = document.getElementById('btn-minimize-gpx-editor');
+      if (!body || !btn) return;
+      const isMin = body.classList.toggle('hidden');
+      btn.innerHTML = isMin ? '&#x25A1;' : '&minus;';
+      btn.title = isMin ? 'Agrandir la fenêtre' : 'Réduire la fenêtre';
+    });
     document.getElementById('btn-add-edit-waypoint')?.addEventListener('click', () => this.toggleAddWaypointMode());
     document.getElementById('btn-toggle-edit-wp-coords')?.addEventListener('click', () => this.toggleEditWaypointCoords());
     document.getElementById('btn-box-cut-track')?.addEventListener('click', () => this.toggleBoxCutMode());

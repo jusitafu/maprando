@@ -11094,6 +11094,18 @@ class AppController {
       document.body.classList.remove('overflow-hidden');
     }
   }
+
+  toggleMinimizePreview() {
+    const body = document.getElementById('preview-body-content');
+    const btn = document.getElementById('btn-minimize-preview');
+    if (!body || !btn) return;
+    const isMinimized = body.classList.toggle('hidden');
+    btn.innerHTML = isMinimized ? '&#x25A1;' : '&minus;';
+    btn.title = isMinimized ? 'Agrandir le profil altimétrique' : 'Réduire le profil altimétrique';
+    if (!isMinimized && window.ElevationProfileInstance) {
+      window.ElevationProfileInstance.draw();
+    }
+  }
 }
 
 // Global bootstrap
