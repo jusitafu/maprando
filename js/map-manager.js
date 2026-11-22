@@ -7223,6 +7223,12 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           <span>📈</span> <span>${this.slopeColoringActive ? 'Pentes : ON' : 'Pentes'}</span>
         </button>
 
+        <!-- Bouton Patrimoine & Curiosités clignotant -->
+        <button id="btn-toggle-heritage-hud" type="button" class="px-2.5 py-1.5 rounded-xl ${this.heritageActive ? 'bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-black ring-2 ring-amber-300 shadow-lg shadow-amber-500/30' : 'bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 font-bold'} text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.toggleHeritageCuriosities()" title="Afficher les monuments historiques, châteaux, ruines, belvédères et curiosités avec halos clignotants">
+          <span class="${this.heritageActive ? 'animate-bounce' : ''}">🏛️</span>
+          <span>${this.heritageActive ? `Patrimoine (${this._heritageCount})` : 'Patrimoine'}</span>
+        </button>
+
         <!-- Bouton Fusionner 2 traces -->
         ${count >= 2 ? `
           <button id="btn-merge-standalone-gpx" type="button" class="px-2.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-black text-xs flex items-center gap-1 shadow-md transition cursor-pointer" onclick="window.MapManagerInstance.openMergeModal()" title="Fusionner 2 traces en un seul parcours continu">
@@ -7424,6 +7430,13 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     this._toiletsCount = 0;
     this._waterToiletsSummary = null;
     this.updateWaterToiletsUi();
+
+    if (this.heritageLayer && this.map && this.map.hasLayer(this.heritageLayer)) {
+      this.map.removeLayer(this.heritageLayer);
+    }
+    this.heritageActive = false;
+    this._heritageCount = 0;
+    this.updateHeritageUi();
     this.standaloneHike = null;
     if (this.selectedHike && String(this.selectedHike.id).startsWith('gpx_user_')) {
       this.selectedHike = null;
@@ -7799,6 +7812,349 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         floatBtn.classList.remove('bg-sky-600', 'text-white', 'border-sky-400', 'ring-2', 'ring-sky-300');
         floatBtn.classList.add('bg-white/95', 'text-slate-900', 'border-slate-400');
       }
+    }
+  }
+
+  // =========================================================================
+  // PATRIMOINE HISTORIQUE & CURIOSITÉS TOURISTIQUES (SYMBOLOGIE CLIGNOTANTE)
+  // =========================================================================
+
+  async toggleHeritageCuriosities(forceState = null) {
+    if (typeof forceState === 'boolean') {
+      this.heritageActive = forceState;
+    } else {
+      this.heritageActive = !this.heritageActive;
+    }
+
+    if (!this.heritageActive) {
+      if (this.heritageLayer && this.map && this.map.hasLayer(this.heritageLayer)) {
+        this.map.removeLayer(this.heritageLayer);
+      }
+      this._heritageCount = 0;
+      this.updateHeritageUi();
+      return;
+    }
+
+    await this.loadHeritageCuriosities();
+  }
+
+  async loadHeritageCuriosities() {
+    if (!this.map) return;
+
+    if (!this.heritageLayer) {
+      this.heritageLayer = L.featureGroup();
+    }
+    this.heritageLayer.clearLayers();
+
+    // 1. Déterminer la zone de recherche (bbox) autour de la trace active
+    let minLat, maxLat, minLon, maxLon;
+    const allPts = [];
+    if (this.standaloneTracks && this.standaloneTracks.length > 0) {
+      this.standaloneTracks.forEach(t => {
+        if (t.points && t.points.length > 0) {
+          t.points.forEach(p => {
+            const lat = p.lat !== undefined ? p.lat : p[0];
+            const lon = p.lon !== undefined ? p.lon : (p.lng !== undefined ? p.lng : p[1]);
+            allPts.push({ lat, lon });
+          });
+        }
+      });
+    }
+
+    if (allPts.length > 0) {
+      minLat = Math.min(...allPts.map(p => p.lat));
+      maxLat = Math.max(...allPts.map(p => p.lat));
+      minLon = Math.min(...allPts.map(p => p.lon));
+      maxLon = Math.max(...allPts.map(p => p.lon));
+      // Marge de recherche de ~450 m autour de la trace
+      minLat -= 0.004;
+      maxLat += 0.004;
+      minLon -= 0.0055;
+      maxLon += 0.0055;
+    } else {
+      const b = this.map.getBounds();
+      minLat = b.getSouth();
+      maxLat = b.getNorth();
+      minLon = b.getWest();
+      maxLon = b.getEast();
+    }
+
+    // Protection taille bbox pour API OSM
+    const latSpan = maxLat - minLat;
+    const lonSpan = maxLon - minLon;
+    const maxAllowedSpan = 0.045; // ~4.5 km
+    if (latSpan > maxAllowedSpan || lonSpan > maxAllowedSpan) {
+      const cLat = (minLat + maxLat) / 2;
+      const cLon = (minLon + maxLon) / 2;
+      minLat = cLat - (maxAllowedSpan / 2);
+      maxLat = cLat + (maxAllowedSpan / 2);
+      minLon = cLon - (maxAllowedSpan / 2);
+      maxLon = cLon + (maxAllowedSpan / 2);
+    }
+
+    if (window.GpxCreatorEditorInstance) {
+      window.GpxCreatorEditorInstance.showUndoFeedback("🏛️ Recherche patrimoine & curiosités...");
+    }
+
+    try {
+      const url = `https://api.openstreetmap.org/api/0.6/map?bbox=${minLon.toFixed(4)},${minLat.toFixed(4)},${maxLon.toFixed(4)},${maxLat.toFixed(4)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("OSM status: " + resp.status);
+      const xmlText = await resp.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(xmlText, 'text/xml');
+      const nodes = xml.querySelectorAll('node');
+
+      let count = 0;
+      const seen = new Set();
+
+      nodes.forEach(node => {
+        const tags = {};
+        node.querySelectorAll('tag').forEach(t => {
+          tags[t.getAttribute('k')] = t.getAttribute('v');
+        });
+
+        const historic = tags.historic;
+        const tourism = tags.tourism;
+        const natural = tags.natural;
+        const heritage = tags.heritage;
+
+        // Détection si c'est un POI patrimonial ou touristique
+        const isHistoric = !!historic;
+        const isViewpoint = tourism === 'viewpoint';
+        const isAttraction = tourism === 'attraction' || tourism === 'artwork';
+        const isNaturalCuriosity = natural === 'cave_entrance' || natural === 'waterfall' || (natural === 'peak' && tags.name) || natural === 'stone';
+        const isHeritage = !!heritage;
+
+        if (!isHistoric && !isViewpoint && !isAttraction && !isNaturalCuriosity && !isHeritage) return;
+
+        const lat = parseFloat(node.getAttribute('lat'));
+        const lon = parseFloat(node.getAttribute('lon'));
+        if (isNaN(lat) || isNaN(lon)) return;
+
+        const key = `${lat.toFixed(5)}_${lon.toFixed(5)}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+
+        // Distance minimale à la trace active
+        let minDist = Infinity;
+        if (allPts.length > 0) {
+          const ptLoc = L.latLng(lat, lon);
+          const step = Math.max(1, Math.floor(allPts.length / 100));
+          for (let i = 0; i < allPts.length; i += step) {
+            const d = ptLoc.distanceTo(L.latLng(allPts[i].lat, allPts[i].lon));
+            if (d < minDist) minDist = d;
+          }
+        }
+
+        // Catégorisation et Iconographie
+        let iconEmoji = '🏛️';
+        let categoryName = 'Patrimoine historique';
+        let gradient = 'linear-gradient(135deg, #d97706, #b45309)';
+        let borderColor = '#fef3c7';
+
+        if (historic === 'castle' || historic === 'fort' || historic === 'city_gate') {
+          iconEmoji = '🏰';
+          categoryName = 'Château & Fortification';
+          gradient = 'linear-gradient(135deg, #b45309, #78350f)';
+          borderColor = '#fde68a';
+        } else if (historic === 'church' || historic === 'chapel' || historic === 'wayside_cross' || historic === 'wayside_shrine' || historic === 'monastery') {
+          iconEmoji = '⛪';
+          categoryName = 'Édifice religieux & Oratoire';
+          gradient = 'linear-gradient(135deg, #4338ca, #312e81)';
+          borderColor = '#e0e7ff';
+        } else if (historic === 'ruins' || historic === 'archaeological_site' || historic === 'tomb') {
+          iconEmoji = '🪨';
+          categoryName = 'Ruine & Archéologie';
+          gradient = 'linear-gradient(135deg, #78716c, #44403c)';
+          borderColor = '#f5f5f4';
+        } else if (isViewpoint) {
+          iconEmoji = '👁️';
+          categoryName = 'Belvédère & Panorama';
+          gradient = 'linear-gradient(135deg, #0284c7, #0369a1)';
+          borderColor = '#bae6fd';
+        } else if (natural === 'cave_entrance') {
+          iconEmoji = '🕳️';
+          categoryName = 'Grotte & Cavité naturelle';
+          gradient = 'linear-gradient(135deg, #475569, #1e293b)';
+          borderColor = '#cbd5e1';
+        } else if (natural === 'waterfall' || tags.amenity === 'fountain') {
+          iconEmoji = '💧';
+          categoryName = 'Cascade & Source remarquable';
+          gradient = 'linear-gradient(135deg, #0d9488, #0f766e)';
+          borderColor = '#ccfbf1';
+        } else if (natural === 'peak') {
+          iconEmoji = '⛰️';
+          categoryName = 'Sommet remarquable';
+          gradient = 'linear-gradient(135deg, #059669, #047857)';
+          borderColor = '#d1fae5';
+        } else if (historic === 'building' || historic === 'manor' || historic === 'tower') {
+          iconEmoji = '🛖';
+          categoryName = 'Bâti remarquable & Borie';
+          gradient = 'linear-gradient(135deg, #ea580c, #c2410c)';
+          borderColor = '#ffedd5';
+        }
+
+        const name = tags.name || tags['name:fr'] || categoryName;
+        const description = tags.description || tags.note || '';
+        const start_date = tags.start_date ? `Époque : ${tags.start_date}` : '';
+
+        count++;
+
+        // Distance formatée
+        let distMsg = '';
+        if (minDist !== Infinity) {
+          if (minDist < 1000) {
+            distMsg = `<div class="mt-1 text-[11px] font-bold text-amber-600 flex items-center gap-1"><span>📏</span> À ~${Math.round(minDist)} m de votre trace GPX</div>`;
+          } else {
+            distMsg = `<div class="mt-1 text-[11px] text-slate-500 flex items-center gap-1"><span>📏</span> À ${(minDist/1000).toFixed(1)} km de votre trace GPX</div>`;
+          }
+        }
+
+        const iconHtml = `
+          <div class="heritage-pulse-marker" style="width: 32px; height: 32px;">
+            <div class="heritage-pulse-badge" style="background:${gradient}; border-color:${borderColor};">
+              ${iconEmoji}
+            </div>
+          </div>
+        `;
+
+        const icon = L.divIcon({
+          html: iconHtml,
+          className: 'heritage-custom-div-icon',
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+          popupAnchor: [0, -18]
+        });
+
+        const safeName = name.replace(/'/g, "\\'");
+        const popupHtml = `
+          <div class="p-1 min-w-[220px] max-w-[280px] text-slate-800">
+            <div class="flex items-center gap-2 font-black text-xs text-amber-700 border-b border-amber-200/80 pb-1 mb-1.5 uppercase tracking-wide">
+              <span>${iconEmoji}</span> <span>${categoryName}</span>
+            </div>
+            <div class="font-black text-sm text-slate-900 leading-snug">${name}</div>
+            ${description ? `<div class="text-[11.5px] text-slate-600 mt-1 italic leading-tight">${description}</div>` : ''}
+            ${start_date ? `<div class="text-[11px] text-amber-800 font-semibold mt-1">⏳ ${start_date}</div>` : ''}
+            ${distMsg}
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+              <span class="text-[10px] text-slate-400 font-mono">${lat.toFixed(5)}, ${lon.toFixed(5)}</span>
+              <button type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow transition cursor-pointer flex items-center gap-1" onclick="window.MapManagerInstance.addHeritageAsWaypoint('${safeName}', ${lat}, ${lon})">
+                <span>➕</span> <span>Jalon</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        const marker = L.marker([lat, lon], { icon })
+          .bindPopup(popupHtml)
+          .bindTooltip(name, {
+            permanent: false,
+            direction: 'top',
+            offset: [0, -18],
+            className: 'heritage-tooltip-label'
+          });
+
+        this.heritageLayer.addLayer(marker);
+      });
+
+      this._heritageCount = count;
+
+      if (this.map && !this.map.hasLayer(this.heritageLayer)) {
+        this.map.addLayer(this.heritageLayer);
+      }
+
+      this.updateHeritageUi();
+
+      if (window.GpxCreatorEditorInstance) {
+        window.GpxCreatorEditorInstance.showUndoFeedback(`🏛️ ${count} élément(s) de patrimoine trouvés`);
+      }
+
+    } catch (err) {
+      console.warn("Échec requête Patrimoine OSM :", err);
+      if (window.GpxCreatorEditorInstance) {
+        window.GpxCreatorEditorInstance.showUndoFeedback("⚠️ Info patrimoine indisponible");
+      }
+    }
+  }
+
+  updateHeritageUi() {
+    const hudBtn = document.getElementById('btn-toggle-heritage-hud');
+    if (hudBtn) {
+      if (this.heritageActive) {
+        hudBtn.className = 'px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-500 text-white font-black ring-2 ring-amber-300 text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/30 transition cursor-pointer';
+        hudBtn.innerHTML = `<span class="animate-bounce">🏛️</span> <span>Patrimoine (${this._heritageCount})</span>`;
+      } else {
+        hudBtn.className = 'px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 font-bold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer';
+        hudBtn.innerHTML = `<span>🏛️</span> <span>Patrimoine</span>`;
+      }
+    }
+
+    const editBtn = document.getElementById('btn-toggle-edit-heritage');
+    if (editBtn) {
+      if (this.heritageActive) {
+        editBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition bg-amber-600 text-white ring-2 ring-amber-300 shadow-sm flex items-center gap-1';
+        editBtn.innerHTML = `<span>🏛️</span> <span>Patrimoine (${this._heritageCount})</span>`;
+      } else {
+        editBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition bg-slate-700 text-amber-200 hover:text-white flex items-center gap-1';
+        editBtn.innerHTML = `<span>🏛️</span> <span>Patrimoine</span>`;
+      }
+    }
+  }
+
+  addHeritageAsWaypoint(name, lat, lon) {
+    if (window.GpxCreatorEditorInstance && window.GpxCreatorEditorInstance.mode === 'edit') {
+      window.GpxCreatorEditorInstance.promptWaypointLabel({
+        lat: lat,
+        lng: lon,
+        ele: 0,
+        name: name
+      });
+      return;
+    }
+
+    // Sinon, ajout direct au tracé standalone actif
+    const track = this.standaloneHike || (this.standaloneTracks && this.standaloneTracks[0]);
+    if (!track) {
+      alert("⚠️ Aucune trace GPX active pour rattacher ce jalon.");
+      return;
+    }
+
+    if (!track.waypoints) track.waypoints = [];
+    track.waypoints.push({
+      name: name,
+      lat: lat,
+      lon: lon,
+      ele: 0
+    });
+
+    if (track.layer) {
+      const assignedColor = track.color || '#0284c7';
+      const wptMarker = L.marker([lat, lon], {
+        icon: L.divIcon({
+          className: 'standalone-wpt-pin',
+          html: `
+            <div style="position:relative; width:26px; height:26px;">
+              <div style="background:${assignedColor}; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; border:2px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.45);">
+                📍
+              </div>
+              <div class="standalone-wpt-label wp-poi-badge" style="position:absolute; left:29px; top:1px; white-space:nowrap; background:rgba(15,23,42,0.92); color:#f8fafc; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid ${assignedColor}; box-shadow:0 2px 6px rgba(0,0,0,0.35); pointer-events:none; max-width:240px; overflow:hidden; text-overflow:ellipsis;">
+                <span class="wpt-badge-name">${name}</span>
+              </div>
+            </div>
+          `,
+          iconSize: [26, 26],
+          iconAnchor: [13, 13]
+        })
+      });
+      track.layer.addLayer(wptMarker);
+      if (!track.waypointMarkers) track.waypointMarkers = [];
+      track.waypointMarkers.push(wptMarker);
+    }
+
+    this.showStandaloneGpxHud();
+    if (window.GpxCreatorEditorInstance) {
+      window.GpxCreatorEditorInstance.showUndoFeedback(`✅ Jalon "${name}" ajouté à la randonnée !`);
     }
   }
 

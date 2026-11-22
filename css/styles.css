@@ -1494,4 +1494,67 @@ body.show-wpt-coords .wpt-badge-coords,
   visibility: visible !important;
 }
 
+/* =========================================================================
+ * SYMBOLOGIE CLIGNOTANTE & HALOS LUMINEUX PATRIMOINE & CURIOSITÉS
+ * ========================================================================= */
+@keyframes heritage-glow-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.9), 0 3px 8px rgba(0, 0, 0, 0.45);
+    transform: scale(0.96);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(245, 158, 11, 0), 0 5px 14px rgba(0, 0, 0, 0.35);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0), 0 3px 8px rgba(0, 0, 0, 0.45);
+    transform: scale(0.96);
+  }
+}
+
+.heritage-pulse-marker {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 9999px !important;
+  animation: heritage-glow-pulse 1.8s infinite ease-in-out !important;
+  cursor: pointer !important;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  user-select: none !important;
+}
+
+.heritage-pulse-marker:hover {
+  transform: scale(1.28) !important;
+  animation: none !important;
+  box-shadow: 0 0 20px 6px rgba(245, 158, 11, 1), 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+  z-index: 1000 !important;
+}
+
+.heritage-pulse-badge {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #ffffff;
+  border: 2px solid #fef3c7;
+  border-radius: 9999px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(180, 83, 9, 0.5);
+}
+
+.heritage-tooltip-label {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: #fef08a !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  border: 1px solid #f59e0b !important;
+  border-radius: 8px !important;
+  padding: 3px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+  white-space: nowrap !important;
+}
+
+
 

@@ -1162,6 +1162,9 @@ class GpxCreatorEditor {
           <button id="btn-toggle-edit-autoroute" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.editAutoRoute ? 'bg-violet-600 text-white' : 'bg-slate-700 text-slate-300'}" title="Activer/désactiver l'auto-routage sur les sentiers voisins">
             ${this.editAutoRoute ? '🥾 Auto-routage : OUI' : '📏 Glisser simple'}
           </button>
+          <button id="btn-toggle-edit-heritage" type="button" class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition ${this.mapManager?.heritageActive ? 'bg-amber-600 text-white ring-2 ring-amber-300 shadow-sm' : 'bg-slate-700 text-amber-200 hover:text-white'} flex items-center gap-1 cursor-pointer" onclick="window.MapManagerInstance?.toggleHeritageCuriosities()" title="Afficher les monuments et curiosités avec halos clignotants">
+            <span>🏛️</span> <span>${this.mapManager?.heritageActive ? `Patrimoine (${this.mapManager?._heritageCount || 0})` : 'Patrimoine'}</span>
+          </button>
         </div>
       </div>
 
@@ -1870,7 +1873,7 @@ class GpxCreatorEditor {
         <label class="block text-xs font-bold text-slate-200 mb-1.5" for="input-wp-name">
           Libellé / Nom du Waypoint :
         </label>
-        <input id="input-wp-name" type="text" placeholder="Ex: Sommet du Coudon, Refuge, Source..." maxlength="60"
+        <input id="input-wp-name" type="text" value="${point.name || point.defaultName || ''}" placeholder="Ex: Sommet du Coudon, Refuge, Source..." maxlength="60"
           class="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white placeholder-slate-400 text-sm font-semibold focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 mb-3" />
 
         <!-- Suggestions rapides -->
@@ -2414,6 +2417,26 @@ class GpxCreatorEditor {
     </trkseg>
   </trk>
 </gpx>`;
+  }
+
+  showUndoFeedback(msg) {
+    let toast = document.getElementById('gpx-undo-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'gpx-undo-toast';
+      toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 z-[10000] bg-slate-900/95 border-2 border-emerald-500/80 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center gap-2 pointer-events-none transition-all duration-300';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span>ℹ️</span> <span>${msg}</span>`;
+    toast.style.opacity = '1';
+    toast.style.transform = 'translate(-50%, 0) scale(1)';
+    clearTimeout(this._undoFeedbackTimer);
+    this._undoFeedbackTimer = setTimeout(() => {
+      if (toast) {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, 15px) scale(0.95)';
+      }
+    }, 2800);
   }
 
   downloadGpxFile(filename, content) {
