@@ -9,13 +9,29 @@ GIT_EXE = r'C:\Users\lesda\AppData\Local\GitHubDesktop\app-3.5.6\resources\app\g
 MAPRANDO_DIR = r'C:\Users\lesda\.gemini\antigravity\scratch\maprando'
 RANDOFINDER_DIR = r'C:\Users\lesda\.gemini\antigravity\scratch\randofinder_update'
 
+# Liste canonique des 65 sigles et acronymes obligatoires dans le mode d'emploi
+MANDATORY_ACRONYMS = [
+    "ACT", "BKG", "BTT", "CAI", "CGU", "CN", "CNIG", "CRS", "CSV", "D+", "D-",
+    "DEM", "EGNOS", "ESRI", "FFR", "FR", "GB", "GNSS", "GPS", "GPX", "GR",
+    "GRP", "HD", "HKG", "HUD", "IBP", "IGM", "IGN", "ISO", "IT", "JSON",
+    "LiDAR", "MNT", "MTN", "NASA", "NGA", "NGI", "NO", "OAV", "ODbL", "OSM",
+    "OTM", "PC", "PDF", "PGHM", "PIN", "POI", "PR", "PRO", "RGE", "RGPD",
+    "RU", "SBAS", "SE", "SIM", "SMS", "SOS", "SRTM", "UE", "USA", "UTM",
+    "VTT", "WGS84", "WP", "XML"
+]
+
+MANDATORY_COMPARATIVE_SOLUTIONS = [
+    "Map & Rando", "Cartes.gouv", "Iphigénie", "Visorando", "Hiker",
+    "Openrunner", "Komoot", "GPXStudio", "BaseCamp", "VisuGPX"
+]
+
 def validate_dom_architecture(html_path):
     """
     Vérification stricte de l'intégrité de l'architecture DOM d'index.html.
     Empêche formellement tout déploiement si un conteneur racine ou une modale
     se retrouve piégé dans une autre vue par omission d'une balise fermante </div>.
     """
-    print("\n🏛️  Audit d'intégrité de l'arborescence DOM (Protection anti-imbrication)...")
+    print("\n🏛️  [TEST 1/3] Audit d'intégrité de l'arborescence DOM (Protection anti-imbrication)...")
     with open(html_path, "r", encoding="utf-8") as f:
         content = f.read()
     
@@ -51,13 +67,6 @@ def validate_dom_architecture(html_path):
         for forbidden in ["main-map-app-container", "modal-mode-emploi", "modal-cgu", "modal-jldapps"]:
             if guides_el.find(id=forbidden):
                 dom_errors.append(f"Pollution DOM critique : #{forbidden} est imbriqué à l'intérieur de #guides-view !")
-                
-    # 3. Vérifier la présence de la section comparative avec Hiker
-    comp_sec = soup.find(id="me-section-comparatif")
-    if not comp_sec:
-        dom_errors.append("Section comparative #me-section-comparatif manquante dans le mode d'emploi !")
-    elif "Hiker" not in comp_sec.text:
-        dom_errors.append("La mention de Hiker (HiiKER.com) est absente de la section comparative !")
 
     if dom_errors:
         print("\n❌ ÉCHEC CRITIQUE DE SÉCURITÉ DOM - DÉPLOIEMENT BLOQUÉ :")
@@ -66,24 +75,126 @@ def validate_dom_architecture(html_path):
         print("\nCorrigez l'arborescence HTML avant de redéployer !")
         sys.exit(1)
         
-    print(f"✓ Intégrité DOM 100% validée : les 5 conteneurs racines sont tous enfants directs de <body>.")
-    print(f"✓ Section comparative vs 9 solutions (avec Hiker.com) validée dans #modal-mode-emploi.")
+    print(f"✓ Intégrité DOM 100% validée : les conteneurs racines sont tous enfants directs de <body>.")
+
+
+def validate_manual_and_tables(html_path, maprando_dir):
+    """
+    Vérification systématique et obligatoire du Mode d'Emploi :
+    1. Grand Tableau Comparatif (10 solutions, fonctionnalités exclusives, 10 piliers).
+    2. Tableau exhaustif des 65 Sigles et Acronymes.
+    3. Recompilation et contrôle strict du PDF Mode d'emploi (exactement 17 pages).
+    """
+    print("\n📖  [TEST 2/3] Audit systématique du Mode d'Emploi Web & Comparatif...")
+    with open(html_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    
+    soup = BeautifulSoup(content, "html.parser")
+    errors = []
+
+    # A. Audit du Grand Tableau Comparatif
+    comp_sec = soup.find(id="me-section-comparatif")
+    if not comp_sec:
+        errors.append("Section comparative #me-section-comparatif introuvable dans index.html !")
+    else:
+        comp_text = comp_sec.text
+        for sol in MANDATORY_COMPARATIVE_SOLUTIONS:
+            if sol.lower() not in comp_text.lower():
+                errors.append(f"Solution comparative manquante dans le tableau : '{sol}' !")
+        
+        # Vérifier fonctionnalités indispensables dans le tableau
+        for feat in ["Patrimoine clignotant", "Fiche Topo A4 fond TOP 25", "IGN TOP 25", "Waypoints"]:
+            if feat.lower() not in comp_text.lower():
+                errors.append(f"Ligne de fonctionnalité comparative manquante : '{feat}' !")
+        
+        # Vérifier rappel des 10 Piliers
+        if "10 Piliers" not in comp_text:
+            errors.append("La mention des '10 Piliers Majeurs & Exclusifs' est manquante dans la synthèse comparative !")
+
+    # B. Audit du Tableau des Sigles et Acronymes
+    pos_glossaire = content.find("Glossaire &amp; Définitions des Sigles")
+    if pos_glossaire == -1:
+        pos_glossaire = content.find("Glossaire")
+    
+    if pos_glossaire == -1:
+        errors.append("Section Glossaire des sigles et acronymes introuvable dans index.html !")
+    else:
+        tbody_match = re.search(r'<tbody[^>]*>(.*?)</tbody>', content[pos_glossaire:], re.DOTALL)
+        if not tbody_match:
+            errors.append("Tableau <tbody> des sigles introuvable dans la section Glossaire !")
+        else:
+            glossary_text = tbody_match.group(1)
+            missing_acronyms = []
+            for acr in MANDATORY_ACRONYMS:
+                if acr not in glossary_text:
+                    missing_acronyms.append(acr)
+            if missing_acronyms:
+                errors.append(f"Sigles obligatoires manquants dans le glossaire ({len(missing_acronyms)}) : {', '.join(missing_acronyms)}")
+            else:
+                row_count = len(re.findall(r'<tr[^>]*>', glossary_text))
+                if row_count < 65:
+                    errors.append(f"Nombre de lignes insuffisant dans le glossaire : {row_count} trouvées (65 attendues)")
+
+    if errors:
+        print("\n❌ ÉCHEC CRITIQUE DE L'AUDIT DU MODE D'EMPLOI WEB :")
+        for err in errors:
+            print(f"  🚨 {err}")
+        sys.exit(1)
+
+    print("✓ Grand Tableau Comparatif validé (10 solutions, lignes clés, 10 piliers exclusifs).")
+    print(f"✓ Tableau exhaustif des Sigles & Acronymes validé (65 sigles officiels confirmés).")
+
+    # C. Recompilation systématique et audit de conformité du PDF
+    print("\n📑  [TEST 3/3] Recompilation et contrôle strict du PDF Mode d'Emploi...")
+    generator_script = os.path.join(maprando_dir, "generate_exhaustive_pdf_manual.py")
+    if not os.path.exists(generator_script):
+        print("❌ Script generate_exhaustive_pdf_manual.py introuvable !")
+        sys.exit(1)
+
+    pdf_out = os.path.join(maprando_dir, "Mode_d_emploi_RandoFinder.pdf")
+    
+    # Exécuter le générateur de PDF
+    comp_res = subprocess.run([sys.executable, generator_script], capture_output=True, text=True)
+    if comp_res.returncode != 0:
+        print(f"❌ Échec de la compilation du PDF :\n{comp_res.stderr}")
+        sys.exit(1)
+
+    # Vérifier le nombre exact de pages du PDF
+    try:
+        import pypdf
+        reader = pypdf.PdfReader(pdf_out)
+        page_count = len(reader.pages)
+    except Exception:
+        import fitz
+        doc = fitz.open(pdf_out)
+        page_count = len(doc)
+
+    if page_count != 17:
+        print(f"\n❌ ERREUR CRITIQUE DE GABARIT PDF : Le document compte {page_count} pages au lieu de STRICTEMENT 17 pages !")
+        print("  🚨 Le contenu a débordé sur une page supplémentaire. Ajustez le CSS ou la densité avant de déployer.")
+        sys.exit(1)
+
+    print(f"✓ PDF Mode_d_emploi_RandoFinder.pdf compilé avec succès (gabarit strict de {page_count} pages respecté).")
+
 
 def sync_and_protect(commit_msg):
     print("=" * 70)
-    print("🛡️  LANCEUR DE DÉPLOIEMENT & PROTECTION STRICTE DU CODE 🛡️")
+    print("🛡️  LANCEUR DE DÉPLOIEMENT & BATTERIE DE TESTS SYSTÉMATIQUES 🛡️")
     print("=" * 70)
     
     index_path = os.path.join(MAPRANDO_DIR, "index.html")
     
-    # ÉTAPE 0 : Validation DOM stricte AVANT toute copie ou déploiement
+    # 1. Validation de l'architecture DOM
     validate_dom_architecture(index_path)
 
-    # 1. Synchroniser index.html
+    # 2. Validation du Mode d'Emploi, du comparatif et du glossaire des 65 sigles + Recompilation PDF
+    validate_manual_and_tables(index_path, MAPRANDO_DIR)
+
+    # 3. Synchroniser index.html
     shutil.copy2(index_path, os.path.join(RANDOFINDER_DIR, "index.html"))
     print("\n✓ index.html synchronisé")
 
-    # 2. Synchroniser les dossiers complets
+    # 4. Synchroniser les dossiers complets
     for folder in ["images", "audio", "docs", "js", "css"]:
         src_dir = os.path.join(MAPRANDO_DIR, folder)
         dst_dir = os.path.join(RANDOFINDER_DIR, folder)
@@ -93,14 +204,15 @@ def sync_and_protect(commit_msg):
             shutil.copytree(src_dir, dst_dir)
             print(f"✓ Dossier {folder}/ synchronisé intégralement ({len(os.listdir(dst_dir))} éléments)")
 
-    # 3. Synchroniser les fichiers racine clés
+    # 5. Synchroniser les fichiers racine clés
     root_files = [
         "Mode_d_emploi_RandoFinder.pdf",
         "Legende_IGN_Top25.pdf",
         "legende-carte-ign-a-imprimer.pdf",
         "favicon.ico",
         "site.webmanifest",
-        "generate_exhaustive_pdf_manual.py"
+        "generate_exhaustive_pdf_manual.py",
+        "acronyms_data.py"
     ]
     for rf in root_files:
         s = os.path.join(MAPRANDO_DIR, rf)
@@ -109,12 +221,11 @@ def sync_and_protect(commit_msg):
             shutil.copy2(s, d)
             print(f"✓ Fichier racine {rf} synchronisé")
 
-    # 4. Audit d'intégrité strict : vérifier toutes les ressources référencées
-    print("\n🔍 Audit de sécurité des ressources...")
+    # 6. Audit d'intégrité strict : vérifier toutes les ressources référencées
+    print("\n🔍 Audit de sécurité des ressources statiques...")
     with open(index_path, "r", encoding="utf-8") as f:
         html_content = f.read()
 
-    # Trouver toutes les références d'images, audio, pdfs
     asset_patterns = [
         r'src=["\']([^"\']+\.(?:png|jpg|jpeg|svg|webp|ico|mp3|pdf))["\']',
         r'url\(["\']?([^"\'\)]+\.(?:png|jpg|jpeg|svg|webp|ico|mp3|pdf))["\']?\)',
@@ -142,8 +253,8 @@ def sync_and_protect(commit_msg):
     else:
         print(f"✓ Intégrité validée : les {len(found_assets)} ressources statiques existent dans les 2 dépôts.")
 
-    # 5. Git Add, Commit et Push sur les deux dépôts
-    track_patterns = ["index.html", "images", "audio", "docs", "js", "css", "Mode_d_emploi_RandoFinder.pdf", "Legende_IGN_Top25.pdf", "legende-carte-ign-a-imprimer.pdf", "generate_exhaustive_pdf_manual.py", "deploy_and_protect_all.py"]
+    # 7. Git Add, Commit et Push sur les deux dépôts
+    track_patterns = ["index.html", "images", "audio", "docs", "js", "css", "Mode_d_emploi_RandoFinder.pdf", "Legende_IGN_Top25.pdf", "legende-carte-ign-a-imprimer.pdf", "generate_exhaustive_pdf_manual.py", "deploy_and_protect_all.py", "acronyms_data.py"]
     for repo_name, repo_dir in [("maprando", MAPRANDO_DIR), ("randofinder_update", RANDOFINDER_DIR)]:
         print(f"\n📦 Git déploiement pour {repo_name}...")
         for pattern in track_patterns:
@@ -151,7 +262,6 @@ def sync_and_protect(commit_msg):
             if os.path.exists(target_p):
                 subprocess.run([GIT_EXE, '-C', repo_dir, 'add', pattern], check=True)
         
-        # Check if there are changes to commit
         status_res = subprocess.run([GIT_EXE, '-C', repo_dir, 'status', '--porcelain'], capture_output=True, text=True, check=True)
         if status_res.stdout.strip():
             subprocess.run([GIT_EXE, '-C', repo_dir, 'commit', '-m', commit_msg], check=True)
@@ -167,9 +277,9 @@ def sync_and_protect(commit_msg):
             print(f"❌ Erreur lors du push {repo_name}: {push_res.stderr}")
 
     print("\n" + "=" * 70)
-    print("✅ OPÉRATION TERMINÉE : CODE PROTÉGÉ ET SYNCHRONISÉ SUR LES 2 DÉPÔTS")
+    print("✅ OPÉRATION TERMINÉE : BATTERIE DE TESTS VALIDÉE & CODE DÉPLOYÉ SUR LES 2 DÉPÔTS")
     print("=" * 70)
 
 if __name__ == "__main__":
-    msg = sys.argv[1] if len(sys.argv) > 1 else "v180: Intégration comparative Hiker.com et protection architecturale DOM"
+    msg = sys.argv[1] if len(sys.argv) > 1 else "v205: Ajout du contrôle systématique du mode d'emploi, comparatif et sigles dans la batterie de tests de déploiement"
     sync_and_protect(msg)
