@@ -8190,34 +8190,6 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         const description = tags.description || tags.note || '';
         const start_date = tags.start_date ? `Époque : ${tags.start_date}` : '';
 
-        // Détermination du lien vers la page descriptive
-        let descriptiveUrl = null;
-        let descriptiveSource = '';
-
-        if (tags.wikipedia) {
-          const parts = tags.wikipedia.split(':');
-          const lang = parts.length > 1 ? parts[0] : 'fr';
-          const pageTitle = parts.length > 1 ? parts.slice(1).join(':') : parts[0];
-          descriptiveUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
-          descriptiveSource = 'Wikipédia';
-        } else if (tags.wikidata) {
-          descriptiveUrl = `https://www.wikidata.org/wiki/${tags.wikidata}`;
-          descriptiveSource = 'Wikidata';
-        } else if (tags['ref:mhs'] || tags['mhs:ref']) {
-          const ref = tags['ref:mhs'] || tags['mhs:ref'];
-          descriptiveUrl = `https://www.pop.culture.gouv.fr/notice/merimee/${ref}`;
-          descriptiveSource = 'Base Mérimée (Ministère de la Culture)';
-        } else if (tags.website || tags.url) {
-          descriptiveUrl = tags.website || tags.url;
-          descriptiveSource = 'Site officiel';
-        } else {
-          // Page descriptive intelligente : recherche encyclopédique ciblée avec le contexte local
-          const cityCtx = this.currentCity || tags['addr:city'] || '';
-          const searchTerms = rawName ? `${rawName} ${cityCtx}` : `${specificType} ${cityCtx}`;
-          descriptiveUrl = `https://fr.wikipedia.org/w/index.php?search=${encodeURIComponent(searchTerms.trim())}`;
-          descriptiveSource = 'Wikipédia (Recherche)';
-        }
-
         count++;
 
         // Distance formatée
@@ -8248,24 +8220,13 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
         const safeName = name.replace(/'/g, "\\'");
         const popupHtml = `
-          <div class="p-1 min-w-[220px] max-w-[290px] text-slate-800">
+          <div class="p-1 min-w-[210px] max-w-[280px] text-slate-800">
             <div class="flex items-center gap-1.5 font-black text-xs text-amber-700 border-b border-amber-200/80 pb-1.5 mb-1.5 uppercase tracking-wide">
               <span>${iconEmoji}</span> <span>${categoryName}</span>
             </div>
             
-            <!-- Nom cliquable ouvrant la page descriptive -->
-            <a href="${descriptiveUrl}" target="_blank" rel="noopener noreferrer" class="group flex items-start justify-between gap-1.5 text-slate-900 hover:text-amber-600 transition font-black text-sm leading-snug cursor-pointer" title="Cliquer pour ouvrir la page descriptive (${descriptiveSource})">
-              <span class="group-hover:underline underline-offset-2 decoration-amber-500">${name}</span>
-              <span class="text-xs text-amber-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform flex-shrink-0" title="Ouvrir la page descriptive">↗</span>
-            </a>
+            <div class="font-black text-sm text-slate-900 leading-snug">${name}</div>
             ${isUnnamed ? `<div class="text-[10.5px] text-slate-400 italic mt-0.5">Élément répertorié sur le sentier</div>` : ''}
-
-            <!-- Bouton lien vers la page descriptive -->
-            <div class="mt-1.5">
-              <a href="${descriptiveUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 text-[10.5px] font-bold transition shadow-xs cursor-pointer" title="Ouvrir la page documentaire (${descriptiveSource})">
-                <span>📖</span> <span>Page descriptive (${descriptiveSource}) ↗</span>
-              </a>
-            </div>
 
             ${description ? `<div class="text-[11.5px] text-slate-600 mt-1.5 italic leading-tight bg-slate-50 p-1.5 rounded-lg border border-slate-100">${description}</div>` : ''}
             ${start_date ? `<div class="text-[11px] text-amber-800 font-semibold mt-1">⏳ ${start_date}</div>` : ''}
