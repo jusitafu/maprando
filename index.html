@@ -362,7 +362,7 @@
         </div>
 
         <span class="text-white font-bold">Map &amp; Rando</span>
-        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ2.4 (22/11/2026)</span>
+        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">ᾳ2.5 (22/11/2026)</span>
         &bull; <span class="text-slate-400">JLDApps 2026</span> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
@@ -1775,10 +1775,10 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ2.4 (22/11/2026) &bull; JLDAPPS 2026</span>
+            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ2.5 (22/11/2026) &bull; JLDAPPS 2026</span>
           </div>
           <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ2.4 (22/11/2026)</span></span>
+            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ2.5 (22/11/2026)</span></span>
           </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -2370,7 +2370,7 @@
               </svg>
             </button>
           </div>
-          Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ2.4 (22/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
+          Map &amp; Rando <strong class="text-emerald-400 font-bold">ᾳ2.5 (22/11/2026)</strong> by <strong>JLDApps 2026</strong> &bull; La cartographie au service de vos pas
         </span>
         <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg">
           Fermer le Mode d'emploi
@@ -2478,19 +2478,25 @@
               <strong>Responsable du traitement :</strong> JLDApps 2026 &bull; Sanary-sur-Mer (Var 83), contact délégué : <a href="mailto:aquacheckjld@gmail.com" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">aquacheckjld@gmail.com</a>.
             </p>
             <p>
-              <strong>Architecture « Privacy by Design » &amp; Minimisation absolue :</strong> L'accès et l'utilisation de l'ensemble des fonctionnalités de <strong>Map &amp; Rando</strong> s'effectuent sans aucune création de compte, sans mot de passe, sans collecte obligatoire d'e-mail et sans aucun profilage publicitaire ou comportemental.
+              <strong>Absence Totale de Géolocalisation :</strong> RandoFinder ne comporte <strong>aucune fonction de géolocalisation active ou de suivi GPS en direct</strong>. L'application ne sollicite, ne lit, n'enregistre et ne transmet à aucun moment les coordonnées de position géographique en temps réel de votre appareil.
             </p>
             <p>
-              <strong>Traitement 100% Local des Traces GPX &amp; Waypoints :</strong> Conformément au principe de minimisation des données (Art. 5 du RGPD), l'ensemble des fichiers GPX téléversés, analysés, créés ou modifiés (tracés vectoriels, profils altimétriques, repères/waypoints créés ou ajoutés par clic sur trace, coordonnées GPS et altitudes LiDAR) sont traités <strong>exclusivement en mémoire vive (RAM) et dans le stockage local (LocalStorage) de votre propre navigateur web</strong>. Aucun tracé de randonnée, aucun point d'intérêt ni historique de navigation n'est téléversé, analysé ou conservé sur un serveur distant externe.
+              <strong>Outils Cartographiques Publics (Traitement 100% Local) :</strong> L'accès libre aux cartes officielles, au visualiseur multi-traces, au créateur et à l'atelier de modification GPX (ajout de waypoints, découpe, profil altimétrique LiDAR, fusion) s'effectue sans aucune obligation de compte. Ces opérations s'exécutent <strong>exclusivement en mémoire locale (RAM et LocalStorage) de votre navigateur</strong> : aucun tracé personnel n'est transmis vers des serveurs externes.
+            </p>
+            <div>
+              <p class="font-semibold text-white mb-1">
+                Module Club « Randonner » &amp; Données Collectées :
+              </p>
+              <ul class="list-disc list-inside space-y-1.5 pl-1 text-[11.5px] text-slate-300">
+                <li><strong>Saisie de l'adresse e-mail :</strong> dans le cadre de la gestion des accès adhérents au module club, une adresse e-mail peut être renseignée. Elle est strictement réservée à l'authentification sécurisée, à la réinitialisation de mot de passe en cas d'oubli et aux communications internes relatives aux activités de randonnée du club. Elle n'est en aucun cas cédée, vendue ou transmise à des tiers à des fins commerciales ou publicitaires.</li>
+                <li><strong>Stockage et partage des traces GPX téléversées :</strong> les fichiers GPX déposés via le module club (onglet <em>« Charger une randonnée »</em>) sont stockés et hébergés dans la base de données sécurisée du club (ex. Supabase Cloud) avec le nom de l'adhérent dépositaire (mention <em>« Ajoutée par »</em>), la date et les paramètres techniques du parcours (distance, dénivelé D+, IBP Index), afin de constituer le catalogue partagé des randonnées accessible aux membres autorisés du club pour consultation, téléchargement et impression de fiches topos.</li>
+              </ul>
+            </div>
+            <p>
+              <strong>Cookies &amp; Traceurs :</strong> L'application n'utilise <strong>aucun cookie publicitaire, marketing ou de pistage comportemental</strong>. Seuls des marqueurs techniques strictement nécessaires (mémorisation locale des fonds de carte favoris, étalonnage de l'écran « 📏 1 cm vrai ») sont conservés sur votre terminal.
             </p>
             <p>
-              <strong>Zéro Cookie Publicitaire &amp; Respect de la Vie Privée :</strong> L'application n'utilise <strong>aucun cookie publicitaire, marketing ou de pistage tiers</strong>. Seuls les réglages techniques strictement indispensables au fonctionnement ergonomique (fonds de carte favoris, calibration d'écran « 📏 1 cm vrai », traces locales en cours de session) sont conservés sur votre terminal.
-            </p>
-            <p>
-              <strong>Géolocalisation Éphémère de Terrain :</strong> Lorsque vous activez la fonction de géolocalisation GPS en randonnée, votre position instantanée est exploitée uniquement en local par votre navigateur pour positionner le curseur sur la carte. Vos coordonnées géographiques ne sont jamais archivées, ni transmises à un serveur, ni cédées à des tiers.
-            </p>
-            <p>
-              <strong>Exercice des Droits RGPD (Articles 15 à 22) :</strong> Vous conservez à tout instant la maîtrise intégrale de vos données. L'utilisateur peut exercer son droit d'accès, d'effacement intégral et d'oubli immédiat par un simple clic sur le bouton <em>« Tout effacer »</em> de l'application ou en purgeant le cache de son navigateur. Pour toute demande d'assistance ou question relative à la protection de vos données personnelles, vous pouvez écrire directement à <a href="mailto:aquacheckjld@gmail.com" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">aquacheckjld@gmail.com</a>.
+              <strong>Exercice des Droits RGPD (Articles 15 à 22) :</strong> Conformément à la réglementation européenne, tout adhérent ou utilisateur bénéficie d'un droit d'accès, de rectification, de portabilité et d'effacement intégral de ses données personnelles (adresse e-mail, traces associées à son profil). Les demandes de suppression ou de modification peuvent être adressées directement à l'administrateur du club ou au responsable à <a href="mailto:aquacheckjld@gmail.com" class="text-cyan-400 hover:text-cyan-300 underline font-semibold">aquacheckjld@gmail.com</a>.
             </p>
           </div>
         </div>
