@@ -1785,7 +1785,7 @@
           <a href="Mode_d_emploi_RandoFinder.pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-extrabold transition flex items-center gap-1.5 shadow-md hover:border-emerald-400">
             <span>📥</span> <span>mode d'emploi détaillé (PDF)</span>
           </a>
-          <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-base font-bold cursor-pointer transition">
+          <button type="button" id="btn-close-modal-mode-emploi" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-xl text-base font-bold cursor-pointer transition">
             ✕
           </button>
         </div>
@@ -2368,9 +2368,24 @@
               </thead>
               <tbody class="divide-y divide-slate-800/60 text-[11.5px]">
                 <tr class="hover:bg-slate-800/40">
+                  <td class="py-2 px-3.5 font-black text-sky-400">GPS</td>
+                  <td class="py-2 px-3.5 font-bold text-white">Global Positioning System</td>
+                  <td class="py-2 px-3.5 text-slate-300">Système mondial de positionnement par satellites de radionavigation permettant de déterminer en continu la position géographique exacte (latitude / longitude WGS84), l'altitude et la vitesse du marcheur.</td>
+                </tr>
+                <tr class="hover:bg-slate-800/40 bg-slate-950/30">
+                  <td class="py-2 px-3.5 font-black text-sky-400">GNSS</td>
+                  <td class="py-2 px-3.5 font-bold text-white">Global Navigation Satellite System</td>
+                  <td class="py-2 px-3.5 text-slate-300">Terme générique officiel regroupant l'ensemble des constellations de positionnement par satellites mondiales : GPS (USA), Galileo (Union Européenne), Glonass (Russie) et Beidou (Chine).</td>
+                </tr>
+                <tr class="hover:bg-slate-800/40">
                   <td class="py-2 px-3.5 font-black text-sky-400">GPX</td>
                   <td class="py-2 px-3.5 font-bold text-white">GPS Exchange Format</td>
                   <td class="py-2 px-3.5 text-slate-300">Format universel de fichier XML standardisé pour l'enregistrement, l'échange et l'affichage d'itinéraires, traces et waypoints GPS.</td>
+                </tr>
+                <tr class="hover:bg-slate-800/40 bg-slate-950/30">
+                  <td class="py-2 px-3.5 font-black text-sky-400">XML</td>
+                  <td class="py-2 px-3.5 font-bold text-white">Extensible Markup Language</td>
+                  <td class="py-2 px-3.5 text-slate-300">Langage informatique universel de balisage textuel structuré servant de socle technique au standard de fichier GPX.</td>
                 </tr>
                 <tr class="hover:bg-slate-800/40 bg-slate-950/30">
                   <td class="py-2 px-3.5 font-black text-sky-400">IGN</td>

@@ -481,7 +481,7 @@ html_content = f"""<!DOCTYPE html>
         <div class="toc-item" style="border-left-color: #047857;">
           <div class="num" style="color: #047857;">Chapitre 16 • Page 17</div>
           <div class="title">Glossaire des Sigles &amp; Acronymes</div>
-          <div class="desc">Lexique de référence des 22 acronymes officiels de la randonnée, de l'IGN, de la FFR et de la cartographie.</div>
+          <div class="desc">Lexique de référence des 25 acronymes officiels de la randonnée, de l'IGN, de la FFR et de la cartographie.</div>
         </div>
       </div>
     </div>
@@ -1429,22 +1429,37 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-body">
       <h2>📖 16. Glossaire &amp; Définitions des Sigles et Acronymes Officiels</h2>
       <p style="margin-bottom: 4pt;">
-        Ce lexique de référence récapitule l'ensemble des <strong>22 sigles, acronymes et termes techniques</strong> utilisés au sein de <strong>Map &amp; Rando</strong>, de l'<strong>IGN</strong> et de la <strong>Fédération Française de la Randonnée Pédestre</strong>.
+        Ce lexique de référence récapitule l'ensemble des <strong>25 sigles, acronymes et termes techniques</strong> utilisés au sein de <strong>Map &amp; Rando</strong>, de l'<strong>IGN</strong> et de la <strong>Fédération Française de la Randonnée Pédestre</strong>.
       </p>
 
-      <table class="comp-table" style="font-size: 6.8pt; line-height: 1.18; margin-top: 2pt;">
+      <table class="comp-table" style="font-size: 6.3pt; line-height: 1.15; margin-top: 2pt;">
         <thead>
           <tr>
-            <th style="width: 14%; text-align: left; padding: 3pt 4pt;">Sigle / Acronyme</th>
-            <th style="width: 32%; text-align: left; padding: 3pt 4pt;">Signification Officielle</th>
-            <th style="width: 54%; text-align: left; padding: 3pt 4pt;">Rôle &amp; Usage en Randonnée &amp; Cartographie</th>
+            <th style="width: 14%; text-align: left; padding: 2.5pt 4pt;">Sigle / Acronyme</th>
+            <th style="width: 32%; text-align: left; padding: 2.5pt 4pt;">Signification Officielle</th>
+            <th style="width: 54%; text-align: left; padding: 2.5pt 4pt;">Rôle &amp; Usage en Randonnée &amp; Cartographie</th>
           </tr>
         </thead>
         <tbody>
           <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">GPS</td>
+            <td style="font-weight: 700; text-align: left;">Global Positioning System</td>
+            <td style="text-align: left;">Système mondial de positionnement par satellites fournissant en continu la localisation (WGS84), l'altitude et la vitesse.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">GNSS</td>
+            <td style="font-weight: 700; text-align: left;">Global Navigation Satellite System</td>
+            <td style="text-align: left;">Ensemble officiel des constellations de satellites de géo-positionnement : GPS (USA), Galileo (UE), Glonass (RU), Beidou (CN).</td>
+          </tr>
+          <tr>
             <td style="font-weight: 900; color: #0284c7; text-align: left;">GPX</td>
             <td style="font-weight: 700; text-align: left;">GPS Exchange Format</td>
             <td style="text-align: left;">Format universel XML standardisé d'échange pour l'enregistrement et le partage de traces, routes et waypoints GPS.</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 900; color: #0284c7; text-align: left;">XML</td>
+            <td style="font-weight: 700; text-align: left;">Extensible Markup Language</td>
+            <td style="text-align: left;">Langage informatique de balisage universel et structuré servant de fondation technique au standard de fichier GPX.</td>
           </tr>
           <tr>
             <td style="font-weight: 900; color: #0284c7; text-align: left;">IGN</td>

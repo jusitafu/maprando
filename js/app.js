@@ -901,6 +901,9 @@ class AppController {
   }
 
   switchTab(tabName) {
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      return;
+    }
     if (tabName === 'upload' && typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
@@ -953,6 +956,9 @@ class AppController {
   }
 
   setViewMode(mode) {
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      return;
+    }
     this.currentViewMode = mode;
     const mapCol = document.getElementById('map-column');
     const tableCol = document.getElementById('table-column');
@@ -1036,7 +1042,10 @@ class AppController {
     this.renderHikesTable();
 
     if (window.MapManagerInstance) {
-      window.MapManagerInstance.renderHikeMarkers(this.filteredHikes);
+      const isFreeMap = window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte';
+      if (!isFreeMap) {
+        window.MapManagerInstance.renderHikeMarkers(this.filteredHikes);
+      }
 
       // Si recherche active par mot-clé et demandé explicitement, centrer la carte sur les résultats
       if (autoZoomSearchResults && this.searchQuery && this.filteredHikes.length > 0) {
@@ -3886,6 +3895,9 @@ class AppController {
   }
 
   switchTab(tabName) {
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      return;
+    }
     if (tabName === 'upload' && typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
@@ -3938,6 +3950,9 @@ class AppController {
   }
 
   setViewMode(mode) {
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      return;
+    }
     this.currentViewMode = mode;
     const mapCol = document.getElementById('map-column');
     const tableCol = document.getElementById('table-column');
@@ -4021,7 +4036,10 @@ class AppController {
     this.renderHikesTable();
 
     if (window.MapManagerInstance) {
-      window.MapManagerInstance.renderHikeMarkers(this.filteredHikes);
+      const isFreeMap = window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte';
+      if (!isFreeMap) {
+        window.MapManagerInstance.renderHikeMarkers(this.filteredHikes);
+      }
 
       // Si recherche active par mot-clé et demandé explicitement, centrer la carte sur les résultats
       if (autoZoomSearchResults && this.searchQuery && this.filteredHikes.length > 0) {
@@ -6871,6 +6889,9 @@ class AppController {
   }
 
   switchTab(tabName) {
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      return;
+    }
     if (tabName === 'upload' && typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
       return;
@@ -6923,6 +6944,9 @@ class AppController {
   }
 
   setViewMode(mode) {
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      return;
+    }
     this.currentViewMode = mode;
     const mapCol = document.getElementById('map-column');
     const tableCol = document.getElementById('table-column');
@@ -7006,7 +7030,10 @@ class AppController {
     this.renderHikesTable();
 
     if (window.MapManagerInstance) {
-      window.MapManagerInstance.renderHikeMarkers(this.filteredHikes);
+      const isFreeMap = window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte';
+      if (!isFreeMap) {
+        window.MapManagerInstance.renderHikeMarkers(this.filteredHikes);
+      }
 
       // Si recherche active par mot-clé et demandé explicitement, centrer la carte sur les résultats
       if (autoZoomSearchResults && this.searchQuery && this.filteredHikes.length > 0) {

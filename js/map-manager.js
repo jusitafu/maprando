@@ -151,6 +151,16 @@ class MapManager {
 
     this.areaSelectionOnCancel = null;
 
+    this._areaAutoPanTimer = null;
+    this._areaPanDelta = null;
+    this._stopAreaAutoPan = () => {
+      if (this._areaAutoPanTimer) {
+        clearInterval(this._areaAutoPanTimer);
+        this._areaAutoPanTimer = null;
+      }
+      this._areaPanDelta = null;
+    };
+
 
 
     // Carroyage UTM & HUD
@@ -1371,7 +1381,12 @@ class MapManager {
     this.areaSelectionCorner1 = null;
     this._isAreaDragging = false;
     this._areaStartScreenPoint = null;
-    this._stopAreaAutoPan();
+    if (typeof this._stopAreaAutoPan === 'function') {
+      try { this._stopAreaAutoPan(); } catch (e) { /* ignore */ }
+    } else if (this._areaAutoPanTimer) {
+      clearInterval(this._areaAutoPanTimer);
+      this._areaAutoPanTimer = null;
+    }
 
     if (this.map) {
       if (this.map.dragging) this.map.dragging.enable();
@@ -2005,7 +2020,10 @@ class MapManager {
 
 
   renderHikeMarkers(hikes) {
-
+    if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
+      if (this.markersLayer) this.markersLayer.clearLayers();
+      return;
+    }
     if (!this.markersLayer) return;
 
     this.currentHikesList = hikes || [];
@@ -4130,25 +4148,13 @@ class MapManager {
 
 
   resetAllMapTools() {
-
     // Réinitialisation intégrale des outils interactifs temporaires (Caps, Mesures, Zones)
-
-    this.clearBearingVisuals();
-
-    this.cancelBearingMeasurement();
-
-    this.cancelMeasurePath();
-
-    this.resetMeasurePath();
-
-    this.cancelAreaSelection();
-
-    if (this.clickModeActive) {
-
-      this.setClickMode(false);
-
-    }
-
+    try { if (typeof this.clearBearingVisuals === 'function') this.clearBearingVisuals(); } catch (e) { console.warn("clearBearingVisuals:", e); }
+    try { if (typeof this.cancelBearingMeasurement === 'function') this.cancelBearingMeasurement(); } catch (e) { console.warn("cancelBearingMeasurement:", e); }
+    try { if (typeof this.cancelMeasurePath === 'function') this.cancelMeasurePath(); } catch (e) { console.warn("cancelMeasurePath:", e); }
+    try { if (typeof this.resetMeasurePath === 'function') this.resetMeasurePath(); } catch (e) { console.warn("resetMeasurePath:", e); }
+    try { if (typeof this.cancelAreaSelection === 'function') this.cancelAreaSelection(); } catch (e) { console.warn("cancelAreaSelection:", e); }
+    try { if (this.clickModeActive && typeof this.setClickMode === 'function') this.setClickMode(false); } catch (e) { console.warn("setClickMode:", e); }
   }
 
 

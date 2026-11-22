@@ -397,15 +397,19 @@
 
       // Reset complet et strict de toute trace résiduelle lors du retour à l'accueil, aux guides ou au module randonner
       if (viewName === 'accueil' || viewName === 'guides' || viewName === 'randonner') {
-        if (window.MapManagerInstance) {
-          window.MapManagerInstance.clearStandaloneGpxTrack();
-          window.MapManagerInstance.resetAllMapTools();
-          if (viewName !== 'randonner' || !params.get('hike')) {
-            window.MapManagerInstance.deselectHike();
+        try {
+          if (window.MapManagerInstance) {
+            window.MapManagerInstance.clearStandaloneGpxTrack();
+            window.MapManagerInstance.resetAllMapTools();
+            if (viewName !== 'randonner' || !params.get('hike')) {
+              window.MapManagerInstance.deselectHike();
+            }
           }
-        }
-        if (window.App && (viewName !== 'randonner' || !params.get('hike'))) {
-          window.App.deselectHike();
+          if (window.App && (viewName !== 'randonner' || !params.get('hike'))) {
+            window.App.deselectHike();
+          }
+        } catch (err) {
+          console.warn("Erreur reset switchView:", err);
         }
       }
 
@@ -434,8 +438,12 @@
         if (lockModal) lockModal.classList.add('hidden');
 
         // Réinitialiser systématiquement les outils temporaires (caps, mesures, zone d'impression)
-        if (window.MapManagerInstance) {
-          window.MapManagerInstance.resetAllMapTools();
+        try {
+          if (window.MapManagerInstance) {
+            window.MapManagerInstance.resetAllMapTools();
+          }
+        } catch (err) {
+          console.warn("Erreur resetAllMapTools carte:", err);
         }
 
         this.applyFreeMapMode(true);
@@ -582,17 +590,25 @@
         if (storageBadge) storageBadge.classList.add('hidden');
         if (headerSubLocation) headerSubLocation.innerHTML = 'Outils Cartographiques &bull; IGN &amp; GPX';
         // Masquer les onglets adhérents (Trouver, Charger, Gérer)
-        tabButtons.forEach(btn => btn.classList.add('hidden'));
+        tabButtons.forEach(btn => {
+          btn.classList.add('hidden');
+          btn.style.setProperty('display', 'none', 'important');
+        });
         // Afficher les boutons GPX libre (Charger 1-3 traces, Créer, Modifier)
         if (quickGpxBtn) quickGpxBtn.classList.remove('hidden');
         if (createGpxBtn) createGpxBtn.classList.remove('hidden');
         if (editGpxBtn) editGpxBtn.classList.remove('hidden');
 
         // Forcer la carte en pleine page (100% largeur / hauteur, cacher la colonne tableau)
-        if (tableCol) tableCol.classList.add('hidden');
+        if (tableCol) {
+          tableCol.classList.add('hidden');
+          tableCol.style.setProperty('display', 'none', 'important');
+        }
         if (mapCol) {
           mapCol.classList.remove('lg:w-1/2');
           mapCol.classList.add('w-full', 'h-full');
+          mapCol.style.setProperty('width', '100%', 'important');
+          mapCol.style.setProperty('height', '100%', 'important');
         }
         if (window.App && typeof window.App.setViewMode === 'function') {
           window.App.setViewMode('map');
@@ -653,7 +669,18 @@
         if (dbSelectorBox) dbSelectorBox.classList.remove('hidden');
         if (storageBadge) storageBadge.classList.remove('hidden');
         if (headerSubLocation) headerSubLocation.innerHTML = 'Sanary-sur-Mer &bull; Var (83)';
-        tabButtons.forEach(btn => btn.classList.remove('hidden'));
+        tabButtons.forEach(btn => {
+          btn.classList.remove('hidden');
+          btn.style.removeProperty('display');
+        });
+        if (tableCol) {
+          tableCol.classList.remove('hidden');
+          tableCol.style.removeProperty('display');
+        }
+        if (mapCol) {
+          mapCol.style.removeProperty('width');
+          mapCol.style.removeProperty('height');
+        }
         if (quickGpxBtn) quickGpxBtn.classList.add('hidden');
         if (createGpxBtn) createGpxBtn.classList.add('hidden');
         if (editGpxBtn) editGpxBtn.classList.add('hidden');
