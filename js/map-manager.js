@@ -6985,7 +6985,8 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
   updateAllStandaloneOffsets() {
     if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
 
-    const count = this.standaloneTracks.length;
+    const visibleTracks = this.standaloneTracks.filter(t => t.visible !== false);
+    const count = visibleTracks.length;
     let baseOffsets = [0];
     if (count === 2) {
       baseOffsets = [-3.5, 3.5];
@@ -6993,7 +6994,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       baseOffsets = [-5, 0, 5];
     }
 
-    const refTrack = this.standaloneTracks[0];
+    const refTrack = visibleTracks[0];
 
     // Détection de l'alignement vectoriel (sens identique ou inverse) sur les tronçons communs
     const getTrackAlignment = (ptsA, ptsB) => {
@@ -7030,7 +7031,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       return matchCount > 0 && (dotSum / matchCount) < 0 ? -1 : 1;
     };
 
-    this.standaloneTracks.forEach((t, i) => {
+    visibleTracks.forEach((t, i) => {
       const nominal = baseOffsets[i] !== undefined ? baseOffsets[i] : 0;
       const align = (i === 0 || !refTrack) ? 1 : getTrackAlignment(refTrack.points, t.points);
       const actualOffset = nominal * align;
@@ -7213,52 +7214,47 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
 
     let tracksHtml = this.standaloneTracks.map((t, i) => {
+      const isVis = t.visible !== false;
 
       const palettePicker = PALETTE.map(c => `
-
         <button type="button" class="w-5 h-5 rounded-full transition-transform hover:scale-125 border-2 ${c === t.color ? 'border-white scale-110 shadow-sm ring-2 ring-white/80' : 'border-black/50'}" style="background-color: ${c};" onclick="window.MapManagerInstance.setTrackColor('${t.id}', '${c}')" title="Appliquer cette couleur"></button>
-
       `).join('');
 
-
-
       return `
-
-        <div class="flex items-center justify-between gap-3.5 p-2.5 rounded-2xl bg-slate-950/75 border border-slate-800 hover:border-slate-700 transition">
-
+        <div class="flex items-center justify-between gap-3.5 p-2.5 rounded-2xl bg-slate-950/75 border border-slate-800 hover:border-slate-700 transition ${!isVis ? 'opacity-55' : ''}">
           <div class="flex items-center gap-3 min-w-0">
-
             <!-- Pastille de couleur cliquable grand format 28px -->
-
-            <button type="button" class="w-7 h-7 rounded-full border-2 border-white shadow-lg flex-shrink-0 cursor-pointer hover:scale-125 transition-transform" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
-
+            <button type="button" class="w-7 h-7 rounded-full border-2 border-white shadow-lg flex-shrink-0 cursor-pointer hover:scale-125 transition-transform ${!isVis ? 'grayscale contrast-50' : ''}" style="background-color: ${t.color};" onclick="window.MapManagerInstance.cycleTrackColor('${t.id}')" title="Cliquez pour changer la couleur">
             </button>
 
-            <span class="font-black text-base text-white truncate max-w-[150px] sm:max-w-[260px]" title="${t.name}">
-
+            <span class="font-black text-base text-white truncate max-w-[150px] sm:max-w-[260px] ${!isVis ? 'line-through text-slate-400' : ''}" title="${t.name}">
               ${t.name}
-
             </span>
 
             <span class="px-2.5 py-1 rounded-xl bg-slate-800 text-sm font-mono text-emerald-300 font-bold whitespace-nowrap shadow-xs">
-
               ${t.distance} km • +${t.elevationGain}m${t.ibp ? ` • <strong class="text-amber-400 font-extrabold">IBP ${t.ibp}</strong>` : ''}
-
             </span>
-
           </div>
 
-
-
-          <div class="flex items-center gap-2.5 flex-shrink-0">
-
+          <div class="flex items-center gap-2 flex-shrink-0">
             <!-- Palette rapide de couleurs -->
-
             <div class="hidden sm:flex items-center gap-1.5 bg-slate-900 px-2.5 py-1.5 rounded-2xl border border-slate-800">
-
               ${palettePicker}
-
             </div>
+
+            <!-- Bouton Visibilité : Œil (Afficher / Masquer la trace) -->
+            <button type="button" class="w-8 h-8 rounded-xl ${isVis ? 'bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-400/40' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'} text-sm flex items-center justify-center transition shadow cursor-pointer active:scale-95" onclick="window.MapManagerInstance.toggleTrackVisibility('${t.id}')" title="${isVis ? 'Masquer cette trace sur la carte' : 'Afficher cette trace sur la carte'}">
+              ${isVis ? `
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              ` : `
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                </svg>
+              `}
+            </button>
 
             <!-- Bouton modifier cette trace -->
             <button type="button" class="w-8 h-8 rounded-xl bg-violet-900/60 hover:bg-violet-700 text-sm text-violet-200 hover:text-white flex items-center justify-center transition shadow cursor-pointer" onclick="window.MapManagerInstance.standaloneHike = window.MapManagerInstance.standaloneTracks[${i}]; window.GpxCreatorEditorInstance?.startEditMode();" title="Modifier cette trace en déplaçant un point vers un sentier voisin">
@@ -7266,27 +7262,17 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
             </button>
 
             <!-- Bouton centrer la vue sur cette trace (clignote au chargement de la trace) -->
-
             <button type="button" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-base text-slate-100 hover:text-white flex items-center justify-center transition shadow cursor-pointer ${t.isNewlyLoaded ? 'center-btn-pulse-blink ring-2 ring-amber-400' : ''}" onclick="this.classList.remove('center-btn-pulse-blink', 'ring-2', 'ring-amber-400'); if(window.MapManagerInstance.standaloneTracks[${i}]) window.MapManagerInstance.standaloneTracks[${i}].isNewlyLoaded=false; if(window.MapManagerInstance.standaloneTracks[${i}]?.layer) window.MapManagerInstance.map.fitBounds(window.MapManagerInstance.standaloneTracks[${i}].layer.getBounds(), {padding:[40,40]});" title="Centrer la carte sur cette trace">
-
               🎯
-
             </button>
 
             <!-- Bouton supprimer cette trace -->
-
             <button type="button" class="w-8 h-8 rounded-xl hover:bg-rose-900/70 text-slate-300 hover:text-rose-300 text-base font-black flex items-center justify-center transition cursor-pointer" onclick="window.MapManagerInstance.removeStandaloneTrack('${t.id}')" title="Fermer cette trace">
-
               ✕
-
             </button>
-
           </div>
-
         </div>
-
       `;
-
     }).join('');
 
 
@@ -7518,6 +7504,50 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     }
   }
 
+  toggleTrackVisibility(trackId) {
+    if (!this.standaloneTracks || this.standaloneTracks.length === 0) return;
+    const t = this.standaloneTracks.find(item => String(item.id) === String(trackId));
+    if (!t) return;
+
+    t.visible = (t.visible === false) ? true : false;
+
+    if (t.visible === false) {
+      if (t.layer && this.map && this.map.hasLayer(t.layer)) {
+        this.map.removeLayer(t.layer);
+      }
+      if (t.slopeLayer && this.map && this.map.hasLayer(t.slopeLayer)) {
+        this.map.removeLayer(t.slopeLayer);
+      }
+      // Si le profil altimétrique affiche actuellement cette trace masquée
+      if (window.ElevationProfileInstance && window.ElevationProfileInstance.currentHike === t) {
+        const nextVis = this.standaloneTracks.find(item => item.visible !== false);
+        if (nextVis && window.App && typeof window.App.showHikePreviewPanel === 'function') {
+          window.App.showHikePreviewPanel(nextVis);
+        } else if (window.App && typeof window.App.hideHikePreviewPanel === 'function') {
+          window.App.hideHikePreviewPanel();
+        }
+      }
+    } else {
+      if (t.layer && this.map && !this.map.hasLayer(t.layer)) {
+        this.map.addLayer(t.layer);
+      }
+      if (this.slopeColoringActive && t.slopeLayer && this.map && !this.map.hasLayer(t.slopeLayer)) {
+        this.map.addLayer(t.slopeLayer);
+      }
+    }
+
+    if (typeof this.updateAllStandaloneOffsets === 'function') {
+      this.updateAllStandaloneOffsets();
+    }
+    this.showStandaloneGpxHud();
+
+    if (window.GpxCreatorEditorInstance) {
+      window.GpxCreatorEditorInstance.showUndoFeedback(
+        t.visible === false ? `🙈 Trace « ${t.name} » masquée` : `👁️ Trace « ${t.name} » affichée`
+      );
+    }
+  }
+
   clearStandaloneGpxTrack() {
     if (this.standaloneTracks && this.standaloneTracks.length > 0) {
       this.standaloneTracks.forEach(t => {
@@ -7665,7 +7695,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           t.slopeLayer = L.featureGroup(polylines);
         }
 
-        if (this.map && !this.map.hasLayer(t.slopeLayer)) {
+        if (t.visible !== false && this.map && !this.map.hasLayer(t.slopeLayer)) {
           this.map.addLayer(t.slopeLayer);
         }
       } else {

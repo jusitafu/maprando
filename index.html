@@ -1976,6 +1976,7 @@
                 <li><strong>🛡️ Confinement strict des fenêtres à l'écran &amp; Mode Réduit compact :</strong> le gestionnaire universel de fenêtres flottantes empêche strictement la boîte des traces, la fiche altimétrique, le créateur/éditeur GPX et toute fenêtre ouverte de sortir du champ visible ou de glisser sous la barre d'en-tête supérieure (Accueil, Charger, Créer, Modifier). Un clic sur le bouton <strong>&minus;</strong> réduit instantanément la fenêtre à sa <strong>stricte ligne d'en-tête</strong> (titre, boutons <strong>&minus;</strong>, <strong>□</strong>, <strong>✕</strong>) sans aucun espace vide résiduel.</li>
                 <li><strong>Décalage parallèle automatique (anti-superposition) :</strong> lorsque 2 ou 3 traces empruntent un même sentier ou tronçon commun, l'application applique automatiquement un décalage latéral vectoriel intelligent afin que toutes les traces restent parfaitement visibles en parallèle côte à côte avec leur halo de contraste blanc, sans qu'aucune ne masque les autres (même en sens inverse).</li>
                 <li><strong>Recentrage &amp; Suppression individuelle :</strong> bouton cible 🎯 pour centrer la carte sur une trace, et <strong>bouton croix ✕ en regard de chaque trace</strong> pour la retirer individuellement sans effacer les autres. Bouton « Tout effacer » pour vider la carte.</li>
+                <li><strong>👁️ Visualisation sélective (Bouton Œil en regard de chaque trace) :</strong> un <strong>bouton œil 👁️</strong> placé sur chaque ligne de trace permet d'afficher ou de masquer à volonté chaque parcours individuellement sans le supprimer. Lorsqu'une trace est masquée (icône œil barré), son tracé et ses repères disparaissent de la carte, son libellé s'estompe dans le panneau, et les décalages parallèles des traces restantes sont automatiquement recalculés en temps réel. Un nouveau clic réactive instantanément son affichage.</li>
                 <li><strong>Fenêtre redimensionnable &amp; déplaçable :</strong> glissez le panneau par son en-tête ou ajustez ses dimensions à l'écran en toute liberté.</li>
               </ul>
             </div>
@@ -8480,7 +8481,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=157"></script>
   <script src="js/ign-top25-sheets.js?v=157"></script>
-  <script src="js/map-manager.js?v=216"></script>
+  <script src="js/map-manager.js?v=217"></script>
 
   <script src="js/pdf-exporter.js?v=171"></script>
   <script src="js/gr-manager.js?v=157"></script>
