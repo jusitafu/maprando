@@ -8088,7 +8088,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         // Détection si c'est un POI patrimonial ou touristique
         const isHistoric = !!historic;
         const isViewpoint = tourism === 'viewpoint';
-        const isAttraction = tourism === 'attraction' || tourism === 'artwork';
+        const isAttraction = tourism === 'attraction' || tourism === 'artwork' || tourism === 'museum';
         const isNaturalCuriosity = natural === 'cave_entrance' || natural === 'waterfall' || (natural === 'peak' && tags.name) || natural === 'stone';
         const isHeritage = !!heritage;
 
@@ -8384,6 +8384,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
           popupAnchor: [0, -22]
         });
 
+        const safeKey = key.replace(/[^a-zA-Z0-9_-]/g, '_');
         const safeName = name.replace(/'/g, "\\'");
         const popupHtml = `
           <div class="p-1 min-w-[210px] max-w-[280px] text-slate-800">
@@ -8397,6 +8398,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
             ${description ? `<div class="text-[11.5px] text-slate-600 mt-1.5 italic leading-tight bg-slate-50 p-1.5 rounded-lg border border-slate-100">${description}</div>` : ''}
             ${start_date ? `<div class="text-[11px] text-amber-800 font-semibold mt-1">⏳ ${start_date}</div>` : ''}
             ${distMsg}
+            
+            <div id="heritage-wiki-${safeKey}" class="empty:hidden"></div>
+
             <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
               <button type="button" title="Cliquer pour copier les coordonnées GPS (${lat.toFixed(5)}, ${lon.toFixed(5)})" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 text-[10.5px] font-mono font-bold flex items-center gap-1.5 transition cursor-pointer shadow-xs active:scale-95 group" onclick="window.MapManagerInstance.copyGpsCoords(${lat.toFixed(5)}, ${lon.toFixed(5)}, this)"><span style="font-size: 12px;">📋</span> <span>${lat.toFixed(5)}, ${lon.toFixed(5)}</span></button>
               <button type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] shadow transition cursor-pointer flex items-center gap-1" onclick="window.MapManagerInstance.addHeritageAsWaypoint('${safeName}', ${lat}, ${lon})">
@@ -8407,13 +8411,22 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         `;
 
         const marker = L.marker([lat, lon], { icon })
-          .bindPopup(popupHtml)
+          .bindPopup(popupHtml, { autoPanPadding: [25, 80], maxWidth: 300 })
           .bindTooltip(name, {
             permanent: false,
             direction: 'top',
             offset: [0, -18],
             className: 'heritage-tooltip-label'
           });
+
+        marker.on('popupopen', () => {
+          const container = document.getElementById(`heritage-wiki-${safeKey}`);
+          if (marker._wikiSummary && container) {
+            this._renderWikiCard(container, marker._wikiSummary);
+          } else if (!marker._wikiChecked) {
+            this.enrichHeritageMarkerWithWiki(safeKey, name, tags, marker);
+          }
+        });
 
         this.heritageLayer.addLayer(marker);
       });
@@ -8568,6 +8581,156 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
     this.showStandaloneGpxHud();
     if (window.GpxCreatorEditorInstance) {
       window.GpxCreatorEditorInstance.showUndoFeedback(`✅ Jalon "${name}" ajouté à la randonnée !`);
+    }
+  }
+
+  // =========================================================================
+  // ENRICHISSEMENT CONDITIONNEL WIKIPÉDIA (PATRIMOINE)
+  // N'affiche une section Wikipédia QUE si un article existe réellement.
+  // Désactivable instantanément en passant enablePatrimoineWikipedia à false.
+  // =========================================================================
+  enablePatrimoineWikipedia = true;
+
+  async enrichHeritageMarkerWithWiki(safeKey, name, tags, marker) {
+    if (!this.enablePatrimoineWikipedia) return;
+    if (marker._wikiChecked) return;
+    marker._wikiChecked = true;
+
+    try {
+      const wikiRef = await this.resolveWikipediaReference(name, tags);
+      if (!wikiRef || !wikiRef.title) return;
+
+      const summary = await this.fetchWikipediaSummary(wikiRef);
+      if (!summary || !summary.extract) return;
+
+      marker._wikiSummary = summary;
+      const container = document.getElementById(`heritage-wiki-${safeKey}`);
+      if (container) {
+        this._renderWikiCard(container, summary);
+      }
+    } catch (e) {
+      // Échec silencieux complet
+    }
+  }
+
+  _renderWikiCard(container, summary) {
+    if (!container || !summary) return;
+    const cleanTitle = (summary.title || '').replace(/"/g, '&quot;');
+    const thumbHtml = summary.thumbnail ? `
+      <div class="mb-1.5 rounded overflow-hidden max-h-24 bg-slate-100 flex items-center justify-center border border-amber-200/50">
+        <img src="${summary.thumbnail}" class="w-full h-20 object-cover rounded shadow-xs" alt="${cleanTitle}" loading="lazy"/>
+      </div>
+    ` : '';
+
+    container.innerHTML = `
+      <div class="mt-2.5 pt-2 border-t border-amber-200/80 bg-gradient-to-b from-amber-50/90 to-amber-100/50 -mx-1 -mb-1 px-2.5 py-2 rounded-b-xl shadow-inner">
+        <div class="flex items-center justify-between text-[11px] font-bold text-slate-800 mb-1">
+          <span class="flex items-center gap-1.5 text-amber-900 font-black"><span style="font-size:12px;">📖</span> <span>Wikipédia</span></span>
+          <a href="${summary.url}" target="_blank" rel="noopener noreferrer" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-0.5 font-bold" title="Lire l'article complet sur Wikipédia">
+            <span>Article complet</span> <span>↗</span>
+          </a>
+        </div>
+        ${thumbHtml}
+        <div class="text-[11px] text-slate-700 leading-snug line-clamp-3 font-normal select-text">
+          ${summary.extract}
+        </div>
+      </div>
+    `;
+    container.classList.remove('empty:hidden');
+  }
+
+  async resolveWikipediaReference(name, tags) {
+    if (!this.enablePatrimoineWikipedia) return null;
+    if (!tags) tags = {};
+    // 1. Tag wikipedia direct (ex: "fr:Château de...", "https://fr.wikipedia.org/wiki/...")
+    const rawWiki = tags.wikipedia || tags['wikipedia:fr'] || tags['wikipedia:en'];
+    if (rawWiki && typeof rawWiki === 'string') {
+      let lang = 'fr';
+      let title = rawWiki.trim();
+      if (title.startsWith('http://') || title.startsWith('https://')) {
+        const match = title.match(/([a-z]{2})\.wikipedia\.org\/wiki\/(.+)/i);
+        if (match) {
+          lang = match[1].toLowerCase();
+          title = decodeURIComponent(match[2]);
+        }
+      } else if (title.includes(':')) {
+        const parts = title.split(':');
+        lang = parts[0].toLowerCase();
+        title = parts.slice(1).join(':').trim();
+      }
+      return { lang, title: title.replace(/_/g, ' ') };
+    }
+
+    // 2. Tag wikidata direct (ex: "Q123456") -> résolution du sitelink frwiki
+    const wikidata = tags.wikidata;
+    if (wikidata && typeof wikidata === 'string' && /^Q\d+$/.test(wikidata.trim())) {
+      try {
+        const wUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${wikidata.trim()}&props=sitelinks&sitefilter=frwiki|enwiki&format=json&origin=*`;
+        const res = await fetch(wUrl);
+        if (res.ok) {
+          const data = await res.json();
+          const entity = data.entities && data.entities[wikidata.trim()];
+          if (entity && entity.sitelinks) {
+            if (entity.sitelinks.frwiki) {
+              return { lang: 'fr', title: entity.sitelinks.frwiki.title };
+            } else if (entity.sitelinks.enwiki) {
+              return { lang: 'en', title: entity.sitelinks.enwiki.title };
+            }
+          }
+        }
+      } catch (e) {
+        // Silencieux
+      }
+    }
+
+    // 3. Si aucun tag wikipedia/wikidata, mais un nom propre explicite et non générique
+    if (name && !this.isGenericPoiName(name)) {
+      return { lang: 'fr', title: name.trim() };
+    }
+
+    return null;
+  }
+
+  isGenericPoiName(name) {
+    if (!name || typeof name !== 'string') return true;
+    const n = name.trim().toLowerCase();
+    if (n.length < 3) return true;
+    const genericTerms = [
+      'four à chaux', 'ancien four', 'four', 'lavoir', 'fontaine', 'borne', 
+      'croix', 'oratoire', 'calvaire', 'table d\'orientation', 'belvédère', 
+      'point de vue', 'sommet', 'pic', 'grotte', 'aven', 'ruines', 'bunker',
+      'tombe', 'stèle', 'source', 'moulin', 'aqueduc', 'pont', 'monument',
+      'statue', 'sculpture', 'bâtiment', 'bâti', 'borie', 'abris', 'abri'
+    ];
+    if (genericTerms.some(g => n === g || n === g + 's')) return true;
+    if (n.startsWith('four à chaux') || n.startsWith('ancien four à chaux')) return true;
+    if (n.startsWith('four ') && n.length < 20) return true;
+    if (n.startsWith('lavoir ') && n.length < 20) return true;
+    if (n.startsWith('borne ') && !n.includes('milliaire')) return true;
+    if (n.startsWith('croix ') && n.length < 18) return true;
+    if (n.startsWith('oratoire ') && n.length < 20) return true;
+    return false;
+  }
+
+  async fetchWikipediaSummary(wikiRef) {
+    if (!wikiRef || !wikiRef.title) return null;
+    const lang = wikiRef.lang || 'fr';
+    const encTitle = encodeURIComponent(wikiRef.title.replace(/ /g, '_'));
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encTitle}`;
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.type === 'disambiguation' || !data.extract) return null;
+      return {
+        title: data.title || wikiRef.title,
+        extract: data.extract,
+        description: data.description || '',
+        thumbnail: (data.thumbnail && data.thumbnail.source) ? data.thumbnail.source : null,
+        url: (data.content_urls && data.content_urls.desktop) ? data.content_urls.desktop.page : `https://${lang}.wikipedia.org/wiki/${encTitle}`
+      };
+    } catch (e) {
+      return null;
     }
   }
 
