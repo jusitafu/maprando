@@ -7765,7 +7765,14 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     try {
       const url = `https://api.openstreetmap.org/api/0.6/map?bbox=${minLon.toFixed(4)},${minLat.toFixed(4)},${maxLon.toFixed(4)},${maxLat.toFixed(4)}`;
-      const resp = await fetch(url);
+      let resp = await fetch(url);
+      if (!resp.ok && resp.status === 400) {
+        const smallSpan = 0.012; // ~1.2 km
+        const cLat = (minLat + maxLat) / 2;
+        const cLon = (minLon + maxLon) / 2;
+        const fallbackUrl = `https://api.openstreetmap.org/api/0.6/map?bbox=${(cLon - smallSpan/2).toFixed(4)},${(cLat - smallSpan/2).toFixed(4)},${(cLon + smallSpan/2).toFixed(4)},${(cLat + smallSpan/2).toFixed(4)}`;
+        resp = await fetch(fallbackUrl);
+      }
       if (!resp.ok) throw new Error("OSM status: " + resp.status);
       const xmlText = await resp.text();
       const parser = new DOMParser();
@@ -7971,16 +7978,26 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       });
     }
 
+    if (window.GpxCreatorEditorInstance && Array.isArray(window.GpxCreatorEditorInstance.trackPoints)) {
+      window.GpxCreatorEditorInstance.trackPoints.forEach(p => {
+        if (p && (p.lat !== undefined || p[0] !== undefined)) {
+          const lat = p.lat !== undefined ? p.lat : p[0];
+          const lon = p.lon !== undefined ? p.lon : (p.lng !== undefined ? p.lng : p[1]);
+          allPts.push({ lat, lon });
+        }
+      });
+    }
+
     if (allPts.length > 0) {
       minLat = Math.min(...allPts.map(p => p.lat));
       maxLat = Math.max(...allPts.map(p => p.lat));
       minLon = Math.min(...allPts.map(p => p.lon));
       maxLon = Math.max(...allPts.map(p => p.lon));
-      // Marge de recherche de ~450 m autour de la trace
-      minLat -= 0.004;
-      maxLat += 0.004;
-      minLon -= 0.0055;
-      maxLon += 0.0055;
+      // Marge de recherche de ~400 m autour de la trace
+      minLat -= 0.0035;
+      maxLat += 0.0035;
+      minLon -= 0.0045;
+      maxLon += 0.0045;
     } else {
       const b = this.map.getBounds();
       minLat = b.getSouth();
@@ -7989,13 +8006,14 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       maxLon = b.getEast();
     }
 
-    // Protection taille bbox pour API OSM
+    // Protection taille bbox pour API OSM (limite stricte sous les 50 000 nœuds OSM)
     const latSpan = maxLat - minLat;
     const lonSpan = maxLon - minLon;
-    const maxAllowedSpan = 0.045; // ~4.5 km
+    const maxAllowedSpan = 0.022; // ~2.2 km
     if (latSpan > maxAllowedSpan || lonSpan > maxAllowedSpan) {
-      const cLat = (minLat + maxLat) / 2;
-      const cLon = (minLon + maxLon) / 2;
+      const mapC = this.map.getCenter();
+      const cLat = mapC ? mapC.lat : ((minLat + maxLat) / 2);
+      const cLon = mapC ? mapC.lng : ((minLon + maxLon) / 2);
       minLat = cLat - (maxAllowedSpan / 2);
       maxLat = cLat + (maxAllowedSpan / 2);
       minLon = cLon - (maxAllowedSpan / 2);
@@ -8008,7 +8026,15 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     try {
       const url = `https://api.openstreetmap.org/api/0.6/map?bbox=${minLon.toFixed(4)},${minLat.toFixed(4)},${maxLon.toFixed(4)},${maxLat.toFixed(4)}`;
-      const resp = await fetch(url);
+      let resp = await fetch(url);
+      if (!resp.ok && resp.status === 400) {
+        // En cas de zone urbaine très dense (>50 000 nœuds OSM), réduction automatique de l'emprise
+        const smallSpan = 0.012; // ~1.2 km
+        const cLat = (minLat + maxLat) / 2;
+        const cLon = (minLon + maxLon) / 2;
+        const fallbackUrl = `https://api.openstreetmap.org/api/0.6/map?bbox=${(cLon - smallSpan/2).toFixed(4)},${(cLat - smallSpan/2).toFixed(4)},${(cLon + smallSpan/2).toFixed(4)},${(cLat + smallSpan/2).toFixed(4)}`;
+        resp = await fetch(fallbackUrl);
+      }
       if (!resp.ok) throw new Error("OSM status: " + resp.status);
       const xmlText = await resp.text();
       const parser = new DOMParser();
@@ -8371,13 +8397,17 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       this.updateHeritageUi();
 
       if (window.GpxCreatorEditorInstance) {
-        window.GpxCreatorEditorInstance.showUndoFeedback(`🏛️ ${count} élément(s) de patrimoine trouvés`);
+        if (count === 0) {
+          window.GpxCreatorEditorInstance.showUndoFeedback("🏛️ Aucun élément de patrimoine répertorié dans ce secteur");
+        } else {
+          window.GpxCreatorEditorInstance.showUndoFeedback(`🏛️ ${count} élément(s) de patrimoine trouvés`);
+        }
       }
 
     } catch (err) {
       console.warn("Échec requête Patrimoine OSM :", err);
       if (window.GpxCreatorEditorInstance) {
-        window.GpxCreatorEditorInstance.showUndoFeedback("⚠️ Info patrimoine indisponible");
+        window.GpxCreatorEditorInstance.showUndoFeedback("⚠️ Info patrimoine indisponible (serveur OSM occupé ou hors ligne)");
       }
     }
   }
