@@ -553,6 +553,22 @@
         if (lockModal) lockModal.classList.add('hidden');
         this.hideStandaloneGpxHud();
         if (typeof GrManager !== 'undefined') GrManager.removeGrBanner();
+
+        // ÉTANCHÉITÉ STRICTE : Fermer toutes les fenêtres modales et réinitialiser l'onglet sur explorer
+        const modalsToClose = [
+          'modal-cgu', 'modal-jldapps', 'modal-mode-emploi',
+          'screen-calib-modal', 'map-area-export-modal', 'map-legend-modal'
+        ];
+        modalsToClose.forEach(id => {
+          const m = document.getElementById(id);
+          if (m) m.classList.add('hidden');
+        });
+        if (window.App) window.App.currentTab = 'explorer';
+        document.querySelectorAll('.tab-content').forEach(tc => {
+          if (tc.id === 'tab-content-explorer') tc.classList.remove('hidden');
+          else tc.classList.add('hidden');
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
       } else if (viewName === 'guides') {
@@ -568,6 +584,17 @@
         // =====================================================================
         if (viewMapContainer) viewMapContainer.classList.remove('hidden');
         if (lockModal) lockModal.classList.add('hidden');
+
+        // ÉTANCHÉITÉ STRICTE : La carte Carte & Outils doit afficher exclusivement la carte (#tab-content-explorer)
+        // et masquer rigoureusement tout écran d'options, chargement ou gestion adhérents
+        document.querySelectorAll('.tab-content').forEach(tc => {
+          if (tc.id === 'tab-content-explorer') {
+            tc.classList.remove('hidden');
+          } else {
+            tc.classList.add('hidden');
+          }
+        });
+        if (window.App) window.App.currentTab = 'explorer';
 
         // Réinitialiser systématiquement les outils temporaires (caps, mesures, zone d'impression)
         try {
@@ -598,6 +625,24 @@
         // =====================================================================
         if (viewMapContainer) viewMapContainer.classList.remove('hidden');
         this.hideStandaloneGpxHud();
+
+        // ÉTANCHÉITÉ STRICTE : Réinitialiser proprement sur l'explorateur (carte + rando)
+        if (window.App) window.App.currentTab = 'explorer';
+        document.querySelectorAll('.tab-content').forEach(tc => {
+          if (tc.id === 'tab-content-explorer') {
+            tc.classList.remove('hidden');
+          } else {
+            tc.classList.add('hidden');
+          }
+        });
+        document.querySelectorAll('[data-tab]').forEach(btn => {
+          const isExp = btn.getAttribute('data-tab') === 'explorer';
+          btn.classList.toggle('bg-emerald-700', isExp);
+          btn.classList.toggle('text-white', isExp);
+          btn.classList.toggle('shadow-sm', isExp);
+          btn.classList.toggle('text-slate-300', !isExp);
+          btn.classList.toggle('hover:bg-slate-800', !isExp);
+        });
 
         const isAuthed = typeof window.AuthManager !== 'undefined' && window.AuthManager.isAuthenticated();
         this.applyFreeMapMode(false);
@@ -730,6 +775,15 @@
         if (quickGpxBtn) quickGpxBtn.classList.remove('hidden');
         if (createGpxBtn) createGpxBtn.classList.remove('hidden');
         if (editGpxBtn) editGpxBtn.classList.remove('hidden');
+
+        // ÉTANCHÉITÉ STRICTE : Forcer l'affichage exclusif de l'onglet carte
+        document.querySelectorAll('.tab-content').forEach(tc => {
+          if (tc.id === 'tab-content-explorer') {
+            tc.classList.remove('hidden');
+          } else {
+            tc.classList.add('hidden');
+          }
+        });
 
         // Forcer la carte en pleine page (100% largeur / hauteur, cacher la colonne tableau)
         if (tableCol) {

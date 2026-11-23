@@ -902,7 +902,7 @@ class AppController {
 
   switchTab(tabName) {
     if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
-      return;
+      if (tabName !== 'explorer') return;
     }
     if (tabName === 'upload' && typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
@@ -3896,7 +3896,7 @@ class AppController {
 
   switchTab(tabName) {
     if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
-      return;
+      if (tabName !== 'explorer') return;
     }
     if (tabName === 'upload' && typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
@@ -6890,7 +6890,7 @@ class AppController {
 
   switchTab(tabName) {
     if (window.location.hash.startsWith('#carte') || window.PortalRouterInstance?.currentView === 'carte') {
-      return;
+      if (tabName !== 'explorer') return;
     }
     if (tabName === 'upload' && typeof AuthManager !== 'undefined' && !AuthManager.hasPermission('can_upload')) {
       this.showToast("Accès restreint : Vous n'avez pas l'autorisation de charger des randonnées.", "error");
