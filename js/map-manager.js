@@ -400,6 +400,17 @@ class MapManager {
 
     const grMapLayer = L.layerGroup([esriLightGray, ignPlanEpure, waymarkedGrOverlay]);
 
+    // Références directes vers les couches de fond pour gestion fine et cohérence des attributions
+    this.ignTop25Layer = ignTop25;
+    this.ignPlanLayer = ignPlan;
+    this.osmFrLayer = osmFr;
+    this.openTopoLayer = openTopo;
+    this.esriSatLayer = esriSat;
+    this.ignSatLayer = ignSat;
+    this.esriLightGrayLayer = esriLightGray;
+    this.ignPlanEpureLayer = ignPlanEpure;
+    this.grMapLayer = grMapLayer;
+
 
 
     // -------------------------------------------------------------
@@ -572,7 +583,14 @@ class MapManager {
 
     });
 
-
+    this.swisstopoLayer = swisstopo;
+    this.ignSpainLayer = ignSpain;
+    this.ignBelgiumLayer = ignBelgium;
+    this.ignGermanyLayer = ignGermany;
+    this.ignAustriaLayer = ignAustria;
+    this.ignItalyLayer = ignItaly;
+    this.ignLuxembourgLayer = ignLuxembourg;
+    this.ignNorwayLayer = ignNorway;
 
     this.baseLayers = {
 
@@ -638,7 +656,8 @@ class MapManager {
 
     });
 
-
+    // Synchronisation initiale immédiate de la barre d'attribution avec le calque actif
+    this.syncAttribution();
 
     this.utmGridLayer = L.layerGroup();
 
@@ -811,6 +830,9 @@ class MapManager {
         this.onBaseLayerChangeCallback(this.currentBaseLayer);
 
       }
+
+      // Synchronisation stricte de la barre d'attribution Leaflet avec le fond sélectionné
+      this.syncAttribution();
 
     });
 
@@ -1581,38 +1603,41 @@ class MapManager {
 
     let targetKey = key;
 
-    for (const [name, layer] of Object.entries(this.baseLayers)) {
+    // Correspondance directe haute précision
+    if (key === 'swisstopo' || key === 'ch') { targetLayer = this.swisstopoLayer; targetKey = 'swisstopo'; }
+    else if (key === 'ignspain' || key === 'es') { targetLayer = this.ignSpainLayer; targetKey = 'ignspain'; }
+    else if (key === 'ignbelgium' || key === 'be') { targetLayer = this.ignBelgiumLayer; targetKey = 'ignbelgium'; }
+    else if (key === 'igngermany' || key === 'de') { targetLayer = this.ignGermanyLayer; targetKey = 'igngermany'; }
+    else if (key === 'ignaustria' || key === 'at') { targetLayer = this.ignAustriaLayer; targetKey = 'ignaustria'; }
+    else if (key === 'ignitaly' || key === 'it') { targetLayer = this.ignItalyLayer; targetKey = 'ignitaly'; }
+    else if (key === 'ignluxembourg' || key === 'lu') { targetLayer = this.ignLuxembourgLayer; targetKey = 'ignluxembourg'; }
+    else if (key === 'ignnorway' || key === 'no') { targetLayer = this.ignNorwayLayer; targetKey = 'ignnorway'; }
+    else if (key === 'opentopo' || key === 'opentopomap') { targetLayer = this.openTopoLayer; targetKey = 'opentopo'; }
+    else if (key === 'igntop25' || key === 'ign' || key === 'fr') { targetLayer = this.ignTop25Layer; targetKey = 'igntop25'; }
+    else if (key === 'ignplan') { targetLayer = this.ignPlanLayer; targetKey = 'ignplan'; }
+    else if (key === 'grmap') { targetLayer = this.grMapLayer; targetKey = 'grmap'; }
+    else if (key === 'osmfr' || key === 'osm') { targetLayer = this.osmFrLayer; targetKey = 'osmfr'; }
+    else if (key === 'satellite' || key === 'esri') { targetLayer = this.esriSatLayer; targetKey = 'satellite'; }
+    else if (key === 'ignsat') { targetLayer = this.ignSatLayer; targetKey = 'satellite'; }
 
-      const lower = name.toLowerCase();
-
-      if ((key === 'swisstopo' || key === 'ch') && (lower.includes('swisstopo') || lower.includes('suisse'))) { targetLayer = layer; targetKey = 'swisstopo'; break; }
-
-      if ((key === 'ignspain' || key === 'es') && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; targetKey = 'ignspain'; break; }
-
-      if ((key === 'ignbelgium' || key === 'be') && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; targetKey = 'ignbelgium'; break; }
-
-      if ((key === 'igngermany' || key === 'de') && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; targetKey = 'igngermany'; break; }
-
-      if ((key === 'ignaustria' || key === 'at') && (lower.includes('autriche') || lower.includes('austria') || lower.includes('öav') || lower.includes('oav'))) { targetLayer = layer; targetKey = 'ignaustria'; break; }
-
-      if ((key === 'ignitaly' || key === 'it') && (lower.includes('italie') || lower.includes('italy') || lower.includes('cai') || lower.includes('igm'))) { targetLayer = layer; targetKey = 'ignitaly'; break; }
-
-      if ((key === 'ignluxembourg' || key === 'lu') && (lower.includes('luxembourg') || lower.includes('geoportail.lu'))) { targetLayer = layer; targetKey = 'ignluxembourg'; break; }
-
-      if ((key === 'ignnorway' || key === 'no') && (lower.includes('norvège') || lower.includes('norvege') || lower.includes('norway') || lower.includes('kartverket'))) { targetLayer = layer; targetKey = 'ignnorway'; break; }
-
-      if ((key === 'opentopo' || key === 'opentopomap') && lower.includes('opentopo')) { targetLayer = layer; targetKey = 'opentopo'; break; }
-
-      if ((key === 'igntop25' || key === 'ign' || key === 'fr') && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; targetKey = 'igntop25'; break; }
-
-      if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; targetKey = 'ignplan'; break; }
-
-      if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré') || lower.includes('gr®'))) { targetLayer = layer; targetKey = 'grmap'; break; }
-
-      if (key === 'osmfr' && (lower.includes('openstreetmap') || lower.includes('sentiers') || lower.includes('france'))) { targetLayer = layer; targetKey = 'osmfr'; break; }
-
-      if (key === 'satellite' && lower.includes('satellite')) { targetLayer = layer; targetKey = 'satellite'; break; }
-
+    if (!targetLayer) {
+      for (const [name, layer] of Object.entries(this.baseLayers)) {
+        const lower = name.toLowerCase();
+        if ((key === 'swisstopo' || key === 'ch') && (lower.includes('swisstopo') || lower.includes('suisse'))) { targetLayer = layer; targetKey = 'swisstopo'; break; }
+        if ((key === 'ignspain' || key === 'es') && (lower.includes('espagne') || lower.includes('spain'))) { targetLayer = layer; targetKey = 'ignspain'; break; }
+        if ((key === 'ignbelgium' || key === 'be') && (lower.includes('belgique') || lower.includes('belgium'))) { targetLayer = layer; targetKey = 'ignbelgium'; break; }
+        if ((key === 'igngermany' || key === 'de') && (lower.includes('allemagne') || lower.includes('germany') || lower.includes('basemap.de'))) { targetLayer = layer; targetKey = 'igngermany'; break; }
+        if ((key === 'ignaustria' || key === 'at') && (lower.includes('autriche') || lower.includes('austria') || lower.includes('öav') || lower.includes('oav'))) { targetLayer = layer; targetKey = 'ignaustria'; break; }
+        if ((key === 'ignitaly' || key === 'it') && (lower.includes('italie') || lower.includes('italy') || lower.includes('cai') || lower.includes('igm'))) { targetLayer = layer; targetKey = 'ignitaly'; break; }
+        if ((key === 'ignluxembourg' || key === 'lu') && (lower.includes('luxembourg') || lower.includes('geoportail.lu'))) { targetLayer = layer; targetKey = 'ignluxembourg'; break; }
+        if ((key === 'ignnorway' || key === 'no') && (lower.includes('norvège') || lower.includes('norvege') || lower.includes('norway') || lower.includes('kartverket'))) { targetLayer = layer; targetKey = 'ignnorway'; break; }
+        if ((key === 'opentopo' || key === 'opentopomap') && lower.includes('opentopo')) { targetLayer = layer; targetKey = 'opentopo'; break; }
+        if ((key === 'igntop25' || key === 'ign' || key === 'fr') && (lower.includes('top 25') || lower.includes('top25'))) { targetLayer = layer; targetKey = 'igntop25'; break; }
+        if (key === 'ignplan' && lower.includes('plan')) { targetLayer = layer; targetKey = 'ignplan'; break; }
+        if (key === 'grmap' && (lower.includes('carte des gr') || lower.includes('fond épuré') || lower.includes('gr®'))) { targetLayer = layer; targetKey = 'grmap'; break; }
+        if (key === 'osmfr' && (lower.includes('openstreetmap') || lower.includes('osm'))) { targetLayer = layer; targetKey = 'osmfr'; break; }
+        if (key === 'satellite' && lower.includes('satellite')) { targetLayer = layer; targetKey = 'satellite'; break; }
+      }
     }
 
     if (targetLayer && !this.map.hasLayer(targetLayer)) {
@@ -1674,6 +1699,9 @@ class MapManager {
         this.onBaseLayerChangeCallback(this.currentBaseLayer);
 
       }
+
+      // Synchronisation stricte de la barre d'attribution Leaflet avec le fond sélectionné
+      this.syncAttribution();
 
     }
 
@@ -6188,7 +6216,7 @@ class MapManager {
 
 
 
-    const top25Layer = this.baseLayers && (this.baseLayers["🇫🇷 France (IGN TOP 25 officiel)"] || this.baseLayers["IGN TOP 25 (France officiel)"] || this.baseLayers["IGN TOP 25 (Carte papier officielle)"]);
+    const top25Layer = this.ignTop25Layer || (this.baseLayers && Object.entries(this.baseLayers).find(([k]) => k.includes('TOP 25') || k.includes('top25'))?.[1]);
 
     if (top25Layer) {
 
@@ -6196,13 +6224,12 @@ class MapManager {
 
     }
 
-    if (this._currentIgnAttribution !== newAttr && this.map.attributionControl) {
+    this._currentIgnAttribution = newAttr;
 
-      this.map.attributionControl.removeAttribution(this._currentIgnAttribution);
+    // Actualiser le cartouche Leaflet uniquement si le fond actif est bien IGN TOP 25
+    if (this.currentBaseLayer === 'igntop25') {
 
-      this.map.attributionControl.addAttribution(newAttr);
-
-      this._currentIgnAttribution = newAttr;
+      this.syncAttribution();
 
     }
 
@@ -6257,6 +6284,34 @@ class MapManager {
    * Interroge l'API WFS IGN graphe_scan25 pour obtenir la date et le titre de la feuille papier
 
    */
+
+  /**
+   * Synchronise strictement la barre d'attribution Leaflet avec les couches réellement actives sur la carte.
+   * Élimine radicalement tout résidu ou texte fantôme (ex: mention TOP 25 persistant sur un fond Esri, OSM ou Swisstopo).
+   */
+  syncAttribution() {
+    if (!this.map || !this.map.attributionControl) return;
+
+    const ctrl = this.map.attributionControl;
+
+    // 1. Réinitialiser complètement le registre interne Leaflet des attributions
+    ctrl._attributions = {};
+
+    // 2. Parcourir toutes les couches actuellement actives et affichées sur la carte
+    this.map.eachLayer((layer) => {
+      if (layer && typeof layer.getAttribution === 'function') {
+        const attr = layer.getAttribution();
+        if (attr) {
+          ctrl.addAttribution(attr);
+        }
+      }
+    });
+
+    // 3. Forcer la mise à jour visuelle du conteneur DOM Leaflet
+    if (typeof ctrl._update === 'function') {
+      ctrl._update();
+    }
+  }
 
   async fetchIgnSheetInfo(lat, lon) {
 
@@ -8852,22 +8907,17 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
       this.currentSatelliteDateStr = `Prise de vue : ${dateStr} (${provider})`;
 
-      // Mettre à jour l'attribution Leaflet
+      const isEsriActive = this.esriSatLayer && this.map.hasLayer(this.esriSatLayer);
+      const isIgnSatActive = this.ignSatLayer && this.map.hasLayer(this.ignSatLayer);
 
-      const satLayer = this.baseLayers && (this.baseLayers["Satellite France (IGN Ortho)"] || this.baseLayers["Satellite Mondial (Esri 🌍)"]);
+      if (isEsriActive && this.esriSatLayer) {
+        this.esriSatLayer.options.attribution = `&copy; Esri World Imagery (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
+      } else if (isIgnSatActive && this.ignSatLayer) {
+        this.ignSatLayer.options.attribution = `&copy; IGN France Orthophoto HD (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
+      }
 
-      if (satLayer) {
-
-        const satAttr = `&copy; Satellite (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
-
-        satLayer.options.attribution = satAttr;
-
-        if (this.map.attributionControl) {
-
-          this.map.attributionControl.addAttribution(satAttr);
-
-        }
-
+      if (this.currentBaseLayer === 'satellite') {
+        this.syncAttribution();
       }
 
     }
