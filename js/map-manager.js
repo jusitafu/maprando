@@ -8791,6 +8791,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     const lon = center.lng;
 
+    const isEsriActive = this.esriSatLayer && this.map.hasLayer(this.esriSatLayer);
+    const isIgnSatActive = this.ignSatLayer && this.map.hasLayer(this.ignSatLayer);
+
     let dateStr = '';
 
     let provider = '';
@@ -8799,10 +8802,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
     try {
 
-      if (this.isInsideFrance(lat, lon)) {
+      if (isIgnSatActive && this.isInsideFrance(lat, lon)) {
 
-        // Flux officiel IGN WFS Ortho
-
+        // Calque IGN Orthophoto HD actif -> Flux officiel IGN WFS Ortho
         const delta = 0.01;
 
         const url = `https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAME=ORTHOIMAGERY.ORTHOPHOTOS.GRAPHE-MOSAIQUAGE:graphe_bdortho&BBOX=${lat-delta},${lon-delta},${lat+delta},${lon+delta},urn:ogc:def:crs:EPSG::4326&OUTPUTFORMAT=application/json`;
@@ -8831,13 +8833,13 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
               }
 
-              provider = 'IGN BD ORTHO® (20 cm)';
+              provider = 'BD ORTHO® 20 cm';
 
             } else if (p.pva) {
 
               dateStr = String(p.pva);
 
-              provider = 'IGN BD ORTHO®';
+              provider = 'BD ORTHO®';
 
             }
 
@@ -8845,14 +8847,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
         }
 
-      }
+      } else if (isEsriActive || (!isIgnSatActive && !this.isInsideFrance(lat, lon))) {
 
-
-
-      if (!dateStr) {
-
-        // Esri World Imagery Identify
-
+        // Calque Esri World Imagery actif -> API Identify officielle Esri ArcGIS Online (sans mélange avec IGN)
         const esriUrl = `https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/identify?geometry=${lon},${lat}&geometryType=esriGeometryPoint&sr=4326&layers=top&tolerance=2&mapExtent=${lon-0.05},${lat-0.05},${lon+0.05},${lat+0.05}&imageDisplay=800,600,96&returnGeometry=false&f=json`;
 
         const eResp = await fetch(esriUrl);
@@ -8885,7 +8882,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
               }
 
-              provider = attr['SOURCE'] ? `Satellite ${attr['SOURCE']}` : 'Satellite Haute Résolution';
+              provider = attr['SOURCE'] ? attr['SOURCE'] : 'Maxar';
 
             }
 
@@ -8903,23 +8900,24 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
 
 
-    if (dateStr) {
-
-      this.currentSatelliteDateStr = `Prise de vue : ${dateStr} (${provider})`;
-
-      const isEsriActive = this.esriSatLayer && this.map.hasLayer(this.esriSatLayer);
-      const isIgnSatActive = this.ignSatLayer && this.map.hasLayer(this.ignSatLayer);
-
-      if (isEsriActive && this.esriSatLayer) {
+    if (isEsriActive && this.esriSatLayer) {
+      if (dateStr) {
+        this.currentSatelliteDateStr = `Prise de vue : ${dateStr} (Esri ${provider})`;
         this.esriSatLayer.options.attribution = `&copy; Esri World Imagery (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
-      } else if (isIgnSatActive && this.ignSatLayer) {
-        this.ignSatLayer.options.attribution = `&copy; IGN France Orthophoto HD (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
+      } else {
+        this.esriSatLayer.options.attribution = `&copy; Esri World Imagery (Monde 🌍 & France)`;
       }
-
-      if (this.currentBaseLayer === 'satellite') {
-        this.syncAttribution();
+    } else if (isIgnSatActive && this.ignSatLayer) {
+      if (dateStr) {
+        this.currentSatelliteDateStr = `Prise de vue : ${dateStr} (IGN ${provider})`;
+        this.ignSatLayer.options.attribution = `&copy; IGN France (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
+      } else {
+        this.ignSatLayer.options.attribution = `&copy; IGN France (Orthophoto HD)`;
       }
+    }
 
+    if (this.currentBaseLayer === 'satellite') {
+      this.syncAttribution();
     }
 
   }
