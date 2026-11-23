@@ -811,7 +811,7 @@ class MapManager {
 
         if (this.currentBaseLayer === 'satellite') {
 
-          this.scheduleSatelliteDateUpdate();
+          this.updateSatelliteDate();
 
         }
 
@@ -1683,6 +1683,12 @@ class MapManager {
         if (this.utmGridLayer) {
 
           this.utmGridLayer.clearLayers();
+
+        }
+
+        if (targetKey === 'satellite') {
+
+          this.updateSatelliteDate();
 
         }
 
