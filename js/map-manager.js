@@ -350,7 +350,7 @@ class MapManager {
 
       maxZoom: 19,
 
-      attribution: '&copy; IGN France (Orthophoto HD)'
+      attribution: '&copy; IGN France (BD ORTHO® 20 cm)'
 
     });
 
@@ -763,7 +763,9 @@ class MapManager {
 
       } else {
 
-        if (name.includes('swisstopo') || name.includes('suisse')) this.currentBaseLayer = 'swisstopo';
+        if (name.includes('satellite') || name.includes('ortho')) this.currentBaseLayer = 'satellite';
+
+        else if (name.includes('swisstopo') || name.includes('suisse')) this.currentBaseLayer = 'swisstopo';
 
         else if (name.includes('espagne') || name.includes('spain')) this.currentBaseLayer = 'ignspain';
 
@@ -785,9 +787,7 @@ class MapManager {
 
         else if (name.includes('opentopo')) this.currentBaseLayer = 'opentopo';
 
-        else if (name.includes('france') || name.includes('openstreetmap') || name.includes('sentiers')) this.currentBaseLayer = 'osmfr';
-
-        else if (name.includes('satellite')) this.currentBaseLayer = 'satellite';
+        else if (name.includes('openstreetmap') || name.includes('sentiers') || name.includes('osm')) this.currentBaseLayer = 'osmfr';
 
         else this.currentBaseLayer = 'other';
 
@@ -8918,7 +8918,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
         this.currentSatelliteDateStr = `Prise de vue : ${dateStr} (IGN ${provider})`;
         this.ignSatLayer.options.attribution = `&copy; IGN France (${provider} • <span class="font-bold text-slate-800">Date : ${dateStr}</span>)`;
       } else {
-        this.ignSatLayer.options.attribution = `&copy; IGN France (Orthophoto HD)`;
+        this.ignSatLayer.options.attribution = `&copy; IGN France (BD ORTHO® 20 cm)`;
       }
     }
 
