@@ -8683,33 +8683,9 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       }
     }
 
-    // 3. Si aucun tag wikipedia/wikidata, mais un nom propre explicite et non générique
-    if (name && !this.isGenericPoiName(name)) {
-      return { lang: 'fr', title: name.trim() };
-    }
-
+    // Aucun tag officiel wikipedia ou wikidata certifié -> aucun affichage
+    // (Évite strictement les homonymies absurdes comme "Le Capucin" -> cheval de course)
     return null;
-  }
-
-  isGenericPoiName(name) {
-    if (!name || typeof name !== 'string') return true;
-    const n = name.trim().toLowerCase();
-    if (n.length < 3) return true;
-    const genericTerms = [
-      'four à chaux', 'ancien four', 'four', 'lavoir', 'fontaine', 'borne', 
-      'croix', 'oratoire', 'calvaire', 'table d\'orientation', 'belvédère', 
-      'point de vue', 'sommet', 'pic', 'grotte', 'aven', 'ruines', 'bunker',
-      'tombe', 'stèle', 'source', 'moulin', 'aqueduc', 'pont', 'monument',
-      'statue', 'sculpture', 'bâtiment', 'bâti', 'borie', 'abris', 'abri'
-    ];
-    if (genericTerms.some(g => n === g || n === g + 's')) return true;
-    if (n.startsWith('four à chaux') || n.startsWith('ancien four à chaux')) return true;
-    if (n.startsWith('four ') && n.length < 20) return true;
-    if (n.startsWith('lavoir ') && n.length < 20) return true;
-    if (n.startsWith('borne ') && !n.includes('milliaire')) return true;
-    if (n.startsWith('croix ') && n.length < 18) return true;
-    if (n.startsWith('oratoire ') && n.length < 20) return true;
-    return false;
   }
 
   async fetchWikipediaSummary(wikiRef) {
