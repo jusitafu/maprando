@@ -1960,6 +1960,7 @@
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">
                 <li><strong>Boîte flottante « TRACES GPX (X/3) » :</strong> chargez jusqu'à 3 fichiers GPX en glisser-déposer ou via « Charger 1 à 3 traces GPX ». Chaque trace dispose d'une pastille et d'une palette de 7 teintes vives (rouge, bleu, vert, orange, violet, cyan, noir) pour changer instantanément sa couleur sur la carte, de sa distance, de son dénivelé D+ et de son <strong>Indice IBP Index officiel</strong>.</li>
                 <li><strong>🎯 Bouton Centrage Clignotant au Chargement :</strong> dès le chargement d'une trace GPX, le <strong>bouton cible 🎯 (situé à gauche de la croix ✕) clignote de manière animée</strong> pour inviter l'utilisateur à centrer immédiatement la carte sur son tracé en un seul clic.</li>
+                <li><strong>📍 Bouton « Ma position » dans les barres de recherche :</strong> disponible immédiatement dans les barres de recherche des deux cartes (<em>Outils cartographiques &amp; GPX</em> et <em>Espace Randonner</em>), le bouton « 📍 Ma position » permet en un seul clic de géolocaliser l'appareil par GPS / GNSS, de centrer automatiquement la carte avec un cercle de précision et un repère animé, et de copier instantanément ses coordonnées géodésiques WGS84.</li>
                 <li><strong>🛡️ Confinement strict des fenêtres à l'écran &amp; Mode Réduit compact :</strong> le gestionnaire universel de fenêtres flottantes empêche strictement la boîte des traces, la fiche altimétrique, le créateur/éditeur GPX et toute fenêtre ouverte de sortir du champ visible ou de glisser sous la barre d'en-tête supérieure (Accueil, Charger, Créer, Modifier). Un clic sur le bouton <strong>&minus;</strong> réduit instantanément la fenêtre à sa <strong>stricte ligne d'en-tête</strong> (titre, boutons <strong>&minus;</strong>, <strong>□</strong>, <strong>✕</strong>) sans aucun espace vide résiduel.</li>
                 <li><strong>Décalage parallèle automatique (anti-superposition) :</strong> lorsque 2 ou 3 traces empruntent un même sentier ou tronçon commun, l'application applique automatiquement un décalage latéral vectoriel intelligent afin que toutes les traces restent parfaitement visibles en parallèle côte à côte avec leur halo de contraste blanc, sans qu'aucune ne masque les autres (même en sens inverse).</li>
                 <li><strong>Recentrage &amp; Suppression individuelle :</strong> bouton cible 🎯 pour centrer la carte sur une trace, et <strong>bouton croix ✕ en regard de chaque trace</strong> pour la retirer individuellement sans effacer les autres. Bouton « Tout effacer » pour vider la carte.</li>
@@ -3572,21 +3573,23 @@
 
               </div>
 
-              <input type="text" id="location-input" value="Sanary-sur-Mer" placeholder="Rechercher une ville dans le monde (ex: Rome, Tokyo, Madrid) ou adresse..." class="w-full pl-8 pr-16 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs sm:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              <input type="text" id="location-input" value="Sanary-sur-Mer" placeholder="Rechercher une ville dans le monde (ex: Rome, Tokyo, Madrid) ou adresse..." class="w-full pl-8 pr-28 sm:pr-32 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs sm:text-sm font-medium focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
 
               
 
               <!-- Action buttons inside input -->
 
-              <div class="absolute inset-y-0 right-1 flex items-center gap-0.5">
+              <div class="absolute inset-y-0 right-1.5 flex items-center gap-1">
 
-                <button id="btn-geoloc" class="p-1 hover:bg-slate-200 rounded text-slate-600 transition text-xs" title="Ma position GPS">
+                <button id="btn-geoloc" type="button" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-black transition-all shadow-xs flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95" title="Centrer la recherche sur ma position GPS actuelle">
 
-                  🛰️
+                  <span>📍</span>
+
+                  <span class="hidden sm:inline text-[11px] font-bold">Ma position</span>
 
                 </button>
 
-                <button id="btn-click-map" class="p-1 hover:bg-slate-200 rounded text-slate-600 transition text-xs" title="Cliquer sur la carte">
+                <button id="btn-click-map" type="button" class="p-1 hover:bg-slate-200 rounded text-slate-600 transition text-xs" title="Cliquer sur la carte pour choisir le point d'origine">
 
                   🗺️
 
@@ -3986,13 +3989,19 @@
           <!-- Recherche exhaustive d'un lieu / adresse (Monde entier) en mode Carte & Outils -->
           <div id="map-world-search-box" class="absolute top-3 left-3 sm:left-4 z-[1050] flex flex-col" style="display: flex !important;">
             <div class="relative flex items-center shadow-xl rounded-xl">
-              <input id="map-world-search-input" type="search"
-                     name="geo_search_address_input_no_autofill"
-                     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                     placeholder="🔍 Lieu, sommet, GR (GR 20) ou sentier (Francigena, West Highland Way)" 
-                     class="w-[300px] sm:w-[460px] max-w-[calc(100vw-5rem)] pl-3.5 pr-4 py-2 rounded-xl bg-white text-slate-900 placeholder-slate-400 border-2 border-slate-300 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 text-xs font-bold shadow-md transition-all"
-                     style="background-color: #ffffff !important; opacity: 1 !important;">
-              <button id="btn-clear-world-search" type="button" class="hidden absolute right-2.5 text-slate-400 hover:text-slate-700 font-bold text-xs cursor-pointer p-1" title="Effacer">✕</button>
+              <div class="relative flex items-center">
+                <input id="map-world-search-input" type="search"
+                       name="geo_search_address_input_no_autofill"
+                       autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                       placeholder="🔍 Lieu, sommet, GR (GR 20) ou sentier (Francigena, West Highland Way)" 
+                       class="w-[240px] sm:w-[380px] md:w-[420px] max-w-[calc(100vw-10rem)] pl-3.5 pr-8 py-2 rounded-xl bg-white text-slate-900 placeholder-slate-400 border-2 border-slate-300 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/40 text-xs font-bold shadow-md transition-all"
+                       style="background-color: #ffffff !important; opacity: 1 !important;">
+                <button id="btn-clear-world-search" type="button" class="hidden absolute right-2 text-slate-400 hover:text-slate-700 font-bold text-xs cursor-pointer p-1" title="Effacer">✕</button>
+              </div>
+              <button id="btn-map-world-geoloc" type="button" class="ml-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-md transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0 border-2 border-emerald-400/60 hover:scale-105 active:scale-95" title="Centrer la carte sur ma position GPS actuelle">
+                <span class="text-sm">📍</span>
+                <span class="hidden sm:inline">Ma position</span>
+              </button>
             </div>
             <div id="map-world-search-results" class="hidden mt-1.5 w-full max-h-72 overflow-y-auto rounded-xl shadow-2xl border-2 border-slate-300 z-[1100] divide-y divide-slate-100 text-xs" style="background-color: #ffffff !important; opacity: 1 !important; -webkit-overflow-scrolling: touch;"></div>
           </div>

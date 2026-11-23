@@ -7001,9 +7001,20 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       this.isHudMinimized = !this.isHudMinimized;
     }
     const hud = document.getElementById('standalone-gpx-hud');
-    if (hud && this.isHudMinimized) {
+    if (hud) {
       delete hud.dataset.userResized;
-      hud.classList.add('is-minimized');
+      hud.style.removeProperty('height');
+      hud.style.removeProperty('min-height');
+      hud.style.removeProperty('max-height');
+      hud.style.removeProperty('width');
+      hud.style.removeProperty('min-width');
+      hud.style.height = '';
+      hud.style.width = '';
+      if (this.isHudMinimized) {
+        hud.classList.add('is-minimized');
+      } else {
+        hud.classList.remove('is-minimized');
+      }
     }
     this.showStandaloneGpxHud();
   }
@@ -7066,17 +7077,17 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
 
       const isMoved = hud.dataset.userMoved === 'true';
       if (!isMoved) {
-        hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-3.5 sm:px-4 py-1.5 shadow-2xl flex items-center justify-between gap-3 text-sm text-white';
+        hud.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-3.5 sm:px-4 py-1.5 shadow-2xl flex items-center justify-between gap-3 text-sm text-white is-minimized movable-floating-window';
         hud.style.setProperty('top', '16px', 'important');
         hud.style.setProperty('left', '50%', 'important');
         hud.style.setProperty('transform', 'translateX(-50%)', 'important');
       } else {
-        hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-3.5 sm:px-4 py-1.5 shadow-2xl flex items-center justify-between gap-3 text-sm text-white';
+        hud.className = 'absolute z-30 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500 rounded-2xl px-3.5 sm:px-4 py-1.5 shadow-2xl flex items-center justify-between gap-3 text-sm text-white is-minimized movable-floating-window';
         hud.style.removeProperty('transform');
         if (hud.dataset.userLeft) hud.style.setProperty('left', `${hud.dataset.userLeft}px`, 'important');
         if (hud.dataset.userTop) hud.style.setProperty('top', `${hud.dataset.userTop}px`, 'important');
-        window.FloatingWindowManagerInstance?.clampWindow(hud);
       }
+      window.FloatingWindowManagerInstance?.clampWindow(hud);
 
       hud.innerHTML = `
         <div class="flex items-center gap-2.5 cursor-pointer select-none" onclick="window.MapManagerInstance.toggleMinimizeHud(false)" title="Cliquer pour agrandir le cartouche">
@@ -7128,6 +7139,7 @@ displayStandaloneGpxTrack(gpxData, fileName, preferredColor = null) {
       hud.style.setProperty('transform', 'none', 'important');
       if (hud.dataset.userLeft) hud.style.setProperty('left', `${hud.dataset.userLeft}px`, 'important');
       if (hud.dataset.userTop) hud.style.setProperty('top', `${hud.dataset.userTop}px`, 'important');
+      window.FloatingWindowManagerInstance?.clampWindow(hud);
     }
 
     // Si la fenêtre n'a pas été explicitement redimensionnée à la main par l'utilisateur,

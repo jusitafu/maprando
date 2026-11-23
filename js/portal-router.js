@@ -104,6 +104,111 @@
      * GESTION DU DOM ET NAVIGATION
      * ========================================================================= */
 
+    locateUserOnWorldMap() {
+      if (!navigator.geolocation) {
+        if (typeof window.App?.showToast === 'function') {
+          window.App.showToast("La géolocalisation n'est pas supportée par votre navigateur", "error");
+        }
+        return;
+      }
+
+      const btn = document.getElementById('btn-map-world-geoloc');
+      if (btn) btn.classList.add('animate-pulse');
+
+      if (typeof window.App?.showToast === 'function') {
+        window.App.showToast("Recherche de votre position GPS...", "info");
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          if (btn) btn.classList.remove('animate-pulse');
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const accuracy = Math.round(pos.coords.accuracy || 20);
+
+          let placeName = 'Ma position GPS';
+          try {
+            if (typeof GPXParser !== 'undefined' && GPXParser.reverseGeocode) {
+              placeName = await GPXParser.reverseGeocode(lat, lon);
+            }
+          } catch (e) {
+            console.warn('Reverse geocode error:', e);
+          }
+
+          const input = document.getElementById('map-world-search-input');
+          if (input) input.value = placeName || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+          const clearBtn = document.getElementById('btn-clear-world-search');
+          if (clearBtn) clearBtn.classList.remove('hidden');
+
+          if (window.MapManagerInstance && window.MapManagerInstance.map) {
+            const map = window.MapManagerInstance.map;
+            map.setView([lat, lon], 16, { animate: true });
+
+            if (window._worldSearchMarker) {
+              map.removeLayer(window._worldSearchMarker);
+            }
+            if (window._worldSearchCircle) {
+              map.removeLayer(window._worldSearchCircle);
+            }
+
+            window._worldSearchCircle = L.circle([lat, lon], {
+              radius: Math.max(20, accuracy),
+              color: '#10b981',
+              fillColor: '#10b981',
+              fillOpacity: 0.15,
+              weight: 2
+            }).addTo(map);
+
+            const userIcon = L.divIcon({
+              className: 'custom-world-user-marker',
+              html: `
+                <div style="position:relative; width:30px; height:30px; display:flex; align-items:center; justify-content:center;">
+                  <span style="position:absolute; width:30px; height:30px; border-radius:9999px; background:rgba(16,185,129,0.35); animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></span>
+                  <span style="position:relative; width:18px; height:18px; border-radius:9999px; background:#10b981; border:3px solid #ffffff; box-shadow:0 3px 10px rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; color:white; font-size:10px;">📍</span>
+                </div>
+              `,
+              iconSize: [30, 30],
+              iconAnchor: [15, 15],
+              popupAnchor: [0, -15]
+            });
+
+            const safePlace = (placeName || 'Ma position GPS').replace(/'/g, "\\'");
+            window._worldSearchMarker = L.marker([lat, lon], { icon: userIcon, zIndexOffset: 2000 })
+              .addTo(map)
+              .bindPopup(`
+                <div style="min-width:190px; font-family:sans-serif; padding:4px;">
+                  <div style="font-weight:900; font-size:13px; color:#065f46; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <span>📍</span> <span>Ma position GPS</span>
+                  </div>
+                  <div style="font-weight:700; font-size:12px; color:#1e293b; margin-bottom:4px;">${placeName}</div>
+                  <div style="font-size:10.5px; color:#64748b; font-family:monospace; margin-bottom:6px;">${lat.toFixed(5)}, ${lon.toFixed(5)} &bull; Précision: ~${accuracy}m</div>
+                  <button type="button" style="padding:4px 8px; border-radius:6px; background:#f1f5f9; border:1px solid #cbd5e1; font-size:10.5px; font-weight:700; color:#334155; cursor:pointer;" onclick="window.MapManagerInstance ? window.MapManagerInstance.copyGpsCoords(${lat.toFixed(5)}, ${lon.toFixed(5)}, this) : null">
+                    📋 Copier GPS
+                  </button>
+                </div>
+              `)
+              .openPopup();
+          }
+
+          if (typeof window.App?.showToast === 'function') {
+            window.App.showToast(`📍 Position trouvée : ${placeName}`, "success");
+          }
+        },
+        (err) => {
+          if (btn) btn.classList.remove('animate-pulse');
+          console.warn("Erreur géolocalisation GPS :", err);
+          if (typeof window.App?.showToast === 'function') {
+            window.App.showToast("Impossible d'accéder à votre position GPS.", "error");
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    }
+
     /* =========================================================================
      * RECHERCHE MONDE ENTIER (LIEUX, SOMMETS, ADRESSES)
      * ========================================================================= */
@@ -141,6 +246,14 @@
           results.classList.add('hidden');
           results.innerHTML = '';
           input.focus();
+        });
+      }
+
+      const worldGeolocBtn = document.getElementById('btn-map-world-geoloc');
+      if (worldGeolocBtn) {
+        worldGeolocBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.locateUserOnWorldMap();
         });
       }
 

@@ -233,17 +233,16 @@ class FloatingWindowManager {
   getHeaderBottom() {
     // 1. En priorité, le header de l'application cartographique (mode #carte)
     const mapHeader = document.getElementById('main-map-header') ||
-                      document.querySelector('#main-map-app-container header') ||
-                      document.getElementById('main-header');
-    if (mapHeader && mapHeader.offsetParent !== null) {
+                      document.querySelector('#main-map-app-container header');
+    if (mapHeader) {
       const rect = mapHeader.getBoundingClientRect();
-      if (rect.bottom > 0) return rect.bottom;
+      if (rect.height > 0) return Math.max(rect.bottom, rect.top + rect.height);
     }
-    // 2. Sinon, tout header ou nav visible
-    const anyHeader = document.querySelector('header') || document.querySelector('nav');
-    if (anyHeader && anyHeader.offsetParent !== null) {
+    // 2. Sinon, tout header visible
+    const anyHeader = document.querySelector('header');
+    if (anyHeader) {
       const rect = anyHeader.getBoundingClientRect();
-      if (rect.bottom > 0) return rect.bottom;
+      if (rect.height > 0) return Math.max(rect.bottom, rect.top + rect.height);
     }
     return 0;
   }
@@ -422,9 +421,14 @@ class FloatingWindowManager {
       const r = this.activeResize;
       if (r.type === 'top') {
         const dy = clientY - r.startY;
-        r.targetTop = r.initialTop + dy;
-        r.targetHeight = Math.max(r.minHeight, r.initialHeight - dy);
-        if (r.targetHeight >= r.minHeight && r.targetTop >= 4) {
+        const headerBottom = this.getHeaderBottom();
+        const minViewportY = headerBottom + 8;
+        const parentTop = r.el.offsetParent ? r.el.offsetParent.getBoundingClientRect().top : 0;
+        const minTop = Math.max(8, minViewportY - parentTop);
+
+        r.targetTop = Math.max(minTop, r.initialTop + dy);
+        r.targetHeight = Math.max(r.minHeight, r.initialHeight - (r.targetTop - r.initialTop));
+        if (r.targetHeight >= r.minHeight) {
           r.el.style.setProperty('top', `${r.targetTop}px`, 'important');
           r.el.style.setProperty('height', `${r.targetHeight}px`, 'important');
           r.el.dataset.userTop = String(r.targetTop);
@@ -504,8 +508,6 @@ class FloatingWindowManager {
    */
   clampWindow(el) {
     if (!el || el.classList.contains('hidden') || el.style.display === 'none') return;
-    const offsetParent = el.offsetParent || document.body;
-    const parentRect = offsetParent.getBoundingClientRect();
     const rect = el.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
@@ -525,9 +527,14 @@ class FloatingWindowManager {
     const clampedX = Math.min(Math.max(minX, curViewportX), maxX);
     const clampedY = Math.min(Math.max(minY, curViewportY), maxY);
 
-    if (Math.abs(clampedX - curViewportX) > 1 || Math.abs(clampedY - curViewportY) > 1) {
-      const newLeft = clampedX - parentRect.left;
-      const newTop = clampedY - parentRect.top;
+    const deltaX = clampedX - curViewportX;
+    const deltaY = clampedY - curViewportY;
+
+    if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) {
+      const curLeft = el.offsetLeft;
+      const curTop = el.offsetTop;
+      const newLeft = Math.round(curLeft + deltaX);
+      const newTop = Math.round(curTop + deltaY);
       el.style.setProperty('left', `${newLeft}px`, 'important');
       el.style.setProperty('top', `${newTop}px`, 'important');
       el.dataset.userLeft = String(newLeft);
@@ -536,7 +543,7 @@ class FloatingWindowManager {
   }
 
   /**
-   * Confinement automatique de toutes les fenêtres déplacées par l'utilisateur
+   * Confinement automatique de toutes les fenêtres déplacées ou ouvertes
    */
   clampAllMovedWindows() {
     const selectors = [
@@ -555,9 +562,7 @@ class FloatingWindowManager {
     ];
     selectors.forEach(sel => {
       document.querySelectorAll(sel).forEach(el => {
-        if (el.dataset.userMoved === 'true') {
-          this.clampWindow(el);
-        }
+        this.clampWindow(el);
       });
     });
   }
