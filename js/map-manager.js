@@ -663,9 +663,25 @@ class MapManager {
 
     this.paperSheetLayer = L.layerGroup();
 
+    // -------------------------------------------------------------
+    // SURCOUCHE OFFICIELLE DU CADASTRE (Parcellaire Express IGN France)
+    // Flux WMTS transparent : parcelles, sections et numéros de parcelles
+    // -------------------------------------------------------------
+    const cadastreLayer = L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng', {
+      minZoom: 12,
+      maxZoom: 19,
+      maxNativeZoom: 19,
+      opacity: 0.85,
+      zIndex: 450,
+      attribution: '&copy; IGN France (Cadastre Parcellaire)'
+    });
+    this.cadastreLayer = cadastreLayer;
+
     const overlayLayers = {
 
       "🌐 Carroyage UTM (Grille kilométrique)": this.utmGridLayer,
+
+      "📐 Cadastre (Parcelles IGN France)": this.cadastreLayer,
 
       "🗺️ Limites feuille papier (TOP 25)": this.paperSheetLayer
 
@@ -691,6 +707,12 @@ class MapManager {
     // Activer la grille kilométrique UTM par défaut (conforme carte papier IGN Top 25)
 
     this.utmGridLayer.addTo(this.map);
+
+    // Activer le cadastre si précédemment mémorisé par l'utilisateur
+    const showCadastre = localStorage.getItem('rf_show_cadastre_parcels') === 'true';
+    if (showCadastre) {
+      this.cadastreLayer.addTo(this.map);
+    }
 
 
 
@@ -1013,6 +1035,12 @@ class MapManager {
 
         this.renderUtmGrid();
 
+      } else if (e.layer === this.cadastreLayer) {
+
+        localStorage.setItem('rf_show_cadastre_parcels', 'true');
+
+        this.syncAttribution();
+
       } else if (e.layer === this.paperSheetLayer) {
 
         localStorage.setItem('rf_show_paper_sheet_bounds', 'true');
@@ -1030,6 +1058,12 @@ class MapManager {
       if (e.layer === this.utmGridLayer) {
 
         this.utmGridLayer.clearLayers();
+
+      } else if (e.layer === this.cadastreLayer) {
+
+        localStorage.setItem('rf_show_cadastre_parcels', 'false');
+
+        this.syncAttribution();
 
       } else if (e.layer === this.paperSheetLayer) {
 
@@ -5790,6 +5824,26 @@ class MapManager {
 
     }
 
+  }
+
+  /**
+   * Bascule l'affichage du calque Cadastre officiel IGN France (Parcellaire Express)
+   */
+  toggleCadastre(force) {
+    if (!this.map || !this.cadastreLayer) return;
+    const shouldShow = typeof force === 'boolean' ? force : !this.map.hasLayer(this.cadastreLayer);
+    if (shouldShow) {
+      if (!this.map.hasLayer(this.cadastreLayer)) {
+        this.cadastreLayer.addTo(this.map);
+      }
+      localStorage.setItem('rf_show_cadastre_parcels', 'true');
+    } else {
+      if (this.map.hasLayer(this.cadastreLayer)) {
+        this.map.removeLayer(this.cadastreLayer);
+      }
+      localStorage.setItem('rf_show_cadastre_parcels', 'false');
+    }
+    this.syncAttribution();
   }
 
 
