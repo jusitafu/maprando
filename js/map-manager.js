@@ -664,10 +664,18 @@ class MapManager {
     this.paperSheetLayer = L.layerGroup();
 
     // -------------------------------------------------------------
-    // SURCOUCHE OFFICIELLE DU CADASTRE (Parcellaire Express IGN France)
-    // Flux WMTS transparent : parcelles, sections et numéros de parcelles
+    // SURCOUCHE OFFICIELLE DU CADASTRE (Parcellaire Express & Sections IGN France)
+    // Flux WMTS transparent : lettres de sections + parcelles et numéros
     // -------------------------------------------------------------
-    const cadastreLayer = L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng', {
+    const cadastreSections = L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRAL.PARCELS.SECTIONS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng', {
+      minZoom: 13,
+      maxZoom: 19,
+      maxNativeZoom: 18,
+      opacity: 0.95,
+      zIndex: 449
+    });
+
+    const cadastreParcels = L.tileLayer('https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=CADASTRALPARCELS.PARCELLAIRE_EXPRESS&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=image%2Fpng', {
       minZoom: 12,
       maxZoom: 19,
       maxNativeZoom: 19,
@@ -675,6 +683,9 @@ class MapManager {
       zIndex: 450,
       attribution: '&copy; IGN France (Cadastre Parcellaire)'
     });
+
+    const cadastreLayer = L.layerGroup([cadastreSections, cadastreParcels]);
+    cadastreLayer.getAttribution = () => '&copy; IGN France (Cadastre Parcellaire)';
     this.cadastreLayer = cadastreLayer;
 
     const overlayLayers = {
