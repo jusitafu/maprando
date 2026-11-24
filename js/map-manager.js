@@ -257,6 +257,8 @@ class MapManager {
     this.savedCadastreParcels = [];
     this.savedParcelsLayerGroup = null;
     this.isCadastrePanelMinimized = false;
+    this.isParcelInfoMinimized = false;
+    this.currentParcelInfoData = null;
     this._selectedCommuneInsee = null;
     this._selectedCommuneNom = null;
     this._lastQueriedParcel = null;
@@ -5893,10 +5895,220 @@ class MapManager {
       if (this._cadastrePopup && this.map.hasLayer(this._cadastrePopup)) {
         this.map.closePopup(this._cadastrePopup);
       }
+      this.closeParcelInfo();
       localStorage.setItem('rf_show_cadastre_parcels', 'false');
       this.syncCadastreMenuVisibility(false);
     }
     this.syncAttribution();
+  }
+
+  /**
+   * Ferme la fenêtre flottante d'information de parcelle et efface le surlignage
+   */
+  closeParcelInfo() {
+    const panel = document.getElementById('cadastre-parcel-info-panel');
+    if (panel) panel.classList.add('hidden');
+    if (this.cadastreHighlightLayer) {
+      this.cadastreHighlightLayer.clearLayers();
+    }
+    if (this._cadastreAbortController) {
+      this._cadastreAbortController.abort();
+      this._cadastreAbortController = null;
+    }
+    this.currentParcelInfoData = null;
+  }
+
+  /**
+   * Réduit ou agrandit la fiche d'information parcelle
+   */
+  toggleMinimizeParcelInfo(force) {
+    const panel = document.getElementById('cadastre-parcel-info-panel');
+    const fullContent = document.getElementById('cadastre-parcel-info-body');
+    const minContent = document.getElementById('cadastre-parcel-info-minimized');
+    const minBtn = document.getElementById('btn-minimize-parcel-info');
+    if (!panel || !fullContent || !minContent) return;
+
+    if (force !== undefined) {
+      this.isParcelInfoMinimized = force;
+    } else {
+      this.isParcelInfoMinimized = !this.isParcelInfoMinimized;
+    }
+
+    if (this.isParcelInfoMinimized) {
+      fullContent.classList.add('hidden');
+      minContent.classList.remove('hidden');
+      if (minBtn) {
+        minBtn.innerHTML = '&#x25A1;';
+        minBtn.title = 'Agrandir la fiche parcelle';
+      }
+    } else {
+      fullContent.classList.remove('hidden');
+      minContent.classList.add('hidden');
+      if (minBtn) {
+        minBtn.innerHTML = '&minus;';
+        minBtn.title = 'Réduire la fiche parcelle';
+      }
+    }
+  }
+
+  /**
+   * Affiche la fiche d'information d'une parcelle dans la fenêtre flottante déplaçable
+   */
+  showCadastreParcelInfo(state, payload = {}) {
+    const panel = document.getElementById('cadastre-parcel-info-panel');
+    const titleEl = document.getElementById('cadastre-parcel-info-title');
+    const bodyEl = document.getElementById('cadastre-parcel-info-body');
+    const minTextEl = document.getElementById('cadastre-parcel-info-min-text');
+    if (!panel || !bodyEl) return;
+
+    panel.classList.remove('hidden');
+    this.toggleMinimizeParcelInfo(false);
+
+    if (state === 'loading') {
+      if (titleEl) titleEl.innerText = 'Interrogation Cadastre...';
+      if (minTextEl) minTextEl.innerText = 'Recherche en cours...';
+      bodyEl.innerHTML = `
+        <div class="p-3 text-slate-300 flex items-center gap-3 text-xs">
+          <div class="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+          <div>
+            <div class="font-bold text-amber-300">Recherche parcellaire IGN...</div>
+            <div class="text-[11px] text-slate-400">Interrogation des limites cadastrales</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    if (state === 'not_found') {
+      if (titleEl) titleEl.innerText = 'Cadastre Officiel';
+      if (minTextEl) minTextEl.innerText = 'Aucune parcelle trouvée';
+      bodyEl.innerHTML = `
+        <div class="p-2.5 text-xs text-slate-300 space-y-1.5 leading-relaxed bg-slate-950/60 rounded-xl border border-slate-800">
+          <div class="font-bold text-amber-300 flex items-center gap-1.5">
+            <span>ℹ️</span> <span>Aucune parcelle à ce point</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Le point cliqué est probablement situé sur le domaine public non cadastré (route, chemin communal, cours d'eau, mer) ou hors emprise cadastrale.</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (state === 'error') {
+      if (titleEl) titleEl.innerText = 'Cadastre Officiel';
+      if (minTextEl) minTextEl.innerText = 'Erreur réseau';
+      bodyEl.innerHTML = `
+        <div class="p-2.5 text-xs text-rose-300 space-y-1 bg-rose-950/50 rounded-xl border border-rose-800">
+          <div class="font-bold flex items-center gap-1.5">
+            <span>⚠️</span> <span>Impossible d'interroger le cadastre</span>
+          </div>
+          <p class="text-[11px] text-rose-200/80">${payload.message || 'Le serveur IGN Apicarto est momentanément indisponible.'}</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (state === 'success') {
+      const p = payload.props || {};
+      const latlng = payload.latlng || (this.map ? this.map.getCenter() : { lat: 0, lng: 0 });
+      const section = p.section || '—';
+      const numero = p.numero || '—';
+      const idu = p.idu || `${p.code_insee || ''}${section}${numero}`;
+      const nomCom = p.nom_com || 'Commune';
+      const codeDep = p.code_dep || '';
+      const isSaved = this.savedCadastreParcels && this.savedCadastreParcels.some(item => item.idu === idu);
+      const isListFull = this.savedCadastreParcels && this.savedCadastreParcels.length >= 50;
+      const savedCount = this.savedCadastreParcels ? this.savedCadastreParcels.length : 0;
+
+      let surfaceFormatted = 'Non renseignée';
+      let surfaceHa = '';
+      if (p.contenance != null) {
+        const c = Number(p.contenance);
+        if (!isNaN(c)) {
+          surfaceFormatted = `${c.toLocaleString('fr-FR')} m²`;
+          if (c >= 10000) {
+            const ha = (c / 10000).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            surfaceHa = `(${ha} ha)`;
+          }
+        }
+      }
+
+      if (titleEl) titleEl.innerText = `Parcelle ${section} n° ${numero}`;
+      if (minTextEl) minTextEl.innerText = `${nomCom} • Sec. ${section} n° ${numero} (${surfaceFormatted})`;
+
+      this.currentParcelInfoData = payload;
+
+      bodyEl.innerHTML = `
+        <!-- Ligne 1 : Commune & Département -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="font-black text-sm text-white flex items-center gap-1.5 truncate">
+            <span class="text-amber-400">📍</span>
+            <span class="truncate">${nomCom}</span>
+            ${codeDep ? `<span class="text-xs text-slate-400 font-mono font-semibold">(${codeDep})</span>` : ''}
+          </div>
+          ${p.code_insee ? `<span class="text-[10px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">INSEE ${p.code_insee}</span>` : ''}
+        </div>
+
+        <!-- Ligne 2 : Badges Section & Numéro -->
+        <div class="flex items-center gap-2 pt-0.5">
+          <div class="flex-1 px-2.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-center font-bold text-xs">
+            Section <span class="font-black text-sm text-white tracking-wider underline decoration-amber-400">${section}</span>
+          </div>
+          <div class="flex-1 px-2.5 py-1.5 rounded-xl bg-slate-800 text-white border border-slate-700 text-center font-mono font-bold text-xs">
+            Parcelle <span class="font-black text-sm text-amber-300">n° ${numero}</span>
+          </div>
+        </div>
+
+        <!-- Ligne 3 : Surface / Contenance -->
+        <div class="bg-slate-950/70 p-2 rounded-xl border border-slate-800 text-xs flex items-center justify-between">
+          <span class="text-slate-400 font-medium">Contenance officielle :</span>
+          <div class="text-right">
+            <span class="font-black text-amber-300 font-mono text-xs">${surfaceFormatted}</span>
+            ${surfaceHa ? `<span class="text-[10.5px] text-slate-400 font-normal ml-1">${surfaceHa}</span>` : ''}
+          </div>
+        </div>
+
+        <!-- Ligne 4 : Boutons Copie IDU & Coordonnées GPS -->
+        <div class="grid grid-cols-2 gap-1.5 text-[10.5px]">
+          <button type="button" 
+            title="Copier la référence cadastrale nationale unique (${idu})" 
+            class="px-2 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 hover:border-amber-400 font-mono font-bold flex items-center justify-center gap-1 transition cursor-pointer truncate active:scale-95" 
+            onclick="window.MapManagerInstance.copyCadastreRef('${idu}', this)">
+            <span>📋</span> <span class="truncate">IDU: ${idu}</span>
+          </button>
+          <button type="button" 
+            title="Copier les coordonnées GPS (${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)})" 
+            class="px-2 py-1.5 rounded-xl bg-slate-800 hover:bg-emerald-950/80 text-slate-200 hover:text-emerald-300 border border-slate-700 hover:border-emerald-400 font-mono font-bold flex items-center justify-center gap-1 transition cursor-pointer truncate active:scale-95" 
+            onclick="window.MapManagerInstance.copyGpsCoords(${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}, this)">
+            <span>📍</span> <span>${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}</span>
+          </button>
+        </div>
+
+        <!-- Ligne 5 : Action Ajouter ou Déjà enregistrée -->
+        <div class="pt-1">
+          ${isSaved ? `
+            <div class="flex items-center justify-between p-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-xs text-emerald-300 font-bold">
+              <div class="flex items-center gap-1.5">
+                <span>✅</span> <span>Enregistrée dans mes parcelles</span>
+              </div>
+              <button type="button" onclick="window.MapManagerInstance.toggleCadastrePanel(true)" class="text-[11px] text-amber-300 hover:underline cursor-pointer font-medium">
+                Voir liste ➔
+              </button>
+            </div>
+          ` : (isListFull ? `
+            <div class="p-2 rounded-xl bg-amber-950/60 border border-amber-500/50 text-xs text-amber-300 text-center font-bold">
+              ⚠️ Liste pleine (50/50 parcelles)
+            </div>
+          ` : `
+            <button type="button" 
+              id="btn-parcel-info-add"
+              onclick="window.MapManagerInstance.addCurrentParcelToSavedList(this)"
+              class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
+              <span>➕</span> <span>Ajouter à mes parcelles (<span id="cadastre-popup-count">${savedCount}</span>/50)</span>
+            </button>
+          `)}
+        </div>
+      `;
+    }
   }
 
   /**
@@ -5917,22 +6129,8 @@ class MapManager {
       this.cadastreHighlightLayer.clearLayers();
     }
 
-    // Afficher temporairement une popup de chargement discrète
-    const loadingPopup = L.popup({
-      autoPanPadding: [30, 80],
-      maxWidth: 320,
-      className: 'cadastre-parcel-popup'
-    })
-      .setLatLng(latlng)
-      .setContent(`
-        <div class="p-2 min-w-[210px] text-slate-700 flex items-center gap-2.5 text-xs font-semibold">
-          <div class="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
-          <span>Interrogation du cadastre IGN...</span>
-        </div>
-      `)
-      .openOn(this.map);
-
-    this._cadastrePopup = loadingPopup;
+    // Afficher la fenêtre flottante en état de chargement
+    this.showCadastreParcelInfo('loading', { latlng });
 
     try {
       const geomParam = JSON.stringify({
@@ -5948,26 +6146,12 @@ class MapManager {
 
       const data = await res.json();
       if (!this.map.hasLayer(this.cadastreLayer)) {
-        if (this._cadastrePopup && this.map.hasLayer(this._cadastrePopup)) {
-          this.map.closePopup(this._cadastrePopup);
-        }
+        this.closeParcelInfo();
         return;
       }
 
       if (!data || !data.features || data.features.length === 0) {
-        loadingPopup.setContent(`
-          <div class="p-2.5 min-w-[210px] text-slate-600 text-xs leading-relaxed">
-            <div class="font-bold text-amber-800 flex items-center gap-1.5 mb-1">
-              <span>ℹ️</span> <span>Cadastre IGN</span>
-            </div>
-            <div>Aucune parcelle cadastrale répertoriée à cet endroit (domaine public non cadastré, voirie ou hors emprise).</div>
-          </div>
-        `);
-        setTimeout(() => {
-          if (this._cadastrePopup === loadingPopup && this.map.hasLayer(loadingPopup)) {
-            this.map.closePopup(loadingPopup);
-          }
-        }, 3200);
+        this.showCadastreParcelInfo('not_found', { latlng });
         return;
       }
 
@@ -5992,132 +6176,13 @@ class MapManager {
         this.cadastreHighlightLayer.addLayer(geoLayer);
       }
 
-      // Nettoyage automatique du surlignage à la fermeture de la popup
-      loadingPopup.on('remove', () => {
-        if (this.cadastreHighlightLayer) {
-          this.cadastreHighlightLayer.clearLayers();
-        }
-      });
-
-      // Formatage de la contenance (surface)
-      let surfaceHtml = '<span class="text-slate-400 italic font-normal">Non renseignée</span>';
-      if (props.contenance != null) {
-        const c = Number(props.contenance);
-        if (!isNaN(c)) {
-          if (c >= 10000) {
-            const ha = (c / 10000).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            surfaceHtml = `<strong>${c.toLocaleString('fr-FR')} m²</strong> <span class="text-[11px] text-slate-500 font-normal">(${ha} ha)</span>`;
-          } else {
-            surfaceHtml = `<strong>${c.toLocaleString('fr-FR')} m²</strong>`;
-          }
-        }
-      }
-
-      const sectionStr = props.section || '—';
-      const numeroStr = props.numero || '—';
-      const iduStr = props.idu || `${props.code_insee || ''}${sectionStr}${numeroStr}`;
-      const isAlreadySaved = this.savedCadastreParcels && this.savedCadastreParcels.some(p => p.idu === iduStr || (p.code_insee === props.code_insee && p.section === sectionStr && p.numero === numeroStr));
-      const isListFull = this.savedCadastreParcels && this.savedCadastreParcels.length >= 12;
-      const savedCount = this.savedCadastreParcels ? this.savedCadastreParcels.length : 0;
-
-      const popupContent = `
-        <div class="p-1 min-w-[230px] max-w-[300px] text-slate-800 font-sans">
-          <!-- En-tête -->
-          <div class="flex items-center justify-between gap-2 border-b border-amber-200/80 pb-1.5 mb-2 pr-4">
-            <div class="flex items-center gap-1.5 font-black text-xs text-amber-800 uppercase tracking-wide">
-              <span>📐</span> <span>Cadastre Officiel</span>
-            </div>
-            <span class="text-[10px] text-slate-400 font-mono font-semibold">IGN France</span>
-          </div>
-
-          <!-- Commune -->
-          <div class="font-extrabold text-sm text-slate-900 leading-snug flex items-baseline gap-1.5">
-            <span class="text-base leading-none">📍</span>
-            <span>${props.nom_com || 'Commune'}</span>
-            ${props.code_dep ? `<span class="text-xs text-slate-500 font-semibold font-mono">(${props.code_dep})</span>` : ''}
-          </div>
-
-          <!-- Badges Section & Parcelle -->
-          <div class="flex items-center gap-2 mt-2">
-            <div class="flex-1 px-2.5 py-1.5 rounded-lg bg-amber-500 text-white font-extrabold text-xs shadow-xs text-center">
-              Section <span class="text-sm tracking-wider underline decoration-amber-200">${sectionStr}</span>
-            </div>
-            <div class="flex-1 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white font-mono font-extrabold text-xs shadow-xs text-center">
-              Parcelle <span class="text-sm text-amber-300">n° ${numeroStr}</span>
-            </div>
-          </div>
-
-          <!-- Informations détaillées -->
-          <div class="mt-2.5 space-y-1.5 text-xs text-slate-700 bg-amber-50/70 p-2 rounded-lg border border-amber-100">
-            <div class="flex items-center justify-between">
-              <span class="text-slate-600 font-medium">Contenance / Surface :</span>
-              <span class="text-slate-900 font-bold">${surfaceHtml}</span>
-            </div>
-            ${props.code_insee ? `
-            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5 border-t border-amber-100/60">
-              <span>Code INSEE :</span>
-              <span class="font-mono font-semibold text-slate-700">${props.code_insee}</span>
-            </div>` : ''}
-            ${props.feuille != null ? `
-            <div class="flex items-center justify-between text-[11px] text-slate-500">
-              <span>Feuille :</span>
-              <span class="font-mono font-semibold text-slate-700">${props.feuille}</span>
-            </div>` : ''}
-          </div>
-
-          <!-- Référence et boutons d'action -->
-          <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5">
-            <button type="button" 
-              title="Copier la référence cadastrale complète (${iduStr})" 
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 border border-slate-200 hover:border-amber-300 text-[10.5px] font-mono font-bold flex items-center gap-1 transition cursor-pointer shadow-xs active:scale-95 group" 
-              onclick="window.MapManagerInstance.copyCadastreRef('${iduStr}', this)">
-              <span>📋</span> <span class="truncate max-w-[115px]">${iduStr}</span>
-            </button>
-            <button type="button" 
-              title="Copier les coordonnées GPS (${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)})" 
-              class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 hover:border-emerald-300 text-[10.5px] font-mono font-bold flex items-center gap-1 transition cursor-pointer shadow-xs active:scale-95" 
-              onclick="window.MapManagerInstance.copyGpsCoords(${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}, this)">
-              <span>📍</span> <span>GPS</span>
-            </button>
-          </div>
-
-          <!-- Bouton Ajouter à mes parcelles (12 max) -->
-          <div class="mt-2 pt-2 border-t border-slate-100">
-            ${isAlreadySaved ? `
-              <div class="py-1.5 px-2 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs">
-                <span>✅</span> <span>Enregistrée dans mes parcelles</span>
-              </div>
-            ` : (isListFull ? `
-              <div class="py-1.5 px-2 rounded-lg bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs">
-                <span>⚠️</span> <span>Liste pleine (12/12 parcelles)</span>
-              </div>
-            ` : `
-              <button type="button" 
-                id="btn-popup-add-cadastre"
-                class="w-full py-1.5 px-2 rounded-lg bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-black text-xs shadow transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-                onclick="window.MapManagerInstance.addCurrentParcelToSavedList(this)">
-                <span>➕</span> <span>Ajouter à mes parcelles (<span id="cadastre-popup-count">${savedCount}</span>/12)</span>
-              </button>
-            `)}
-          </div>
-        </div>
-      `;
-
-      loadingPopup.setContent(popupContent);
+      // Afficher la fiche complète dans la fenêtre flottante déplaçable
+      this.showCadastreParcelInfo('success', { feature, props, latlng });
 
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.warn('Erreur interrogation cadastre :', err);
-      loadingPopup.setContent(`
-        <div class="p-2 text-xs text-slate-500 flex items-center gap-1.5">
-          <span>⚠️</span> <span>Impossible d'interroger le cadastre pour le moment.</span>
-        </div>
-      `);
-      setTimeout(() => {
-        if (this._cadastrePopup === loadingPopup && this.map.hasLayer(loadingPopup)) {
-          this.map.closePopup(loadingPopup);
-        }
-      }, 2500);
+      this.showCadastreParcelInfo('error', { message: err.message });
     }
   }
 
@@ -6162,7 +6227,7 @@ class MapManager {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          this.savedCadastreParcels = parsed.slice(0, 12);
+          this.savedCadastreParcels = parsed.slice(0, 50);
         }
       }
     } catch (e) {
@@ -6186,6 +6251,7 @@ class MapManager {
     } else {
       if (btn) btn.classList.add('hidden');
       if (panel) panel.classList.add('hidden');
+      this.closeParcelInfo();
       if (this.savedParcelsLayerGroup) {
         this.savedParcelsLayerGroup.clearLayers();
       }
@@ -6321,7 +6387,7 @@ class MapManager {
   }
 
   /**
-   * Recherche une parcelle via le formulaire et l'ajoute à la liste des 12 max
+   * Recherche une parcelle via le formulaire et l'ajoute à la liste des 50 max
    */
   async searchAndAddCadastreParcel() {
     const communeInput = document.getElementById('cadastre-search-commune');
@@ -6337,8 +6403,8 @@ class MapManager {
       feedback.classList.remove('hidden');
     };
 
-    if (this.savedCadastreParcels.length >= 12) {
-      showMsg('⚠️ Limite de 12 parcelles atteinte. Supprimez-en une pour en ajouter une nouvelle.', true);
+    if (this.savedCadastreParcels.length >= 50) {
+      showMsg('⚠️ Limite de 50 parcelles atteinte. Supprimez-en une pour en ajouter une nouvelle.', true);
       return;
     }
 
@@ -6468,9 +6534,9 @@ class MapManager {
    */
   addCurrentParcelToSavedList(btnEl) {
     if (!this._lastQueriedParcel) return;
-    if (this.savedCadastreParcels.length >= 12) {
+    if (this.savedCadastreParcels.length >= 50) {
       if (window.GpxCreatorEditorInstance && typeof window.GpxCreatorEditorInstance.showUndoFeedback === 'function') {
-        window.GpxCreatorEditorInstance.showUndoFeedback('⚠️ Limite de 12 parcelles atteinte.');
+        window.GpxCreatorEditorInstance.showUndoFeedback('⚠️ Limite de 50 parcelles atteinte.');
       }
       return;
     }
@@ -6509,11 +6575,11 @@ class MapManager {
     this.updateSavedParcelsUi();
 
     if (btnEl) {
-      btnEl.outerHTML = `<div class="py-1.5 px-2 rounded-lg bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs"><span>✅</span> <span>Ajoutée avec succès !</span></div>`;
+      btnEl.outerHTML = `<div class="flex items-center justify-between p-2 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-xs text-emerald-300 font-bold"><div class="flex items-center gap-1.5"><span>✅</span> <span>Ajoutée avec succès !</span></div><button type="button" onclick="window.MapManagerInstance.toggleCadastrePanel(true)" class="text-[11px] text-amber-300 hover:underline cursor-pointer font-medium">Voir liste ➔</button></div>`;
     }
 
     if (window.GpxCreatorEditorInstance && typeof window.GpxCreatorEditorInstance.showUndoFeedback === 'function') {
-      window.GpxCreatorEditorInstance.showUndoFeedback(`Parcelle ${newParcel.nom_com} (${section} n° ${numero}) ajoutée aux parcelles (${this.savedCadastreParcels.length}/12)`);
+      window.GpxCreatorEditorInstance.showUndoFeedback(`Parcelle ${newParcel.nom_com} (${section} n° ${numero}) ajoutée aux parcelles (${this.savedCadastreParcels.length}/50)`);
     }
   }
 
@@ -6610,48 +6676,32 @@ class MapManager {
   }
 
   /**
-   * Ouvre la popup de détails d'une parcelle enregistrée
+   * Ouvre la fiche de détails d'une parcelle enregistrée dans la fenêtre flottante déplaçable
    */
   openSavedParcelDetails(parcel, latlng) {
     if (!this.map || !parcel) return;
-    let surfaceHtml = parcel.contenance != null 
-      ? `<strong>${parcel.contenance.toLocaleString('fr-FR')} m²</strong>` 
-      : '<span class="text-slate-400 italic">Non renseignée</span>';
 
-    const content = `
-      <div class="p-1 min-w-[220px] max-w-[280px] text-slate-800 font-sans">
-        <div class="flex items-center justify-between gap-2 border-b border-amber-200/80 pb-1.5 mb-2 pr-4">
-          <div class="flex items-center gap-1.5 font-black text-xs text-amber-800 uppercase tracking-wide">
-            <span>📐</span> <span>Parcelle Enregistrée</span>
-          </div>
-          <span class="w-3.5 h-3.5 rounded-full border border-black/30 shadow-xs" style="background-color: ${parcel.color};"></span>
-        </div>
-        <div class="font-extrabold text-sm text-slate-900 leading-snug flex items-baseline gap-1.5">
-          <span>📍</span> <span>${parcel.nom_com}</span> ${parcel.code_dep ? `<span class="text-xs text-slate-500 font-mono">(${parcel.code_dep})</span>` : ''}
-        </div>
-        <div class="flex items-center gap-2 mt-2">
-          <div class="flex-1 px-2.5 py-1 rounded-lg bg-amber-500 text-white font-extrabold text-xs shadow-xs text-center">
-            Section <span class="text-sm underline">${parcel.section}</span>
-          </div>
-          <div class="flex-1 px-2.5 py-1 rounded-lg bg-slate-900 text-white font-mono font-extrabold text-xs shadow-xs text-center">
-            Parcelle <span class="text-sm text-amber-300">n° ${parcel.numero}</span>
-          </div>
-        </div>
-        <div class="mt-2 text-xs text-slate-700 bg-amber-50/70 p-2 rounded-lg border border-amber-100 flex items-center justify-between">
-          <span class="text-slate-600 font-medium">Contenance :</span>
-          <span class="text-slate-900 font-bold">${surfaceHtml}</span>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-[11px] text-slate-500 font-mono">
-          <span>Réf : ${parcel.idu}</span>
-          <button type="button" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-amber-100 text-slate-700 border border-slate-200 text-[10px] cursor-pointer" onclick="window.MapManagerInstance.copyCadastreRef('${parcel.idu}', this)">📋 Copier</button>
-        </div>
-      </div>
-    `;
+    // Surlignage temporaire sur la parcelle
+    if (this.cadastreHighlightLayer) {
+      this.cadastreHighlightLayer.clearLayers();
+      if (parcel.geometry) {
+        const highlightStyle = {
+          color: parcel.color || '#ea580c',
+          weight: 3.5,
+          opacity: 0.95,
+          fillColor: parcel.color || '#f97316',
+          fillOpacity: 0.35
+        };
+        const geoLayer = L.geoJSON(parcel.geometry, {
+          style: highlightStyle,
+          interactive: false
+        });
+        this.cadastreHighlightLayer.addLayer(geoLayer);
+      }
+    }
 
-    L.popup({ autoPanPadding: [30, 80], maxWidth: 300 })
-      .setLatLng(latlng)
-      .setContent(content)
-      .openOn(this.map);
+    // Affichage dans la fenêtre flottante déplaçable avec boutons - et ✕
+    this.showCadastreParcelInfo('success', { props: parcel, latlng });
   }
 
   /**

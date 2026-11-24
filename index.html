@@ -1935,22 +1935,23 @@
             </div>
 
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/70 space-y-2">
-              <div class="font-extrabold text-amber-300 flex items-center gap-1.5"><span>📐</span> Cadastre Officiel IGN, Interrogation au Clic &amp; Gestionnaire de Parcelles (12 max)</div>
+              <div class="font-extrabold text-amber-300 flex items-center gap-1.5"><span>📐</span> Cadastre Officiel IGN, Interrogation au Clic &amp; Gestionnaire de Parcelles (50 max)</div>
               <ul class="list-disc list-inside space-y-1.5 text-xs text-slate-300">
                 <li><strong>Affichage de la couche Cadastre :</strong> activable en 1 clic dans le sélecteur de calques (en haut à droite). Superpose les limites de sections, limites de parcelles et numéros cadastraux officiels en transparence au-dessus du fond cartographique de votre choix (IGN TOP 25, Satellite, etc.).</li>
-                <li><strong>Interrogation interactive au clic :</strong> lorsque le cadastre est affiché, cliquez sur n'importe quelle parcelle sur la carte pour surligner son contour exact en orange ambré et ouvrir sa fiche d'information complète :
+                <li><strong>Interrogation interactive au clic :</strong> lorsque le cadastre est affiché, cliquez sur n'importe quelle parcelle sur la carte pour surligner son contour exact en orange ambré et ouvrir sa <strong>fiche d'information flottante, déplaçable et minimisable</strong> :
                   <ul class="list-disc list-inside pl-3 mt-0.5 space-y-0.5 text-slate-300">
                     <li>Nom de la commune et département (ex. <code>Sanary-sur-Mer (83)</code>).</li>
                     <li>Badge de <strong>Section</strong> bien visible (ex. <code>Section AS</code>) et badge de <strong>Numéro</strong> (ex. <code>Parcelle n° 0302</code>).</li>
                     <li><strong>Contenance / Surface officielle</strong> exacte en m² (avec conversion automatique en hectares si &ge; 10 000 m²).</li>
                     <li>Code INSEE de la commune et numéro de feuille cadastrale.</li>
                     <li>Bouton de copie de la <strong>référence cadastrale nationale unique (IDU)</strong> et bouton de copie des <strong>coordonnées GPS</strong> du point cliqué.</li>
+                    <li>Boutons ergonomiques de fenêtre : <strong>réduction (−)</strong> en bandeau compact pour libérer la vue cartographique et <strong>fermeture (✕)</strong> avec effacement automatique du contour surligné.</li>
                   </ul>
                 </li>
-                <li><strong>Menu dédié « 📐 Parcelles (X/12) » :</strong> apparaît automatiquement dans la barre d'outils inférieure lorsque la couche Cadastre est cochée (et disparaît si la couche est masquée). Il ouvre un panneau flottant déplaçable, redimensionnable et minimisable.</li>
+                <li><strong>Menu dédié « 📐 Parcelles (X/50) » :</strong> apparaît automatiquement dans la barre d'outils inférieure lorsque la couche Cadastre est cochée (et disparaît si la couche est masquée). Il ouvre un panneau flottant déplaçable, redimensionnable et minimisable.</li>
                 <li><strong>Recherche officielle de parcelle :</strong> formulaire intégré permettant de renseigner la commune (avec auto-complétion instantanée officielle via <em>geo.api.gouv.fr</em> ou saisie de code postal/INSEE), la lettre de section et le numéro de parcelle. Sur validation par « ➕ Ajouter », la géométrie exacte est récupérée via l'API Apicarto IGN, ajoutée à votre liste et la carte s'y centre automatiquement.</li>
                 <li><strong>Ajout direct en 1 clic depuis la carte :</strong> chaque fiche d'interrogation au clic comporte également un bouton <strong>« ➕ Ajouter à mes parcelles »</strong> pour enregistrer la parcelle sélectionnée sans rien saisir au clavier.</li>
-                <li><strong>Gestion personnalisée de jusqu'à 12 parcelles :</strong>
+                <li><strong>Gestion personnalisée de jusqu'à 50 parcelles :</strong>
                   <ul class="list-disc list-inside pl-3 mt-0.5 space-y-0.5 text-slate-300">
                     <li><strong>Coche / Œil (👁️) :</strong> affiche ou masque individuellement la coloration de chaque parcelle sur la carte.</li>
                     <li><strong>Coloration au choix (Palette de 8 couleurs vives) :</strong> pastilles de couleur rapide (rouge, orange, jaune, vert, cyan, bleu, violet, rose) pour teinter le polygone de chaque parcelle avec la couleur de votre choix.</li>
@@ -2417,6 +2418,20 @@
                     <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
                     <td class="py-2.5 px-2.5 text-center text-slate-400">Impression basique</td>
                     <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Fiche payante">Payant (PDF TOP25)</td>
+                  </tr>
+                  <!-- Row 17 : Cadastre officiel & Gestionnaire de parcelles -->
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="py-2.5 px-3.5 font-bold text-white sticky left-0 bg-slate-900/95 z-10 border-r border-slate-800">Cadastre officiel IGN &amp; Parcelles (50)</td>
+                    <td class="py-2.5 px-3 text-center bg-emerald-950/60 border-x-2 border-emerald-500/60 font-black text-emerald-300" title="Superposition Parcellaire Express IGN, interrogation au clic avec fiche déplaçable, recherche parcellaire et gestionnaire de jusqu'à 50 parcelles colorées"><span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-black">Oui (Clic + 50 parcelles)</span></td>
+                    <td class="py-2.5 px-2.5 text-center text-slate-400" title="Couche cadastre brute sans interrogation détaillée ni coloration personnalisée">Couche brute seule</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-300 font-semibold" title="Option payante avec abonnement">Payant (Option)</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
+                    <td class="py-2.5 px-2.5 text-center text-rose-400">Non</td>
                   </tr>
                 </tbody>
               </table>
@@ -3771,13 +3786,46 @@
 
           </div>
 
+          <!-- FLOATING CADASTRE PARCEL INFO PANEL (Fiche parcelle / GPS déplaçable avec - et ✕) -->
+          <div id="cadastre-parcel-info-panel" class="hidden movable-floating-window absolute top-16 sm:top-20 left-2 sm:left-16 z-30 bg-slate-900/95 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-amber-500/80 backdrop-blur-md w-[calc(100%-1rem)] sm:w-88 max-w-sm transition-all duration-200">
+            <!-- Header avec titre, grip ⠿ et boutons -, ✕ -->
+            <div class="window-drag-header flex items-center justify-between pb-2 mb-2 border-b border-slate-800 cursor-grab active:cursor-grabbing">
+              <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="window.MapManagerInstance?.toggleMinimizeParcelInfo()">
+                <span class="window-drag-grip text-slate-400 hover:text-white text-xs opacity-75">⠿</span>
+                <span class="text-base text-amber-400">📐</span>
+                <span id="cadastre-parcel-info-title" class="text-xs font-bold text-white uppercase tracking-wider">Parcelle Cadastre</span>
+              </div>
+              <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
+                <button type="button" id="btn-minimize-parcel-info" onclick="window.MapManagerInstance?.toggleMinimizeParcelInfo()" title="Réduire la fiche (ou agrandir)" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
+                  &minus;
+                </button>
+                <button type="button" id="btn-close-parcel-info" onclick="window.MapManagerInstance?.closeParcelInfo()" title="Fermer la fiche parcelle" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800">
+                  &#x2715;
+                </button>
+              </div>
+            </div>
+
+            <!-- Contenu Réduit / Minimisé -->
+            <div id="cadastre-parcel-info-minimized" class="hidden py-1">
+              <div class="flex items-center justify-between gap-2 cursor-pointer text-xs" onclick="window.MapManagerInstance?.toggleMinimizeParcelInfo(false)" title="Cliquer pour afficher la fiche complète">
+                <span id="cadastre-parcel-info-min-text" class="font-bold text-amber-300 truncate">Parcelle sélectionnée</span>
+                <span class="text-[10px] text-slate-400 font-mono">Agrandir ▲</span>
+              </div>
+            </div>
+
+            <!-- Contenu Complet Détaillé (Injecté dynamiquement) -->
+            <div id="cadastre-parcel-info-body" class="space-y-2.5">
+            </div>
+          </div>
+
           <!-- FLOATING CADASTRE PARCELS PANEL (Actif uniquement si couche cadastre cochée) -->
           <div id="cadastre-parcels-panel" class="hidden movable-floating-window absolute top-3 sm:top-4 right-2 sm:right-16 z-30 bg-slate-900/95 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-amber-500/80 backdrop-blur-md w-[calc(100%-1rem)] sm:w-96 max-w-md transition-all duration-200">
-            <!-- Header avec titre, compteur et boutons de fenêtre -, ✕ -->
-            <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-800">
-              <div class="flex items-center gap-2 cursor-pointer select-none" onclick="window.MapManagerInstance?.toggleMinimizeCadastrePanel()">
+            <!-- Header avec titre, compteur, grip ⠿ et boutons de fenêtre -, ✕ -->
+            <div class="window-drag-header flex items-center justify-between pb-2 mb-2.5 border-b border-slate-800 cursor-grab active:cursor-grabbing">
+              <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="window.MapManagerInstance?.toggleMinimizeCadastrePanel()">
+                <span class="window-drag-grip text-slate-400 hover:text-white text-xs opacity-75">⠿</span>
                 <span class="text-base text-amber-400">📐</span>
-                <span class="text-xs font-bold text-white uppercase tracking-wider">Parcelles Cadastre (<span id="cadastre-panel-count">0</span>/12)</span>
+                <span class="text-xs font-bold text-white uppercase tracking-wider">Parcelles Cadastre (<span id="cadastre-panel-count">0</span>/50)</span>
               </div>
               <div class="flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-700">
                 <button type="button" id="btn-minimize-cadastre-panel" onclick="window.MapManagerInstance?.toggleMinimizeCadastrePanel()" title="Réduire / Agrandir" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600">
@@ -3836,10 +3884,10 @@
                 <div id="cadastre-search-feedback" class="hidden text-[11px] leading-tight"></div>
               </div>
 
-              <!-- Liste des 12 parcelles max -->
+              <!-- Liste des 50 parcelles max -->
               <div class="space-y-1.5">
                 <div class="flex items-center justify-between text-[11px] text-slate-400 px-0.5">
-                  <span class="font-bold uppercase tracking-wider text-slate-300">Mes parcelles (<span id="cadastre-list-count">0</span>/12)</span>
+                  <span class="font-bold uppercase tracking-wider text-slate-300">Mes parcelles (<span id="cadastre-list-count">0</span>/50)</span>
                   <button id="btn-cadastre-clear-all" type="button"
                     onclick="window.MapManagerInstance?.clearAllSavedCadastreParcels()"
                     class="hidden text-rose-400 hover:text-rose-300 hover:underline cursor-pointer">
@@ -4110,7 +4158,7 @@
               title="Gérer, rechercher et colorier les parcelles cadastrales"
               onclick="window.MapManagerInstance && window.MapManagerInstance.toggleCadastrePanel();">
               <span class="tool-icon text-base sm:text-lg group-hover:scale-110 transition-transform">📐</span>
-              <span id="btn-cadastre-menu-text">Parcelles (<span id="cadastre-saved-count">0</span>/12)</span>
+              <span id="btn-cadastre-menu-text">Parcelles (<span id="cadastre-saved-count">0</span>/50)</span>
             </button>
           </div>
 
@@ -8606,13 +8654,13 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/screen-calib-manager.js?v=157"></script>
   <script src="js/ign-top25-sheets.js?v=157"></script>
-  <script src="js/map-manager.js?v=223"></script>
+  <script src="js/map-manager.js?v=225"></script>
 
   <script src="js/pdf-exporter.js?v=171"></script>
   <script src="js/gr-manager.js?v=157"></script>
   <script src="js/gpx-creator-editor.js?v=172"></script>
   <script src="js/ffr-roadmap-manager.js?v=190"></script>
-  <script src="js/floating-window-manager.js?v=157"></script>
+  <script src="js/floating-window-manager.js?v=225"></script>
 
   <script src="js/portal-router.js?v=157"></script>
     <script src="js/app.js?v=171"></script>

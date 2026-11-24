@@ -274,27 +274,27 @@ html_content = f"""<!DOCTYPE html>
   .comp-table {{
     width: 100%;
     border-collapse: collapse;
-    font-size: 6.8pt;
-    line-height: 1.12;
-    margin-top: 3pt;
-    margin-bottom: 3pt;
+    font-size: 6.4pt;
+    line-height: 1.08;
+    margin-top: 2pt;
+    margin-bottom: 2pt;
   }}
   .comp-table th, .comp-table td {{
     border: 1px solid #cbd5e1;
-    padding: 1.8pt 2.5pt;
+    padding: 1.3pt 2.2pt;
     text-align: center;
   }}
   .comp-table th {{
     background-color: #0f172a;
     color: #f8fafc;
     font-weight: 700;
-    font-size: 6.8pt;
+    font-size: 6.4pt;
     text-transform: uppercase;
   }}
   .comp-table th.th-hl {{
     background-color: #065f46;
     color: #6ee7b7;
-    font-size: 7.2pt;
+    font-size: 6.8pt;
     border: 1.5px solid #059669;
   }}
 
@@ -581,7 +581,7 @@ html_content = f"""<!DOCTYPE html>
       <h3>Fonds Mondiaux, Cadastre &amp; Surcouches Officielles</h3>
       <ul>
         <li><strong>Imagerie Satellite HD &amp; OpenTopoMap :</strong> photographies aériennes haute résolution et sentiers balisés mondiaux.</li>
-        <li><strong>📐 Cadastre officiel &amp; Gestionnaire de Parcelles (12 max) :</strong> surcouche transparente Parcellaire Express &amp; Sections IGN. Un clic sur une parcelle surligne son contour et affiche sa fiche (Section, Numéro, Commune, Surface m², référence IDU, GPS). Le menu dédié « Parcelles (X/12) » (visible si la couche est cochée) permet de rechercher une parcelle (commune avec suggestion, section, n°) ou de l'ajouter au clic sur la carte, de colorier chaque parcelle parmi 8 teintes personnalisées, d'activer/masquer sa vue (👁️), de la centrer (🎯) et de suivre la surface cumulée totale.</li>
+        <li><strong>📐 Cadastre officiel &amp; Gestionnaire de Parcelles (50 max) :</strong> surcouche transparente Parcellaire Express &amp; Sections IGN. Un clic sur une parcelle surligne son contour et ouvre sa fiche d'information déplaçable et minimisable (Section, Numéro, Commune, Surface m², référence IDU, GPS). Le menu dédié « Parcelles (X/50) » (visible si la couche est cochée) permet de rechercher une parcelle (commune avec suggestion, section, n°) ou de l'ajouter au clic sur la carte, de colorier chaque parcelle parmi 8 teintes personnalisées, d'activer/masquer sa vue (👁️), de la centrer (🎯) et de suivre la surface cumulée totale.</li>
         <li><strong>🗺️ Limites des Feuilles Papier TOP 25 :</strong> contours bleus officiels avec nom, référence et millésime d'édition papier IGN.</li>
       </ul>
     </div>
@@ -1402,6 +1402,19 @@ html_content = f"""<!DOCTYPE html>
             <td class="td-no">Non</td>
             <td class="td-dim">Impression</td>
             <td class="td-no">Payant</td>
+          </tr>
+          <tr>
+            <td><strong>Cadastre officiel &amp; Parcelles (50)</strong></td>
+            <td class="td-hl">Oui (Clic + 50 parcelles)</td>
+            <td class="td-dim">Couche brute</td>
+            <td class="td-no">Payant</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
+            <td class="td-no">Non</td>
           </tr>
         </tbody>
       </table>
