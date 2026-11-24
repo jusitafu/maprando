@@ -1934,6 +1934,35 @@
               </ul>
             </div>
 
+            <div class="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/70 space-y-2">
+              <div class="font-extrabold text-amber-300 flex items-center gap-1.5"><span>📐</span> Cadastre Officiel IGN, Interrogation au Clic &amp; Gestionnaire de Parcelles (12 max)</div>
+              <ul class="list-disc list-inside space-y-1.5 text-xs text-slate-300">
+                <li><strong>Affichage de la couche Cadastre :</strong> activable en 1 clic dans le sélecteur de calques (en haut à droite). Superpose les limites de sections, limites de parcelles et numéros cadastraux officiels en transparence au-dessus du fond cartographique de votre choix (IGN TOP 25, Satellite, etc.).</li>
+                <li><strong>Interrogation interactive au clic :</strong> lorsque le cadastre est affiché, cliquez sur n'importe quelle parcelle sur la carte pour surligner son contour exact en orange ambré et ouvrir sa fiche d'information complète :
+                  <ul class="list-disc list-inside pl-3 mt-0.5 space-y-0.5 text-slate-300">
+                    <li>Nom de la commune et département (ex. <code>Sanary-sur-Mer (83)</code>).</li>
+                    <li>Badge de <strong>Section</strong> bien visible (ex. <code>Section AS</code>) et badge de <strong>Numéro</strong> (ex. <code>Parcelle n° 0302</code>).</li>
+                    <li><strong>Contenance / Surface officielle</strong> exacte en m² (avec conversion automatique en hectares si &ge; 10 000 m²).</li>
+                    <li>Code INSEE de la commune et numéro de feuille cadastrale.</li>
+                    <li>Bouton de copie de la <strong>référence cadastrale nationale unique (IDU)</strong> et bouton de copie des <strong>coordonnées GPS</strong> du point cliqué.</li>
+                  </ul>
+                </li>
+                <li><strong>Menu dédié « 📐 Parcelles (X/12) » :</strong> apparaît automatiquement dans la barre d'outils inférieure lorsque la couche Cadastre est cochée (et disparaît si la couche est masquée). Il ouvre un panneau flottant déplaçable, redimensionnable et minimisable.</li>
+                <li><strong>Recherche officielle de parcelle :</strong> formulaire intégré permettant de renseigner la commune (avec auto-complétion instantanée officielle via <em>geo.api.gouv.fr</em> ou saisie de code postal/INSEE), la lettre de section et le numéro de parcelle. Sur validation par « ➕ Ajouter », la géométrie exacte est récupérée via l'API Apicarto IGN, ajoutée à votre liste et la carte s'y centre automatiquement.</li>
+                <li><strong>Ajout direct en 1 clic depuis la carte :</strong> chaque fiche d'interrogation au clic comporte également un bouton <strong>« ➕ Ajouter à mes parcelles »</strong> pour enregistrer la parcelle sélectionnée sans rien saisir au clavier.</li>
+                <li><strong>Gestion personnalisée de jusqu'à 12 parcelles :</strong>
+                  <ul class="list-disc list-inside pl-3 mt-0.5 space-y-0.5 text-slate-300">
+                    <li><strong>Coche / Œil (👁️) :</strong> affiche ou masque individuellement la coloration de chaque parcelle sur la carte.</li>
+                    <li><strong>Coloration au choix (Palette de 8 couleurs vives) :</strong> pastilles de couleur rapide (rouge, orange, jaune, vert, cyan, bleu, violet, rose) pour teinter le polygone de chaque parcelle avec la couleur de votre choix.</li>
+                    <li><strong>Bouton Cible (🎯) :</strong> centrage et zoom automatique sur le polygone de la parcelle.</li>
+                    <li><strong>Bouton Croix (✕) &amp; « Tout effacer » :</strong> retrait individuel ou suppression totale des parcelles enregistrées.</li>
+                    <li><strong>Surface totale cumulée :</strong> calcul et affichage automatique en temps réel de la surface cumulée de l'ensemble de vos parcelles.</li>
+                    <li><strong>Mémorisation permanente :</strong> vos parcelles et leurs couleurs personnalisées sont conservées dans votre navigateur (localStorage) d'une session à l'autre.</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+
             <div class="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
               <div class="font-extrabold text-emerald-300 flex items-center gap-1.5"><span>🔍</span> Recherche Universelle &amp; Sentiers Clignotants (GR® &amp; Chemins)</div>
               <ul class="list-disc list-inside space-y-1 text-xs text-slate-300">

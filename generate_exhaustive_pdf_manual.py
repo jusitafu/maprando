@@ -578,10 +578,11 @@ html_content = f"""<!DOCTYPE html>
         <li><strong>🇳🇴 Norvège (Kartverket) &amp; 🇸🇪 Suède (Lantmäteriet) :</strong> cartes scandinaves haute précision pour les grands treks polaires.</li>
       </ul>
 
-      <h3>Fonds Mondiaux &amp; Imagerie Satellite Haute Résolution</h3>
+      <h3>Fonds Mondiaux, Cadastre &amp; Surcouches Officielles</h3>
       <ul>
-        <li><strong>OpenTopoMap &amp; OSM Outdoors :</strong> sentiers balisés mondiaux avec courbes de niveau tous les 10 à 20 mètres.</li>
-        <li><strong>Imagerie Satellite HD Orthophoto :</strong> photographies aériennes haute résolution (IGN BD ORTHO® 20 cm en France et ESRI World Imagery à l'international).</li>
+        <li><strong>Imagerie Satellite HD &amp; OpenTopoMap :</strong> photographies aériennes haute résolution et sentiers balisés mondiaux.</li>
+        <li><strong>📐 Cadastre officiel &amp; Gestionnaire de Parcelles (12 max) :</strong> surcouche transparente Parcellaire Express &amp; Sections IGN. Un clic sur une parcelle surligne son contour et affiche sa fiche (Section, Numéro, Commune, Surface m², référence IDU, GPS). Le menu dédié « Parcelles (X/12) » (visible si la couche est cochée) permet de rechercher une parcelle (commune avec suggestion, section, n°) ou de l'ajouter au clic sur la carte, de colorier chaque parcelle parmi 8 teintes personnalisées, d'activer/masquer sa vue (👁️), de la centrer (🎯) et de suivre la surface cumulée totale.</li>
+        <li><strong>🗺️ Limites des Feuilles Papier TOP 25 :</strong> contours bleus officiels avec nom, référence et millésime d'édition papier IGN.</li>
       </ul>
     </div>
 
