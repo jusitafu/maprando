@@ -8,12 +8,11 @@ class ElevationProfile {
   static DEFAULT_SLOPE_CONFIG = {
     enabled: true,
     bands: [
-      { id: 'descent',  label: '< -1 % (Descente)',        min: -999, max: -1,  color: '#38bdf8', pattern: 'solid' },
-      { id: 'flat',     label: '-1 % à +2 % (Plat)',       min: -1,   max: 2.5, color: '#94a3b8', pattern: 'solid' },
-      { id: 'gentle',   label: '3 % à 7 % (Douce)',        min: 2.5,  max: 7.5, color: '#22c55e', pattern: 'dots'  },
-      { id: 'moderate', label: '8 % à 14 % (Soutenue)',    min: 7.5,  max: 14.5,color: '#f59e0b', pattern: 'diag'  },
-      { id: 'steep',    label: '15 % à 24 % (Raide)',      min: 14.5, max: 24.5,color: '#ef4444', pattern: 'cross' },
-      { id: 'wall',     label: '25 % et + (Très raide)',   min: 24.5, max: 999, color: '#581c87', pattern: 'dense' }
+      { id: 'flat',     label: '0 à 2 % (Plat / Faux-plat)',  min: 0,    max: 2.5,  color: '#94a3b8', pattern: 'solid' },
+      { id: 'gentle',   label: '3 à 7 % (Pente douce)',       min: 2.5,  max: 7.5,  color: '#22c55e', pattern: 'dots'  },
+      { id: 'moderate', label: '8 à 14 % (Pente soutenue)',   min: 7.5,  max: 14.5, color: '#f59e0b', pattern: 'diag'  },
+      { id: 'steep',    label: '15 à 24 % (Pente raide)',     min: 14.5, max: 24.5, color: '#ef4444', pattern: 'cross' },
+      { id: 'wall',     label: '25 % et + (Très raide / Mur)',min: 24.5, max: 999,  color: '#581c87', pattern: 'dense' }
     ]
   };
 
@@ -47,9 +46,10 @@ class ElevationProfile {
   }
 
   static getBandForSlope(slopePct, cfg) {
+    const absSlope = Math.abs(slopePct);
     const bands = (cfg && cfg.bands) ? cfg.bands : ElevationProfile.DEFAULT_SLOPE_CONFIG.bands;
     for (const b of bands) {
-      if (slopePct >= b.min && slopePct < b.max) return b;
+      if (absSlope >= b.min && absSlope < b.max) return b;
     }
     return bands[bands.length - 1];
   }
@@ -147,19 +147,22 @@ class ElevationProfile {
 
     const slopes = ElevationProfile.computeSmoothedSlopes(points);
     const patternCache = {};
-    const getFill = (band) => {
-      const key = `${band.color}_${band.pattern}_${patternScale}`;
+    const getFill = (band, isDescent) => {
+      // Pour les hachures diagonales, inverser automatiquement l'orientation en descente (\ vs /)
+      const effPattern = (isDescent && band.pattern === 'diag') ? 'diag2' : band.pattern;
+      const key = `${band.color}_${effPattern}_${patternScale}`;
       if (!patternCache[key]) {
-        patternCache[key] = ElevationProfile.createSlopePattern(ctx, band.color, band.pattern, patternScale);
+        patternCache[key] = ElevationProfile.createSlopePattern(ctx, band.color, effPattern, patternScale);
       }
       return patternCache[key];
     };
 
-    // Regrouper les segments consécutifs de même tranche pour un rendu ultra-rapide et net
+    // Regrouper les segments consécutifs de même tranche et même sens (montée/descente)
     let segStart = 0;
     let curBand = ElevationProfile.getBandForSlope(slopes[0], cfg);
+    let curIsDesc = slopes[0] < -2.5;
 
-    const flushSegment = (startIdx, endIdx, band) => {
+    const flushSegment = (startIdx, endIdx, band, isDesc) => {
       if (endIdx <= startIdx) return;
       ctx.beginPath();
       ctx.moveTo(getX(points[startIdx].dist || 0), baselineY);
@@ -168,7 +171,7 @@ class ElevationProfile {
       }
       ctx.lineTo(getX(points[endIdx].dist || 0), baselineY);
       ctx.closePath();
-      ctx.fillStyle = getFill(band);
+      ctx.fillStyle = getFill(band, isDesc);
       ctx.fill();
 
       ctx.beginPath();
@@ -185,13 +188,15 @@ class ElevationProfile {
 
     for (let i = 1; i < points.length; i++) {
       const band = ElevationProfile.getBandForSlope(slopes[i], cfg);
-      if (band.id !== curBand.id) {
-        flushSegment(segStart, i, curBand);
+      const isDesc = slopes[i] < -2.5;
+      if (band.id !== curBand.id || isDesc !== curIsDesc) {
+        flushSegment(segStart, i, curBand, curIsDesc);
         segStart = i;
         curBand = band;
+        curIsDesc = isDesc;
       }
     }
-    flushSegment(segStart, points.length - 1, curBand);
+    flushSegment(segStart, points.length - 1, curBand, curIsDesc);
     return slopes;
   }
 
