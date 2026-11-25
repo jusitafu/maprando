@@ -1786,50 +1786,83 @@ static async exportFichePDF(hike, options = {}) {
         }] : []);
 
     if (tracksToDraw.length > 0) {
+      const isMultiTrack = tracksToDraw.length > 1;
+      // Échelle proportionnelle maîtrisée (ne devient plus gigantesque en HD / A3)
+      const trkScale = Math.max(0.85, Math.min(2.2, imgWidth / 1200));
+
+      // Fonction utilitaire de décalage latéral perpendiculaire (en pixels canvas)
+      // Permet de distinguer nettement 2 ou 3 traces qui se chevauchent sur un même sentier
+      const buildOffsetPixels = (pts, offsetPx) => {
+        const raw = pts.map(p => latLonToPixel(p.lat, p.lon));
+        if (!offsetPx || raw.length < 2) return raw;
+        const out = [];
+        for (let i = 0; i < raw.length; i++) {
+          const prev = raw[Math.max(0, i - 1)];
+          const next = raw[Math.min(raw.length - 1, i + 1)];
+          const dx = next.x - prev.x;
+          const dy = next.y - prev.y;
+          const len = Math.hypot(dx, dy);
+          if (len > 0.001) {
+            const nx = -dy / len;
+            const ny = dx / len;
+            out.push({ x: raw[i].x + nx * offsetPx, y: raw[i].y + ny * offsetPx });
+          } else {
+            out.push(raw[i]);
+          }
+        }
+        return out;
+      };
+
+      const multiOffsets = tracksToDraw.length === 2
+        ? [-2.4 * trkScale, 2.4 * trkScale]
+        : (tracksToDraw.length >= 3 ? [-3.4 * trkScale, 0, 3.4 * trkScale] : [0]);
+
       tracksToDraw.forEach((trk, trkIdx) => {
         const pts = trk.points;
         if (!pts || pts.length === 0) return;
         const curColor = trk.color || trackColor || '#1d4ed8';
 
-        // 1. Échelle adaptative haute visibilité pour impression (tracé ultra-contrasté et épais)
-        const trkScale = Math.max(1, imgWidth / 680);
-        const outerW = Math.round(14 * trkScale);
-        const haloW = Math.round(10 * trkScale);
-        const mainW = Math.round(6.5 * trkScale);
+        // Épaisseurs fines et élégantes (style carte topo IGN) :
+        // - Mono-trace : lisible sans écraser les sentiers ni courbes de niveau
+        // - Multi-traces : rubans fins décalés côte à côte, sans grosse bordure noire
+        const outerW = isMultiTrack ? 0 : Math.max(5.0, 6.2 * trkScale);
+        const haloW = isMultiTrack ? Math.max(3.2, 4.0 * trkScale) : Math.max(3.8, 4.8 * trkScale);
+        const mainW = isMultiTrack ? Math.max(1.9, 2.4 * trkScale) : Math.max(2.4, 3.0 * trkScale);
 
-        // 1. Bordure d'ombre externe sombre (très contrastée)
-        ctx.beginPath();
-        let first = latLonToPixel(pts[0].lat, pts[0].lon);
-        ctx.moveTo(first.x, first.y);
-        for (let i = 1; i < pts.length; i++) {
-          const pt = latLonToPixel(pts[i].lat, pts[i].lon);
-          ctx.lineTo(pt.x, pt.y);
-        }
-        ctx.strokeStyle = 'rgba(15, 23, 42, 0.95)';
-        ctx.lineWidth = outerW;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.stroke();
+        const offsetPx = isMultiTrack ? (multiOffsets[trkIdx] || 0) : 0;
+        const pixPts = buildOffsetPixels(pts, offsetPx);
 
-        // 2. Halo blanc pur protecteur (contraste absolu sur fond IGN TOP 25)
-        ctx.beginPath();
-        ctx.moveTo(first.x, first.y);
-        for (let i = 1; i < pts.length; i++) {
-          const pt = latLonToPixel(pts[i].lat, pts[i].lon);
-          ctx.lineTo(pt.x, pt.y);
+        // 1. Ombre externe très discrète (mono-trace uniquement)
+        if (outerW > 0) {
+          ctx.beginPath();
+          ctx.moveTo(pixPts[0].x, pixPts[0].y);
+          for (let i = 1; i < pixPts.length; i++) {
+            ctx.lineTo(pixPts[i].x, pixPts[i].y);
+          }
+          ctx.strokeStyle = 'rgba(15, 23, 42, 0.55)';
+          ctx.lineWidth = outerW;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
         }
-        ctx.strokeStyle = '#ffffff';
+
+        // 2. Halo blanc fin protecteur (détache nettement chaque trace du fond IGN)
+        ctx.beginPath();
+        ctx.moveTo(pixPts[0].x, pixPts[0].y);
+        for (let i = 1; i < pixPts.length; i++) {
+          ctx.lineTo(pixPts[i].x, pixPts[i].y);
+        }
+        ctx.strokeStyle = isMultiTrack ? 'rgba(255, 255, 255, 0.88)' : '#ffffff';
         ctx.lineWidth = haloW;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // 3. Tracé principal avec sa propre couleur vive (épaisseur renforcée)
+        // 3. Tracé principal fin et net avec sa propre couleur
         ctx.beginPath();
-        ctx.moveTo(first.x, first.y);
-        for (let i = 1; i < pts.length; i++) {
-          const pt = latLonToPixel(pts[i].lat, pts[i].lon);
-          ctx.lineTo(pt.x, pt.y);
+        ctx.moveTo(pixPts[0].x, pixPts[0].y);
+        for (let i = 1; i < pixPts.length; i++) {
+          ctx.lineTo(pixPts[i].x, pixPts[i].y);
         }
         ctx.strokeStyle = curColor;
         ctx.lineWidth = mainW;
@@ -1837,12 +1870,12 @@ static async exportFichePDF(hike, options = {}) {
         ctx.lineJoin = 'round';
         ctx.stroke();
 
-        // 4. Chevrons directionnels (flèches blanches)
+        // 4. Chevrons directionnels proportionnés
         let accumulatedDist = 0;
-        const arrowSpacing = Math.round(75 * trkScale);
-        for (let i = 1; i < pts.length; i++) {
-          const p1 = latLonToPixel(pts[i - 1].lat, pts[i - 1].lon);
-          const p2 = latLonToPixel(pts[i].lat, pts[i].lon);
+        const arrowSpacing = Math.round((isMultiTrack ? 115 : 90) * trkScale);
+        for (let i = 1; i < pixPts.length; i++) {
+          const p1 = pixPts[i - 1];
+          const p2 = pixPts[i];
           const segLen = Math.hypot(p2.x - p1.x, p2.y - p1.y);
           accumulatedDist += segLen;
           if (accumulatedDist >= arrowSpacing && segLen > 4) {
@@ -1850,15 +1883,16 @@ static async exportFichePDF(hike, options = {}) {
             const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
             const midX = (p1.x + p2.x) / 2;
             const midY = (p1.y + p2.y) / 2;
+            const chevScale = isMultiTrack ? 0.65 * trkScale : 0.8 * trkScale;
             ctx.save();
             ctx.translate(midX, midY);
             ctx.rotate(angle);
             ctx.beginPath();
-            ctx.moveTo(-4.5 * trkScale, -3.8 * trkScale);
-            ctx.lineTo(3.2 * trkScale, 0);
-            ctx.lineTo(-4.5 * trkScale, 3.8 * trkScale);
+            ctx.moveTo(-3.6 * chevScale, -2.8 * chevScale);
+            ctx.lineTo(2.4 * chevScale, 0);
+            ctx.lineTo(-3.6 * chevScale, 2.8 * chevScale);
             ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = Math.max(2, 2.4 * trkScale);
+            ctx.lineWidth = Math.max(1.2, 1.6 * chevScale);
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.stroke();
@@ -1869,13 +1903,13 @@ static async exportFichePDF(hike, options = {}) {
         // 5. Marqueur de départ
         const sPt = trk.startPoint || { lat: pts[0].lat, lon: pts[0].lon };
         const startPix = latLonToPixel(sPt.lat, sPt.lon);
-        const markerR = Math.max(10, Math.round(11 * trkScale));
+        const markerR = Math.max(8, Math.round(9 * trkScale));
         ctx.beginPath();
         ctx.arc(startPix.x, startPix.y, markerR, 0, Math.PI * 2);
         ctx.fillStyle = tracksToDraw.length > 1 ? curColor : '#10b981';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = Math.max(2.5, Math.round(3 * trkScale));
+        ctx.lineWidth = Math.max(1.8, Math.round(2.2 * trkScale));
         ctx.stroke();
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${Math.round(markerR * 0.95)}px sans-serif`;
@@ -1893,7 +1927,7 @@ static async exportFichePDF(hike, options = {}) {
           ctx.fillStyle = '#ef4444';
           ctx.fill();
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = Math.max(2.5, Math.round(3 * trkScale));
+          ctx.lineWidth = Math.max(1.8, Math.round(2.2 * trkScale));
           ctx.stroke();
           ctx.fillStyle = '#ffffff';
           ctx.font = `bold ${Math.round(markerR * 0.95)}px sans-serif`;

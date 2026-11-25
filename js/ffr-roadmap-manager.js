@@ -971,9 +971,9 @@ class FfrRoadmapManager {
             <span>✏️</span> <span>Ajuster sur carte</span>
           </button>
 
-          <!-- Export GPX enrichi avec les Waypoints d'arrêt -->
-          <button id="btn-ffr-export-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer" title="Télécharger le fichier GPX enrichi des Waypoints d'arrêt">
-            <span>💾</span> <span>Export GPX</span>
+          <!-- Export GPX enrichi avec les points intermédiaires (Waypoints <wpt>) -->
+          <button id="btn-ffr-export-gpx" type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow transition cursor-pointer" title="Télécharger la trace GPX incluant tous les points intermédiaires renommés (balises <wpt>)">
+            <span>💾</span> <span>Export GPX + Points</span>
           </button>
 
           <!-- Export CSV -->
@@ -1116,7 +1116,7 @@ class FfrRoadmapManager {
 
     const rows = [
       { key: 'num', label: 'Points N°', header: true },
-      { key: 'designation', label: 'Désignation (Waypoint)', isEditableText: true },
+      { key: 'designation', label: '✏️ Désignation (Renommer)', isEditableText: true },
       { key: 'azimuth', label: 'Azimut (°)', isBadge: true },
       { key: 'altitude', label: 'Altitude (M)', suffix: ' m' },
       { key: 'distTroncon', label: 'Dist. tronçon (kM)', suffix: ' km' },
@@ -1165,7 +1165,7 @@ class FfrRoadmapManager {
             </div>
           `;
         } else if (row.isEditableText) {
-          cellContent = `<input type="text" class="ffr-input-cell ffr-edit-name bg-slate-900/90 text-white font-bold text-[11px] px-2 py-0.5 rounded border border-slate-700/80 w-full text-center focus:border-sky-400 focus:outline-none" data-idx="${cIdx}" value="${this.escapeHtml(p.designation)}" />`;
+          cellContent = `<input type="text" class="ffr-input-cell ffr-edit-name bg-slate-800/95 hover:bg-slate-800 text-amber-200 font-bold text-[11px] px-2 py-1 rounded-lg border border-sky-500/70 w-full min-w-[130px] text-center focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none transition cursor-text" data-idx="${cIdx}" value="${this.escapeHtml(p.designation)}" title="Cliquer pour renommer ce point intermédiaire" />`;
         } else if (row.isBadge) {
           cellContent = p.azimuth !== '-' ? `<span class="px-2 py-0.5 rounded bg-sky-950 border border-sky-700/80 text-sky-300 font-mono font-black text-[11px]">🧭 ${p.azimuth}°</span>` : '<span class="text-slate-600 font-mono">-</span>';
         } else if (row.isEditableSpeed) {
@@ -1335,13 +1335,22 @@ class FfrRoadmapManager {
     });
 
     this.modalEl.querySelectorAll('.ffr-edit-name').forEach(inp => {
-      inp.addEventListener('change', () => {
+      const syncName = () => {
         const idx = parseInt(inp.getAttribute('data-idx'), 10);
+        const val = inp.value;
         if (this.points[idx]) {
-          this.points[idx].designation = inp.value;
-          if (this.calibratedPoints[idx]) this.calibratedPoints[idx].designation = inp.value;
+          this.points[idx].designation = val;
+          if (this.calibratedPoints[idx]) this.calibratedPoints[idx].designation = val;
+          // Synchronisation immédiate sur la mini-carte si active
+          if (this.miniMapMarkers && this.miniMapMarkers[idx]) {
+            const p = this.points[idx];
+            const numLabel = idx === 0 ? 'D' : (idx === this.points.length - 1 ? 'A' : p.num);
+            this.miniMapMarkers[idx].setTooltipContent(`<b>${numLabel} • ${this.escapeHtml(val || ('Point ' + numLabel))}</b><br/>Alt: ${p.altitude}m • Arr: ${p.heureArrivee}`);
+          }
         }
-      });
+      };
+      inp.addEventListener('input', syncName);
+      inp.addEventListener('change', syncName);
     });
 
     this.modalEl.querySelectorAll('.ffr-edit-speed').forEach(inp => {
@@ -1518,13 +1527,15 @@ class FfrRoadmapManager {
     gpx += `<gpx version="1.1" creator="Map &amp; Rando by JLDApps 2026 - Tableau de Marche FFR" xmlns="http://www.topografix.com/GPX/1/1">\n`;
     gpx += `  <metadata>\n    <name>${this.escapeXml(this.hikeName)} (Waypoints FFR)</name>\n    <time>${new Date().toISOString()}</time>\n  </metadata>\n`;
 
-    // 1. Waypoints balisés (<wpt>)
-    this.points.forEach(p => {
+    // 1. Waypoints balisés (<wpt>) avec noms personnalisés
+    this.points.forEach((p, idx) => {
+      const labelNum = idx === 0 ? 'D' : (idx === this.points.length - 1 ? 'A' : p.num);
       gpx += `  <wpt lat="${Number(p.lat).toFixed(6)}" lon="${Number(p.lon).toFixed(6)}">\n`;
       if (p.altitude) gpx += `    <ele>${p.altitude}</ele>\n`;
-      gpx += `    <name>${this.escapeXml(p.designation || ('Point ' + p.num))}</name>\n`;
-      gpx += `    <desc>Jalon ${p.num} • Arrivée estimée: ${p.heureArrivee}${p.pause > 0 ? ' (Pause ' + p.pause + ' mn)' : ''} • Dist: ${p.cumulDist} km</desc>\n`;
-      gpx += `    <sym>Waypoint</sym>\n`;
+      gpx += `    <name>${this.escapeXml(p.designation || ('Point ' + labelNum))}</name>\n`;
+      const extraInfo = p.info ? ` • ${this.escapeXml(p.info)}` : '';
+      gpx += `    <desc>Jalon ${labelNum} • Arrivée estimée: ${p.heureArrivee}${p.pause > 0 ? ' (Pause ' + p.pause + ' mn)' : ''} • Dist: ${p.cumulDist} km${extraInfo}</desc>\n`;
+      gpx += `    <sym>${idx === 0 ? 'Flag, Green' : (idx === this.points.length - 1 ? 'Flag, Red' : 'Waypoint')}</sym>\n`;
       gpx += `  </wpt>\n`;
     });
 
@@ -1533,7 +1544,7 @@ class FfrRoadmapManager {
     const rawPts = track.points || [];
     rawPts.forEach(p => {
       const lat = p.lat !== undefined ? p.lat : p[0];
-      const lon = p.lon !== undefined ? (p.lon !== undefined ? p.lon : p.lng) : p[1];
+      const lon = p.lon !== undefined ? p.lon : (p.lng !== undefined ? p.lng : p[1]);
       const ele = p.ele !== undefined ? p.ele : (p[2] || 0);
       gpx += `      <trkpt lat="${Number(lat).toFixed(6)}" lon="${Number(lon).toFixed(6)}"><ele>${Number(ele).toFixed(1)}</ele></trkpt>\n`;
     });
@@ -1543,11 +1554,15 @@ class FfrRoadmapManager {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${this.hikeName.replace(/[^a-zA-Z0-9_-]/g, '_')}_Tableau_de_Marche_FFR.gpx`;
+    link.download = `${this.hikeName.replace(/[^a-zA-Z0-9_-]/g, '_')}_avec_${this.points.length}_points_FFR.gpx`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+
+    if (window.GpxCreatorEditorInstance && typeof window.GpxCreatorEditorInstance.showUndoFeedback === 'function') {
+      window.GpxCreatorEditorInstance.showUndoFeedback(`💾 GPX exporté avec ${this.points.length} points intermédiaires (<wpt>)`);
+    }
   }
 
   /**
@@ -1618,8 +1633,8 @@ class FfrRoadmapManager {
     const rawPts = this.currentTrack?.points || [];
     const latlngsJson = JSON.stringify(rawPts.map(p => [
       p.lat !== undefined ? p.lat : p[0],
-      p.lon !== undefined ? (p.lon !== undefined ? p.lon : p.lng) : p[1]
-    ]));
+      p.lon !== undefined ? p.lon : (p.lng !== undefined ? p.lng : p[1])
+    ]).filter(pt => pt[0] != null && pt[1] != null && !isNaN(pt[0]) && !isNaN(pt[1])));
 
     // Inclure la distance depuis le point précédent dans markersJson pour affichage sur la carte imprimée
     const markersJson = JSON.stringify(this.points.map((p, idx) => {
@@ -1810,13 +1825,12 @@ class FfrRoadmapManager {
               break-after: page !important;
             }
             .map-box-full {
-              height: 174mm !important;
-              min-height: 170mm !important;
+              height: 170mm !important;
+              min-height: 168mm !important;
             }
-          }
             .print-sheet:last-child {
-              page-break-after: avoid !important;
-              break-after: avoid !important;
+              page-break-after: auto !important;
+              break-after: auto !important;
             }
           }
         </style>
@@ -2020,43 +2034,42 @@ class FfrRoadmapManager {
               });
 
               if (latlngs.length > 0) {
-                // Tracé contrasté visible pour l'animateur
-                L.polyline(latlngs, { color: '#ffffff', weight: 6, opacity: 0.95 }).addTo(map);
-                L.polyline(latlngs, { color: '#0284c7', weight: 3.5, opacity: 1.0 }).addTo(map);
+                // Tracé haute lisibilité (halo blanc + rouge carmin vif qui tranche sur le bleu/vert IGN TOP 25)
+                L.polyline(latlngs, { color: '#ffffff', weight: 7.5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+                L.polyline(latlngs, { color: '#dc2626', weight: 4.0, opacity: 1.0, lineCap: 'round', lineJoin: 'round' }).addTo(map);
 
                 markers.forEach(m => {
                   const color = m.isStart ? '#10b981' : (m.isEnd ? '#ef4444' : '#0284c7');
                   const pinIcon = L.divIcon({
                     className: 'map-print-pin',
-                    html: '<div style="background:' + color + '; color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; border:2.5px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.6);">' + m.num + '</div>',
-                    iconSize: [26, 26],
-                    iconAnchor: [13, 13]
+                    html: '<div style="background:' + color + '; color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:11px; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.55);">' + m.num + '</div>',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
                   });
                   const marker = L.marker([m.lat, m.lon], { icon: pinIcon }).addTo(map);
 
-                  const labelHtml = '<div style="font-weight:900; font-size:11px; color:#0f172a;">' + m.num + ' • ' + m.desig + '</div>' + 
-                    (m.distPrev ? '<div style="font-size:10px; font-weight:800; color:#0284c7;">' + m.distPrev + '</div>' : '');
+                  const labelHtml = '<div style="font-weight:900; font-size:10.5px; color:#0f172a;">' + m.num + ' • ' + m.desig + '</div>' + 
+                    (m.distPrev ? '<div style="font-size:9.5px; font-weight:800; color:#0284c7;">' + m.distPrev + '</div>' : '');
 
                   marker.bindTooltip(labelHtml, {
                     permanent: true,
                     direction: 'top',
-                    offset: [0, -14],
+                    offset: [0, -13],
                     className: 'ffr-print-tooltip'
                   });
                 });
 
-                // Calcul du cadrage pour que la trace GPX occupe le MAXIMUM de la page
+                // Cadrage exact pour que la trace entière occupe toute la page (écran + avant impression)
                 const bounds = L.latLngBounds(latlngs);
-                setTimeout(function() {
-                  map.invalidateSize();
-                  map.fitBounds(bounds, { padding: [12, 12], maxZoom: 17 });
-                }, 350);
+                const fitFullTrace = function() {
+                  map.invalidateSize(true);
+                  map.fitBounds(bounds, { padding: [22, 22], maxZoom: 17, animate: false });
+                };
+                fitFullTrace();
+                setTimeout(fitFullTrace, 300);
+                setTimeout(fitFullTrace, 800);
+                window.addEventListener('beforeprint', fitFullTrace);
               }
-            } catch(e) {
-              console.error('Erreur rendu carte impression:', e);
-            }
-          };
-        </script>
             } catch(e) {
               console.error('Erreur rendu carte impression:', e);
             }
