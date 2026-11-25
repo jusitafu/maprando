@@ -4275,10 +4275,13 @@
 
             <!-- Elevation Profile Canvas -->
             <div class="border-t border-slate-100 pt-2">
-              <div class="flex items-center justify-between gap-1.5 text-[11px] font-semibold text-slate-500 mb-1">
+              <div class="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-500 mb-1">
                 <span class="truncate">Profil altimétrique</span>
                 <div class="flex items-center gap-1 flex-shrink-0">
-                  <span id="preview-dmoins" class="text-rose-500 mr-1"></span>
+                  <span id="preview-dmoins" class="text-rose-500 mr-0.5"></span>
+                  <button type="button" id="btn-toggle-slope-settings" onclick="window.ElevationProfileInstance?.toggleSlopeSettings()" class="px-1.5 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-[10px] font-bold transition cursor-pointer flex items-center gap-0.5 shadow-2xs" title="Paramétrer les couleurs et motifs de remplissage par % de pente">
+                    <span>🎨</span><span>Pentes</span>
+                  </button>
                   <button type="button" id="btn-print-profile-a4" onclick="window.ElevationProfileInstance?.printProfile('A4')" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-emerald-600 text-white text-[10px] font-bold transition cursor-pointer flex items-center gap-0.5 shadow-xs" title="Imprimer le profil altimétrique en pleine page A4 Paysage">
                     <span>🖨️</span><span>A4</span>
                   </button>
@@ -4287,6 +4290,8 @@
                   </button>
                 </div>
               </div>
+              <!-- Panneau paramétrable des couleurs et motifs par % de pente -->
+              <div id="elevation-slope-settings-panel" class="hidden mb-1.5 p-2 rounded-lg bg-slate-900 text-white border border-slate-700 text-[10px] space-y-1.5 shadow-lg"></div>
               <div id="elevation-chart-container" class="w-full h-28 bg-slate-50 rounded-lg border border-slate-200 overflow-hidden relative"></div>
             </div>
 
@@ -8658,7 +8663,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
 
   <script src="js/storage.js?v=157"></script>
 
-  <script src="js/elevation-profile.js?v=228"></script>
+  <script src="js/elevation-profile.js?v=229"></script>
 
   <script src="js/screen-calib-manager.js?v=157"></script>
   <script src="js/ign-top25-sheets.js?v=157"></script>

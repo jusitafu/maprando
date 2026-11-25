@@ -5,6 +5,196 @@
  */
 
 class ElevationProfile {
+  static DEFAULT_SLOPE_CONFIG = {
+    enabled: true,
+    bands: [
+      { id: 'descent',  label: '< -1 % (Descente)',        min: -999, max: -1,  color: '#38bdf8', pattern: 'solid' },
+      { id: 'flat',     label: '-1 % à +2 % (Plat)',       min: -1,   max: 2.5, color: '#94a3b8', pattern: 'solid' },
+      { id: 'gentle',   label: '3 % à 7 % (Douce)',        min: 2.5,  max: 7.5, color: '#22c55e', pattern: 'dots'  },
+      { id: 'moderate', label: '8 % à 14 % (Soutenue)',    min: 7.5,  max: 14.5,color: '#f59e0b', pattern: 'diag'  },
+      { id: 'steep',    label: '15 % à 24 % (Raide)',      min: 14.5, max: 24.5,color: '#ef4444', pattern: 'cross' },
+      { id: 'wall',     label: '25 % et + (Très raide)',   min: 24.5, max: 999, color: '#581c87', pattern: 'dense' }
+    ]
+  };
+
+  static PATTERN_OPTIONS = [
+    { id: 'solid', label: 'Uni' },
+    { id: 'dots',  label: 'Pointillés' },
+    { id: 'diag',  label: 'Hachures /' },
+    { id: 'diag2', label: 'Hachures \\' },
+    { id: 'cross', label: 'Croisé X' },
+    { id: 'vert',  label: 'Vertical |' },
+    { id: 'dense', label: 'Dense ///' }
+  ];
+
+  static getSlopeConfig() {
+    try {
+      const raw = localStorage.getItem('rf_elevation_slope_config');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.bands) && parsed.bands.length === ElevationProfile.DEFAULT_SLOPE_CONFIG.bands.length) {
+          return parsed;
+        }
+      }
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(ElevationProfile.DEFAULT_SLOPE_CONFIG));
+  }
+
+  static saveSlopeConfig(cfg) {
+    try {
+      localStorage.setItem('rf_elevation_slope_config', JSON.stringify(cfg));
+    } catch (e) {}
+  }
+
+  static getBandForSlope(slopePct, cfg) {
+    const bands = (cfg && cfg.bands) ? cfg.bands : ElevationProfile.DEFAULT_SLOPE_CONFIG.bands;
+    for (const b of bands) {
+      if (slopePct >= b.min && slopePct < b.max) return b;
+    }
+    return bands[bands.length - 1];
+  }
+
+  static createSlopePattern(ctx, color, patternType, scale = 1) {
+    const hexToRgba = (hex, alpha) => {
+      const clean = (hex || '#22c55e').replace('#', '');
+      const full = clean.length === 3 ? clean.split('').map(c => c + c).join('') : clean;
+      const num = parseInt(full, 16);
+      if (isNaN(num)) return `rgba(34, 197, 94, ${alpha})`;
+      return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+    };
+
+    if (!patternType || patternType === 'solid') {
+      return hexToRgba(color, 0.34);
+    }
+
+    const sz = Math.max(8, Math.round((patternType === 'dense' ? 8 : 10) * scale));
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = sz;
+    pCanvas.height = sz;
+    const pCtx = pCanvas.getContext('2d');
+
+    // Fond teinté léger
+    pCtx.fillStyle = hexToRgba(color, 0.24);
+    pCtx.fillRect(0, 0, sz, sz);
+
+    pCtx.strokeStyle = hexToRgba(color, 0.78);
+    pCtx.fillStyle = hexToRgba(color, 0.78);
+    pCtx.lineWidth = Math.max(1.1, 1.3 * scale);
+
+    if (patternType === 'dots') {
+      const r = Math.max(1.2, 1.5 * scale);
+      pCtx.beginPath();
+      pCtx.arc(sz * 0.3, sz * 0.3, r, 0, Math.PI * 2);
+      pCtx.arc(sz * 0.8, sz * 0.8, r, 0, Math.PI * 2);
+      pCtx.fill();
+    } else if (patternType === 'diag') {
+      pCtx.beginPath();
+      pCtx.moveTo(-2, sz + 2); pCtx.lineTo(sz + 2, -2);
+      pCtx.moveTo(-2, 2); pCtx.lineTo(2, -2);
+      pCtx.moveTo(sz - 2, sz + 2); pCtx.lineTo(sz + 2, sz - 2);
+      pCtx.stroke();
+    } else if (patternType === 'diag2') {
+      pCtx.beginPath();
+      pCtx.moveTo(-2, -2); pCtx.lineTo(sz + 2, sz + 2);
+      pCtx.moveTo(sz - 2, -2); pCtx.lineTo(sz + 2, 2);
+      pCtx.moveTo(-2, sz - 2); pCtx.lineTo(2, sz + 2);
+      pCtx.stroke();
+    } else if (patternType === 'cross') {
+      pCtx.beginPath();
+      pCtx.moveTo(0, sz); pCtx.lineTo(sz, 0);
+      pCtx.moveTo(0, 0); pCtx.lineTo(sz, sz);
+      pCtx.stroke();
+    } else if (patternType === 'vert') {
+      pCtx.beginPath();
+      pCtx.moveTo(sz * 0.5, 0); pCtx.lineTo(sz * 0.5, sz);
+      pCtx.stroke();
+    } else if (patternType === 'dense') {
+      pCtx.lineWidth = Math.max(1.5, 1.8 * scale);
+      pCtx.beginPath();
+      pCtx.moveTo(-2, sz + 2); pCtx.lineTo(sz + 2, -2);
+      pCtx.moveTo(-2, sz * 0.5 + 2); pCtx.lineTo(sz * 0.5 + 2, -2);
+      pCtx.moveTo(sz * 0.5 - 2, sz + 2); pCtx.lineTo(sz + 2, sz * 0.5 - 2);
+      pCtx.stroke();
+    }
+
+    return ctx.createPattern(pCanvas, 'repeat') || hexToRgba(color, 0.35);
+  }
+
+  static computeSmoothedSlopes(points) {
+    const n = points.length;
+    const slopes = new Array(n).fill(0);
+    if (n < 2) return slopes;
+    const windowKm = 0.06; // lissage sur ~60 m pour éviter le bruit GPS
+    for (let i = 0; i < n; i++) {
+      let i1 = i, i2 = i;
+      const d0 = Number(points[i].dist || 0);
+      while (i1 > 0 && d0 - Number(points[i1].dist || 0) < windowKm / 2) i1--;
+      while (i2 < n - 1 && Number(points[i2].dist || 0) - d0 < windowKm / 2) i2++;
+      if (i1 === i2) {
+        if (i2 < n - 1) i2++;
+        else if (i1 > 0) i1--;
+      }
+      const distM = (Number(points[i2].dist || 0) - Number(points[i1].dist || 0)) * 1000;
+      const dEle = Number(points[i2].ele || 0) - Number(points[i1].ele || 0);
+      slopes[i] = distM > 2 ? Math.max(-60, Math.min(60, (dEle / distM) * 100)) : 0;
+    }
+    return slopes;
+  }
+
+  static drawSlopeColoredProfile(ctx, points, getX, getY, baselineY, lineWidth, patternScale = 1) {
+    const cfg = ElevationProfile.getSlopeConfig();
+    if (!cfg.enabled || points.length < 2) return false;
+
+    const slopes = ElevationProfile.computeSmoothedSlopes(points);
+    const patternCache = {};
+    const getFill = (band) => {
+      const key = `${band.color}_${band.pattern}_${patternScale}`;
+      if (!patternCache[key]) {
+        patternCache[key] = ElevationProfile.createSlopePattern(ctx, band.color, band.pattern, patternScale);
+      }
+      return patternCache[key];
+    };
+
+    // Regrouper les segments consécutifs de même tranche pour un rendu ultra-rapide et net
+    let segStart = 0;
+    let curBand = ElevationProfile.getBandForSlope(slopes[0], cfg);
+
+    const flushSegment = (startIdx, endIdx, band) => {
+      if (endIdx <= startIdx) return;
+      ctx.beginPath();
+      ctx.moveTo(getX(points[startIdx].dist || 0), baselineY);
+      for (let k = startIdx; k <= endIdx; k++) {
+        ctx.lineTo(getX(points[k].dist || 0), getY(Number(points[k].ele || 0)));
+      }
+      ctx.lineTo(getX(points[endIdx].dist || 0), baselineY);
+      ctx.closePath();
+      ctx.fillStyle = getFill(band);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(getX(points[startIdx].dist || 0), getY(Number(points[startIdx].ele || 0)));
+      for (let k = startIdx + 1; k <= endIdx; k++) {
+        ctx.lineTo(getX(points[k].dist || 0), getY(Number(points[k].ele || 0)));
+      }
+      ctx.strokeStyle = band.color;
+      ctx.lineWidth = lineWidth;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    };
+
+    for (let i = 1; i < points.length; i++) {
+      const band = ElevationProfile.getBandForSlope(slopes[i], cfg);
+      if (band.id !== curBand.id) {
+        flushSegment(segStart, i, curBand);
+        segStart = i;
+        curBand = band;
+      }
+    }
+    flushSegment(segStart, points.length - 1, curBand);
+    return slopes;
+  }
+
   constructor(containerId) {
     this.containerId = containerId;
     this.container = typeof document !== 'undefined' ? document.getElementById(containerId) : null;
@@ -306,34 +496,38 @@ class ElevationProfile {
       ctx.fillText(distVal + ' km', x, height - 6);
     }
 
-    // 3. Topographic Gradient area fill
-    const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.50)');
-    gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.20)');
-    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+    // 3 & 4. Remplissage et courbe (Coloration & Motifs par % de pente par défaut, ou uni classique si désactivé)
+    const computedSlopes = ElevationProfile.drawSlopeColoredProfile(
+      ctx, points, getX, getY, padding.top + chartH, 2.4, 0.85
+    );
+    if (!computedSlopes) {
+      const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+      gradient.addColorStop(0, 'rgba(16, 185, 129, 0.50)');
+      gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.20)');
+      gradient.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
 
-    ctx.beginPath();
-    ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
+      ctx.beginPath();
+      ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
+      }
+      ctx.lineTo(getX(points[points.length - 1].dist), padding.top + chartH);
+      ctx.lineTo(getX(points[0].dist), padding.top + chartH);
+      ctx.closePath();
+
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
+      }
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 2.2;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
     }
-    ctx.lineTo(getX(points[points.length - 1].dist), padding.top + chartH);
-    ctx.lineTo(getX(points[0].dist), padding.top + chartH);
-    ctx.closePath();
-
-    ctx.fillStyle = gradient;
-    ctx.fill();
-
-    // 4. Contour Line (Crisp Mountain Trail Polyline)
-    ctx.beginPath();
-    ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
-    }
-    ctx.strokeStyle = '#059669';
-    ctx.lineWidth = 2.2;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
 
     // 5. Peak marker
     let peakPt = points[0];
@@ -451,10 +645,16 @@ class ElevationProfile {
         // Détecter si le curseur passe près d'un point nommé pour l'afficher dans l'infobulle
         const nearWp = namedPts.find(wp => Math.abs(wp.dist - ptDist) <= Math.max(0.18, maxDist * 0.025));
 
-        // High-contrast Tooltip Pill
+        // High-contrast Tooltip Pill (avec pente % en direct)
         const eleVal = closest.point.ele != null ? `${Math.round(closest.point.ele)} m` : '-- m';
         const distVal = closest.point.dist != null ? `${closest.point.dist} km` : `${cursorDist.toFixed(1)} km`;
-        const tooltipText = nearWp ? `📍 ${nearWp.name} • ${eleVal} • ${distVal}` : `${eleVal} • ${distVal}`;
+        const slopeHere = (computedSlopes && closest.index != null && computedSlopes[closest.index] !== undefined)
+          ? Math.round(computedSlopes[closest.index])
+          : null;
+        const slopeTxt = slopeHere !== null ? ` • ${slopeHere > 0 ? '+' : ''}${slopeHere}%` : '';
+        const tooltipText = nearWp
+          ? `📍 ${nearWp.name} • ${eleVal} • ${distVal}${slopeTxt}`
+          : `${eleVal} • ${distVal}${slopeTxt}`;
         ctx.font = 'bold 11px Inter, system-ui, sans-serif';
         const textWidth = ctx.measureText(tooltipText).width;
         let tooltipX = cx + 8;
@@ -775,35 +975,39 @@ class ElevationProfile {
       ctx.fillText(distVal + ' km', x, height - 10);
     }
 
-    // 3. Dégradé de relief émeraude
-    const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
-    gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.18)');
-    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+    // 3 & 4. Relief coloré et tramé par % de pente (ou dégradé émeraude si désactivé)
+    const staticSlopes = ElevationProfile.drawSlopeColoredProfile(
+      ctx, points, getX, getY, padding.top + chartH, 2.4, 1.0
+    );
+    if (!staticSlopes) {
+      const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
+      gradient.addColorStop(0, 'rgba(16, 185, 129, 0.45)');
+      gradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.18)');
+      gradient.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
 
-    ctx.beginPath();
-    ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
+      ctx.beginPath();
+      ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
+      }
+      ctx.lineTo(getX(points[points.length - 1].dist), padding.top + chartH);
+      ctx.lineTo(getX(points[0].dist), padding.top + chartH);
+      ctx.closePath();
+
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
+      for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
+      }
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 2.4;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
     }
-    ctx.lineTo(getX(points[points.length - 1].dist), padding.top + chartH);
-    ctx.lineTo(getX(points[0].dist), padding.top + chartH);
-    ctx.closePath();
-
-    ctx.fillStyle = gradient;
-    ctx.fill();
-
-    // 4. Ligne de crête (Polyline verte haute précision)
-    ctx.beginPath();
-    ctx.moveTo(getX(points[0].dist), getY(points[0].ele));
-    for (let i = 1; i < points.length; i++) {
-      ctx.lineTo(getX(points[i].dist), getY(points[i].ele));
-    }
-    ctx.strokeStyle = '#059669';
-    ctx.lineWidth = 2.4;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.stroke();
 
     // 5. Point culminant (Sommet)
     let peakPt = points[0];
@@ -1198,35 +1402,60 @@ class ElevationProfile {
       ctx.fillText(`${Number(d.toFixed(1))} km`, x, pad.top + plotH + 14);
     }
 
-    // Aire dégradée sous la courbe
-    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
-    grad.addColorStop(0, 'rgba(16, 185, 129, 0.38)');
-    grad.addColorStop(0.65, 'rgba(14, 165, 233, 0.18)');
-    grad.addColorStop(1, 'rgba(14, 165, 233, 0.03)');
+    // Aire et courbe (avec couleurs et motifs par % de pente)
+    const printSlopes = ElevationProfile.drawSlopeColoredProfile(
+      ctx, pts, toX, toY, pad.top + plotH, 4.5, 1.5
+    );
+    if (!printSlopes) {
+      const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+      grad.addColorStop(0, 'rgba(16, 185, 129, 0.38)');
+      grad.addColorStop(0.65, 'rgba(14, 165, 233, 0.18)');
+      grad.addColorStop(1, 'rgba(14, 165, 233, 0.03)');
 
-    ctx.beginPath();
-    ctx.moveTo(toX(pts[0].dist || 0), pad.top + plotH);
-    for (let i = 0; i < pts.length; i++) {
-      ctx.lineTo(toX(pts[i].dist || 0), toY(Number(pts[i].ele || 0)));
-    }
-    ctx.lineTo(toX(pts[pts.length - 1].dist || totalDist), pad.top + plotH);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(toX(pts[0].dist || 0), pad.top + plotH);
+      for (let i = 0; i < pts.length; i++) {
+        ctx.lineTo(toX(pts[i].dist || 0), toY(Number(pts[i].ele || 0)));
+      }
+      ctx.lineTo(toX(pts[pts.length - 1].dist || totalDist), pad.top + plotH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
 
-    // Courbe principale nette
-    ctx.beginPath();
-    for (let i = 0; i < pts.length; i++) {
-      const x = toX(pts[i].dist || 0);
-      const y = toY(Number(pts[i].ele || 0));
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const x = toX(pts[i].dist || 0);
+        const y = toY(Number(pts[i].ele || 0));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#047857';
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    } else {
+      // Légende normalisée des pentes (couleurs + motifs) en haut à gauche du graphique imprimé
+      const cfg = ElevationProfile.getSlopeConfig();
+      const legY = 14;
+      let legX = pad.left;
+      ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      cfg.bands.forEach(b => {
+        const swatchW = 24, swatchH = 16;
+        ctx.fillStyle = ElevationProfile.createSlopePattern(ctx, b.color, b.pattern, 1.1);
+        ctx.fillRect(legX, legY, swatchW, swatchH);
+        ctx.strokeStyle = b.color;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(legX, legY, swatchW, swatchH);
+
+        const shortLbl = b.label.split('(')[0].trim();
+        ctx.fillStyle = '#1e293b';
+        ctx.fillText(shortLbl, legX + swatchW + 6, legY + swatchH / 2);
+        legX += swatchW + ctx.measureText(shortLbl).width + 22;
+      });
     }
-    ctx.strokeStyle = '#047857';
-    ctx.lineWidth = 4;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.stroke();
 
     // Badge Point Haut (Sommet)
     const peakX = toX(maxPt.dist || 0);
@@ -1321,6 +1550,92 @@ class ElevationProfile {
     }
 
     return canvas.toDataURL('image/png');
+  }
+
+  /**
+   * Ouvre ou ferme le panneau de paramétrage des couleurs et motifs par % de pente
+   */
+  toggleSlopeSettings(force) {
+    const panel = document.getElementById('elevation-slope-settings-panel');
+    if (!panel) return;
+    const shouldShow = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
+    if (shouldShow) {
+      this.renderSlopeSettingsPanel();
+      panel.classList.remove('hidden');
+    } else {
+      panel.classList.add('hidden');
+    }
+  }
+
+  renderSlopeSettingsPanel() {
+    const panel = document.getElementById('elevation-slope-settings-panel');
+    if (!panel) return;
+    const cfg = ElevationProfile.getSlopeConfig();
+    const rowsHtml = cfg.bands.map((b, idx) => {
+      const opts = ElevationProfile.PATTERN_OPTIONS.map(o =>
+        `<option value="${o.id}" ${b.pattern === o.id ? 'selected' : ''}>${o.label}</option>`
+      ).join('');
+      return `
+        <div class="flex items-center justify-between gap-1.5 py-0.5 border-b border-slate-800/80 last:border-0">
+          <span class="font-semibold text-slate-200 truncate flex-1">${b.label}</span>
+          <input type="color" value="${b.color}"
+            onchange="window.ElevationProfileInstance?.updateSlopeBand(${idx}, 'color', this.value)"
+            class="w-6 h-5 rounded cursor-pointer bg-transparent border border-slate-600 p-0 flex-shrink-0" title="Choisir la couleur" />
+          <select onchange="window.ElevationProfileInstance?.updateSlopeBand(${idx}, 'pattern', this.value)"
+            class="bg-slate-800 text-slate-100 border border-slate-700 rounded px-1 py-0.5 text-[10px] font-semibold cursor-pointer focus:outline-none focus:border-amber-400">
+            ${opts}
+          </select>
+        </div>
+      `;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="flex items-center justify-between pb-1 border-b border-slate-700">
+        <label class="flex items-center gap-1.5 font-bold text-amber-300 cursor-pointer select-none">
+          <input type="checkbox" ${cfg.enabled ? 'checked' : ''}
+            onchange="window.ElevationProfileInstance?.toggleSlopeEnabled(this.checked)"
+            class="accent-amber-500 cursor-pointer" />
+          <span>Couleurs &amp; motifs par pente (%)</span>
+        </label>
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="window.ElevationProfileInstance?.resetSlopeConfig()"
+            class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600 text-[9.5px] font-bold cursor-pointer" title="Rétablir les couleurs normalisées par défaut">
+            ↺ Défaut
+          </button>
+          <button type="button" onclick="window.ElevationProfileInstance?.toggleSlopeSettings(false)"
+            class="px-1.5 py-0.5 rounded bg-rose-950/80 hover:bg-rose-700 text-rose-200 border border-rose-800 text-[9.5px] font-bold cursor-pointer" title="Fermer">
+            ✕
+          </button>
+        </div>
+      </div>
+      <div class="space-y-0.5 ${cfg.enabled ? '' : 'opacity-45 pointer-events-none'}">
+        ${rowsHtml}
+      </div>
+    `;
+  }
+
+  toggleSlopeEnabled(enabled) {
+    const cfg = ElevationProfile.getSlopeConfig();
+    cfg.enabled = !!enabled;
+    ElevationProfile.saveSlopeConfig(cfg);
+    this.renderSlopeSettingsPanel();
+    if (this.currentHike) this.resizeAndDraw(this.cursorDist);
+  }
+
+  updateSlopeBand(idx, prop, val) {
+    const cfg = ElevationProfile.getSlopeConfig();
+    if (cfg.bands[idx]) {
+      cfg.bands[idx][prop] = val;
+      ElevationProfile.saveSlopeConfig(cfg);
+      if (this.currentHike) this.resizeAndDraw(this.cursorDist);
+    }
+  }
+
+  resetSlopeConfig() {
+    const def = JSON.parse(JSON.stringify(ElevationProfile.DEFAULT_SLOPE_CONFIG));
+    ElevationProfile.saveSlopeConfig(def);
+    this.renderSlopeSettingsPanel();
+    if (this.currentHike) this.resizeAndDraw(this.cursorDist);
   }
 }
 
