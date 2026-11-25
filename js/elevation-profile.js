@@ -713,8 +713,23 @@ class ElevationProfile {
     const projected = [];
     const seenKeys = new Set();
 
+    const decodeXmlEntities = (str) => {
+      if (!str) return '';
+      let s = String(str);
+      for (let k = 0; k < 2; k++) {
+        s = s
+          .replace(/&apos;|&#0*39;|&#x0*27;/gi, "'")
+          .replace(/&quot;|&#0*34;|&#x0*22;/gi, '"')
+          .replace(/&lt;|&#0*60;/gi, '<')
+          .replace(/&gt;|&#0*62;/gi, '>')
+          .replace(/&nbsp;|&#0*160;/gi, ' ')
+          .replace(/&amp;|&#0*38;/gi, '&');
+      }
+      return s;
+    };
+
     rawWpts.forEach(wp => {
-      const name = (wp.name || wp.designation || '').trim();
+      const name = decodeXmlEntities(wp.name || wp.designation || '').trim();
       if (!name) return;
       const wLat = Number(wp.lat);
       const wLon = Number(wp.lon !== undefined ? wp.lon : wp.lng);
@@ -1521,7 +1536,8 @@ class ElevationProfile {
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        const lbl = `${wp.name.slice(0, 26)} (${Math.round(wp.ele)}m)`;
+        const dispName = wp.name.length > 38 ? wp.name.slice(0, 37) + '…' : wp.name;
+        const lbl = `${dispName} (${Math.round(wp.ele)}m)`;
         const bw = ctx.measureText(lbl).width + 18;
         const bh = 28;
         let bx = Math.max(pad.left + 4, Math.min(width - pad.right - bw - 4, wx - bw / 2));

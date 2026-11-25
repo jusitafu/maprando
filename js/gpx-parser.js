@@ -204,15 +204,29 @@ class GPXParser {
       const body = wptExtractMatch[2] || '';
       const pt = parsePointElement(attrs, body);
       if (pt) {
+        const decodeXmlEntities = (str) => {
+          if (!str) return '';
+          let s = String(str);
+          for (let k = 0; k < 2; k++) {
+            s = s
+              .replace(/&apos;|&#0*39;|&#x0*27;/gi, "'")
+              .replace(/&quot;|&#0*34;|&#x0*22;/gi, '"')
+              .replace(/&lt;|&#0*60;/gi, '<')
+              .replace(/&gt;|&#0*62;/gi, '>')
+              .replace(/&nbsp;|&#0*160;/gi, ' ')
+              .replace(/&amp;|&#0*38;/gi, '&');
+          }
+          return s;
+        };
         let wptName = '';
         const nameMatch = /<(?:[a-zA-Z0-9_:-]+:)?name\b[^>]*>([\s\S]*?)<\//i.exec(body);
         if (nameMatch && nameMatch[1]) {
-          wptName = nameMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+          wptName = decodeXmlEntities(nameMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '')).trim();
         }
         let wptDesc = '';
         const descMatch = /<(?:[a-zA-Z0-9_:-]+:)?(?:desc|description)\b[^>]*>([\s\S]*?)<\//i.exec(body);
         if (descMatch && descMatch[1]) {
-          wptDesc = descMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '').trim();
+          wptDesc = decodeXmlEntities(descMatch[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/<[^>]+>/g, '')).trim();
         }
         let wptSym = '';
         const symMatch = /<(?:[a-zA-Z0-9_:-]+:)?sym\b[^>]*>([\s\S]*?)<\//i.exec(body);
