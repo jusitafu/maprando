@@ -354,7 +354,70 @@ class ElevationProfile {
     ctx.fillStyle = '#047857';
     ctx.font = 'bold 9px Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`▲ Max ${peakPt.ele}m`, Math.min(width - 35, Math.max(50, peakX)), Math.max(12, peakY - 6));
+    ctx.fillText(`▲ Max ${Math.round(peakPt.ele)}m`, Math.min(width - 35, Math.max(50, peakX)), Math.max(12, peakY - 6));
+
+    // 5b. Points nommés (Sommets, Waypoints, Points d'intérêt) projetés sur le profil
+    const namedPts = this.extractNamedPointsForProfile(hike);
+    if (namedPts.length > 0) {
+      ctx.font = 'bold 8.5px Inter, system-ui, sans-serif';
+      const placedLabels = [];
+      namedPts.forEach((wp) => {
+        const wx = getX(wp.dist);
+        const wy = getY(wp.ele);
+
+        // Ligne verticale discrète jusqu'à l'axe des distances
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([2, 2]);
+        ctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+        ctx.lineWidth = 1;
+        ctx.moveTo(wx, wy);
+        ctx.lineTo(wx, padding.top + chartH);
+        ctx.stroke();
+        ctx.restore();
+
+        // Pastille sur la courbe
+        ctx.beginPath();
+        ctx.arc(wx, wy, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#d97706';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        // Étiquette compacte anti-chevauchement
+        const shortName = wp.name.length > 18 ? wp.name.slice(0, 17) + '…' : wp.name;
+        const tw = ctx.measureText(shortName).width + 8;
+        const th = 13;
+        let lx = Math.max(padding.left + 2, Math.min(padding.left + chartW - tw - 2, wx - tw / 2));
+        let ly = Math.max(padding.top + 1, wy - th - 6);
+
+        // Éviter chevauchement avec étiquettes déjà posées
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const overlaps = placedLabels.some(b =>
+            lx < b.x + b.w + 3 && lx + tw + 3 > b.x && ly < b.y + b.h + 2 && ly + th + 2 > b.y
+          );
+          if (!overlaps) break;
+          ly = (ly + th + 16 < padding.top + chartH - th) ? (ly + th + 4) : Math.max(padding.top + 1, ly - th - 3);
+        }
+        placedLabels.push({ x: lx, y: ly, w: tw, h: th });
+
+        ctx.fillStyle = 'rgba(255, 251, 235, 0.94)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(lx, ly, tw, th, 3);
+        else ctx.rect(lx, ly, tw, th);
+        ctx.fill();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+
+        ctx.fillStyle = '#92400e';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(shortName, lx + tw / 2, ly + th / 2 + 0.5);
+      });
+      ctx.textBaseline = 'alphabetic';
+    }
 
     // 6. Interactive Cursor Indicator (Synchronisé avec la carte)
     if (cursorDist !== null && !isNaN(cursorDist)) {
@@ -385,14 +448,17 @@ class ElevationProfile {
         ctx.lineWidth = 2;
         ctx.stroke();
 
+        // Détecter si le curseur passe près d'un point nommé pour l'afficher dans l'infobulle
+        const nearWp = namedPts.find(wp => Math.abs(wp.dist - ptDist) <= Math.max(0.18, maxDist * 0.025));
+
         // High-contrast Tooltip Pill
         const eleVal = closest.point.ele != null ? `${Math.round(closest.point.ele)} m` : '-- m';
         const distVal = closest.point.dist != null ? `${closest.point.dist} km` : `${cursorDist.toFixed(1)} km`;
-        const tooltipText = `${eleVal} • ${distVal}`;
+        const tooltipText = nearWp ? `📍 ${nearWp.name} • ${eleVal} • ${distVal}` : `${eleVal} • ${distVal}`;
         ctx.font = 'bold 11px Inter, system-ui, sans-serif';
         const textWidth = ctx.measureText(tooltipText).width;
         let tooltipX = cx + 8;
-        if (tooltipX + textWidth + 8 > width) tooltipX = cx - textWidth - 12;
+        if (tooltipX + textWidth + 8 > width) tooltipX = Math.max(padding.left, cx - textWidth - 12);
         let tooltipY = cy - 8;
         if (tooltipY < padding.top + 14) tooltipY = padding.top + 14;
 
@@ -406,6 +472,78 @@ class ElevationProfile {
         ctx.fillText(tooltipText, tooltipX + 1, tooltipY);
       }
     }
+  }
+
+  /**
+   * Extrait et projette sur la trace tous les points nommés (waypoints <wpt>, sommets, POIs)
+   * Compatible avec les 2 systèmes : Cartes & Outils ET Randonner
+   */
+  extractNamedPointsForProfile(hike) {
+    if (!hike || !hike.points || hike.points.length < 2) return [];
+    let rawWpts = Array.isArray(hike.waypoints) ? hike.waypoints : [];
+
+    // Si la rando (ex: module Randonner) possède rawGpx mais pas encore hike.waypoints, parser les <wpt> une seule fois
+    if (rawWpts.length === 0 && hike.rawGpx && !hike._wptsParsedFromRaw) {
+      hike._wptsParsedFromRaw = true;
+      try {
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(hike.rawGpx, 'text/xml');
+        const wptNodes = xml.querySelectorAll('wpt');
+        const extracted = [];
+        wptNodes.forEach(node => {
+          const lat = parseFloat(node.getAttribute('lat'));
+          const lon = parseFloat(node.getAttribute('lon'));
+          const name = (node.querySelector('name')?.textContent || '').trim();
+          const eleNode = node.querySelector('ele');
+          const ele = eleNode ? parseFloat(eleNode.textContent) : null;
+          if (!isNaN(lat) && !isNaN(lon) && name) {
+            extracted.push({ lat, lon, name, ele: isNaN(ele) ? null : ele });
+          }
+        });
+        if (extracted.length > 0) {
+          hike.waypoints = extracted;
+          rawWpts = extracted;
+        }
+      } catch (e) {}
+    }
+
+    if (rawWpts.length === 0) return [];
+
+    const pts = hike.points;
+    const projected = [];
+    const seenKeys = new Set();
+
+    rawWpts.forEach(wp => {
+      const name = (wp.name || wp.designation || '').trim();
+      if (!name) return;
+      const wLat = Number(wp.lat);
+      const wLon = Number(wp.lon !== undefined ? wp.lon : wp.lng);
+      if (isNaN(wLat) || isNaN(wLon)) return;
+
+      let bestPt = pts[0];
+      let bestDistSq = Infinity;
+      for (const p of pts) {
+        const pLon = p.lon !== undefined ? p.lon : p.lng;
+        const dSq = (p.lat - wLat) ** 2 + (pLon - wLon) ** 2;
+        if (dSq < bestDistSq) {
+          bestDistSq = dSq;
+          bestPt = p;
+        }
+      }
+      // Ignorer si le waypoint est à plus de ~1.5 km de la trace (~0.015 deg)
+      if (Math.sqrt(bestDistSq) > 0.015) return;
+
+      const dist = Number(bestPt.dist || 0);
+      const ele = Number(bestPt.ele != null ? bestPt.ele : (wp.ele || 0));
+      const key = `${name.toLowerCase()}_${dist.toFixed(2)}`;
+      if (seenKeys.has(key)) return;
+      seenKeys.add(key);
+
+      projected.push({ name, dist, ele, lat: wLat, lon: wLon });
+    });
+
+    projected.sort((a, b) => a.dist - b.dist);
+    return projected;
   }
 
   handleMouseMove(e) {
@@ -726,6 +864,61 @@ class ElevationProfile {
     ctx.fillStyle = '#0f172a';
     ctx.textAlign = 'right';
     ctx.fillText(badgeText, width - padding.right - 7, 22);
+
+    // 7. Points nommés (Sommets, Waypoints, POIs) sur le profil PDF statique
+    const staticNamedPts = (typeof ElevationProfile.prototype.extractNamedPointsForProfile === 'function')
+      ? ElevationProfile.prototype.extractNamedPointsForProfile(hike)
+      : [];
+    if (staticNamedPts.length > 0) {
+      ctx.font = 'bold 9.5px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const placed = [];
+      staticNamedPts.forEach((wp) => {
+        const wx = getX(wp.dist);
+        const wy = getY(wp.ele);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = 'rgba(217, 119, 6, 0.55)';
+        ctx.lineWidth = 1;
+        ctx.moveTo(wx, wy);
+        ctx.lineTo(wx, padding.top + chartH);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(wx, wy, 3.8, 0, Math.PI * 2);
+        ctx.fillStyle = '#d97706';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        const lbl = wp.name.length > 20 ? wp.name.slice(0, 19) + '…' : wp.name;
+        const bw = ctx.measureText(lbl).width + 10;
+        const bh = 15;
+        let bx = Math.max(padding.left + 2, Math.min(padding.left + chartW - bw - 2, wx - bw / 2));
+        let by = Math.max(padding.top + 2, wy - bh - 7);
+        for (let a = 0; a < 3; a++) {
+          const ov = placed.some(b => bx < b.x + b.w + 3 && bx + bw + 3 > b.x && by < b.y + b.h + 2 && by + bh + 2 > b.y);
+          if (!ov) break;
+          by = (by + bh + 18 < padding.top + chartH - bh) ? (by + bh + 4) : Math.max(padding.top + 2, by - bh - 4);
+        }
+        placed.push({ x: bx, y: by, w: bw, h: bh });
+
+        ctx.fillStyle = 'rgba(255, 251, 235, 0.95)';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1;
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeRect(bx, by, bw, bh);
+
+        ctx.fillStyle = '#78350f';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(lbl, bx + bw / 2, by + bh / 2);
+      });
+      ctx.textBaseline = 'alphabetic';
+    }
 
     return canvas.toDataURL('image/png');
   }
@@ -1072,23 +1265,17 @@ class ElevationProfile {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Tracer les waypoints GPX éventuels sur le profil
-    if (Array.isArray(hike.waypoints) && hike.waypoints.length > 0) {
-      ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-      hike.waypoints.forEach((wp) => {
-        const wLat = Number(wp.lat);
-        const wLon = Number(wp.lon !== undefined ? wp.lon : wp.lng);
-        if (isNaN(wLat) || isNaN(wLon)) return;
-        let bestPt = pts[0], bestD = Infinity;
-        for (const p of pts) {
-          const pLon = p.lon !== undefined ? p.lon : p.lng;
-          const d = (p.lat - wLat) ** 2 + (pLon - wLon) ** 2;
-          if (d < bestD) { bestD = d; bestPt = p; }
-        }
-        const wx = toX(bestPt.dist || 0);
-        const wy = toY(Number(bestPt.ele || 0));
+    // Tracer les points nommés (sommets, waypoints, POIs) avec anti-chevauchement
+    const namedPrintPts = this.extractNamedPointsForProfile(hike);
+    if (namedPrintPts.length > 0) {
+      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      const placedBoxes = [];
+      namedPrintPts.forEach((wp) => {
+        const wx = toX(wp.dist);
+        const wy = toY(wp.ele);
+
         ctx.save();
-        ctx.strokeStyle = 'rgba(2, 132, 199, 0.55)';
+        ctx.strokeStyle = 'rgba(217, 119, 6, 0.65)';
         ctx.setLineDash([6, 5]);
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1098,19 +1285,38 @@ class ElevationProfile {
         ctx.restore();
 
         ctx.beginPath();
-        ctx.arc(wx, wy, 6, 0, Math.PI * 2);
-        ctx.fillStyle = '#0284c7';
+        ctx.arc(wx, wy, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#d97706';
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        if (wp.name) {
-          ctx.fillStyle = '#0f172a';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(wp.name.slice(0, 22), wx, Math.max(pad.top + 22, wy - 12));
+        const lbl = `${wp.name.slice(0, 26)} (${Math.round(wp.ele)}m)`;
+        const bw = ctx.measureText(lbl).width + 18;
+        const bh = 28;
+        let bx = Math.max(pad.left + 4, Math.min(width - pad.right - bw - 4, wx - bw / 2));
+        let by = Math.max(pad.top + 4, wy - bh - 14);
+
+        for (let attempt = 0; attempt < 4; attempt++) {
+          const overlaps = placedBoxes.some(b =>
+            bx < b.x + b.w + 6 && bx + bw + 6 > b.x && by < b.y + b.h + 4 && by + bh + 4 > b.y
+          );
+          if (!overlaps) break;
+          by = (by + bh + 34 < pad.top + plotH - bh) ? (by + bh + 6) : Math.max(pad.top + 4, by - bh - 6);
         }
+        placedBoxes.push({ x: bx, y: by, w: bw, h: bh });
+
+        ctx.fillStyle = 'rgba(255, 251, 235, 0.96)';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.8;
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeRect(bx, by, bw, bh);
+
+        ctx.fillStyle = '#78350f';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(lbl, bx + bw / 2, by + bh / 2);
       });
     }
 
