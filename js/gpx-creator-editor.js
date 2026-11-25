@@ -2686,42 +2686,69 @@ class GpxCreatorEditor {
 
   async enrichElevations(coords) {
     if (!coords || coords.length < 2) return coords;
-    // Vérifier si des altitudes sont déjà présentes
-    const hasEle = coords.some(c => (c[2] || 0) > 0);
+    // Vérifier si des altitudes réelles sont déjà présentes
+    const hasEle = coords.some(c => (c[2] || 0) > 1);
     if (hasEle) return coords;
 
     try {
-      // Échantillonner au maximum 50 points pour l'API alti IGN
-      const sampleStep = Math.max(1, Math.floor(coords.length / 50));
+      // Échantillonner jusqu'à 60 points répartis uniformément
+      const maxSamples = 60;
+      const sampleStep = Math.max(1, Math.floor((coords.length - 1) / (maxSamples - 1)));
       const sampleIndices = [];
       for (let i = 0; i < coords.length; i += sampleStep) sampleIndices.push(i);
       if (sampleIndices[sampleIndices.length - 1] !== coords.length - 1) {
         sampleIndices.push(coords.length - 1);
       }
 
-      const lons = sampleIndices.map(i => coords[i][1].toFixed(6)).join('|');
-      const lats = sampleIndices.map(i => coords[i][0].toFixed(6)).join('|');
-      const url = `https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevationLine.json?lon=${lons}&lat=${lats}&resource=ign_rge_alti_wld&sampling=${sampleIndices.length}`;
+      let fetchedEles = null;
 
-      const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
-      if (resp.ok) {
-        const data = await resp.json();
-        const eles = data.elevations || [];
-        if (eles.length === sampleIndices.length) {
-          for (let k = 0; k < sampleIndices.length; k++) {
-            const idx = sampleIndices[k];
-            coords[idx][2] = Math.round((eles[k].z || 0) * 10) / 10;
+      // 1) API officielle IGN Géoplateforme RGE ALTI (point à point exact via elevation.json)
+      try {
+        const lons = sampleIndices.map(i => Number(coords[i][1]).toFixed(5)).join('|');
+        const lats = sampleIndices.map(i => Number(coords[i][0]).toFixed(5)).join('|');
+        const ignUrl = `https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon=${lons}&lat=${lats}&resource=ign_rge_alti_wld&zonly=true`;
+        const resp = await fetch(ignUrl, { headers: { 'Accept': 'application/json' } });
+        if (resp.ok) {
+          const data = await resp.json();
+          const eles = data.elevations || [];
+          if (eles.length === sampleIndices.length && eles.some(z => typeof z === 'number' && z > -500 && z !== -99999)) {
+            fetchedEles = eles.map(z => (typeof z === 'number' && z > -500 && z !== -99999) ? Math.round(z * 10) / 10 : null);
           }
-          // Remplir les points intermédiaires par interpolation
-          for (let k = 0; k < sampleIndices.length - 1; k++) {
-            const i1 = sampleIndices[k];
-            const i2 = sampleIndices[k + 1];
-            const z1 = coords[i1][2];
-            const z2 = coords[i2][2];
-            for (let j = i1 + 1; j < i2; j++) {
-              const ratio = (j - i1) / (i2 - i1);
-              coords[j][2] = Math.round((z1 + ratio * (z2 - z1)) * 10) / 10;
+        }
+      } catch (e) {}
+
+      // 2) Fallback mondial Open-Meteo Elevation API si hors France ou indisponibilité IGN
+      if (!fetchedEles) {
+        try {
+          const latsC = sampleIndices.map(i => Number(coords[i][0]).toFixed(5)).join(',');
+          const lonsC = sampleIndices.map(i => Number(coords[i][1]).toFixed(5)).join(',');
+          const omUrl = `https://api.open-meteo.com/v1/elevation?latitude=${latsC}&longitude=${lonsC}`;
+          const resp = await fetch(omUrl);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data.elevation) && data.elevation.length === sampleIndices.length) {
+              fetchedEles = data.elevation.map(z => (typeof z === 'number' && !isNaN(z)) ? Math.round(z * 10) / 10 : null);
             }
+          }
+        } catch (e) {}
+      }
+
+      if (fetchedEles) {
+        // Combler d'éventuels trous null par le voisin valide
+        let lastValid = fetchedEles.find(z => z !== null) || 0;
+        for (let k = 0; k < sampleIndices.length; k++) {
+          if (fetchedEles[k] !== null) lastValid = fetchedEles[k];
+          coords[sampleIndices[k]][2] = lastValid;
+        }
+        // Interpolation linéaire sur tous les points intermédiaires
+        for (let k = 0; k < sampleIndices.length - 1; k++) {
+          const i1 = sampleIndices[k];
+          const i2 = sampleIndices[k + 1];
+          const z1 = coords[i1][2];
+          const z2 = coords[i2][2];
+          for (let j = i1 + 1; j < i2; j++) {
+            const ratio = (j - i1) / (i2 - i1);
+            coords[j][2] = Math.round((z1 + ratio * (z2 - z1)) * 10) / 10;
           }
         }
       }

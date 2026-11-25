@@ -110,6 +110,115 @@ class ElevationProfile {
 
     // Rendu synchrone direct préservant le curseur actif
     this.resizeAndDraw(this.cursorDist);
+
+    // Détection automatique d'un GPX sans altitudes (profil plat à 0 m) -> enrichissement auto IGN RGE Alti
+    const allZeroEle = hike.points.length >= 2 && hike.points.every(p => !p.ele || Math.abs(Number(p.ele)) < 0.5);
+    if (allZeroEle && !hike._eleEnrichAttempted) {
+      hike._eleEnrichAttempted = true;
+      this.autoEnrichZeroElevation(hike);
+    }
+  }
+
+  /**
+   * Récupère automatiquement les altitudes réelles (IGN RGE Alti / Open-Meteo)
+   * lorsqu'un fichier GPX chargé ne contient pas d'altitudes (tout à 0 m).
+   */
+  async autoEnrichZeroElevation(hike) {
+    if (!hike || !hike.points || hike.points.length < 2) return;
+    try {
+      const pts = hike.points;
+      const maxSamples = 60;
+      const sampleStep = Math.max(1, Math.floor((pts.length - 1) / (maxSamples - 1)));
+      const sampleIndices = [];
+      for (let i = 0; i < pts.length; i += sampleStep) sampleIndices.push(i);
+      if (sampleIndices[sampleIndices.length - 1] !== pts.length - 1) {
+        sampleIndices.push(pts.length - 1);
+      }
+
+      const getLon = (p) => Number(p.lon !== undefined ? p.lon : p.lng);
+      let fetchedEles = null;
+
+      // 1) IGN Géoplateforme RGE Alti
+      try {
+        const lons = sampleIndices.map(i => getLon(pts[i]).toFixed(5)).join('|');
+        const lats = sampleIndices.map(i => Number(pts[i].lat).toFixed(5)).join('|');
+        const url = `https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon=${lons}&lat=${lats}&resource=ign_rge_alti_wld&zonly=true`;
+        const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (resp.ok) {
+          const data = await resp.json();
+          const eles = data.elevations || [];
+          if (eles.length === sampleIndices.length && eles.some(z => typeof z === 'number' && z > -500 && z !== -99999)) {
+            fetchedEles = eles.map(z => (typeof z === 'number' && z > -500 && z !== -99999) ? Math.round(z * 10) / 10 : null);
+          }
+        }
+      } catch (e) {}
+
+      // 2) Fallback mondial Open-Meteo
+      if (!fetchedEles) {
+        try {
+          const latsC = sampleIndices.map(i => Number(pts[i].lat).toFixed(5)).join(',');
+          const lonsC = sampleIndices.map(i => getLon(pts[i]).toFixed(5)).join(',');
+          const omUrl = `https://api.open-meteo.com/v1/elevation?latitude=${latsC}&longitude=${lonsC}`;
+          const resp = await fetch(omUrl);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data.elevation) && data.elevation.length === sampleIndices.length) {
+              fetchedEles = data.elevation.map(z => (typeof z === 'number' && !isNaN(z)) ? Math.round(z * 10) / 10 : null);
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!fetchedEles) return;
+
+      let lastValid = fetchedEles.find(z => z !== null) || 0;
+      for (let k = 0; k < sampleIndices.length; k++) {
+        if (fetchedEles[k] !== null) lastValid = fetchedEles[k];
+        pts[sampleIndices[k]].ele = lastValid;
+      }
+      for (let k = 0; k < sampleIndices.length - 1; k++) {
+        const i1 = sampleIndices[k];
+        const i2 = sampleIndices[k + 1];
+        const z1 = pts[i1].ele;
+        const z2 = pts[i2].ele;
+        for (let j = i1 + 1; j < i2; j++) {
+          const ratio = (j - i1) / (i2 - i1);
+          pts[j].ele = Math.round((z1 + ratio * (z2 - z1)) * 10) / 10;
+        }
+      }
+
+      // Recalculer D+, D-, min, max (avec lissage anti-bruit 4m)
+      let dPlus = 0, dMoins = 0, minE = Infinity, maxE = -Infinity;
+      let refEle = pts[0].ele;
+      for (let i = 0; i < pts.length; i++) {
+        const z = pts[i].ele;
+        if (z < minE) minE = z;
+        if (z > maxE) maxE = z;
+        const diff = z - refEle;
+        if (diff >= 4) { dPlus += diff; refEle = z; }
+        else if (diff <= -4) { dMoins += Math.abs(diff); refEle = z; }
+      }
+      hike.elevationGain = Math.round(dPlus);
+      hike.elevationLoss = Math.round(dMoins);
+      hike.minElevation = Math.round(minE);
+      hike.maxElevation = Math.round(maxE);
+
+      // Mettre à jour l'interface si cette randonnée est toujours affichée
+      if (this.currentHike === hike) {
+        const elDplus = document.getElementById('preview-dplus');
+        const elDmoins = document.getElementById('preview-dmoins');
+        const elAlt = document.getElementById('preview-alt');
+        if (elDplus) elDplus.textContent = `+${hike.elevationGain} m`;
+        if (elDmoins) elDmoins.textContent = `-${hike.elevationLoss} m`;
+        if (elAlt) elAlt.textContent = `${hike.minElevation}m / ${hike.maxElevation}m`;
+        this.resizeAndDraw(this.cursorDist);
+      }
+      if (window.MapManagerInstance && typeof window.MapManagerInstance.showStandaloneGpxHud === 'function') {
+        window.MapManagerInstance.showStandaloneGpxHud();
+      }
+    } catch (e) {
+      console.warn('Auto-enrichissement altimétrique ignoré:', e);
+    }
   }
 
   resizeAndDraw(cursorDist = null) {
@@ -617,6 +726,393 @@ class ElevationProfile {
     ctx.fillStyle = '#0f172a';
     ctx.textAlign = 'right';
     ctx.fillText(badgeText, width - padding.right - 7, 22);
+
+    return canvas.toDataURL('image/png');
+  }
+
+  /**
+   * Impression pleine page du profil altimétrique en format A4 ou A3 Paysage
+   * Fonctionne indifféremment depuis "Cartes & Outils" et "Randonner"
+   */
+  printProfile(format = 'A4') {
+    const hike = this.currentHike;
+    if (!hike || !hike.points || hike.points.length < 2) {
+      alert('Aucun profil altimétrique actif à imprimer.');
+      return;
+    }
+
+    const fmt = (format === 'A3') ? 'A3' : 'A4';
+    const isA3 = fmt === 'A3';
+    const canvasW = isA3 ? 2400 : 1800;
+    const canvasH = isA3 ? 1320 : 980;
+
+    // Générer l'image haute définition pleine page du profil
+    const imgDataUrl = this.buildHighResPrintCanvas(hike, canvasW, canvasH);
+    const title = (hike.name || hike.title || 'Profil Altimétrique').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const dist = hike.distanceKm || hike.distance || 0;
+    const dPlus = hike.elevationGain || 0;
+    const dMoins = hike.elevationLoss || 0;
+    const minAlt = hike.minElevation || 0;
+    const maxAlt = hike.maxElevation || 0;
+    const ibp = hike.ibpIndex ? ` • IBP ${hike.ibpIndex}` : '';
+    const dateStr = new Date().toLocaleDateString('fr-FR');
+
+    const printWin = window.open('', '_blank');
+    if (!printWin) {
+      alert('Veuillez autoriser les fenêtres pop-up pour imprimer le profil altimétrique.');
+      return;
+    }
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Profil Altimétrique (${fmt} Paysage) - ${title}</title>
+        <style id="page-size-style">
+          @page { size: ${fmt} landscape; margin: 6mm; }
+        </style>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #e2e8f0;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .no-print {
+            width: 100%;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+          }
+          .btn {
+            padding: 7px 14px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+          }
+          .btn-fmt { background: #1e293b; color: #cbd5e1; }
+          .btn-fmt.active { background: #0284c7; color: #ffffff; border-color: #38bdf8; }
+          .btn-print { background: #10b981; color: #ffffff; border-color: #34d399; }
+          .btn-print:hover { background: #059669; }
+          .btn-close { background: #7f1d1d; color: #fecaca; border-color: #dc2626; }
+          .sheet {
+            background: #ffffff;
+            width: ${isA3 ? '408mm' : '285mm'};
+            height: ${isA3 ? '285mm' : '198mm'};
+            margin: 14px auto;
+            padding: 6mm 8mm;
+            box-shadow: 0 12px 35px rgba(15,23,42,0.2);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          .sheet-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            border-bottom: 2px solid #059669;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+          }
+          .sheet-title { font-size: 16px; font-weight: 900; color: #0f172a; }
+          .sheet-sub { font-size: 11px; color: #475569; margin-top: 2px; font-weight: 600; }
+          .stats-pills { display: flex; gap: 8px; }
+          .pill {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 3px 9px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #0f172a;
+          }
+          .pill-green { background: #ecfdf5; border-color: #6ee7b7; color: #047857; }
+          .pill-red { background: #fff1f2; border-color: #fda4af; color: #be123c; }
+          .chart-wrap {
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 4px;
+            overflow: hidden;
+          }
+          .chart-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+          }
+          .sheet-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9.5px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 4px;
+            margin-top: 6px;
+          }
+          @media print {
+            body { background: #ffffff !important; }
+            .no-print { display: none !important; }
+            .sheet {
+              width: 100% !important;
+              height: 100vh !important;
+              margin: 0 !important;
+              padding: 2mm !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print">
+          <div style="font-weight: 900; font-size: 13px;">📈 Impression Profil Altimétrique Pleine Page • <span id="lbl-fmt">${fmt} Paysage</span></div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" id="btn-a4" class="btn btn-fmt ${!isA3 ? 'active' : ''}" onclick="setFmt('A4')">Format A4 Paysage</button>
+            <button type="button" id="btn-a3" class="btn btn-fmt ${isA3 ? 'active' : ''}" onclick="setFmt('A3')">Format A3 Paysage</button>
+            <button type="button" class="btn btn-print" onclick="window.print()">🖨️ Imprimer / PDF</button>
+            <button type="button" class="btn btn-close" onclick="window.close()">✕ Fermer</button>
+          </div>
+        </div>
+        <div class="sheet" id="print-sheet">
+          <div class="sheet-header">
+            <div>
+              <div class="sheet-title">▲ Profil Altimétrique : ${title}</div>
+              <div class="sheet-sub">Map &amp; Rando by JLDApps 2026 • Format <span id="sub-fmt">${fmt}</span> Paysage${ibp}</div>
+            </div>
+            <div class="stats-pills">
+              <span class="pill">📏 ${dist} km</span>
+              <span class="pill pill-green">↗ D+ ${dPlus} m</span>
+              <span class="pill pill-red">↘ D- ${dMoins} m</span>
+              <span class="pill">⛰️ ${minAlt} m / ${maxAlt} m</span>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <img src="${imgDataUrl}" alt="Profil Altimétrique" />
+          </div>
+          <div class="sheet-footer">
+            <div>Profil Topographique Haute Définition • Map &amp; Rando by JLDApps 2026</div>
+            <div>Édité le ${dateStr}</div>
+          </div>
+        </div>
+        <script>
+          function setFmt(f) {
+            document.getElementById('page-size-style').innerHTML = '@page { size: ' + f + ' landscape; margin: 6mm; }';
+            document.getElementById('lbl-fmt').textContent = f + ' Paysage';
+            document.getElementById('sub-fmt').textContent = f;
+            document.getElementById('btn-a4').classList.toggle('active', f === 'A4');
+            document.getElementById('btn-a3').classList.toggle('active', f === 'A3');
+            var sh = document.getElementById('print-sheet');
+            sh.style.width = (f === 'A3') ? '408mm' : '285mm';
+            sh.style.height = (f === 'A3') ? '285mm' : '198mm';
+          }
+        </script>
+      </body>
+      </html>
+    `);
+    printWin.document.close();
+  }
+
+  /**
+   * Construit un canvas très haute résolution pour l'impression A4/A3 pleine page
+   */
+  buildHighResPrintCanvas(hike, width, height) {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    const pts = hike.points;
+    const pad = { top: 68, right: 56, bottom: 72, left: 86 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    const totalDist = Math.max(0.1, Number(hike.distanceKm || pts[pts.length - 1].dist || 1));
+    let minE = Infinity, maxE = -Infinity;
+    let maxPt = pts[0], minPt = pts[0];
+    for (const p of pts) {
+      const z = Number(p.ele || 0);
+      if (z < minE) { minE = z; minPt = p; }
+      if (z > maxE) { maxE = z; maxPt = p; }
+    }
+    if (!isFinite(minE)) { minE = 0; maxE = 100; }
+    const rangeE = Math.max(20, maxE - minE);
+    const yMin = Math.floor((minE - rangeE * 0.08) / 10) * 10;
+    const yMax = Math.ceil((maxE + rangeE * 0.12) / 10) * 10;
+    const ySpan = Math.max(10, yMax - yMin);
+
+    const toX = (d) => pad.left + (d / totalDist) * plotW;
+    const toY = (z) => pad.top + plotH - ((z - yMin) / ySpan) * plotH;
+
+    // Grille horizontale (altitudes)
+    const ySteps = 6;
+    ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    for (let i = 0; i <= ySteps; i++) {
+      const val = Math.round(yMin + (ySpan * i) / ySteps);
+      const y = toY(val);
+      ctx.strokeStyle = i === 0 ? '#64748b' : '#e2e8f0';
+      ctx.lineWidth = i === 0 ? 2 : 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(pad.left + plotW, y);
+      ctx.stroke();
+
+      ctx.fillStyle = '#334155';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`${val} m`, pad.left - 14, y);
+    }
+
+    // Grille verticale (kilomètres)
+    const kmStep = totalDist <= 5 ? 0.5 : (totalDist <= 15 ? 1 : (totalDist <= 30 ? 2 : 5));
+    for (let d = 0; d <= totalDist + 0.001; d += kmStep) {
+      const x = toX(Math.min(d, totalDist));
+      ctx.strokeStyle = d === 0 ? '#64748b' : '#e2e8f0';
+      ctx.lineWidth = d === 0 ? 2 : 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x, pad.top);
+      ctx.lineTo(x, pad.top + plotH);
+      ctx.stroke();
+
+      ctx.fillStyle = '#334155';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(`${Number(d.toFixed(1))} km`, x, pad.top + plotH + 14);
+    }
+
+    // Aire dégradée sous la courbe
+    const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + plotH);
+    grad.addColorStop(0, 'rgba(16, 185, 129, 0.38)');
+    grad.addColorStop(0.65, 'rgba(14, 165, 233, 0.18)');
+    grad.addColorStop(1, 'rgba(14, 165, 233, 0.03)');
+
+    ctx.beginPath();
+    ctx.moveTo(toX(pts[0].dist || 0), pad.top + plotH);
+    for (let i = 0; i < pts.length; i++) {
+      ctx.lineTo(toX(pts[i].dist || 0), toY(Number(pts[i].ele || 0)));
+    }
+    ctx.lineTo(toX(pts[pts.length - 1].dist || totalDist), pad.top + plotH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Courbe principale nette
+    ctx.beginPath();
+    for (let i = 0; i < pts.length; i++) {
+      const x = toX(pts[i].dist || 0);
+      const y = toY(Number(pts[i].ele || 0));
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#047857';
+    ctx.lineWidth = 4;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // Badge Point Haut (Sommet)
+    const peakX = toX(maxPt.dist || 0);
+    const peakY = toY(Number(maxPt.ele || 0));
+    ctx.beginPath();
+    ctx.arc(peakX, peakY, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#dc2626';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    const peakLbl = `▲ Sommet : ${Math.round(maxE)} m (km ${(maxPt.dist || 0).toFixed(1)})`;
+    ctx.font = 'bold 21px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    const peakW = ctx.measureText(peakLbl).width + 24;
+    const pBoxX = Math.min(width - pad.right - peakW, Math.max(pad.left, peakX - peakW / 2));
+    const pBoxY = Math.max(10, peakY - 46);
+    ctx.fillStyle = '#fef2f2';
+    ctx.strokeStyle = '#dc2626';
+    ctx.lineWidth = 2;
+    ctx.fillRect(pBoxX, pBoxY, peakW, 34);
+    ctx.strokeRect(pBoxX, pBoxY, peakW, 34);
+    ctx.fillStyle = '#991b1b';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(peakLbl, pBoxX + peakW / 2, pBoxY + 17);
+
+    // Badge Point Bas
+    const lowX = toX(minPt.dist || 0);
+    const lowY = toY(Number(minPt.ele || 0));
+    ctx.beginPath();
+    ctx.arc(lowX, lowY, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#0284c7';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Tracer les waypoints GPX éventuels sur le profil
+    if (Array.isArray(hike.waypoints) && hike.waypoints.length > 0) {
+      ctx.font = 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      hike.waypoints.forEach((wp) => {
+        const wLat = Number(wp.lat);
+        const wLon = Number(wp.lon !== undefined ? wp.lon : wp.lng);
+        if (isNaN(wLat) || isNaN(wLon)) return;
+        let bestPt = pts[0], bestD = Infinity;
+        for (const p of pts) {
+          const pLon = p.lon !== undefined ? p.lon : p.lng;
+          const d = (p.lat - wLat) ** 2 + (pLon - wLon) ** 2;
+          if (d < bestD) { bestD = d; bestPt = p; }
+        }
+        const wx = toX(bestPt.dist || 0);
+        const wy = toY(Number(bestPt.ele || 0));
+        ctx.save();
+        ctx.strokeStyle = 'rgba(2, 132, 199, 0.55)';
+        ctx.setLineDash([6, 5]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(wx, wy);
+        ctx.lineTo(wx, pad.top + plotH);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(wx, wy, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        if (wp.name) {
+          ctx.fillStyle = '#0f172a';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(wp.name.slice(0, 22), wx, Math.max(pad.top + 22, wy - 12));
+        }
+      });
+    }
 
     return canvas.toDataURL('image/png');
   }
