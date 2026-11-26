@@ -127,13 +127,49 @@
           const accuracy = Math.round(pos.coords.accuracy || 20);
 
           let placeName = 'Ma position GPS';
-          try {
-            if (typeof GPXParser !== 'undefined' && GPXParser.reverseGeocode) {
-              placeName = await GPXParser.reverseGeocode(lat, lon);
-            }
-          } catch (e) {
-            console.warn('Reverse geocode error:', e);
-          }
+          let lidarAlt = null;
+          let lidarSource = 'LiDAR IGN';
+
+          const fetchLidarAlt = async () => {
+            try {
+              const ignUrl = `https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon=${lon.toFixed(6)}&lat=${lat.toFixed(6)}&resource=ign_rge_alti_wld&zonly=true`;
+              const resp = await fetch(ignUrl, { headers: { 'Accept': 'application/json' } });
+              if (resp.ok) {
+                const data = await resp.json();
+                const z = data?.elevations?.[0];
+                if (typeof z === 'number' && !isNaN(z) && z > -500 && z !== -99999) {
+                  lidarAlt = Math.round(z);
+                  lidarSource = 'LiDAR IGN';
+                  return;
+                }
+              }
+            } catch (e) {}
+            // Fallback mondial Open-Meteo si hors France ou coupure IGN
+            try {
+              const omResp = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat.toFixed(6)}&longitude=${lon.toFixed(6)}`);
+              if (omResp.ok) {
+                const omData = await omResp.json();
+                const z = omData?.elevation?.[0];
+                if (typeof z === 'number' && !isNaN(z)) {
+                  lidarAlt = Math.round(z);
+                  lidarSource = 'MNT';
+                }
+              }
+            } catch (e) {}
+          };
+
+          await Promise.all([
+            (async () => {
+              try {
+                if (typeof GPXParser !== 'undefined' && GPXParser.reverseGeocode) {
+                  placeName = await GPXParser.reverseGeocode(lat, lon);
+                }
+              } catch (e) {
+                console.warn('Reverse geocode error:', e);
+              }
+            })(),
+            fetchLidarAlt()
+          ]);
 
           const input = document.getElementById('map-world-search-input');
           if (input) input.value = placeName || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
@@ -173,14 +209,20 @@
             });
 
             const safePlace = (placeName || 'Ma position GPS').replace(/'/g, "\\'");
+            const altBadgeHtml = (lidarAlt !== null)
+              ? `<div style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:6px; background:#ecfdf5; border:1px solid #6ee7b7; color:#047857; font-size:11px; font-weight:800; margin-bottom:6px;">
+                   <span>⛰️</span> <span>Altitude ${lidarSource} : ${lidarAlt} m</span>
+                 </div>`
+              : '';
             window._worldSearchMarker = L.marker([lat, lon], { icon: userIcon, zIndexOffset: 2000 })
               .addTo(map)
               .bindPopup(`
-                <div style="min-width:190px; font-family:sans-serif; padding:4px;">
+                <div style="min-width:205px; font-family:sans-serif; padding:4px;">
                   <div style="font-weight:900; font-size:13px; color:#065f46; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                     <span>📍</span> <span>Ma position GPS</span>
                   </div>
-                  <div style="font-weight:700; font-size:12px; color:#1e293b; margin-bottom:4px;">${placeName}</div>
+                  <div style="font-weight:700; font-size:12px; color:#1e293b; margin-bottom:5px;">${placeName}</div>
+                  ${altBadgeHtml}
                   <div style="font-size:10.5px; color:#64748b; font-family:monospace; margin-bottom:6px;">${lat.toFixed(5)}, ${lon.toFixed(5)} &bull; Précision: ~${accuracy}m</div>
                   <button type="button" style="padding:4px 8px; border-radius:6px; background:#f1f5f9; border:1px solid #cbd5e1; font-size:10.5px; font-weight:700; color:#334155; cursor:pointer;" onclick="window.MapManagerInstance ? window.MapManagerInstance.copyGpsCoords(${lat.toFixed(5)}, ${lon.toFixed(5)}, this) : null">
                     📋 Copier GPS
