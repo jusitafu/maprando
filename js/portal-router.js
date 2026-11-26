@@ -458,6 +458,10 @@
           if (input) input.value = item.title;
           if (window.MapManagerInstance && window.MapManagerInstance.map) {
             const map = window.MapManagerInstance.map;
+            if (item.isWaterway && typeof WaterwayManager !== 'undefined') {
+              WaterwayManager.displayWaterway(item, map);
+              return;
+            }
             if (item.bbox) {
               map.fitBounds(item.bbox, { maxZoom: 15, padding: [30, 30] });
             } else {
@@ -1341,7 +1345,10 @@
             bbox: f.bbox ? [[f.bbox[1], f.bbox[0]], [f.bbox[3], f.bbox[2]]] : null,
             icon: '🌊',
             isWaterway: true,
-            score: (nameNorm === qNorm ? 115 : 80) + (isFrance ? 25 : 0)
+            score: (nameNorm === qNorm ? 115 : 80) + (isFrance ? 25 : 0),
+            osmType: p.osm_type,
+            osmId: p.osm_id,
+            osmValue: osmVal
           };
         }).filter(Boolean);
       } catch (e) {
@@ -1364,4 +1371,344 @@
     }
     return unique;
   };
+
+  // =========================================================================
+  // GESTIONNAIRE ET AFFICHAGE ANIMÉ CLIGNOTANT DES COURS D'EAU (WATERWAYS)
+  // Permet le clignotement haute visibilité et l'écoulement animé sur le tracé
+  // =========================================================================
+  class WaterwayManager {
+    static currentWaterwayLayer = null;
+    static currentWaterwayBanner = null;
+    static _cache = new Map();
+
+    /**
+     * Nettoie tout tracé de cours d'eau précédent
+     */
+    static clearWaterway(map) {
+      if (!map && window.MapManagerInstance && window.MapManagerInstance.map) {
+        map = window.MapManagerInstance.map;
+      }
+      if (this.currentWaterwayLayer) {
+        try {
+          if (map && map.hasLayer(this.currentWaterwayLayer)) {
+            map.removeLayer(this.currentWaterwayLayer);
+          }
+        } catch (e) {}
+        this.currentWaterwayLayer = null;
+      }
+      this.removeWaterwayBanner();
+    }
+
+    /**
+     * Supprime le bandeau flottant d'information du cours d'eau
+     */
+    static removeWaterwayBanner() {
+      if (this.currentWaterwayBanner) {
+        try { this.currentWaterwayBanner.remove(); } catch (e) {}
+        this.currentWaterwayBanner = null;
+      }
+      const b = document.getElementById('waterway-floating-banner');
+      if (b) {
+        try { b.remove(); } catch (e) {}
+      }
+    }
+
+    /**
+     * Affiche un bandeau flottant d'information en haut de l'écran avec bouton Fermer (✕)
+     */
+    static showWaterwayBanner(waterway, map, opts = {}) {
+      this.removeWaterwayBanner();
+
+      const banner = document.createElement('div');
+      banner.id = 'waterway-floating-banner';
+      banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-sky-500/80 flex flex-col gap-1.5 max-w-[94vw] sm:max-w-2xl transition-all duration-300 animate-bounce-short select-none';
+
+      const wType = waterway.waterType || 'Cours d\'eau';
+      const distText = opts.distKm ? ` • Longueur : ~${opts.distKm} km` : (opts.segmentsCount ? ` • ${opts.segmentsCount} tronçons` : '');
+
+      banner.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="bg-sky-600 text-white font-black text-xs px-2.5 py-0.5 rounded-md shadow uppercase tracking-wide flex items-center gap-1.5 flex-shrink-0">
+              <span class="inline-block w-2 h-2 rounded-full bg-cyan-200 animate-ping"></span>
+              🌊 ${wType}
+            </span>
+            <div class="flex flex-col min-w-0">
+              <div class="font-extrabold text-white text-sm sm:text-base truncate flex items-center gap-2">
+                <span>${waterway.rawName || waterway.title || 'Cours d\'eau'}</span>
+                <span class="text-[11px] text-cyan-300 font-semibold hidden sm:inline">${distText}</span>
+              </div>
+              <div class="text-[11px] text-slate-300 font-medium truncate">
+                ${waterway.subtitle || 'Écoulement naturel et tracé hydrographique officiel'}
+              </div>
+            </div>
+          </div>
+          <button id="btn-close-waterway-banner" type="button" class="ml-auto text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 active:scale-95 transition rounded-xl p-1.5 px-2.5 text-sm font-black border border-slate-700/80 flex-shrink-0 cursor-pointer" title="Masquer le cours d'eau">
+            ✕
+          </button>
+        </div>
+      `;
+
+      document.body.appendChild(banner);
+      this.currentWaterwayBanner = banner;
+
+      const closeBtn = banner.querySelector('#btn-close-waterway-banner');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          this.clearWaterway(map);
+        });
+      }
+    }
+
+    /**
+     * Récupère la géométrie fine complète d'un cours d'eau depuis OSM (way/relation/full.json) ou Nominatim
+     */
+    static async fetchWaterwayGeometry(item) {
+      const cacheKey = `${item.osmType || ''}_${item.osmId || ''}_${item.rawName || item.title || ''}`;
+      if (this._cache.has(cacheKey)) {
+        return this._cache.get(cacheKey);
+      }
+
+      let segments = [];
+
+      // 1. Si osmType et osmId sont présents (provenant de Photon)
+      if (item.osmType && item.osmId) {
+        const typeStr = (item.osmType === 'R' || item.osmType === 'relation') ? 'relation' : 'way';
+        try {
+          const url = `https://api.openstreetmap.org/api/0.6/${typeStr}/${item.osmId}/full.json`;
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data && Array.isArray(data.elements)) {
+              const nodes = {};
+              data.elements.forEach(el => {
+                if (el.type === 'node' && el.lat != null && el.lon != null) {
+                  nodes[el.id] = [Number(el.lat), Number(el.lon)];
+                }
+              });
+              data.elements.forEach(el => {
+                if (el.type === 'way' && Array.isArray(el.nodes)) {
+                  const pts = el.nodes.map(nid => nodes[nid]).filter(Boolean);
+                  if (pts.length > 1) {
+                    segments.push(pts);
+                  }
+                }
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('[WaterwayManager] Erreur OSM direct full.json:', e);
+        }
+      }
+
+      // 2. Fallback Nominatim avec polygon_geojson si segments vides
+      if (segments.length === 0 && (item.rawName || item.title)) {
+        try {
+          const queryName = item.rawName || item.title.split('—')[0].trim();
+          const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(queryName)}&format=json&polygon_geojson=1&limit=3`;
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (Array.isArray(data)) {
+              for (const res of data) {
+                const geo = res.geojson;
+                if (!geo) continue;
+                if (geo.type === 'LineString' && Array.isArray(geo.coordinates)) {
+                  const pts = geo.coordinates.map(c => [c[1], c[0]]);
+                  if (pts.length > 1) segments.push(pts);
+                  break;
+                } else if (geo.type === 'MultiLineString' && Array.isArray(geo.coordinates)) {
+                  geo.coordinates.forEach(line => {
+                    const pts = line.map(c => [c[1], c[0]]);
+                    if (pts.length > 1) segments.push(pts);
+                  });
+                  break;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[WaterwayManager] Erreur Nominatim geojson:', e);
+        }
+      }
+
+      // 3. Fallback Overpass ciblé autour du point si toujours vide
+      if (segments.length === 0 && item.lat && item.lon) {
+        try {
+          const qName = (item.rawName || item.title || '').replace(/["']/g, '');
+          const opQuery = `[out:json][timeout:6];(way["waterway"~"river|stream|canal"]["name"~"${qName}",i](around:35000,${item.lat},${item.lon});relation["waterway"~"river|stream|canal"]["name"~"${qName}",i](around:35000,${item.lat},${item.lon}););out geom 30;`;
+          const mirrors = [
+            'https://overpass.kumi.systems/api/interpreter',
+            'https://overpass-api.de/api/interpreter'
+          ];
+          for (const mirror of mirrors) {
+            try {
+              const resp = await fetch(mirror, {
+                method: 'POST',
+                body: 'data=' + encodeURIComponent(opQuery),
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+              });
+              if (!resp.ok) continue;
+              const data = await resp.json();
+              if (data && Array.isArray(data.elements)) {
+                data.elements.forEach(el => {
+                  if (el.type === 'way' && Array.isArray(el.geometry)) {
+                    const pts = el.geometry.map(g => [g.lat, g.lon]);
+                    if (pts.length > 1) segments.push(pts);
+                  } else if (el.type === 'relation' && Array.isArray(el.members)) {
+                    el.members.forEach(m => {
+                      if (m.type === 'way' && Array.isArray(m.geometry)) {
+                        const pts = m.geometry.map(g => [g.lat, g.lon]);
+                        if (pts.length > 1) segments.push(pts);
+                      }
+                    });
+                  }
+                });
+                if (segments.length > 0) break;
+              }
+            } catch (me) {}
+          }
+        } catch (e) {
+          console.warn('[WaterwayManager] Erreur Overpass fallback:', e);
+        }
+      }
+
+      // 4. Fallback ultime : si aucun tracé géométrique détaillé trouvé, tracer un segment représentatif
+      if (segments.length === 0 && item.lat && item.lon) {
+        const d = 0.015;
+        segments.push([
+          [item.lat - d, item.lon - d],
+          [item.lat, item.lon],
+          [item.lat + d, item.lon + d]
+        ]);
+      }
+
+      if (segments.length > 0) {
+        this._cache.set(cacheKey, segments);
+      }
+      return segments;
+    }
+
+    /**
+     * Calcule la distance totale approximative en kilomètres
+     */
+    static computeDistanceKm(segments) {
+      if (!segments || !segments.length) return 0;
+      let distMeters = 0;
+      const toRad = x => (x * Math.PI) / 180;
+      segments.forEach(pts => {
+        for (let i = 0; i < pts.length - 1; i++) {
+          const [lat1, lon1] = pts[i];
+          const [lat2, lon2] = pts[i + 1];
+          const dLat = toRad(lat2 - lat1);
+          const dLon = toRad(lon2 - lon1);
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          distMeters += 6371000 * c;
+        }
+      });
+      return Math.round(distMeters / 1000);
+    }
+
+    /**
+     * Affiche le cours d'eau sur la carte avec clignotement animé, halo lumineux et écoulement continu
+     */
+    static async displayWaterway(waterway, map) {
+      if (!map) {
+        if (window.MapManagerInstance && window.MapManagerInstance.map) {
+          map = window.MapManagerInstance.map;
+        } else {
+          return;
+        }
+      }
+
+      if (!waterway) return;
+
+      // Nettoyer tout affichage précédent
+      this.clearWaterway(map);
+
+      // Supprimer tout éventuel marker de recherche précédent
+      if (window._worldSearchMarker) {
+        try { map.removeLayer(window._worldSearchMarker); } catch (e) {}
+        window._worldSearchMarker = null;
+      }
+
+      // Récupérer la géométrie fine
+      const segments = (waterway.geometry && Array.isArray(waterway.geometry))
+        ? waterway.geometry
+        : await this.fetchWaterwayGeometry(waterway);
+
+      if (!segments || segments.length === 0) {
+        if (waterway.lat && waterway.lon) {
+          map.setView([waterway.lat, waterway.lon], 14);
+        }
+        return;
+      }
+
+      const distKm = this.computeDistanceKm(segments);
+
+      // Créer le groupe de calques pour le tracé clignotant
+      this.currentWaterwayLayer = L.layerGroup();
+
+      // 1. Halo lumineux sous-jacent (Blanc éclatant pour détacher sur tout fond IGN/Satellite/OSM)
+      const halo = L.polyline(segments, {
+        color: '#ffffff',
+        weight: 9,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round',
+        interactive: false
+      });
+      this.currentWaterwayLayer.addLayer(halo);
+
+      // 2. Tracé corps du cours d'eau en bleu azur éclatant avec pulsation / clignotement
+      const bodyTrack = L.polyline(segments, {
+        color: '#0284c7', // Bleu azur éclatant
+        weight: 5.5,
+        opacity: 1,
+        lineCap: 'round',
+        lineJoin: 'round',
+        interactive: false,
+        className: 'leaflet-waterway-blinking-path'
+      });
+      this.currentWaterwayLayer.addLayer(bodyTrack);
+
+      // 3. Tirets d'écoulement de l'eau animés en continu le long du lit du cours d'eau
+      const dashTrack = L.polyline(segments, {
+        color: '#e0f2fe', // Écume / eau claire lumineuse
+        weight: 2.8,
+        dashArray: '12, 10',
+        opacity: 0.95,
+        interactive: false,
+        className: 'leaflet-waterway-blinking-dash'
+      });
+      this.currentWaterwayLayer.addLayer(dashTrack);
+
+      // Ajouter à la carte
+      this.currentWaterwayLayer.addTo(map);
+
+      // Ajuster le zoom pour englober tout le cours d'eau ou le tronçon
+      try {
+        const allPts = segments.flat();
+        if (allPts.length > 0) {
+          const bounds = L.latLngBounds(allPts);
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        } else if (waterway.lat && waterway.lon) {
+          map.setView([waterway.lat, waterway.lon], 14);
+        }
+      } catch (e) {
+        if (waterway.lat && waterway.lon) map.setView([waterway.lat, waterway.lon], 14);
+      }
+
+      // Afficher le bandeau d'information flottant en haut avec bouton Fermer (✕)
+      this.showWaterwayBanner(waterway, map, { distKm, segmentsCount: segments.length });
+    }
+  }
+
+  // Export global
+  window.WaterwayManager = WaterwayManager;
+  window.displayWaterway = WaterwayManager.displayWaterway.bind(WaterwayManager);
+  window.clearWaterway = WaterwayManager.clearWaterway.bind(WaterwayManager);
 })();

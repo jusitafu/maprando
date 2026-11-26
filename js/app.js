@@ -2680,6 +2680,15 @@ class AppController {
       `;
       
       item.addEventListener('click', () => {
+        if (place.isWaterway && typeof WaterwayManager !== 'undefined') {
+          const m = window.MapManagerInstance && window.MapManagerInstance.map;
+          if (m) WaterwayManager.displayWaterway(place, m);
+          const locationInput = document.getElementById('location-input');
+          const resultsContainer = document.getElementById('location-autocomplete-results');
+          if (locationInput) locationInput.value = place.displayName || place.title;
+          if (resultsContainer) resultsContainer.classList.add('hidden');
+          return;
+        }
         this.applySelectedPlace(place.lat, place.lon, place.displayName || place.title, place.isAddress);
       });
       resultsContainer.appendChild(item);
@@ -5681,6 +5690,15 @@ class AppController {
       `;
       
       item.addEventListener('click', () => {
+        if (place.isWaterway && typeof WaterwayManager !== 'undefined') {
+          const m = window.MapManagerInstance && window.MapManagerInstance.map;
+          if (m) WaterwayManager.displayWaterway(place, m);
+          const locationInput = document.getElementById('location-input');
+          const resultsContainer = document.getElementById('location-autocomplete-results');
+          if (locationInput) locationInput.value = place.displayName || place.title;
+          if (resultsContainer) resultsContainer.classList.add('hidden');
+          return;
+        }
         this.applySelectedPlace(place.lat, place.lon, place.displayName || place.title, place.isAddress);
       });
       resultsContainer.appendChild(item);
@@ -8682,6 +8700,15 @@ class AppController {
       `;
       
       item.addEventListener('click', () => {
+        if (place.isWaterway && typeof WaterwayManager !== 'undefined') {
+          const m = window.MapManagerInstance && window.MapManagerInstance.map;
+          if (m) WaterwayManager.displayWaterway(place, m);
+          const locationInput = document.getElementById('location-input');
+          const resultsContainer = document.getElementById('location-autocomplete-results');
+          if (locationInput) locationInput.value = place.displayName || place.title;
+          if (resultsContainer) resultsContainer.classList.add('hidden');
+          return;
+        }
         this.applySelectedPlace(place.lat, place.lon, place.displayName || place.title, place.isAddress);
       });
       resultsContainer.appendChild(item);

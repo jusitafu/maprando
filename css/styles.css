@@ -630,6 +630,39 @@ path.bearing-preview-line {
   animation: grPulseBlink 1.25s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
 }
 
+/* Tracé Cours d'eau haute visibilité et clignotement / écoulement animé */
+@keyframes waterwayPulse {
+  0%, 100% {
+    opacity: 1;
+    stroke: #0284c7;
+    stroke-width: 6px;
+    filter: drop-shadow(0 0 4px rgba(2, 132, 199, 0.95));
+  }
+  50% {
+    opacity: 0.55;
+    stroke: #38bdf8;
+    stroke-width: 8px;
+    filter: drop-shadow(0 0 10px rgba(56, 189, 248, 1));
+  }
+}
+
+@keyframes waterwayFlow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -44;
+  }
+}
+
+.leaflet-waterway-blinking-path {
+  animation: waterwayPulse 1.35s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+.leaflet-waterway-blinking-dash {
+  animation: waterwayFlow 1.2s linear infinite, waterwayPulse 1.35s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
 @keyframes bounceShort {
   0%, 100% { transform: translate(-50%, 0); }
   50% { transform: translate(-50%, -6px); }
