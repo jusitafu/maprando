@@ -342,6 +342,12 @@
         namedTrailsPromise = GrManager.searchNamedTrails(query).catch(() => []);
       }
 
+      // Recherche parallèle des cours d'eau (IGN Hydrographie + OSM Waterway)
+      let waterwaysPromise = Promise.resolve([]);
+      if (typeof window.searchWaterways === 'function' && query.trim().length >= 3) {
+        waterwaysPromise = window.searchWaterways(query).catch(() => []);
+      }
+
       let items = [];
 
       // 1. Essai Nominatim OSM
@@ -398,10 +404,21 @@
         }
       }
 
-      const namedTrails = await namedTrailsPromise;
+      const [namedTrails, waterways] = await Promise.all([namedTrailsPromise, waterwaysPromise]);
+
+      // Intégrer les cours d'eau (avec déduplication simple)
+      if (waterways && waterways.length > 0) {
+        const merged = [];
+        waterways.forEach(w => merged.push(w));
+        items.forEach(it => {
+          const dup = waterways.some(w => Math.abs(w.lat - it.lat) < 0.02 && Math.abs(w.lon - it.lon) < 0.02 && it.title.toLowerCase().includes(w.rawName.toLowerCase()));
+          if (!dup) merged.push(it);
+        });
+        items = merged;
+      }
 
       if (items.length === 0 && (!namedTrails || namedTrails.length === 0)) {
-        results.innerHTML = '<div class="p-2.5 text-center text-slate-400 text-[11px]">Aucun lieu ou sentier trouvé pour cette recherche</div>';
+        results.innerHTML = '<div class="p-2.5 text-center text-slate-400 text-[11px]">Aucun lieu, cours d\'eau ou sentier trouvé pour cette recherche</div>';
         return;
       }
 
@@ -417,13 +434,21 @@
       }
       items.forEach(item => {
         const div = document.createElement('div');
-        div.className = 'search-item p-3 hover:bg-emerald-50 cursor-pointer transition flex items-start gap-2.5 border-b border-slate-200/90 last:border-b-0';
+        div.className = item.isWaterway
+          ? 'search-item p-3 hover:bg-sky-50 cursor-pointer transition flex items-start gap-2.5 border-b border-slate-200/90 last:border-b-0'
+          : 'search-item p-3 hover:bg-emerald-50 cursor-pointer transition flex items-start gap-2.5 border-b border-slate-200/90 last:border-b-0';
         div.style.backgroundColor = '#ffffff';
         div.style.opacity = '1';
+        const iconHtml = item.isWaterway
+          ? '<span class="text-sky-600 mt-0.5 text-sm flex-shrink-0">🌊</span>'
+          : '<span class="text-emerald-600 mt-0.5 text-sm flex-shrink-0">📍</span>';
+        const badgeHtml = item.waterType
+          ? `<span class="ml-1.5 px-1.5 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-bold">${item.waterType}</span>`
+          : '';
         div.innerHTML = `
-          <span class="text-emerald-600 mt-0.5 text-sm flex-shrink-0">📍</span>
+          ${iconHtml}
           <div class="flex-1 min-w-0">
-            <div class="font-extrabold text-slate-900 text-xs truncate">${item.title}</div>
+            <div class="font-extrabold text-slate-900 text-xs truncate flex items-center">${item.rawName || item.title}${badgeHtml}</div>
             <div class="text-[11px] text-slate-600 truncate font-medium mt-0.5">${item.subtitle}</div>
           </div>
         `;
@@ -1207,6 +1232,136 @@
   }
 
   // Instanciation globale
-  
-    window.PortalRouterInstance = new PortalRouter();
+  window.PortalRouterInstance = new PortalRouter();
+
+  // =========================================================================
+  // RECHERCHE UNIFIÉE DE COURS D'EAU (IGN Hydrographie BD TOPO + OSM Waterway)
+  // Utilisée par les 2 systèmes de carte (Cartes & Outils et Randonner)
+  // =========================================================================
+  const FRENCH_FLEUVES = new Set([
+    'rhone', 'loire', 'seine', 'garonne', 'rhin', 'meuse', 'escaut', 'somme',
+    'vilaine', 'charente', 'adour', 'var', 'argens', 'herault', 'aude', 'tet',
+    'orne', 'vire', 'sevre niortaise', 'golo', 'tavignano', 'orb', 'tech',
+    'roya', 'siagne', 'gapeau', 'huveaune', 'arc', 'reppe', 'touloubre', 'vidourle',
+    'lez', 'paillon', 'cagne', 'loup', 'brague', 'giscle', 'eyrieux', 'dordogne'
+  ]);
+
+  function normalizeWaterName(str) {
+    return String(str || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/^(le |la |l'|les |fleuve |riviere |ruisseau |torrent |canal |vallon |ravin |bief )+/i, '')
+      .trim();
+  }
+
+  function classifyWaterway(name, osmValue) {
+    const low = String(name || '').toLowerCase();
+    const core = normalizeWaterName(name);
+    if (osmValue === 'waterfall' || /\b(cascade|chute|chutes|saut)\b/i.test(low)) return 'Cascade';
+    if (osmValue === 'canal' || /^canal\b/i.test(low)) return 'Canal';
+    if (/^bief\b/i.test(low)) return 'Bief';
+    if (/^torrent\b/i.test(low)) return 'Torrent';
+    if (/^vallon\b/i.test(low)) return 'Vallon';
+    if (/^ravin\b/i.test(low)) return 'Ravin';
+    if (/^ruisseau\b/i.test(low) || osmValue === 'stream') return 'Ruisseau';
+    if (/^fleuve\b/i.test(low) || FRENCH_FLEUVES.has(core)) return 'Fleuve';
+    if (osmValue === 'river' || /^rivi[èe]re\b/i.test(low)) return 'Rivière';
+    if (osmValue === 'drain' || osmValue === 'ditch') return 'Ruisseau / Fossé';
+    return 'Cours d\'eau';
+  }
+
+  window.searchWaterways = async function(query, signal) {
+    const q = (query || '').trim();
+    if (q.length < 3) return [];
+    const qNorm = normalizeWaterName(q);
+
+    const ignPromise = (async () => {
+      try {
+        const url = `https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(q)}&index=poi&category=${encodeURIComponent("cours d'eau")}&limit=5`;
+        const resp = await fetch(url, { headers: { 'Accept': 'application/json' }, signal });
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        const feats = data.features || [];
+        return feats.map(f => {
+          const p = f.properties || {};
+          const coords = f.geometry?.coordinates || [];
+          const rawName = (p.toponym || p.name || '').trim();
+          if (!rawName || coords.length < 2) return null;
+          // Filtrer les résultats IGN qui ne matchent que la commune et pas le nom du cours d'eau
+          const nameNorm = normalizeWaterName(rawName);
+          if (qNorm.length >= 3 && !nameNorm.includes(qNorm) && !rawName.toLowerCase().includes(q.toLowerCase())) {
+            return null;
+          }
+          const waterType = classifyWaterway(rawName, null);
+          const cities = Array.isArray(p.city) ? p.city.filter(Boolean).slice(0, 2).join(', ') : (p.city || '');
+          const sub = [waterType, cities, 'France (IGN)'].filter(Boolean).join(' • ');
+          return {
+            rawName,
+            waterType,
+            title: `${rawName} — ${waterType}`,
+            subtitle: sub,
+            lat: Number(coords[1]),
+            lon: Number(coords[0]),
+            bbox: null,
+            icon: '🌊',
+            isWaterway: true,
+            score: nameNorm === qNorm ? 120 : 88
+          };
+        }).filter(Boolean);
+      } catch (e) {
+        return [];
+      }
+    })();
+
+    const photonPromise = (async () => {
+      try {
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&osm_tag=waterway&limit=5&lang=fr`;
+        const resp = await fetch(url, { signal });
+        if (!resp.ok) return [];
+        const data = await resp.json();
+        const feats = data.features || [];
+        return feats.map(f => {
+          const p = f.properties || {};
+          const coords = f.geometry?.coordinates || [];
+          const rawName = (p.name || '').trim();
+          const osmVal = p.osm_value || '';
+          if (!rawName || coords.length < 2 || osmVal === 'dam' || osmVal === 'weir') return null;
+          const nameNorm = normalizeWaterName(rawName);
+          const waterType = classifyWaterway(rawName, osmVal);
+          const loc = [p.city, p.state, p.country].filter(Boolean).join(', ');
+          const sub = [waterType, loc].filter(Boolean).join(' • ');
+          const isFrance = (p.countrycode || '').toUpperCase() === 'FR';
+          return {
+            rawName,
+            waterType,
+            title: `${rawName} — ${waterType}`,
+            subtitle: sub,
+            lat: Number(coords[1]),
+            lon: Number(coords[0]),
+            bbox: f.bbox ? [[f.bbox[1], f.bbox[0]], [f.bbox[3], f.bbox[2]]] : null,
+            icon: '🌊',
+            isWaterway: true,
+            score: (nameNorm === qNorm ? 115 : 80) + (isFrance ? 25 : 0)
+          };
+        }).filter(Boolean);
+      } catch (e) {
+        return [];
+      }
+    })();
+
+    const [ignRes, phRes] = await Promise.all([ignPromise, photonPromise]);
+    const all = [...ignRes, ...phRes].sort((a, b) => b.score - a.score);
+
+    // Déduplication par nom + proximité
+    const unique = [];
+    for (const item of all) {
+      const dup = unique.some(u =>
+        normalizeWaterName(u.rawName) === normalizeWaterName(item.rawName) &&
+        Math.abs(u.lat - item.lat) < 0.25 && Math.abs(u.lon - item.lon) < 0.25
+      );
+      if (!dup) unique.push(item);
+      if (unique.length >= 4) break;
+    }
+    return unique;
+  };
 })();

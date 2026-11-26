@@ -2557,18 +2557,25 @@ class AppController {
       return [];
     })();
 
+    // 4. COURS D'EAU (IGN Hydrographie BD TOPO + OSM Waterway)
+    const waterwayPromise = (typeof window.searchWaterways === 'function' && cleanQuery.length >= 3)
+      ? window.searchWaterways(cleanQuery, signal).catch(() => [])
+      : Promise.resolve([]);
+
     // Exécution parallèle des sources
-    const [omSettled, banSettled, phSettled] = await Promise.allSettled([
+    const [omSettled, banSettled, phSettled, wwSettled] = await Promise.allSettled([
       openMeteoPromise,
       banPromise,
-      photonPromise
+      photonPromise,
+      waterwayPromise
     ]);
 
     const omItems = (omSettled.status === 'fulfilled' && omSettled.value) ? omSettled.value : [];
     const banItems = (banSettled.status === 'fulfilled' && banSettled.value) ? banSettled.value : [];
     const phItems = (phSettled.status === 'fulfilled' && phSettled.value) ? phSettled.value : [];
+    const wwItems = (wwSettled.status === 'fulfilled' && wwSettled.value) ? wwSettled.value : [];
 
-    const candidates = [...omItems, ...banItems, ...phItems];
+    const candidates = [...omItems, ...banItems, ...phItems, ...wwItems];
 
     // Attribution des scores de pertinence textuelle
     const qLower = normKey;
@@ -5551,18 +5558,25 @@ class AppController {
       return [];
     })();
 
+    // 4. COURS D'EAU (IGN Hydrographie BD TOPO + OSM Waterway)
+    const waterwayPromise = (typeof window.searchWaterways === 'function' && cleanQuery.length >= 3)
+      ? window.searchWaterways(cleanQuery, signal).catch(() => [])
+      : Promise.resolve([]);
+
     // Exécution parallèle des sources
-    const [omSettled, banSettled, phSettled] = await Promise.allSettled([
+    const [omSettled, banSettled, phSettled, wwSettled] = await Promise.allSettled([
       openMeteoPromise,
       banPromise,
-      photonPromise
+      photonPromise,
+      waterwayPromise
     ]);
 
     const omItems = (omSettled.status === 'fulfilled' && omSettled.value) ? omSettled.value : [];
     const banItems = (banSettled.status === 'fulfilled' && banSettled.value) ? banSettled.value : [];
     const phItems = (phSettled.status === 'fulfilled' && phSettled.value) ? phSettled.value : [];
+    const wwItems = (wwSettled.status === 'fulfilled' && wwSettled.value) ? wwSettled.value : [];
 
-    const candidates = [...omItems, ...banItems, ...phItems];
+    const candidates = [...omItems, ...banItems, ...phItems, ...wwItems];
 
     // Attribution des scores de pertinence textuelle
     const qLower = normKey;
@@ -8545,18 +8559,25 @@ class AppController {
       return [];
     })();
 
+    // 4. COURS D'EAU (IGN Hydrographie BD TOPO + OSM Waterway)
+    const waterwayPromise = (typeof window.searchWaterways === 'function' && cleanQuery.length >= 3)
+      ? window.searchWaterways(cleanQuery, signal).catch(() => [])
+      : Promise.resolve([]);
+
     // Exécution parallèle des sources
-    const [omSettled, banSettled, phSettled] = await Promise.allSettled([
+    const [omSettled, banSettled, phSettled, wwSettled] = await Promise.allSettled([
       openMeteoPromise,
       banPromise,
-      photonPromise
+      photonPromise,
+      waterwayPromise
     ]);
 
     const omItems = (omSettled.status === 'fulfilled' && omSettled.value) ? omSettled.value : [];
     const banItems = (banSettled.status === 'fulfilled' && banSettled.value) ? banSettled.value : [];
     const phItems = (phSettled.status === 'fulfilled' && phSettled.value) ? phSettled.value : [];
+    const wwItems = (wwSettled.status === 'fulfilled' && wwSettled.value) ? wwSettled.value : [];
 
-    const candidates = [...omItems, ...banItems, ...phItems];
+    const candidates = [...omItems, ...banItems, ...phItems, ...wwItems];
 
     // Attribution des scores de pertinence textuelle
     const qLower = normKey;
