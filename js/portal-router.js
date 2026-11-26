@@ -139,7 +139,7 @@
                 const z = data?.elevations?.[0];
                 if (typeof z === 'number' && !isNaN(z) && z > -500 && z !== -99999) {
                   lidarAlt = Math.round(z);
-                  lidarSource = 'LiDAR IGN';
+                  lidarSource = 'IGN RGE ALTI';
                   return;
                 }
               }
@@ -209,10 +209,8 @@
             });
 
             const safePlace = (placeName || 'Ma position GPS').replace(/'/g, "\\'");
-            const altBadgeHtml = (lidarAlt !== null)
-              ? `<div style="display:inline-flex; align-items:center; gap:5px; padding:3px 8px; border-radius:6px; background:#ecfdf5; border:1px solid #6ee7b7; color:#047857; font-size:11px; font-weight:800; margin-bottom:6px;">
-                   <span>⛰️</span> <span>Altitude ${lidarSource} : ${lidarAlt} m</span>
-                 </div>`
+            const altLineHtml = (lidarAlt !== null)
+              ? `<div style="font-size:10.5px; color:#64748b; font-family:monospace; margin-bottom:6px;">Altitude : ${lidarAlt} m (${lidarSource})</div>`
               : '';
             window._worldSearchMarker = L.marker([lat, lon], { icon: userIcon, zIndexOffset: 2000 })
               .addTo(map)
@@ -221,9 +219,9 @@
                   <div style="font-weight:900; font-size:13px; color:#065f46; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                     <span>📍</span> <span>Ma position GPS</span>
                   </div>
-                  <div style="font-weight:700; font-size:12px; color:#1e293b; margin-bottom:5px;">${placeName}</div>
-                  ${altBadgeHtml}
-                  <div style="font-size:10.5px; color:#64748b; font-family:monospace; margin-bottom:6px;">${lat.toFixed(5)}, ${lon.toFixed(5)} &bull; Précision: ~${accuracy}m</div>
+                  <div style="font-weight:700; font-size:12px; color:#1e293b; margin-bottom:4px;">${placeName}</div>
+                  <div style="font-size:10.5px; color:#64748b; font-family:monospace; margin-bottom:3px;">${lat.toFixed(5)}, ${lon.toFixed(5)} &bull; Précision : ~${accuracy} m</div>
+                  ${altLineHtml}
                   <button type="button" style="padding:4px 8px; border-radius:6px; background:#f1f5f9; border:1px solid #cbd5e1; font-size:10.5px; font-weight:700; color:#334155; cursor:pointer;" onclick="window.MapManagerInstance ? window.MapManagerInstance.copyGpsCoords(${lat.toFixed(5)}, ${lon.toFixed(5)}, this) : null">
                     📋 Copier GPS
                   </button>
