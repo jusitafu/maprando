@@ -125,9 +125,9 @@
     <!-- Navigation Supérieure Épurée -->
     <header class="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xl">
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-2xl shadow-lg shadow-emerald-950/50 border border-emerald-400/30">
-          🗺️
-        </div>
+        <button type="button" class="btn-open-jldapps-modal w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-emerald-950/50 border-2 border-emerald-400/50 hover:border-white transition cursor-pointer flex-shrink-0 p-0 bg-slate-900" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">
+          <img src="images/logo_jldapps.png" alt="JLDApps" class="w-full h-full object-cover" />
+        </button>
         <div class="flex flex-col">
           <div class="flex items-baseline gap-2">
             <button type="button" onclick="window.openVersionHistoryModal && window.openVersionHistoryModal()" class="text-xl sm:text-2xl font-black tracking-tight text-white hover:text-emerald-300 uppercase leading-none transition cursor-pointer bg-transparent border-0 p-0 text-left" title="Cliquer pour afficher l'historique des versions depuis α2.0">Map &amp; Rando</button>
@@ -8862,7 +8862,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/ffr-roadmap-manager.js?v=226"></script>
   <script src="js/floating-window-manager.js?v=225"></script>
 
-  <script src="js/versions-changelog.js?v=253"></script>
+  <script src="js/versions-changelog.js?v=254"></script>
 <script src="js/portal-router.js?v=253"></script>
     <script src="js/app.js?v=235"></script>
 

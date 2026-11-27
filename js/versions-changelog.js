@@ -10,9 +10,9 @@
     {
       version: 'α3.8',
       date: '27/11/2026',
-      builds: 'v253',
+      builds: 'v253 – v254',
       title: 'Historique interactif des versions & harmonisation branding',
-      details: 'Tableau interactif de l\'historique des versions depuis α2.0 accessible au clic sur « Map & Rando », mise à jour de la date officielle (27/11/2026) et placement exclusif du logo JLDApps à gauche de JLDApps (Web & PDF 17 pages).'
+      details: 'Tableau interactif de l\'historique des versions depuis α2.0 accessible au clic sur « Map & Rando », mise à jour de la date officielle (27/11/2026), logo JLDApps restauré dans l\'en-tête d\'accueil et placement épuré sur la couverture du PDF (17 pages).'
     },
     {
       version: 'α3.7',
