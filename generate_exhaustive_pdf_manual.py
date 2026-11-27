@@ -415,7 +415,7 @@ html_content = f"""<!DOCTYPE html>
         <div class="toc-item">
           <div class="num">Chapitre 5 • Page 6</div>
           <div class="title">Barre de Recherche Universelle &amp; GR® Clignotants</div>
-          <div class="desc">Recherche de lieux, de GR® (GR 20, GR 34) et chemins célèbres (Stevenson).</div>
+          <div class="desc">Recherche de lieux, chemins (GR®, West Highland Way) et cours d'eau illuminés.</div>
         </div>
 
         <div class="toc-item">
@@ -697,13 +697,14 @@ html_content = f"""<!DOCTYPE html>
         <div class="figure-caption">Figure 5 : Recherche du Chemin de Stevenson (GR 70) avec mise en surbrillance rouge/blanc clignotante animée sur toute la chaîne des Cévennes.</div>
       </div>
 
-      <h3>Recherche de Sentiers Mythiques &amp; Chemins Historiques</h3>
+      <h3>Recherche Universelle : Lieux, Chemins (GR®) &amp; Cours d'eau</h3>
       <p>
-        Tapez simplement quelques lettres dans la boîte de recherche :
+        Tapez simplement quelques lettres dans la boîte de recherche (<em>Lieu, chemin (ex. West Highland Way), cours d'eau</em>) :
       </p>
       <ul>
-        <li><strong>Recherche par numéro de GR :</strong> <code>GR 20</code> (Corse), <code>GR 34</code> (Sentier des Douaniers breton), <code>GR 5</code> (Grande Traversée des Alpes), <code>GR 54</code> (Tour de l'Oisans), <code>GR 98</code> (Calanques), etc.</li>
-        <li><strong>Recherche par nom historique célèbre :</strong> <code>Chemin de Stevenson</code> (GR 70), <code>Via Francigena</code>, <code>Tour du Mont-Blanc</code>, <code>West Highland Way</code>, <code>Chemin de Saint-Jacques de Compostelle</code>, <code>Chemin des Bonshommes</code> (GR 107).</li>
+        <li><strong>Lieux, sommets &amp; adresses :</strong> villes, cols, sommets ou coordonnées GPS dans le monde entier.</li>
+        <li><strong>Chemins &amp; GR® :</strong> par numéro (<code>GR 20</code>, <code>GR 34</code>, <code>GR 5</code>, <code>GR 54</code>, <code>GR 98</code>) ou nom historique (<code>West Highland Way</code>, <code>Chemin de Stevenson</code>, <code>Via Francigena</code>, <code>Tour du Mont-Blanc</code>, <code>Compostelle</code>).</li>
+        <li><strong>🌊 Cours d'eau (IGN Hydrographie + OSM) :</strong> fleuves, rivières, ruisseaux, torrents, canaux et cascades (ex. <code>Verdon</code>, <code>Deûle</code>, <code>Reppe</code>, <code>Rhône</code>), affichés avec leur <strong>nom et type exact</strong>, et <strong>illuminés en bleu cyan animé</strong> (également activable par clic direct sur un cours d'eau à partir du zoom 12, et effaçable d'un clic sur la croix <strong>✕</strong>).</li>
       </ul>
 
       <h3>Mise en Surbrillance Clignotante Animée</h3>
