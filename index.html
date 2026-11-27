@@ -125,13 +125,13 @@
     <!-- Navigation Supérieure Épurée -->
     <header class="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xl">
       <div class="flex items-center gap-3">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-2xl shadow-lg shadow-emerald-950/50 border border-emerald-400/30">
-          🗺️
-        </div>
+        <button type="button" class="btn-open-jldapps-modal w-11 h-11 rounded-2xl overflow-hidden shadow-lg shadow-emerald-950/50 border-2 border-emerald-400/50 hover:border-white transition cursor-pointer flex-shrink-0 p-0 bg-slate-900" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">
+          <img src="images/logo_jldapps.png" alt="JLDApps" class="w-full h-full object-cover" />
+        </button>
         <div class="flex flex-col">
           <div class="flex items-baseline gap-2">
             <span class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase leading-none">Map &amp; Rando</span>
-            <button type="button" class="btn-open-jldapps-modal text-xs sm:text-sm font-semibold text-emerald-300/90 hover:text-emerald-200 transition underline underline-offset-4 decoration-emerald-500/50 hover:decoration-emerald-300 cursor-pointer bg-transparent border-0 p-0 text-left leading-none" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">by <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.15em] h-[1.15em] rounded-[4px] align-[-0.18em] mr-1 shadow-xs select-none" />JLDApps</button>
+            <button type="button" class="btn-open-jldapps-modal text-xs sm:text-sm font-semibold text-emerald-300/90 hover:text-emerald-200 transition underline underline-offset-4 decoration-emerald-500/50 hover:decoration-emerald-300 cursor-pointer bg-transparent border-0 p-0 text-left leading-none" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">by <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.25em] h-[1.25em] rounded-[4px] align-[-0.2em] mr-1 shadow-xs select-none" />JLDApps</button>
           </div>
           <span class="text-[11px] text-slate-300 font-semibold tracking-wider uppercase leading-tight mt-0.5">La cartographie au service de vos pas</span>
         </div>
@@ -165,9 +165,10 @@
       
       <!-- En-tête Hero avec Branding & Titre dans un cadre de verre élégant pour lisibilité absolue -->
       <div class="text-center max-w-4xl mx-auto mb-2.5 sm:mb-3 p-3.5 sm:p-4 rounded-3xl bg-slate-950/75 backdrop-blur-xl border border-slate-700/60 shadow-2xl">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 mb-3 shadow-sm">
+        <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-400/40 text-emerald-300 mb-3 shadow-sm">
+          <img src="images/logo_jldapps.png" alt="JLDApps" class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg shadow-md border border-emerald-400/40 select-none" />
           <span class="text-xs sm:text-sm font-black uppercase tracking-wider">Map &amp; Rando</span>
-          <button type="button" class="btn-open-jldapps-modal text-xs text-slate-300 hover:text-white font-medium transition underline underline-offset-2 decoration-slate-400/50 hover:decoration-white cursor-pointer bg-transparent border-0 p-0 inline leading-none" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">by <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.15em] h-[1.15em] rounded-[4px] align-[-0.18em] mr-1 shadow-xs select-none" />JLDApps</button>
+          <button type="button" class="btn-open-jldapps-modal text-xs text-slate-300 hover:text-white font-medium transition underline underline-offset-2 decoration-slate-400/50 hover:decoration-white cursor-pointer bg-transparent border-0 p-0 inline leading-none" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)">by <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.25em] h-[1.25em] rounded-[4px] align-[-0.2em] mr-1 shadow-xs select-none" />JLDApps</button>
         </div>
         <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white mb-1.5 leading-tight drop-shadow-xl">
           La cartographie au service de vos pas
@@ -1967,13 +1968,16 @@
   <div id="modal-mode-emploi" class="hidden fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
     <div class="bg-slate-900 border-2 border-emerald-500/60 rounded-3xl max-w-5xl w-full p-5 sm:p-8 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto text-slate-200">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-        <div>
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ3.0 (22/11/2026) &bull; JLDAPPS 2026</span>
+        <div class="flex items-center gap-3.5">
+          <img src="images/logo_jldapps.png" alt="JLDApps" class="w-12 h-12 rounded-2xl shadow-lg border-2 border-emerald-400/50 flex-shrink-0 select-none" />
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
+              <span>GUIDE COMPLET UTILISATEUR &bull; VERSION ᾳ3.0 (22/11/2026) &bull; <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.2em] h-[1.2em] rounded-[3px] align-[-0.18em] mr-1 select-none" />JLDAPPS 2026</span>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+              <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ3.0 (22/11/2026)</span></span>
+            </h3>
           </div>
-          <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">ᾳ3.0 (22/11/2026)</span></span>
-          </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
           <a href="Mode_d_emploi_RandoFinder.pdf" target="_blank" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-extrabold transition flex items-center gap-1.5 shadow-md hover:border-emerald-400">

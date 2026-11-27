@@ -34,6 +34,9 @@ def get_base64_img(path):
     return ""
 
 logo_b64 = get_base64_img(os.path.join(WORKDIR, "logo.png"))
+jld_logo_b64 = get_base64_img(os.path.join(WORKDIR, "images", "logo_jldapps.png"))
+jld_img_sm = f'<img src="{jld_logo_b64}" alt="JLDApps" style="height: 9pt; width: 9pt; border-radius: 2pt; vertical-align: -1.5pt; margin-right: 3pt; display: inline-block;">' if jld_logo_b64 else ''
+jld_img_h1 = f'<img src="{jld_logo_b64}" alt="JLDApps" style="height: 20pt; width: 20pt; border-radius: 5pt; vertical-align: -4pt; margin-right: 5pt; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">' if jld_logo_b64 else ''
 
 fig1_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig01_accueil.jpg"))
 fig2_b64 = get_base64_img(os.path.join(SCREEN_DIR, "fig03_cartotheque_calques.jpg"))
@@ -360,7 +363,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>GUIDE OFFICIEL DE L'UTILISATEUR</div>
     </div>
@@ -368,7 +371,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-body">
       <div style="text-align: center; margin-top: 6pt; margin-bottom: 8pt;">
         <div class="badge badge-green" style="font-size: 8pt; padding: 2px 10px; margin-bottom: 4pt;">MANUEL TECHNIQUE OFFICIEL • VERSION ᾳ3.0 (22/11/2026) • ÉDITION 2026</div>
-        <h1 style="font-size: 18pt; margin-bottom: 2pt; color: #047857;">Map &amp; Rando by JLDApps</h1>
+        <h1 style="font-size: 18pt; margin-bottom: 2pt; color: #047857;">{jld_img_h1}Map &amp; Rando by {jld_img_sm}JLDApps</h1>
         <div style="font-size: 10.5pt; font-weight: 700; color: #0369a1; margin-bottom: 4pt;">Mode d'Emploi Détaillé de l'Application</div>
         <p style="text-align: center; max-width: 480pt; margin: 0 auto; color: #475569; font-size: 8.5pt;">
           Cartographie Topographique Mondiale, Réseau National des GR®, Visualiseur &amp; Créateur de Traces GPX,
@@ -487,7 +490,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 1 / 17</div>
     </div>
   </section>
@@ -499,7 +502,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 1 • ÉCRAN D'ACCUEIL</div>
     </div>
@@ -539,7 +542,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 2 / 17</div>
     </div>
   </section>
@@ -551,7 +554,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 2 • CARTOTHÈQUE OFFICIELLE</div>
     </div>
@@ -587,7 +590,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 3 / 17</div>
     </div>
   </section>
@@ -599,7 +602,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 3 • CARTE DES CALANQUES</div>
     </div>
@@ -630,7 +633,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 4 / 17</div>
     </div>
   </section>
@@ -642,7 +645,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 4 • BANDEAU HUD & REPERES</div>
     </div>
@@ -669,7 +672,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 5 / 17</div>
     </div>
   </section>
@@ -681,7 +684,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 5 • RECHERCHE UNIVERSELLE</div>
     </div>
@@ -714,7 +717,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 6 / 17</div>
     </div>
   </section>
@@ -726,7 +729,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 6 • OUTILS DE MESURE</div>
     </div>
@@ -760,7 +763,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 7 / 17</div>
     </div>
   </section>
@@ -772,7 +775,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 7 • MULTI-TRACES GPX</div>
     </div>
@@ -807,7 +810,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 8 / 17</div>
     </div>
   </section>
@@ -819,7 +822,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 8 • PENTES &amp; FUSION DE TRACES GPX</div>
     </div>
@@ -868,7 +871,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 9 / 17</div>
     </div>
   </section>
@@ -880,7 +883,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 9 • CRÉATEUR D'ITINÉRAIRE GPX</div>
     </div>
@@ -924,7 +927,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 10 / 17</div>
     </div>
   </section>
@@ -936,7 +939,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 10 • MODIFICATION DE TRACE GPX</div>
     </div>
@@ -967,7 +970,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 11 / 17</div>
     </div>
   </section>
@@ -979,7 +982,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 11 • PROFIL ALTIMÉTRIQUE</div>
     </div>
@@ -1017,7 +1020,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 12 / 17</div>
     </div>
   </section>
@@ -1029,7 +1032,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 12 • IMPRESSION HAUTE DÉFINITION</div>
     </div>
@@ -1060,7 +1063,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 13 / 17</div>
     </div>
   </section>
@@ -1072,7 +1075,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 13 • MODULE RANDONNER</div>
     </div>
@@ -1110,7 +1113,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 14 / 17</div>
     </div>
   </section>
@@ -1122,7 +1125,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 14 • GUIDES &amp; SAVOIRS</div>
     </div>
@@ -1156,7 +1159,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 15 / 17</div>
     </div>
   </section>
@@ -1168,7 +1171,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>CHAPITRE 15 • ÉTUDE COMPARATIVE DU MARCHÉ</div>
     </div>
@@ -1460,7 +1463,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 16 / 17</div>
     </div>
   </section>
@@ -1472,7 +1475,7 @@ html_content = f"""<!DOCTYPE html>
     <div class="page-header">
       <div class="brand">
         <span style="font-size: 11pt; line-height: 1;">🗺️</span>
-        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • JLDApps 2026</span>
+        <span>Map &amp; Rando ᾳ3.0 (22/11/2026) • {jld_img_sm}JLDApps 2026</span>
       </div>
       <div>ANNEXE • GLOSSAIRE DES SIGLES &amp; ACRONYMES</div>
     </div>
@@ -1848,7 +1851,7 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-footer">
-      <div>Map &amp; Rando by JLDApps 2026 • Document Utilisateur Officiel</div>
+      <div>Map &amp; Rando by {jld_img_sm}JLDApps 2026 • Document Utilisateur Officiel</div>
       <div class="page-number">Page 17 / 17</div>
     </div>
   </section>
