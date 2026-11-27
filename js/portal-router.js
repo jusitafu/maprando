@@ -746,12 +746,16 @@
       if (!el) return;
       const isHidden = el.classList.contains('hidden');
       if (isHidden) {
-        el.classList.remove('hidden');
-        if (buttonEl) {
-          const icon = buttonEl.querySelector('.guide-toggle-icon');
-          if (icon) icon.textContent = 'Replier ▴';
-        }
         if (ficheId === 'fiche-top25-catalog-content') {
+          // Déplacer directement sous <body> pour échapper à tout transform/overflow-hidden (vrai pleine page 100vw x 100vh)
+          if (!this._top25OrigParent && el.parentElement && el.parentElement !== document.body) {
+            this._top25OrigParent = el.parentElement;
+          }
+          if (el.parentElement !== document.body) {
+            document.body.appendChild(el);
+          }
+          el.classList.remove('hidden');
+          el.style.display = 'flex';
           document.body.style.overflow = 'hidden';
           this.renderTop25CatalogTable();
           if (!this._top25EscHandler) {
@@ -765,11 +769,21 @@
             };
             document.addEventListener('keydown', this._top25EscHandler);
           }
+        } else {
+          el.classList.remove('hidden');
+        }
+        if (buttonEl) {
+          const icon = buttonEl.querySelector('.guide-toggle-icon');
+          if (icon) icon.textContent = 'Replier ▴';
         }
       } else {
         el.classList.add('hidden');
         if (ficheId === 'fiche-top25-catalog-content') {
+          el.style.display = 'none';
           document.body.style.overflow = '';
+          if (this._top25OrigParent && el.parentElement === document.body) {
+            this._top25OrigParent.appendChild(el);
+          }
           if (this._top25EscHandler) {
             document.removeEventListener('keydown', this._top25EscHandler);
             this._top25EscHandler = null;
@@ -779,7 +793,9 @@
           const icon = buttonEl.querySelector('.guide-toggle-icon');
           if (icon) icon.textContent = 'Déplier ▾';
         } else {
-          const parentCard = el.closest('.rounded-3xl');
+          const parentCard = (ficheId === 'fiche-top25-catalog-content' && this._top25OrigParent)
+            ? this._top25OrigParent
+            : el.closest('.rounded-3xl');
           if (parentCard) {
             const icon = parentCard.querySelector('.guide-toggle-icon');
             if (icon) icon.textContent = 'Déplier ▾';
