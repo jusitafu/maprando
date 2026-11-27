@@ -1719,9 +1719,12 @@ class GrManager {
     if (!latlng || !map) return false;
     const [mx, my] = this._ll2merc(latlng.lat, latlng.lng);
     const zoom = map.getZoom ? map.getZoom() : 10;
-    // Rayon de tolérance équivalent à ~11 pixels à l'écran
+    // Rayon de tolérance strict (~8 pixels à l'écran, plafonné à 350 m hors carte GR pour ne pas capturer un GR lointain)
     const metersPerPixel = 40075016.686 / (256 * Math.pow(2, zoom));
-    const tol = Math.min(35000, Math.max(100, Math.round(metersPerPixel * 11)));
+    const isGrMap = window.MapManagerInstance && window.MapManagerInstance.currentBaseLayer === 'grmap';
+    const tol = isGrMap
+      ? Math.min(25000, Math.max(80, Math.round(metersPerPixel * 10)))
+      : Math.min(350, Math.max(40, Math.round(metersPerPixel * 8)));
     const bbox = `${(mx - tol).toFixed(1)},${(my - tol).toFixed(1)},${(mx + tol).toFixed(1)},${(my + tol).toFixed(1)}`;
 
     try {

@@ -953,20 +953,36 @@ class MapManager {
         if (this.map.hasLayer(this.cadastreLayer) && (!window.GpxCreatorEditorInstance || !window.GpxCreatorEditorInstance.mode)) {
           this.queryCadastreAtPoint(e.latlng);
         } else if (!window.GpxCreatorEditorInstance || !window.GpxCreatorEditorInstance.mode) {
-          // Clic direct sur un GR/sentier balisé OU sur un cours d'eau (sur toutes les cartes, zoom >= 11)
+          // Clic direct sur un cours d'eau OU un GR/sentier balisé (zoom >= 11 ou fond Carte GR)
           const z = this.map.getZoom();
           if (this.currentBaseLayer === 'grmap' || z >= 11) {
             (async () => {
-              let foundGr = false;
-              if (typeof GrManager !== 'undefined' && GrManager.handleMapClickForGr) {
-                foundGr = await GrManager.handleMapClickForGr(e.latlng, this.map);
-                if (foundGr) {
-                  const clearBtn = document.getElementById('btn-clear-world-search');
-                  if (clearBtn) clearBtn.classList.remove('hidden');
+              // Sur le fond dédié "Carte GR", priorité aux GR ; sur toutes les autres cartes (IGN TOP 25, etc.),
+              // tester le cours d'eau EN PREMIER (contrôle strict de distance au lit) pour qu'un GR éloigné ne vole jamais le clic !
+              if (this.currentBaseLayer === 'grmap') {
+                let foundGr = false;
+                if (typeof GrManager !== 'undefined' && GrManager.handleMapClickForGr) {
+                  foundGr = await GrManager.handleMapClickForGr(e.latlng, this.map);
+                  if (foundGr) {
+                    const clearBtn = document.getElementById('btn-clear-world-search');
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                  }
                 }
-              }
-              if (!foundGr && typeof window.queryWaterwayAtPoint === 'function') {
-                await window.queryWaterwayAtPoint(e.latlng);
+                if (!foundGr && typeof window.queryWaterwayAtPoint === 'function') {
+                  await window.queryWaterwayAtPoint(e.latlng);
+                }
+              } else {
+                let foundWaterway = false;
+                if (typeof window.queryWaterwayAtPoint === 'function') {
+                  foundWaterway = await window.queryWaterwayAtPoint(e.latlng);
+                }
+                if (!foundWaterway && typeof GrManager !== 'undefined' && GrManager.handleMapClickForGr) {
+                  const foundGr = await GrManager.handleMapClickForGr(e.latlng, this.map);
+                  if (foundGr) {
+                    const clearBtn = document.getElementById('btn-clear-world-search');
+                    if (clearBtn) clearBtn.classList.remove('hidden');
+                  }
+                }
               }
             })();
           }
