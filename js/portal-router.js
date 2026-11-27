@@ -332,6 +332,8 @@
         GrManager.renderResults(results, query, (it) => {
           const input = document.getElementById('map-world-search-input');
           if (input) input.value = `${it.ref}${it.name && it.name !== it.ref ? ' - ' + it.name : ''}`;
+          const clearBtn = document.getElementById('btn-clear-world-search');
+          if (clearBtn) clearBtn.classList.remove('hidden');
         });
         return;
       }
@@ -433,6 +435,8 @@
         GrManager.appendTrailItemsToContainer(results, namedTrails, (it) => {
           const input = document.getElementById('map-world-search-input');
           if (input) input.value = `${it.ref ? it.ref + ' - ' : ''}${it.name || ''}`;
+          const clearBtn = document.getElementById('btn-clear-world-search');
+          if (clearBtn) clearBtn.classList.remove('hidden');
         });
       }
       items.forEach(item => {
@@ -1717,9 +1721,12 @@
   window.displayWaterway = WaterwayManager.displayWaterway.bind(WaterwayManager);
   window.clearWaterway = WaterwayManager.clearWaterway.bind(WaterwayManager);
 
-  // Effacement complet depuis la croix (✕) de la barre de recherche (cours d'eau + marqueur + cercle + popup)
+  // Effacement complet depuis la croix (✕) de la barre de recherche (GR + cours d'eau + marqueur + cercle + popup)
   window.clearWorldSearchAndWaterway = function() {
     const map = window.MapManagerInstance && window.MapManagerInstance.map;
+    if (typeof GrManager !== 'undefined' && typeof GrManager.clearGr === 'function') {
+      GrManager.clearGr(map);
+    }
     if (typeof WaterwayManager !== 'undefined') {
       WaterwayManager.clearWaterway(map);
     }
@@ -1740,52 +1747,62 @@
   let _waterwayClickAbort = null;
   window.queryWaterwayAtPoint = async function(latlng) {
     const map = window.MapManagerInstance && window.MapManagerInstance.map;
-    if (!map || !latlng) return;
+    if (!map || !latlng) return false;
     if (_waterwayClickAbort) {
       try { _waterwayClickAbort.abort(); } catch (e) {}
     }
     _waterwayClickAbort = new AbortController();
     const lat = Number(latlng.lat).toFixed(6);
     const lon = Number(latlng.lng).toFixed(6);
-    // Rayon de détection adaptatif selon le zoom (35m à zoom 15+, jusqu'à 90m à zoom 12)
+    // Rayon de détection adaptatif selon le zoom (60m à zoom 15+, jusqu'à 180m à zoom 11)
     const z = map.getZoom();
-    const radius = z >= 15 ? 35 : (z >= 14 ? 50 : (z >= 13 ? 70 : 95));
-    const q = `[out:json][timeout:6];(way(around:${radius},${lat},${lon})["waterway"]["name"];);out tags center 1;`;
+    const radius = z >= 15 ? 60 : (z >= 14 ? 85 : (z >= 13 ? 115 : (z >= 12 ? 150 : 190)));
+    const q = `[out:json][timeout:6];(way(around:${radius},${lat},${lon})["waterway"]["name"];way(around:${radius},${lat},${lon})["natural"="water"]["water"~"river|canal"]["name"];relation(around:${radius},${lat},${lon})["waterway"]["name"];);out tags center 3;`;
 
-    try {
-      const resp = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: 'data=' + encodeURIComponent(q),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: _waterwayClickAbort.signal
-      });
-      if (!resp.ok) return;
-      const data = await resp.json();
-      const el = data && Array.isArray(data.elements) && data.elements[0];
-      if (!el || !el.tags || !el.tags.name) return;
+    const endpoints = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+    ];
 
-      const rawName = el.tags.name.trim();
-      const osmVal = el.tags.waterway || '';
-      const waterType = classifyWaterway(rawName, osmVal);
-      const item = {
-        rawName,
-        waterType,
-        title: `${rawName} — ${waterType}`,
-        subtitle: `${waterType} • OpenStreetMap`,
-        lat: latlng.lat,
-        lon: latlng.lng,
-        icon: '🌊',
-        isWaterway: true
-      };
+    for (const ep of endpoints) {
+      try {
+        const resp = await fetch(ep, {
+          method: 'POST',
+          body: 'data=' + encodeURIComponent(q),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          signal: _waterwayClickAbort.signal
+        });
+        if (!resp.ok) continue;
+        const data = await resp.json();
+        const el = data && Array.isArray(data.elements) && data.elements.find(e => e.tags && e.tags.name);
+        if (!el) return false;
 
-      const input = document.getElementById('map-world-search-input');
-      if (input) input.value = item.title;
-      const clearBtn = document.getElementById('btn-clear-world-search');
-      if (clearBtn) clearBtn.classList.remove('hidden');
+        const rawName = el.tags.name.trim();
+        const osmVal = el.tags.waterway || el.tags.water || '';
+        const waterType = classifyWaterway(rawName, osmVal);
+        const item = {
+          rawName,
+          waterType,
+          title: `${rawName} — ${waterType}`,
+          subtitle: `${waterType} • OpenStreetMap`,
+          lat: latlng.lat,
+          lon: latlng.lng,
+          icon: '🌊',
+          isWaterway: true
+        };
 
-      WaterwayManager.displayWaterway(item, map);
-    } catch (e) {
-      // Silencieux en cas d'annulation ou hors-ligne
+        const input = document.getElementById('map-world-search-input');
+        if (input) input.value = item.title;
+        const clearBtn = document.getElementById('btn-clear-world-search');
+        if (clearBtn) clearBtn.classList.remove('hidden');
+
+        WaterwayManager.displayWaterway(item, map);
+        return true;
+      } catch (e) {
+        if (e.name === 'AbortError') return false;
+      }
     }
+    return false;
   };
 })();
