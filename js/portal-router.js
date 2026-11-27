@@ -285,6 +285,9 @@
           clearBtn.classList.add('hidden');
           results.classList.add('hidden');
           results.innerHTML = '';
+          if (typeof window.clearWorldSearchAndWaterway === 'function') {
+            window.clearWorldSearchAndWaterway();
+          }
           input.focus();
         });
       }
@@ -456,6 +459,8 @@
           results.classList.add('hidden');
           const input = document.getElementById('map-world-search-input');
           if (input) input.value = item.title;
+          const clearBtn = document.getElementById('btn-clear-world-search');
+          if (clearBtn) clearBtn.classList.remove('hidden');
           if (window.MapManagerInstance && window.MapManagerInstance.map) {
             const map = window.MapManagerInstance.map;
             if (item.isWaterway && typeof WaterwayManager !== 'undefined') {
@@ -1711,4 +1716,76 @@
   window.WaterwayManager = WaterwayManager;
   window.displayWaterway = WaterwayManager.displayWaterway.bind(WaterwayManager);
   window.clearWaterway = WaterwayManager.clearWaterway.bind(WaterwayManager);
+
+  // Effacement complet depuis la croix (✕) de la barre de recherche (cours d'eau + marqueur + cercle + popup)
+  window.clearWorldSearchAndWaterway = function() {
+    const map = window.MapManagerInstance && window.MapManagerInstance.map;
+    if (typeof WaterwayManager !== 'undefined') {
+      WaterwayManager.clearWaterway(map);
+    }
+    if (map) {
+      if (window._worldSearchMarker) {
+        try { map.removeLayer(window._worldSearchMarker); } catch (e) {}
+        window._worldSearchMarker = null;
+      }
+      if (window._worldSearchCircle) {
+        try { map.removeLayer(window._worldSearchCircle); } catch (e) {}
+        window._worldSearchCircle = null;
+      }
+      try { map.closePopup(); } catch (e) {}
+    }
+  };
+
+  // Interrogation silencieuse au clic direct sur un cours d'eau sur la carte -> affiche son nom et l'illumine
+  let _waterwayClickAbort = null;
+  window.queryWaterwayAtPoint = async function(latlng) {
+    const map = window.MapManagerInstance && window.MapManagerInstance.map;
+    if (!map || !latlng) return;
+    if (_waterwayClickAbort) {
+      try { _waterwayClickAbort.abort(); } catch (e) {}
+    }
+    _waterwayClickAbort = new AbortController();
+    const lat = Number(latlng.lat).toFixed(6);
+    const lon = Number(latlng.lng).toFixed(6);
+    // Rayon de détection adaptatif selon le zoom (35m à zoom 15+, jusqu'à 90m à zoom 12)
+    const z = map.getZoom();
+    const radius = z >= 15 ? 35 : (z >= 14 ? 50 : (z >= 13 ? 70 : 95));
+    const q = `[out:json][timeout:6];(way(around:${radius},${lat},${lon})["waterway"]["name"];);out tags center 1;`;
+
+    try {
+      const resp = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(q),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal: _waterwayClickAbort.signal
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const el = data && Array.isArray(data.elements) && data.elements[0];
+      if (!el || !el.tags || !el.tags.name) return;
+
+      const rawName = el.tags.name.trim();
+      const osmVal = el.tags.waterway || '';
+      const waterType = classifyWaterway(rawName, osmVal);
+      const item = {
+        rawName,
+        waterType,
+        title: `${rawName} — ${waterType}`,
+        subtitle: `${waterType} • OpenStreetMap`,
+        lat: latlng.lat,
+        lon: latlng.lng,
+        icon: '🌊',
+        isWaterway: true
+      };
+
+      const input = document.getElementById('map-world-search-input');
+      if (input) input.value = item.title;
+      const clearBtn = document.getElementById('btn-clear-world-search');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+
+      WaterwayManager.displayWaterway(item, map);
+    } catch (e) {
+      // Silencieux en cas d'annulation ou hors-ligne
+    }
+  };
 })();

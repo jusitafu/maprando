@@ -952,6 +952,13 @@ class MapManager {
         // Interrogation interactive du Cadastre si le calque est activé et qu'on ne dessine/modifie pas une trace
         if (this.map.hasLayer(this.cadastreLayer) && (!window.GpxCreatorEditorInstance || !window.GpxCreatorEditorInstance.mode)) {
           this.queryCadastreAtPoint(e.latlng);
+        } else if (
+          (!window.GpxCreatorEditorInstance || !window.GpxCreatorEditorInstance.mode) &&
+          this.map.getZoom() >= 12 &&
+          typeof window.queryWaterwayAtPoint === 'function'
+        ) {
+          // Clic direct sur un cours d'eau : affiche son nom/type et l'illumine silencieusement s'il y en a un sous le clic
+          window.queryWaterwayAtPoint(e.latlng);
         }
 
         if (this.currentBaseLayer === 'grmap' && typeof GrManager !== 'undefined' && GrManager.handleMapClickForGr) {
