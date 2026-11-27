@@ -688,14 +688,37 @@
         // Rafraîchir Leaflet et garantir une netteté topographique optimale
         setTimeout(() => {
           if (window.MapManagerInstance && window.MapManagerInstance.map) {
-            const map = window.MapManagerInstance.map;
+            const mm = window.MapManagerInstance;
+            const map = mm.map;
             map.invalidateSize();
-            // Si aucune trace standalone n'est chargée, centrer sur une vue topographique idéale au 1:25 000
-            if (!window.MapManagerInstance.standaloneTracks || window.MapManagerInstance.standaloneTracks.length === 0) {
+            if (this._pendingTop25Sheet) {
+              const targetSheet = this._pendingTop25Sheet;
+              this._pendingTop25Sheet = null;
+              if (targetSheet.isCalanques && typeof mm.activateCalanquesMode === 'function') {
+                mm.activateCalanquesMode();
+              } else {
+                if (mm.currentBaseLayer !== 'igntop25' && typeof mm.setBaseLayer === 'function') {
+                  mm.setBaseLayer('igntop25');
+                }
+                if (mm.paperSheetLayer && !map.hasLayer(mm.paperSheetLayer)) {
+                  mm.paperSheetLayer.addTo(map);
+                }
+                if (Array.isArray(targetSheet.b) && targetSheet.b.length >= 4) {
+                  map.fitBounds([[targetSheet.b[0], targetSheet.b[1]], [targetSheet.b[2], targetSheet.b[3]]], { padding: [25, 25], animate: true });
+                }
+                if (typeof mm.renderPaperSheetBounds === 'function') {
+                  setTimeout(() => mm.renderPaperSheetBounds(), 350);
+                }
+              }
+              if (typeof window.App?.showToast === 'function') {
+                window.App.showToast(`🗺️ Carte IGN ${targetSheet.r} — ${targetSheet.t}`, 'success');
+              }
+            } else if (!mm.standaloneTracks || mm.standaloneTracks.length === 0) {
+              // Si aucune trace standalone n'est chargée, centrer sur une vue topographique idéale au 1:25 000
               map.setView([43.125, 5.800], 13.5);
             }
           }
-        }, 150);
+        }, 180);
 
       } else if (viewName === 'randonner') {
         // =====================================================================
@@ -1058,35 +1081,12 @@
         this.toggleGuideFiche('fiche-top25-catalog-content');
       }
 
-      this.navigateTo('carte');
-
-      const focusSheet = () => {
-        const mm = window.MapManagerInstance;
-        if (!mm || !mm.map) return;
-
-        if (item.isCalanques && typeof mm.activateCalanquesMode === 'function') {
-          mm.activateCalanquesMode();
-        } else {
-          if (mm.currentBaseLayer !== 'igntop25' && typeof mm.setBaseLayer === 'function') {
-            mm.setBaseLayer('igntop25');
-          }
-          if (mm.paperSheetLayer && !mm.map.hasLayer(mm.paperSheetLayer)) {
-            mm.paperSheetLayer.addTo(mm.map);
-          }
-          if (Array.isArray(item.b) && item.b.length >= 4) {
-            mm.map.fitBounds([[item.b[0], item.b[1]], [item.b[2], item.b[3]]], { padding: [25, 25], animate: true });
-          }
-          if (typeof mm.renderPaperSheetBounds === 'function') {
-            setTimeout(() => mm.renderPaperSheetBounds(), 350);
-          }
-        }
-
-        if (typeof window.App?.showToast === 'function') {
-          window.App.showToast(`🗺️ Carte IGN ${item.r} — ${item.t}`, 'success');
-        }
-      };
-
-      setTimeout(focusSheet, 250);
+      this._pendingTop25Sheet = item;
+      if (window.location.hash !== '#carte') {
+        window.location.hash = '#carte';
+      } else {
+        this.switchView('carte');
+      }
     }
 
     /**
