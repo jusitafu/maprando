@@ -1423,43 +1423,83 @@
     }
 
     /**
-     * Affiche un bandeau flottant d'information en haut de l'écran avec bouton Fermer (✕)
+     * Affiche la fenêtre flottante d'information à droite du cours d'eau (dans la carte, déplaçable avec - et ✕)
      */
     static showWaterwayBanner(waterway, map, opts = {}) {
       this.removeWaterwayBanner();
 
+      const container = (map && map.getContainer) ? map.getContainer() : document.body;
       const banner = document.createElement('div');
       banner.id = 'waterway-floating-banner';
-      banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-sky-500/80 flex flex-col gap-1.5 max-w-[94vw] sm:max-w-2xl transition-all duration-300 animate-bounce-short select-none';
+      banner.className = 'movable-floating-window absolute z-[1040] bg-slate-900/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-2xl border-2 border-sky-500/80 flex flex-col gap-1.5 w-[270px] sm:w-[320px] max-w-[calc(100%-2rem)] transition-all duration-200 select-none';
 
-      const wType = waterway.waterType || 'Cours d\'eau';
-      const distText = opts.distKm ? ` • Longueur : ~${opts.distKm} km` : (opts.segmentsCount ? ` • ${opts.segmentsCount} tronçons` : '');
+      const wType = waterway.waterType || "Cours d'eau";
+      const distText = opts.distKm ? `Longueur : ~${opts.distKm} km` : (opts.segmentsCount ? `${opts.segmentsCount} tronçons` : '');
 
       banner.innerHTML = `
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <span class="bg-sky-600 text-white font-black text-xs px-2.5 py-0.5 rounded-md shadow uppercase tracking-wide flex items-center gap-1.5 flex-shrink-0">
-              <span class="inline-block w-2 h-2 rounded-full bg-cyan-200 animate-ping"></span>
+        <div class="window-drag-header flex items-center justify-between gap-2 pb-1.5 border-b border-slate-800 cursor-grab active:cursor-grabbing">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="window-drag-grip text-slate-400 hover:text-white text-xs opacity-75">⠿</span>
+            <span class="bg-sky-600 text-white font-black text-[10px] px-2 py-0.5 rounded-md shadow uppercase tracking-wide flex items-center gap-1 flex-shrink-0">
+              <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-200 animate-ping"></span>
               🌊 ${wType}
             </span>
-            <div class="flex flex-col min-w-0">
-              <div class="font-extrabold text-white text-sm sm:text-base truncate flex items-center gap-2">
-                <span>${waterway.rawName || waterway.title || 'Cours d\'eau'}</span>
-                <span class="text-[11px] text-cyan-300 font-semibold hidden sm:inline">${distText}</span>
-              </div>
-              <div class="text-[11px] text-slate-300 font-medium truncate">
-                ${waterway.subtitle || 'Écoulement naturel et tracé hydrographique officiel'}
-              </div>
-            </div>
           </div>
-          <button id="btn-close-waterway-banner" type="button" class="ml-auto text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 active:scale-95 transition rounded-xl p-1.5 px-2.5 text-sm font-black border border-slate-700/80 flex-shrink-0 cursor-pointer" title="Masquer le cours d'eau">
-            ✕
-          </button>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button id="btn-min-waterway-banner" type="button" class="hud-win-btn bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-600" title="Réduire / Agrandir">&minus;</button>
+            <button id="btn-close-waterway-banner" type="button" class="hud-win-btn bg-rose-950/90 hover:bg-rose-700 text-rose-300 hover:text-white border border-rose-800" title="Masquer le cours d'eau">&#x2715;</button>
+          </div>
+        </div>
+        <div id="waterway-banner-body" class="flex flex-col gap-0.5">
+          <div class="font-extrabold text-white text-sm leading-tight truncate">${waterway.rawName || waterway.title || "Cours d'eau"}</div>
+          ${distText ? `<div class="text-xs text-cyan-300 font-bold">${distText}</div>` : ''}
+          <div class="text-[10.5px] text-slate-400 font-medium truncate">
+            ${waterway.subtitle || 'Tracé hydrographique officiel'}
+          </div>
         </div>
       `;
 
-      document.body.appendChild(banner);
+      // Calcul de la position : à droite du cours d'eau / point cliqué, à l'intérieur de la carte
+      const cW = container.clientWidth || window.innerWidth;
+      const cH = container.clientHeight || window.innerHeight;
+      const panelW = Math.min(320, cW - 32);
+      const panelH = 105;
+      let leftPx = Math.max(16, cW - panelW - 18);
+      let topPx = Math.max(72, Math.round(cH * 0.32));
+
+      if (map && typeof map.latLngToContainerPoint === 'function') {
+        let anchor = null;
+        if (opts.bounds && typeof opts.bounds.isValid === 'function' && opts.bounds.isValid()) {
+          anchor = L.latLng(opts.bounds.getCenter().lat, opts.bounds.getEast());
+        } else if (waterway.lat != null && waterway.lon != null) {
+          anchor = L.latLng(waterway.lat, waterway.lon);
+        }
+        if (anchor) {
+          const pt = map.latLngToContainerPoint(anchor);
+          leftPx = Math.min(cW - panelW - 16, Math.max(16, Math.round(pt.x + 22)));
+          topPx = Math.min(cH - panelH - 58, Math.max(72, Math.round(pt.y - panelH / 2)));
+        }
+      }
+
+      banner.style.left = `${leftPx}px`;
+      banner.style.top = `${topPx}px`;
+
+      container.appendChild(banner);
       this.currentWaterwayBanner = banner;
+
+      if (typeof L !== 'undefined' && L.DomEvent) {
+        L.DomEvent.disableClickPropagation(banner);
+        L.DomEvent.disableScrollPropagation(banner);
+      }
+
+      const minBtn = banner.querySelector('#btn-min-waterway-banner');
+      const bodyEl = banner.querySelector('#waterway-banner-body');
+      if (minBtn && bodyEl) {
+        minBtn.addEventListener('click', () => {
+          const hidden = bodyEl.classList.toggle('hidden');
+          minBtn.innerHTML = hidden ? '&#x25A1;' : '&minus;';
+        });
+      }
 
       const closeBtn = banner.querySelector('#btn-close-waterway-banner');
       if (closeBtn) {
@@ -1699,20 +1739,21 @@
       this.currentWaterwayLayer.addTo(map);
 
       // Ajuster le zoom pour englober tout le cours d'eau ou le tronçon
+      let fitBoundsObj = null;
       try {
         const allPts = segments.flat();
         if (allPts.length > 0) {
-          const bounds = L.latLngBounds(allPts);
-          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+          fitBoundsObj = L.latLngBounds(allPts);
+          map.fitBounds(fitBoundsObj, { padding: [50, 50], maxZoom: 15, animate: false });
         } else if (waterway.lat && waterway.lon) {
-          map.setView([waterway.lat, waterway.lon], 14);
+          map.setView([waterway.lat, waterway.lon], 14, { animate: false });
         }
       } catch (e) {
-        if (waterway.lat && waterway.lon) map.setView([waterway.lat, waterway.lon], 14);
+        if (waterway.lat && waterway.lon) map.setView([waterway.lat, waterway.lon], 14, { animate: false });
       }
 
-      // Afficher le bandeau d'information flottant en haut avec bouton Fermer (✕)
-      this.showWaterwayBanner(waterway, map, { distKm, segmentsCount: segments.length });
+      // Afficher la fenêtre d'information à droite du cours d'eau dans la carte
+      this.showWaterwayBanner(waterway, map, { distKm, segmentsCount: segments.length, bounds: fitBoundsObj });
     }
   }
 

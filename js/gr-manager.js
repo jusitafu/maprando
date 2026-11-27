@@ -541,9 +541,10 @@ class GrManager {
   static showGrBanner(gr, map, opts = {}) {
     this.removeGrBanner();
 
+    const container = (map && map.getContainer) ? map.getContainer() : document.body;
     const banner = document.createElement('div');
     banner.id = 'gr-floating-banner';
-    banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 flex flex-col gap-1.5 max-w-[94vw] sm:max-w-2xl transition-all duration-300 animate-bounce-short select-none';
+    banner.className = 'movable-floating-window absolute z-[1040] bg-slate-900/95 text-white backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 flex flex-col gap-1.5 w-[290px] sm:w-[350px] max-w-[calc(100%-2rem)] transition-all duration-200 select-none';
 
     const badgeColor = gr.group === 'INT' ? 'bg-blue-600' : (gr.group === 'REG' ? 'bg-amber-600' : 'bg-rose-600');
     const candidates = Array.isArray(opts.candidates) ? opts.candidates : [];
@@ -585,8 +586,38 @@ class GrManager {
       ${candidatesHtml}
     `;
 
-    document.body.appendChild(banner);
+    // Calcul de position : à droite du chemin / point cliqué, à l'intérieur de la carte
+    const cW = container.clientWidth || window.innerWidth;
+    const cH = container.clientHeight || window.innerHeight;
+    const panelW = Math.min(350, cW - 32);
+    const panelH = candidates.length > 1 ? 135 : 95;
+    let leftPx = Math.max(16, cW - panelW - 18);
+    let topPx = Math.max(72, Math.round(cH * 0.32));
+
+    if (map && typeof map.latLngToContainerPoint === 'function') {
+      let anchor = null;
+      if (opts.anchorLatLng) {
+        anchor = opts.anchorLatLng;
+      } else if (opts.bounds && typeof opts.bounds.isValid === 'function' && opts.bounds.isValid()) {
+        anchor = L.latLng(opts.bounds.getCenter().lat, opts.bounds.getEast());
+      }
+      if (anchor) {
+        const pt = map.latLngToContainerPoint(anchor);
+        leftPx = Math.min(cW - panelW - 16, Math.max(16, Math.round(pt.x + 22)));
+        topPx = Math.min(cH - panelH - 58, Math.max(72, Math.round(pt.y - panelH / 2)));
+      }
+    }
+
+    banner.style.left = `${leftPx}px`;
+    banner.style.top = `${topPx}px`;
+
+    container.appendChild(banner);
     this.currentGrBanner = banner;
+
+    if (typeof L !== 'undefined' && L.DomEvent) {
+      L.DomEvent.disableClickPropagation(banner);
+      L.DomEvent.disableScrollPropagation(banner);
+    }
 
     const closeBtn = banner.querySelector('#btn-close-gr-banner');
     if (closeBtn) {
@@ -1218,17 +1249,20 @@ class GrManager {
       finish: itin[itin.length - 1] || (det.tags && det.tags.to) || ''
     }, map, {
       bounds,
+      anchorLatLng: opts.anchorLatLng || null,
       candidates: opts.candidates || null
     });
   }
 
   static showLoadingBanner(item) {
     this.removeGrBanner();
+    const map = window.MapManagerInstance && window.MapManagerInstance.map;
+    const container = (map && map.getContainer) ? map.getContainer() : document.body;
     const banner = document.createElement('div');
     banner.id = 'gr-floating-banner';
-    banner.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-[1500] bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 text-xs font-bold';
+    banner.className = 'absolute top-20 right-4 z-[1040] bg-slate-900/95 text-white px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-rose-500/80 text-xs font-bold';
     banner.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Chargement du tracé ' + this._esc(item.ref || item.name || '') + '…';
-    document.body.appendChild(banner);
+    container.appendChild(banner);
     this.currentGrBanner = banner;
   }
 
@@ -1719,6 +1753,7 @@ class GrManager {
 
       await this.displayRemote(results[0], map, {
         fitBounds: false,
+        anchorLatLng: latlng,
         candidates: results.slice(0, 6)
       });
       return true;
