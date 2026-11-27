@@ -468,8 +468,8 @@ html_content = f"""<!DOCTYPE html>
 
         <div class="toc-item">
           <div class="num">Chapitre 14 • Page 15</div>
-          <div class="title">Guides &amp; Savoirs — 6 Fiches &amp; Sécurité</div>
-          <div class="desc">GNSS/SBAS, LiDAR HD, barème IBP, check-list, secours satellite et montres.</div>
+          <div class="title">Guides &amp; Savoirs — Fiches, Catalogue IGN &amp; Sécurité</div>
+          <div class="desc">GNSS/SBAS, LiDAR HD, IBP, check-list, secours satellite, GPX et catalogue des 1 538 cartes IGN.</div>
         </div>
 
         <div class="toc-item" style="border-left-color: #6366f1;">
@@ -1128,24 +1128,25 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <div class="page-body">
-      <h2>📚 14. Module « Guides &amp; Savoirs » — 6 Fiches &amp; Sécurité</h2>
+      <h2>📚 14. Module « Guides &amp; Savoirs » — 6 Fiches, Catalogue IGN &amp; Sécurité</h2>
       <p>
-        Le module <strong>Guides &amp; Savoirs</strong> rassemble 6 dossiers techniques de référence rédigés pour perfectionner votre autonomie et votre sécurité en pleine nature. Chaque fiche est consultable directement à l'écran et téléchargeable en 1 clic au format PDF officiel haute définition.
+        Le module <strong>Guides &amp; Savoirs</strong> rassemble 6 dossiers techniques de référence (téléchargeables en PDF haute définition) et un <strong>catalogue interactif pleine page des 1 538 cartes IGN</strong> accessibles dans RandoFinder.
       </p>
 
       <div class="figure-box">
         <img src="{fig11_b64}" alt="Guides et Savoirs">
-        <div class="figure-caption">Figure 13 : Les fiches techniques de référence consultables en mode accordéon et téléchargeables en PDF imprimable.</div>
+        <div class="figure-caption">Figure 13 : Les fiches techniques de référence (PDF imprimable) et le catalogue pleine page des cartes IGN.</div>
       </div>
 
-      <h3>Les 6 Fiches Techniques de Référence</h3>
+      <h3>Les 6 Fiches Techniques &amp; le Catalogue des Cartes IGN</h3>
       <ul>
         <li><strong>🛰️ Fiche 1 : Technologies GPS, SBAS (EGNOS) &amp; Montres de Sport :</strong> précision GNSS multi-constellations, correction différentielle SBAS et double fréquence L1+L5.</li>
         <li><strong>🌲 Fiche 2 : Programme National IGN LiDAR HD :</strong> modélisation laser 3D à 10 pts/m² traversant la canopée pour restituer le relief réel à 50 cm.</li>
         <li><strong>📊 Fiche 3 : Indice IBP Index &amp; Échelle d'Effort Physique :</strong> calcul officiel FFRandonnée croisant dénivelé et distance selon 5 niveaux d'effort.</li>
         <li><strong>✅ Fiche 4 : Check-list de Départ Randonnée :</strong> vérifications indispensables de J-1 à H-0 (3 couches, eau, boussole, powerbank, secours).</li>
         <li><strong>🚨 Fiche 5 : Secours en Randonnée, Zone Blanche &amp; SOS Satellite :</strong> appel 112 sans SIM, SMS 114, balises Iridium et SOS satellite direct smartphone.</li>
-        <li><strong>⌚ Fiche 6 : Randonner avec un Fichier GPX &amp; Montres Connectées :</strong> anatomie XML/WGS84 (&lt;trk&gt;, &lt;rte&gt;, &lt;wpt&gt;), plateformes de téléchargement fiables (Visorando, AllTrails, Komoot, IGNrando') et éditeurs (VisuGPX, OpenRunner, BRouter), transfert Bluetooth sur Garmin, Coros, Suunto, Polar, Apple Watch et navigation sécurisée.</li>
+        <li><strong>⌚ Fiche 6 : Randonner avec un Fichier GPX &amp; Montres Connectées :</strong> anatomie XML/WGS84, plateformes fiables, éditeurs, transfert Bluetooth sur montres GPS et navigation sécurisée.</li>
+        <li><strong>🗺️ Fiche 7 : Catalogue des Cartes IGN TOP 25®, Série Bleue &amp; Calanques (Pleine Page) :</strong> tableau recherchable des 1 538 cartes (580 TOP 25 ET/OT + 957 Série Bleue SB + carte spéciale IGN 89035 Calanques éd. 2025), filtres avec info-bulles et accès direct <em>Voir sur la carte</em>.</li>
       </ul>
 
       <h3>Sauvegarde &amp; Restauration</h3>
