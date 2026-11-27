@@ -1832,12 +1832,36 @@ class MapManager {
 
     }
 
-    // 4. Belgique (Ardennes, Fagnes)
-
+    // 4. Belgique (frontière franco-belge réelle par segments afin de ne jamais capturer Lille, la Deûle, Valenciennes, Maubeuge ou les Ardennes françaises)
     if (lat >= 49.49 && lat <= 51.51 && lon >= 2.54 && lon <= 6.41) {
-
-      return 'ignbelgium';
-
+      const frBeBorder = [
+        [2.54, 51.09], // Bray-Dunes / La Panne
+        [2.74, 50.76], // Bailleul / Poperinge
+        [2.88, 50.70], // Armentières
+        [3.18, 50.75], // Tourcoing / Halluin (Nord de Lille & Deûle)
+        [3.27, 50.65], // Toufflers / Est de Lille
+        [3.66, 50.41], // Quiévrain / Est de Valenciennes
+        [4.12, 50.32], // Nord-Est de Maubeuge
+        [4.20, 49.98], // Est d'Hirson / Chimay
+        [4.83, 50.14], // Pointe de Givet (France)
+        [4.95, 49.82], // Nord de Charleville-Mézières
+        [5.30, 49.68], // Nord de Sedan
+        [5.82, 49.55], // Longwy / Virton
+        [6.41, 49.55]
+      ];
+      let borderLat = 49.55;
+      for (let i = 0; i < frBeBorder.length - 1; i++) {
+        const [x1, y1] = frBeBorder[i];
+        const [x2, y2] = frBeBorder[i + 1];
+        if (lon >= x1 && lon <= x2) {
+          const t = (x2 === x1) ? 0 : (lon - x1) / (x2 - x1);
+          borderLat = y1 + t * (y2 - y1);
+          break;
+        }
+      }
+      if (lat > borderLat) {
+        return 'ignbelgium';
+      }
     }
 
     // 5. Espagne (Pyrénées espagnoles, Picos de Europa, Sierras)
