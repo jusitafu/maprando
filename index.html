@@ -1658,7 +1658,7 @@
               </div>
 
               <!-- Barre de recherche et filtres -->
-              <div class="flex-shrink-0 flex flex-col gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+              <div class="relative z-30 flex-shrink-0 flex flex-col gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div class="relative flex-1">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">🔍</span>
@@ -1676,28 +1676,57 @@
                   </div>
                 </div>
 
-                <!-- Filtres rapides par série -->
+                <!-- Filtres rapides par série avec info-bulles explicatives au survol -->
                 <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold">
                   <button type="button" data-top25-filter="all"
                           onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('all')"
                           class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-cyan-600 text-white border border-cyan-400 cursor-pointer transition">
                     Toutes
                   </button>
-                  <button type="button" data-top25-filter="top25"
-                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('top25')"
-                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
-                    TOP 25 (ET / OT)
-                  </button>
-                  <button type="button" data-top25-filter="sb"
-                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('sb')"
-                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
-                    Série Bleue (SB)
-                  </button>
-                  <button type="button" data-top25-filter="calanques"
-                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('calanques')"
-                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition">
-                    🏖️ Calanques (89035)
-                  </button>
+
+                  <!-- TOP 25 (ET / OT) -->
+                  <div class="relative group/tip inline-block">
+                    <button type="button" data-top25-filter="top25"
+                            onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('top25')"
+                            class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
+                      TOP 25 (ET / OT) <span class="text-[11px] opacity-75 ml-0.5">ⓘ</span>
+                    </button>
+                    <div class="pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-80 sm:w-96 p-3.5 rounded-xl bg-slate-900 border border-cyan-400/60 shadow-2xl text-left text-xs font-normal leading-relaxed text-slate-200 z-50">
+                      <div class="font-extrabold text-cyan-300 mb-1">🗺️ Gamme IGN TOP 25® (ET / OT — 580 feuilles)</div>
+                      <p>Couvre les <strong>zones touristiques, littorales, massifs montagneux et parcs naturels</strong> au 1:25 000 (1 cm = 250 m).</p>
+                      <p class="mt-1">Ajoute au fond topographique les <strong>sentiers balisés GR® / PR®</strong>, refuges, gîtes, campings et activités de plein air. <em>ET</em> = Est, <em>OT</em> = Ouest.</p>
+                      <p class="mt-1.5 text-emerald-300 font-semibold">✓ Utilisée dans RandoFinder via le flux officiel IGN SCAN 25® (assemblée en continu avec la Série Bleue).</p>
+                    </div>
+                  </div>
+
+                  <!-- Série Bleue (SB) -->
+                  <div class="relative group/tip inline-block">
+                    <button type="button" data-top25-filter="sb"
+                            onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('sb')"
+                            class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
+                      Série Bleue (SB) <span class="text-[11px] opacity-75 ml-0.5">ⓘ</span>
+                    </button>
+                    <div class="pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-80 sm:w-96 p-3.5 rounded-xl bg-slate-900 border border-sky-400/60 shadow-2xl text-left text-xs font-normal leading-relaxed text-slate-200 z-50">
+                      <div class="font-extrabold text-sky-300 mb-1">📘 Gamme IGN Série Bleue (SB — 957 feuilles)</div>
+                      <p>Couvre le <strong>reste de la France métropolitaine</strong> (plaines, campagnes, zones hors grands massifs touristiques) au 1:25 000.</p>
+                      <p class="mt-1">Offre <strong>strictement la même précision topographique</strong> que la TOP 25 (courbes de niveau, chemins, bâtiments, hydrographie), sans la surcouche touristique spécifique.</p>
+                      <p class="mt-1.5 text-emerald-300 font-semibold">✓ Utilisée dans RandoFinder en complément de la TOP 25 pour couvrir 100 % du territoire français.</p>
+                    </div>
+                  </div>
+
+                  <!-- Calanques (89035) -->
+                  <div class="relative group/tip inline-block">
+                    <button type="button" data-top25-filter="calanques"
+                            onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('calanques')"
+                            class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition">
+                      🏖️ Calanques (89035) <span class="text-[11px] opacity-75 ml-0.5">ⓘ</span>
+                    </button>
+                    <div class="pointer-events-none opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 absolute left-0 top-full mt-2 w-80 sm:w-96 p-3.5 rounded-xl bg-slate-900 border border-rose-400/60 shadow-2xl text-left text-xs font-normal leading-relaxed text-slate-200 z-50">
+                      <div class="font-extrabold text-rose-300 mb-1">🏖️ Carte Spéciale IGN 89035 — Les Calanques (Éd. 2025)</div>
+                      <p>Carte dédiée à la <strong>Traversée des Calanques</strong> (Marseille – Cassis – La Ciotat) avec un détail renforcé pour les sentiers escarpés, calanques et belvédères du Parc National.</p>
+                      <p class="mt-1.5 text-emerald-300 font-semibold">✓ Intégrée dans RandoFinder avec détection automatique sur zone, emprise en pointillés bordeaux et légende dédiée.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
