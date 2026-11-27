@@ -821,17 +821,17 @@
 
       const items = [];
 
-      // Entrée dédiée : Carte spéciale IGN 89035 – Parc National des Calanques (1:15 000)
+      // Entrée dédiée : Carte spéciale IGN 89035 – Parc National des Calanques
       items.push({
         id: 'calanques_89035',
         r: '89035',
-        a: 'Spéciale 1:15 000',
-        aNum: 9999,
+        a: '2025',
+        aNum: 2025,
         t: 'LES CALANQUES — Traversée des Calanques (Marseille – Cassis – La Ciotat)',
         b: [43.175, 5.335, 43.275, 5.625],
         series: 'calanques',
         isCalanques: true,
-        _search: norm('89035 calanques traversee des calanques marseille cassis la ciotat parc national speciale 1:15000 1:15 000')
+        _search: norm('89035 2025 calanques traversee des calanques marseille cassis la ciotat parc national speciale')
       });
 
       const rawSheets = Array.isArray(window.IGN_TOP25_SHEETS) ? window.IGN_TOP25_SHEETS : [];
