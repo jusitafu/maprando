@@ -1631,99 +1631,126 @@
             </div>
           </button>
 
-          <!-- Contenu dépliable de la Fiche 7 -->
-          <div id="fiche-top25-catalog-content" class="hidden border-t border-slate-800 p-5 sm:p-7 bg-slate-950/70 space-y-4">
-            <!-- Barre de recherche et filtres -->
-            <div class="flex flex-col gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
-                <div class="relative flex-1">
-                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">🔍</span>
-                  <input id="top25-catalog-search" type="text" autocomplete="off"
-                         placeholder="Rechercher par réf. commerciale (ex : 3244 ET, 89035), titre (ex : Calanques, Gardanne) ou année (ex : 2025)..."
-                         oninput="window.PortalRouterInstance && window.PortalRouterInstance.renderTop25CatalogTable(this.value)"
-                         class="w-full pl-9 pr-9 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-cyan-400 focus:outline-none text-xs sm:text-sm text-white placeholder-slate-400 transition" />
-                  <button type="button" id="top25-catalog-clear"
-                          onclick="var i=document.getElementById('top25-catalog-search'); if(i){i.value=''; i.focus();} window.PortalRouterInstance && window.PortalRouterInstance.renderTop25CatalogTable('');"
-                          class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center justify-center cursor-pointer transition"
-                          title="Effacer la recherche">✕</button>
+          <!-- Contenu dépliable PLEINE PAGE de la Fiche 7 -->
+          <div id="fiche-top25-catalog-content" class="hidden fixed inset-0 z-[9995] bg-slate-950/98 backdrop-blur-md flex flex-col overflow-hidden">
+            <div class="max-w-7xl w-full mx-auto h-full flex flex-col px-4 sm:px-8 py-4 sm:py-6 gap-4">
+
+              <!-- En-tête pleine page avec bouton Replier -->
+              <div class="flex-shrink-0 flex items-center justify-between gap-4 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-cyan-500/20 text-cyan-300 border-2 border-cyan-500/40 flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 shadow-inner">
+                    🗺️
+                  </div>
+                  <div class="min-w-0">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-200 border border-cyan-400/40 text-xs font-black uppercase tracking-wider mb-1">
+                      <span>CATALOGUE CARTOGRAPHIQUE &bull; IGN FRANCE &amp; CALANQUES</span>
+                    </div>
+                    <h2 class="text-lg sm:text-2xl lg:text-[26px] font-black text-white leading-tight tracking-tight truncate">
+                      Cartes IGN TOP 25® France &amp; Carte Spéciale des Calanques
+                    </h2>
+                  </div>
                 </div>
-                <div id="top25-catalog-count" class="text-xs font-extrabold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-3 py-2 rounded-xl whitespace-nowrap text-center">
-                  Chargement…
+                <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-top25-catalog-content')"
+                        class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-sm sm:text-base shadow-lg transition cursor-pointer flex items-center gap-2 flex-shrink-0"
+                        title="Replier le catalogue (Échap)">
+                  <span>▴</span> <span>Replier</span>
+                </button>
+              </div>
+
+              <!-- Barre de recherche et filtres -->
+              <div class="flex-shrink-0 flex flex-col gap-3 bg-slate-900/90 p-4 rounded-2xl border border-slate-800">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div class="relative flex-1">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none">🔍</span>
+                    <input id="top25-catalog-search" type="text" autocomplete="off"
+                           placeholder="Rechercher par réf. commerciale (ex : 3244 ET, 89035), titre (ex : Calanques, Gardanne) ou année (ex : 2025)..."
+                           oninput="window.PortalRouterInstance && window.PortalRouterInstance.renderTop25CatalogTable(this.value)"
+                           class="w-full pl-11 pr-10 py-3 rounded-xl bg-slate-950 border border-slate-700 focus:border-cyan-400 focus:outline-none text-sm sm:text-base text-white placeholder-slate-400 transition" />
+                    <button type="button" id="top25-catalog-clear"
+                            onclick="var i=document.getElementById('top25-catalog-search'); if(i){i.value=''; i.focus();} window.PortalRouterInstance && window.PortalRouterInstance.renderTop25CatalogTable('');"
+                            class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold flex items-center justify-center cursor-pointer transition"
+                            title="Effacer la recherche">✕</button>
+                  </div>
+                  <div id="top25-catalog-count" class="text-sm sm:text-base font-extrabold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-4 py-3 rounded-xl whitespace-nowrap text-center">
+                    Chargement…
+                  </div>
+                </div>
+
+                <!-- Filtres rapides par série -->
+                <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-bold">
+                  <button type="button" data-top25-filter="all"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('all')"
+                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-cyan-600 text-white border border-cyan-400 cursor-pointer transition">
+                    Toutes
+                  </button>
+                  <button type="button" data-top25-filter="top25"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('top25')"
+                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
+                    TOP 25 (ET / OT)
+                  </button>
+                  <button type="button" data-top25-filter="sb"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('sb')"
+                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
+                    Série Bleue (SB)
+                  </button>
+                  <button type="button" data-top25-filter="calanques"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('calanques')"
+                          class="top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition">
+                    🏖️ Calanques (89035)
+                  </button>
                 </div>
               </div>
 
-              <!-- Filtres rapides par série -->
-              <div class="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
-                <button type="button" data-top25-filter="all"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('all')"
-                        class="top25-filter-btn px-3 py-1 rounded-full bg-cyan-600 text-white border border-cyan-400 cursor-pointer transition">
-                  Toutes
-                </button>
-                <button type="button" data-top25-filter="top25"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('top25')"
-                        class="top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
-                  TOP 25 (ET / OT)
-                </button>
-                <button type="button" data-top25-filter="sb"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('sb')"
-                        class="top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition">
-                  Série Bleue (SB)
-                </button>
-                <button type="button" data-top25-filter="calanques"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.setTop25CatalogFilter('calanques')"
-                        class="top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition">
-                  🏖️ Calanques (89035)
-                </button>
+              <!-- Tableau pleine page scrollable des cartes -->
+              <div class="flex-1 min-h-0 overflow-auto rounded-2xl border border-slate-700/80 bg-slate-900/40 shadow-2xl">
+                <table class="w-full text-left text-sm sm:text-[15px] border-collapse">
+                  <thead class="sticky top-0 z-10 bg-slate-900 text-slate-200 border-b border-slate-700 text-xs sm:text-sm font-extrabold uppercase tracking-wider shadow-md">
+                    <tr>
+                      <th class="px-4 sm:px-6 py-3.5 whitespace-nowrap cursor-pointer hover:text-cyan-300 select-none transition"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.sortTop25Catalog('r')"
+                          title="Trier par référence commerciale">
+                        Réf. commerciale <span id="top25-sort-r" class="text-cyan-400">▲</span>
+                      </th>
+                      <th class="px-4 sm:px-6 py-3.5 whitespace-nowrap cursor-pointer hover:text-cyan-300 select-none transition"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.sortTop25Catalog('a')"
+                          title="Trier par date d'édition">
+                        Date d'édition <span id="top25-sort-a" class="text-slate-500">↕</span>
+                      </th>
+                      <th class="px-4 sm:px-6 py-3.5 cursor-pointer hover:text-cyan-300 select-none transition"
+                          onclick="window.PortalRouterInstance && window.PortalRouterInstance.sortTop25Catalog('t')"
+                          title="Trier par titre">
+                        Titre <span id="top25-sort-t" class="text-slate-500">↕</span>
+                      </th>
+                      <th class="px-4 sm:px-6 py-3.5 text-right whitespace-nowrap">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="top25-catalog-tbody" class="divide-y divide-slate-800/70 font-medium">
+                    <tr>
+                      <td colspan="4" class="p-8 text-center text-slate-400 text-base">Chargement du catalogue des cartes IGN TOP 25 France &amp; Calanques…</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-            </div>
 
-            <!-- Tableau scrollable des cartes -->
-            <div class="overflow-x-auto max-h-[480px] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950/60">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead class="sticky top-0 z-10 bg-slate-900 text-slate-200 border-b border-slate-700 font-extrabold uppercase tracking-wider shadow-sm">
-                  <tr>
-                    <th class="p-3 whitespace-nowrap cursor-pointer hover:text-cyan-300 select-none transition"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.sortTop25Catalog('r')"
-                        title="Trier par référence commerciale">
-                      Réf. commerciale <span id="top25-sort-r" class="text-cyan-400">▲</span>
-                    </th>
-                    <th class="p-3 whitespace-nowrap cursor-pointer hover:text-cyan-300 select-none transition"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.sortTop25Catalog('a')"
-                        title="Trier par date d'édition">
-                      Date d'édition <span id="top25-sort-a" class="text-slate-500">↕</span>
-                    </th>
-                    <th class="p-3 cursor-pointer hover:text-cyan-300 select-none transition"
-                        onclick="window.PortalRouterInstance && window.PortalRouterInstance.sortTop25Catalog('t')"
-                        title="Trier par titre">
-                      Titre <span id="top25-sort-t" class="text-slate-500">↕</span>
-                    </th>
-                    <th class="p-3 text-right whitespace-nowrap">Carte</th>
-                  </tr>
-                </thead>
-                <tbody id="top25-catalog-tbody" class="divide-y divide-slate-800/60 font-medium">
-                  <tr>
-                    <td colspan="4" class="p-6 text-center text-slate-400">Dépliez la fiche pour afficher le catalogue des cartes IGN TOP 25 France &amp; Calanques.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              <!-- Pied de page pleine page -->
+              <div class="flex-shrink-0 pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <span class="text-xs sm:text-sm text-slate-400">
+                  Source : tableau d'assemblage officiel IGN SCAN 25® France métropolitaine + Carte spéciale IGN 89035 (Parc National des Calanques, 1:15 000).
+                </span>
+                <div class="flex items-center gap-2.5 flex-shrink-0">
+                  <div id="top25-catalog-more-wrap" class="hidden">
+                    <button type="button" onclick="window.PortalRouterInstance && window.PortalRouterInstance.showAllTop25CatalogRows()"
+                            class="px-4 py-2 rounded-xl bg-cyan-900/60 hover:bg-cyan-800/80 text-cyan-200 border border-cyan-500/40 font-bold text-xs sm:text-sm transition cursor-pointer">
+                      Afficher toutes les cartes correspondantes
+                    </button>
+                  </div>
+                  <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-top25-catalog-content')"
+                          class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm border border-slate-700 transition cursor-pointer">
+                    ▴ Replier
+                  </button>
+                </div>
+              </div>
 
-            <div id="top25-catalog-more-wrap" class="hidden flex justify-center pt-1">
-              <button type="button" onclick="window.PortalRouterInstance && window.PortalRouterInstance.showAllTop25CatalogRows()"
-                      class="px-4 py-2 rounded-xl bg-cyan-900/60 hover:bg-cyan-800/80 text-cyan-200 border border-cyan-500/40 font-bold text-xs transition cursor-pointer">
-                Afficher toutes les cartes correspondantes
-              </button>
-            </div>
-
-            <!-- Bouton replier -->
-            <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
-              <span class="text-[11px] text-slate-400">
-                Source : tableau d'assemblage officiel IGN SCAN 25® France métropolitaine + Carte spéciale IGN 89035 (Parc National des Calanques, 1:15 000).
-              </span>
-              <button type="button" onclick="window.PortalRouterInstance.toggleGuideFiche('fiche-top25-catalog-content')"
-                      class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition cursor-pointer flex-shrink-0">
-                ▴ Replier la fiche
-              </button>
             </div>
           </div>
         </div>
@@ -8802,7 +8829,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/ffr-roadmap-manager.js?v=226"></script>
   <script src="js/floating-window-manager.js?v=225"></script>
 
-  <script src="js/portal-router.js?v=245"></script>
+  <script src="js/portal-router.js?v=246"></script>
     <script src="js/app.js?v=235"></script>
 
 

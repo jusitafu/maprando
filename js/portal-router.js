@@ -752,10 +752,29 @@
           if (icon) icon.textContent = 'Replier ▴';
         }
         if (ficheId === 'fiche-top25-catalog-content') {
+          document.body.style.overflow = 'hidden';
           this.renderTop25CatalogTable();
+          if (!this._top25EscHandler) {
+            this._top25EscHandler = (ev) => {
+              if (ev.key === 'Escape') {
+                const panel = document.getElementById('fiche-top25-catalog-content');
+                if (panel && !panel.classList.contains('hidden')) {
+                  this.toggleGuideFiche('fiche-top25-catalog-content');
+                }
+              }
+            };
+            document.addEventListener('keydown', this._top25EscHandler);
+          }
         }
       } else {
         el.classList.add('hidden');
+        if (ficheId === 'fiche-top25-catalog-content') {
+          document.body.style.overflow = '';
+          if (this._top25EscHandler) {
+            document.removeEventListener('keydown', this._top25EscHandler);
+            this._top25EscHandler = null;
+          }
+        }
         if (buttonEl) {
           const icon = buttonEl.querySelector('.guide-toggle-icon');
           if (icon) icon.textContent = 'Déplier ▾';
@@ -836,11 +855,11 @@
       document.querySelectorAll('.top25-filter-btn').forEach((btn) => {
         const isActive = btn.dataset.top25Filter === this._top25Filter;
         if (isActive) {
-          btn.className = 'top25-filter-btn px-3 py-1 rounded-full bg-cyan-600 text-white border border-cyan-400 cursor-pointer transition';
+          btn.className = 'top25-filter-btn px-3.5 py-1.5 rounded-full bg-cyan-600 text-white border border-cyan-400 cursor-pointer transition';
         } else if (btn.dataset.top25Filter === 'calanques') {
-          btn.className = 'top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition';
+          btn.className = 'top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition';
         } else {
-          btn.className = 'top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition';
+          btn.className = 'top25-filter-btn px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition';
         }
       });
       this.renderTop25CatalogTable();
@@ -959,19 +978,19 @@
         const it = filtered[i];
         if (it.isCalanques) {
           rows.push(`
-            <tr class="bg-rose-950/35 hover:bg-rose-900/40 transition">
-              <td class="p-2.5 sm:p-3 whitespace-nowrap">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-600/30 border border-rose-400/50 text-rose-200 font-mono font-extrabold">🏖️ ${esc(it.r)}</span>
+            <tr class="bg-rose-950/40 hover:bg-rose-900/45 transition">
+              <td class="px-4 sm:px-6 py-3 whitespace-nowrap">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-600/30 border border-rose-400/50 text-rose-200 font-mono text-sm sm:text-[15px] font-extrabold">🏖️ ${esc(it.r)}</span>
               </td>
-              <td class="p-2.5 sm:p-3 whitespace-nowrap">
-                <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold text-[11px]">${esc(it.a)}</span>
+              <td class="px-4 sm:px-6 py-3 whitespace-nowrap">
+                <span class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-200 font-bold text-xs sm:text-sm">${esc(it.a)}</span>
               </td>
-              <td class="p-2.5 sm:p-3 font-bold text-rose-100">${esc(it.t)}</td>
-              <td class="p-2.5 sm:p-3 text-right whitespace-nowrap">
+              <td class="px-4 sm:px-6 py-3 text-sm sm:text-base font-bold text-rose-100 leading-snug">${esc(it.t)}</td>
+              <td class="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
                 <button type="button" onclick="window.PortalRouterInstance && window.PortalRouterInstance.openTop25SheetOnMap(${i})"
-                        class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] shadow-sm transition cursor-pointer"
+                        class="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs sm:text-sm shadow-sm transition cursor-pointer"
                         title="Ouvrir la carte spéciale IGN 89035 des Calanques">
-                  🗺️ Voir
+                  🗺️ Voir sur la carte
                 </button>
               </td>
             </tr>`);
@@ -980,17 +999,17 @@
             ? 'bg-cyan-500/20 border-cyan-400/40 text-cyan-200'
             : 'bg-slate-800 border-slate-700 text-slate-200';
           rows.push(`
-            <tr class="hover:bg-slate-800/40 transition">
-              <td class="p-2.5 sm:p-3 whitespace-nowrap">
-                <span class="inline-block px-2 py-0.5 rounded-md border font-mono font-bold ${badgeClass}">${esc(it.r)}</span>
+            <tr class="hover:bg-slate-800/50 transition">
+              <td class="px-4 sm:px-6 py-3 whitespace-nowrap">
+                <span class="inline-block px-2.5 py-1 rounded-lg border font-mono text-sm sm:text-[15px] font-bold ${badgeClass}">${esc(it.r)}</span>
               </td>
-              <td class="p-2.5 sm:p-3 whitespace-nowrap text-slate-300 font-mono">${esc(it.a)}</td>
-              <td class="p-2.5 sm:p-3 text-white font-semibold">${esc(it.t)}</td>
-              <td class="p-2.5 sm:p-3 text-right whitespace-nowrap">
+              <td class="px-4 sm:px-6 py-3 whitespace-nowrap text-slate-300 font-mono text-sm sm:text-[15px]">${esc(it.a)}</td>
+              <td class="px-4 sm:px-6 py-3 text-white text-sm sm:text-base font-semibold leading-snug">${esc(it.t)}</td>
+              <td class="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
                 <button type="button" onclick="window.PortalRouterInstance && window.PortalRouterInstance.openTop25SheetOnMap(${i})"
-                        class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 font-bold text-[11px] transition cursor-pointer"
+                        class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 font-bold text-xs sm:text-sm transition cursor-pointer"
                         title="Centrer la carte IGN TOP 25 sur cette feuille">
-                  🗺️ Voir
+                  🗺️ Voir sur la carte
                 </button>
               </td>
             </tr>`);
@@ -1016,6 +1035,12 @@
       const list = this._top25FilteredList || [];
       const item = list[idx];
       if (!item) return;
+
+      // Refermer proprement la vue pleine page du catalogue avant d'aller sur la carte
+      const panel = document.getElementById('fiche-top25-catalog-content');
+      if (panel && !panel.classList.contains('hidden')) {
+        this.toggleGuideFiche('fiche-top25-catalog-content');
+      }
 
       this.navigateTo('carte');
 
