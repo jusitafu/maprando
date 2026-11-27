@@ -751,6 +751,9 @@
           const icon = buttonEl.querySelector('.guide-toggle-icon');
           if (icon) icon.textContent = 'Replier ▴';
         }
+        if (ficheId === 'fiche-top25-catalog-content') {
+          this.renderTop25CatalogTable();
+        }
       } else {
         el.classList.add('hidden');
         if (buttonEl) {
@@ -768,6 +771,281 @@
         window.ScrollElevatorInstance.fitMenuToFullPage();
         window.ScrollElevatorInstance.refresh();
       }
+    }
+
+    /* =========================================================================
+     * CATALOGUE DES CARTES IGN TOP 25 FRANCE & CALANQUES (RUBRIQUE SAVOIRS)
+     * ========================================================================= */
+    getTop25CatalogItems() {
+      if (this._top25CatalogCache) return this._top25CatalogCache;
+
+      const norm = (str) => String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+      const items = [];
+
+      // Entrée dédiée : Carte spéciale IGN 89035 – Parc National des Calanques (1:15 000)
+      items.push({
+        id: 'calanques_89035',
+        r: '89035',
+        a: 'Spéciale 1:15 000',
+        aNum: 9999,
+        t: 'LES CALANQUES — Traversée des Calanques (Marseille – Cassis – La Ciotat)',
+        b: [43.175, 5.335, 43.275, 5.625],
+        series: 'calanques',
+        isCalanques: true,
+        _search: norm('89035 calanques traversee des calanques marseille cassis la ciotat parc national speciale 1:15000 1:15 000')
+      });
+
+      const rawSheets = Array.isArray(window.IGN_TOP25_SHEETS) ? window.IGN_TOP25_SHEETS : [];
+      for (const s of rawSheets) {
+        if (!s || !s.r || !s.t || !Array.isArray(s.b) || s.b.length < 4) continue;
+        const ref = String(s.r).trim();
+        if (ref.startsWith('-')) continue;
+        // France métropolitaine uniquement (lat 41..51.5, lon -6..10.5)
+        const latS = Number(s.b[0]);
+        const lonW = Number(s.b[1]);
+        if (latS < 41 || latS > 51.5 || lonW < -6 || lonW > 10.5) continue;
+
+        const title = String(s.t).trim();
+        const yearNum = Number(s.a) || 0;
+        const yearStr = yearNum ? String(yearNum) : '—';
+        const isSb = /\bSB$/i.test(ref);
+        items.push({
+          id: s.n || (ref + '_' + title),
+          r: ref,
+          a: yearStr,
+          aNum: yearNum,
+          t: title,
+          b: s.b,
+          series: isSb ? 'sb' : 'top25',
+          isCalanques: false,
+          _search: norm(`${ref} ${yearStr} ${title} ${isSb ? 'serie bleue' : 'top 25 top25'}`)
+        });
+      }
+
+      this._top25CatalogCache = items;
+      return items;
+    }
+
+    setTop25CatalogFilter(filter) {
+      this._top25Filter = filter || 'all';
+      this._top25ShowAll = false;
+      document.querySelectorAll('.top25-filter-btn').forEach((btn) => {
+        const isActive = btn.dataset.top25Filter === this._top25Filter;
+        if (isActive) {
+          btn.className = 'top25-filter-btn px-3 py-1 rounded-full bg-cyan-600 text-white border border-cyan-400 cursor-pointer transition';
+        } else if (btn.dataset.top25Filter === 'calanques') {
+          btn.className = 'top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-rose-300 border border-rose-500/40 cursor-pointer transition';
+        } else {
+          btn.className = 'top25-filter-btn px-3 py-1 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer transition';
+        }
+      });
+      this.renderTop25CatalogTable();
+    }
+
+    sortTop25Catalog(col) {
+      if (this._top25SortCol === col) {
+        this._top25SortDir = this._top25SortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        this._top25SortCol = col;
+        this._top25SortDir = col === 'a' ? 'desc' : 'asc';
+      }
+      ['r', 'a', 't'].forEach((k) => {
+        const el = document.getElementById(`top25-sort-${k}`);
+        if (!el) return;
+        if (k === this._top25SortCol) {
+          el.textContent = this._top25SortDir === 'asc' ? '▲' : '▼';
+          el.className = 'text-cyan-400';
+        } else {
+          el.textContent = '↕';
+          el.className = 'text-slate-500';
+        }
+      });
+      this.renderTop25CatalogTable();
+    }
+
+    showAllTop25CatalogRows() {
+      this._top25ShowAll = true;
+      this.renderTop25CatalogTable();
+    }
+
+    renderTop25CatalogTable(queryOverride) {
+      const tbody = document.getElementById('top25-catalog-tbody');
+      const countEl = document.getElementById('top25-catalog-count');
+      const inputEl = document.getElementById('top25-catalog-search');
+      const clearBtn = document.getElementById('top25-catalog-clear');
+      const moreWrap = document.getElementById('top25-catalog-more-wrap');
+      if (!tbody) return;
+
+      const rawQuery = (typeof queryOverride === 'string')
+        ? queryOverride
+        : (inputEl ? inputEl.value : '');
+
+      if (typeof queryOverride === 'string') {
+        this._top25ShowAll = false;
+      }
+
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !rawQuery.trim());
+      }
+
+      const normQuery = rawQuery
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+      const tokens = normQuery ? normQuery.split(/\s+/).filter(Boolean) : [];
+
+      const activeFilter = this._top25Filter || 'all';
+      const sortCol = this._top25SortCol || 'r';
+      const sortDir = this._top25SortDir || 'asc';
+
+      const allItems = this.getTop25CatalogItems();
+      const filtered = allItems.filter((it) => {
+        if (activeFilter !== 'all' && it.series !== activeFilter) return false;
+        if (tokens.length > 0) {
+          for (const tk of tokens) {
+            if (!it._search.includes(tk)) return false;
+          }
+        }
+        return true;
+      });
+
+      // Tri (en conservant la Carte spéciale des Calanques en tête lors du tri par défaut)
+      filtered.sort((a, b) => {
+        if (sortCol === 'r' && sortDir === 'asc') {
+          if (a.isCalanques && !b.isCalanques) return -1;
+          if (!a.isCalanques && b.isCalanques) return 1;
+        }
+        let cmp = 0;
+        if (sortCol === 'a') {
+          cmp = (a.aNum - b.aNum) || a.r.localeCompare(b.r, 'fr');
+        } else if (sortCol === 't') {
+          cmp = a.t.localeCompare(b.t, 'fr');
+        } else {
+          cmp = a.r.localeCompare(b.r, 'fr') || a.t.localeCompare(b.t, 'fr');
+        }
+        return sortDir === 'asc' ? cmp : -cmp;
+      });
+
+      this._top25FilteredList = filtered;
+
+      if (countEl) {
+        const totalFmt = filtered.length.toLocaleString('fr-FR');
+        countEl.textContent = filtered.length <= 1
+          ? `${totalFmt} carte affichée`
+          : `${totalFmt} cartes affichées`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="p-6 text-center text-slate-400">
+              Aucune carte trouvée pour « <span class="text-white font-bold">${rawQuery.replace(/</g, '&lt;')}</span> ».
+            </td>
+          </tr>`;
+        if (moreWrap) moreWrap.classList.add('hidden');
+        return;
+      }
+
+      const limit = this._top25ShowAll ? filtered.length : Math.min(filtered.length, 250);
+      const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const rows = [];
+
+      for (let i = 0; i < limit; i++) {
+        const it = filtered[i];
+        if (it.isCalanques) {
+          rows.push(`
+            <tr class="bg-rose-950/35 hover:bg-rose-900/40 transition">
+              <td class="p-2.5 sm:p-3 whitespace-nowrap">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-600/30 border border-rose-400/50 text-rose-200 font-mono font-extrabold">🏖️ ${esc(it.r)}</span>
+              </td>
+              <td class="p-2.5 sm:p-3 whitespace-nowrap">
+                <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold text-[11px]">${esc(it.a)}</span>
+              </td>
+              <td class="p-2.5 sm:p-3 font-bold text-rose-100">${esc(it.t)}</td>
+              <td class="p-2.5 sm:p-3 text-right whitespace-nowrap">
+                <button type="button" onclick="window.PortalRouterInstance && window.PortalRouterInstance.openTop25SheetOnMap(${i})"
+                        class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] shadow-sm transition cursor-pointer"
+                        title="Ouvrir la carte spéciale IGN 89035 des Calanques">
+                  🗺️ Voir
+                </button>
+              </td>
+            </tr>`);
+        } else {
+          const badgeClass = it.series === 'top25'
+            ? 'bg-cyan-500/20 border-cyan-400/40 text-cyan-200'
+            : 'bg-slate-800 border-slate-700 text-slate-200';
+          rows.push(`
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="p-2.5 sm:p-3 whitespace-nowrap">
+                <span class="inline-block px-2 py-0.5 rounded-md border font-mono font-bold ${badgeClass}">${esc(it.r)}</span>
+              </td>
+              <td class="p-2.5 sm:p-3 whitespace-nowrap text-slate-300 font-mono">${esc(it.a)}</td>
+              <td class="p-2.5 sm:p-3 text-white font-semibold">${esc(it.t)}</td>
+              <td class="p-2.5 sm:p-3 text-right whitespace-nowrap">
+                <button type="button" onclick="window.PortalRouterInstance && window.PortalRouterInstance.openTop25SheetOnMap(${i})"
+                        class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-600 text-cyan-300 hover:text-white border border-cyan-500/30 font-bold text-[11px] transition cursor-pointer"
+                        title="Centrer la carte IGN TOP 25 sur cette feuille">
+                  🗺️ Voir
+                </button>
+              </td>
+            </tr>`);
+        }
+      }
+
+      tbody.innerHTML = rows.join('');
+
+      if (moreWrap) {
+        if (filtered.length > limit) {
+          moreWrap.classList.remove('hidden');
+          const btn = moreWrap.querySelector('button');
+          if (btn) {
+            btn.textContent = `Afficher toutes les ${(filtered.length).toLocaleString('fr-FR')} cartes correspondantes (+${(filtered.length - limit).toLocaleString('fr-FR')})`;
+          }
+        } else {
+          moreWrap.classList.add('hidden');
+        }
+      }
+    }
+
+    openTop25SheetOnMap(idx) {
+      const list = this._top25FilteredList || [];
+      const item = list[idx];
+      if (!item) return;
+
+      this.navigateTo('carte');
+
+      const focusSheet = () => {
+        const mm = window.MapManagerInstance;
+        if (!mm || !mm.map) return;
+
+        if (item.isCalanques && typeof mm.activateCalanquesMode === 'function') {
+          mm.activateCalanquesMode();
+        } else {
+          if (mm.currentBaseLayer !== 'igntop25' && typeof mm.setBaseLayer === 'function') {
+            mm.setBaseLayer('igntop25');
+          }
+          if (mm.paperSheetLayer && !mm.map.hasLayer(mm.paperSheetLayer)) {
+            mm.paperSheetLayer.addTo(mm.map);
+          }
+          if (Array.isArray(item.b) && item.b.length >= 4) {
+            mm.map.fitBounds([[item.b[0], item.b[1]], [item.b[2], item.b[3]]], { padding: [25, 25], animate: true });
+          }
+          if (typeof mm.renderPaperSheetBounds === 'function') {
+            setTimeout(() => mm.renderPaperSheetBounds(), 350);
+          }
+        }
+
+        if (typeof window.App?.showToast === 'function') {
+          window.App.showToast(`🗺️ Carte IGN ${item.r} — ${item.t}`, 'success');
+        }
+      };
+
+      setTimeout(focusSheet, 250);
     }
 
     /**
