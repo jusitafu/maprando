@@ -92,7 +92,7 @@
 
   <!-- Custom CSS -->
 
-  <link rel="stylesheet" href="css/styles.css?v=255">
+  <link rel="stylesheet" href="css/styles.css?v=256">
 
 </head>
 
@@ -362,7 +362,7 @@
         </div>
 
         <span class="text-white font-bold">Map &amp; Rando</span>
-        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">α3.9 (28/11/2026)</span>
+        <span class="text-emerald-400 font-extrabold text-[11px] bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40 tracking-wide">α3.10 (28/11/2026)</span>
         &bull; <button type="button" class="btn-open-jldapps-modal text-slate-400 hover:text-emerald-300 transition underline underline-offset-2 cursor-pointer p-0 bg-transparent border-0 inline" title="Découvrir les autres applications de JLDApps (WaterMetrics, FuelCoPilot)"><img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.15em] h-[1.15em] rounded-[4px] align-[-0.18em] mr-1 shadow-xs select-none" />JLDApps 2026</button> &bull; Sanary-sur-Mer (Var 83)
       </div>
     </footer>
@@ -1969,10 +1969,10 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-1">
-            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION α3.9 (28/11/2026) &bull; <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.2em] h-[1.2em] rounded-[3px] align-[-0.18em] mr-1 select-none" />JLDAPPS 2026</span>
+            <span>GUIDE COMPLET UTILISATEUR &bull; VERSION α3.10 (28/11/2026) &bull; <img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.2em] h-[1.2em] rounded-[3px] align-[-0.18em] mr-1 select-none" />JLDAPPS 2026</span>
           </div>
           <h3 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">α3.9 (28/11/2026)</span></span>
+            <span>📖</span> <span>Mode d'emploi détaillé de Map &amp; Rando <span class="text-xs sm:text-sm font-extrabold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">α3.10 (28/11/2026)</span></span>
           </h3>
         </div>
         <div class="flex items-center gap-2 self-end sm:self-auto">
@@ -3032,7 +3032,7 @@
               </svg>
             </button>
           </div>
-          Map &amp; Rando <strong class="text-emerald-400 font-bold">α3.9 (28/11/2026)</strong> by <strong><img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.15em] h-[1.15em] rounded-[4px] align-[-0.18em] mr-1 shadow-xs select-none" />JLDApps 2026</strong> &bull; La cartographie au service de vos pas
+          Map &amp; Rando <strong class="text-emerald-400 font-bold">α3.10 (28/11/2026)</strong> by <strong><img src="images/logo_jldapps.png" alt="JLDApps" class="inline-block w-[1.15em] h-[1.15em] rounded-[4px] align-[-0.18em] mr-1 shadow-xs select-none" />JLDApps 2026</strong> &bull; La cartographie au service de vos pas
         </span>
         <button type="button" onclick="document.getElementById('modal-mode-emploi').classList.add('hidden')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition cursor-pointer shadow-lg">
           Fermer le Mode d'emploi
@@ -4246,12 +4246,16 @@
           <!-- BANDEAU INFÉRIEUR UNIFIÉ (Zéro chevauchement, même hauteur h-11, alignement parfait barre noire + boutons blancs) -->
           <div id="map-bottom-dock" class="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between gap-2 pointer-events-none">
 
-            <!-- FLOATING CARTOGRAPHY HUD (Gauche : Échelle, 1 cm, GPS WGS84, UTM, Altitude, Commune) -->
-            <div id="map-coords-hud" 
-              onclick="App.copyMapCoords()"
-              class="pointer-events-auto h-11 min-w-0 max-w-full overflow-x-auto bg-slate-900/95 hover:bg-slate-950 text-white px-3 sm:px-3.5 rounded-2xl shadow-2xl border-2 border-slate-700/90 backdrop-blur-md text-xs font-semibold transition-all select-none cursor-pointer flex items-center gap-2 sm:gap-2.5"
-              style="scrollbar-width: none;"
-              title="Cliquer pour copier les coordonnées GPS & UTM dans le presse-papier">
+            <!-- FLOATING CARTOGRAPHY HUD (Gauche : Échelle, 1 cm, GPS WGS84, UTM, Altitude, Commune + poignée agrandissement) -->
+            <div class="relative min-w-0 max-w-full flex items-center pointer-events-auto">
+              <div class="hud-resize-zone" title="Tirer vers le haut/bas pour agrandir ou réduire proportionnellement les barres (double-clic = 100 %)">
+                <span class="hud-resize-pill">⇕ Agrandir</span>
+              </div>
+              <div id="map-coords-hud" 
+                onclick="App.copyMapCoords()"
+                class="h-11 min-w-0 max-w-full overflow-x-auto bg-slate-900/95 hover:bg-slate-950 text-white px-3 sm:px-3.5 rounded-2xl shadow-2xl border-2 border-slate-700/90 backdrop-blur-md text-[13px] font-semibold transition-colors select-none cursor-pointer flex items-center gap-2 sm:gap-2.5"
+                style="scrollbar-width: none;"
+                title="Cliquer pour copier les coordonnées GPS & UTM dans le presse-papier">
 
               <div id="map-hud-scale-box" class="flex items-center gap-1.5 text-emerald-400 font-black whitespace-nowrap cursor-default flex-shrink-0" onclick="event.stopPropagation();">
                 <span class="text-sm">🔍</span>
@@ -4295,10 +4299,14 @@
 
               <span class="text-xs text-slate-400 opacity-75 hover:opacity-100 hidden xl:inline ml-1 font-sans font-bold whitespace-nowrap flex-shrink-0">📋 Copier</span>
 
+              </div>
             </div>
 
-            <!-- FLOATING MAP TOOLS (Droite : même hauteur h-11, alignés avec la barre noire ; Parcelles au-dessus de Mesurer) -->
-            <div class="pointer-events-auto flex-shrink-0 flex items-center gap-2">
+            <!-- FLOATING MAP TOOLS (Droite : même hauteur h-11, alignés avec la barre noire ; Parcelles au-dessus de Mesurer + poignée agrandissement) -->
+            <div id="map-bottom-tools-group" class="relative pointer-events-auto flex-shrink-0 flex items-center gap-2">
+              <div class="hud-resize-zone" title="Tirer vers le haut/bas pour agrandir ou réduire proportionnellement les barres (double-clic = 100 %)">
+                <span class="hud-resize-pill">⇕ Agrandir</span>
+              </div>
 
               <a id="btn-map-manual" href="Mode_d_emploi_RandoFinder.pdf" target="_blank"
                 class="hidden 2xl:inline-flex map-floating-tool-btn h-11 px-3.5 bg-white/95 hover:bg-white text-slate-900 hover:text-emerald-700 rounded-2xl shadow-xl hover:shadow-2xl border-2 border-slate-400 text-xs sm:text-sm font-black transition-all items-center gap-2 cursor-pointer backdrop-blur-md active:scale-95 group whitespace-nowrap" 
@@ -8869,8 +8877,8 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/ffr-roadmap-manager.js?v=226"></script>
   <script src="js/floating-window-manager.js?v=225"></script>
 
-  <script src="js/versions-changelog.js?v=255"></script>
-<script src="js/portal-router.js?v=253"></script>
+  <script src="js/versions-changelog.js?v=256"></script>
+<script src="js/portal-router.js?v=256"></script>
     <script src="js/app.js?v=235"></script>
 
 

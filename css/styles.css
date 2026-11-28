@@ -331,9 +331,14 @@ html, body {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
-/* Conteneurs bas Leaflet : échelle graphique + attribution alignées juste au-dessus de la barre noire */
+/* Variable globale d'agrandissement proportionnel des barres basses (1.00 -> 1.45) */
+:root {
+  --hud-scale: 1;
+}
+
+/* Conteneurs bas Leaflet : échelle graphique (à gauche) + attribution (à sa droite), juste au-dessus de la barre noire */
 .leaflet-bottom {
-  bottom: 62px !important;
+  bottom: calc(18px + 44px * var(--hud-scale)) !important;
   pointer-events: none !important;
 }
 .leaflet-bottom .leaflet-control {
@@ -344,29 +349,30 @@ html, body {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: calc(8px * var(--hud-scale)) !important;
   flex-wrap: nowrap !important;
 }
 
-/* Boîte échelle Leaflet positionnée juste au-dessus de la barre noire */
+/* Boîte échelle Leaflet positionnée à GAUCHE (order: 1), juste au-dessus de la barre noire */
 .leaflet-bottom.leaflet-left .leaflet-control-scale {
+  order: 1 !important;
   float: none !important;
   clear: none !important;
   margin: 0 !important;
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border-radius: 10px !important;
+  border-radius: calc(10px * var(--hud-scale)) !important;
   border: 1px solid rgba(203, 213, 225, 0.95) !important;
   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.14) !important;
-  height: 30px !important;
+  height: calc(30px * var(--hud-scale)) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 0 10px !important;
+  padding: 0 calc(10px * var(--hud-scale)) !important;
   box-sizing: border-box !important;
   pointer-events: auto !important;
-  transition: all 0.2s ease !important;
+  transition: background 0.2s ease, border-color 0.2s ease !important;
   z-index: 25 !important;
 }
 
@@ -382,11 +388,11 @@ html, body {
   border-top: none !important;
   color: #0f172a !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace !important;
-  font-size: 11px !important;
+  font-size: calc(11.5px * var(--hud-scale)) !important;
   font-weight: 800 !important;
   text-align: center !important;
   line-height: 1.1 !important;
-  padding: 1px 6px 2px !important;
+  padding: 1px calc(6px * var(--hud-scale)) 2px !important;
   margin: 0 !important;
   box-sizing: border-box !important;
   text-shadow: none !important;
@@ -394,22 +400,23 @@ html, body {
   border-bottom-right-radius: 2px !important;
 }
 
-/* Attribution Leaflet / IGN positionnée juste à droite de l'échelle graphique, au-dessus de la barre noire */
+/* Attribution Leaflet / IGN positionnée à DROITE de l'échelle graphique (order: 2) */
 .leaflet-bottom .leaflet-control-attribution {
+  order: 2 !important;
   float: none !important;
   clear: none !important;
   margin: 0 !important;
-  background: rgba(255, 255, 255, 0.95) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   color: #334155 !important;
-  font-size: 10px !important;
+  font-size: calc(10.5px * var(--hud-scale)) !important;
   font-weight: 600 !important;
-  height: 30px !important;
+  height: calc(30px * var(--hud-scale)) !important;
   display: inline-flex !important;
   align-items: center !important;
-  padding: 0 10px !important;
-  border-radius: 10px !important;
+  padding: 0 calc(10px * var(--hud-scale)) !important;
+  border-radius: calc(10px * var(--hud-scale)) !important;
   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.14) !important;
   border: 1px solid rgba(203, 213, 225, 0.95) !important;
   line-height: 1 !important;
@@ -426,6 +433,79 @@ html, body {
 
 .leaflet-bottom .leaflet-control-attribution a:hover {
   text-decoration: underline !important;
+}
+
+/* Dimensionnement proportionnel des barres basses (#map-coords-hud et boutons blancs) */
+#map-coords-hud {
+  height: calc(44px * var(--hud-scale)) !important;
+  font-size: calc(13px * var(--hud-scale)) !important;
+  padding-left: calc(14px * var(--hud-scale)) !important;
+  padding-right: calc(14px * var(--hud-scale)) !important;
+  gap: calc(10px * var(--hud-scale)) !important;
+}
+#map-coords-hud label,
+#map-coords-hud span {
+  font-size: inherit;
+}
+#map-hud-scale-input {
+  font-size: calc(12.5px * var(--hud-scale)) !important;
+  width: calc(74px * var(--hud-scale)) !important;
+  padding: calc(2px * var(--hud-scale)) calc(6px * var(--hud-scale)) !important;
+}
+#btn-open-screen-calib {
+  font-size: calc(12px * var(--hud-scale)) !important;
+  padding: calc(2px * var(--hud-scale)) calc(7px * var(--hud-scale)) !important;
+}
+#map-bottom-dock .map-floating-tool-btn {
+  height: calc(44px * var(--hud-scale)) !important;
+  font-size: calc(13.5px * var(--hud-scale)) !important;
+  padding-left: calc(14px * var(--hud-scale)) !important;
+  padding-right: calc(14px * var(--hud-scale)) !important;
+}
+#map-bottom-dock .map-floating-tool-btn .tool-icon {
+  font-size: calc(17px * var(--hud-scale)) !important;
+}
+#map-bottom-dock #btn-cadastre-menu {
+  height: calc(40px * var(--hud-scale)) !important;
+  font-size: calc(13px * var(--hud-scale)) !important;
+  margin-bottom: calc(8px * var(--hud-scale)) !important;
+}
+
+/* Poignée d'agrandissement proportionnel au survol de la limite supérieure des barres */
+.hud-resize-zone {
+  position: absolute;
+  top: -7px;
+  left: 12px;
+  right: 12px;
+  height: 12px;
+  cursor: ns-resize;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+.hud-resize-pill {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.92);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  background: rgba(15, 23, 42, 0.96);
+  color: #34d399;
+  border: 1.5px solid rgba(52, 211, 153, 0.85);
+  border-radius: 9999px;
+  padding: 1px 9px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 16px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  user-select: none;
+}
+.hud-resize-zone:hover .hud-resize-pill,
+body.is-resizing-bottom-hud .hud-resize-pill {
+  opacity: 1;
+  transform: translateY(-8px) scale(1);
 }
 #ign-paper-date-badge {
   color: #0f172a !important;

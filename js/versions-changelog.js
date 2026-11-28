@@ -3,10 +3,17 @@
  * JLDApps 2026 — Mis à jour systématiquement à chaque modification.
  */
 (function () {
-  window.MAPRANDO_CURRENT_VERSION = 'α3.9';
+  window.MAPRANDO_CURRENT_VERSION = 'α3.10';
   window.MAPRANDO_CURRENT_DATE = '28/11/2026';
 
   window.MAPRANDO_VERSION_HISTORY = [
+    {
+      version: 'α3.10',
+      date: '28/11/2026',
+      builds: 'v256',
+      title: 'Agrandissement proportionnel des barres basses & ordre échelle/Leaflet',
+      details: 'Poignée d\'agrandissement (⇕) au survol du bord supérieur de la barre noire et des boutons blancs : glisser vers le haut/bas agrandit ou réduit proportionnellement toutes les barres (100 % à 145 %, mémorisé, double-clic = 100 %) sans chevauchement ; échelle graphique placée à gauche de l\'indication Leaflet.'
+    },
     {
       version: 'α3.9',
       date: '28/11/2026',

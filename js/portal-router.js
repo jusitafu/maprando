@@ -2232,4 +2232,107 @@
       return false;
     }
   };
+
+  /* =========================================================================
+   * AGRANDISSEMENT PROPORTIONNEL DES BARRES BASSES (POIGNÉE ⇕ AU SURVOL)
+   * ========================================================================= */
+  (function initBottomHudResizer() {
+    const STORAGE_KEY = 'rf_bottom_hud_scale';
+    const MIN_SCALE = 1.0;
+    const MAX_SCALE = 1.45;
+
+    let currentScale = 1.0;
+    try {
+      const saved = parseFloat(localStorage.getItem(STORAGE_KEY));
+      if (!isNaN(saved) && saved >= MIN_SCALE && saved <= MAX_SCALE) {
+        currentScale = saved;
+      }
+    } catch (e) {}
+
+    const applyScale = (val, showPct = false) => {
+      const clamped = Math.max(MIN_SCALE, Math.min(MAX_SCALE, Math.round(val * 100) / 100));
+      currentScale = clamped;
+      document.documentElement.style.setProperty('--hud-scale', String(clamped));
+      const pct = Math.round(clamped * 100);
+      document.querySelectorAll('.hud-resize-pill').forEach((pill) => {
+        pill.textContent = showPct ? `⇕ ${pct} %` : (clamped > 1.01 ? `⇕ ${pct} %` : '⇕ Agrandir');
+      });
+    };
+
+    const bindResizer = () => {
+      applyScale(currentScale, false);
+      const zones = document.querySelectorAll('.hud-resize-zone');
+      if (!zones.length) return;
+
+      zones.forEach((zone) => {
+        if (zone.dataset.hudResizeBound === '1') return;
+        zone.dataset.hudResizeBound = '1';
+
+        const startDrag = (clientY) => {
+          const startY = clientY;
+          const startScale = currentScale;
+          document.body.classList.add('is-resizing-bottom-hud');
+          document.body.style.cursor = 'ns-resize';
+
+          const onMove = (ev) => {
+            const y = ev.touches ? ev.touches[0].clientY : ev.clientY;
+            const deltaY = startY - y; // Tirer vers le haut => agrandir
+            let nextScale = startScale + (deltaY / 120);
+            nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, nextScale));
+
+            // Plafonnement anti-débordement si la barre noire commence à manquer de largeur
+            const hud = document.getElementById('map-coords-hud');
+            if (nextScale > currentScale && hud && hud.scrollWidth > hud.clientWidth + 4 && currentScale >= 1.05) {
+              return;
+            }
+            applyScale(nextScale, true);
+          };
+
+          const onEnd = () => {
+            document.body.classList.remove('is-resizing-bottom-hud');
+            document.body.style.cursor = '';
+            try { localStorage.setItem(STORAGE_KEY, String(currentScale)); } catch (e) {}
+            applyScale(currentScale, false);
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onEnd);
+            window.removeEventListener('touchmove', onMove);
+            window.removeEventListener('touchend', onEnd);
+          };
+
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onEnd);
+          window.addEventListener('touchmove', onMove, { passive: true });
+          window.addEventListener('touchend', onEnd);
+        };
+
+        zone.addEventListener('mousedown', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          startDrag(ev.clientY);
+        });
+
+        zone.addEventListener('touchstart', (ev) => {
+          if (!ev.touches || !ev.touches[0]) return;
+          ev.stopPropagation();
+          startDrag(ev.touches[0].clientY);
+        }, { passive: true });
+
+        zone.addEventListener('dblclick', (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          applyScale(1.0, false);
+          try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+          if (typeof window.App?.showToast === 'function') {
+            window.App.showToast('📏 Taille des barres réinitialisée à 100 %', 'info');
+          }
+        });
+      });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindResizer);
+    } else {
+      bindResizer();
+    }
+  })();
 })();
