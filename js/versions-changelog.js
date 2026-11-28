@@ -10,9 +10,9 @@
     {
       version: 'α3.10',
       date: '28/11/2026',
-      builds: 'v256 – v257',
-      title: 'Agrandissement proportionnel des barres basses (jusqu\'à 200 %) & ordre échelle/Leaflet',
-      details: 'Poignée d\'agrandissement (⇕) au survol du bord supérieur de la barre noire et des boutons blancs : glisser vers le haut/bas agrandit ou réduit proportionnellement toutes les barres (100 % à 200 %, mémorisé, double-clic = 100 %) avec affichage intégral des coordonnées GPS/UTM/Altitude/Commune ; échelle graphique placée à gauche de l\'indication Leaflet.'
+      builds: 'v256 – v258',
+      title: 'Agrandissement proportionnel des barres basses (jusqu\'à 200 %), ordre échelle/Leaflet & documentation',
+      details: 'Poignée d\'agrandissement (⇕) au survol du bord supérieur de la barre noire et des boutons blancs : glisser vers le haut/bas agrandit ou réduit proportionnellement toutes les barres (100 % à 200 %, mémorisé, double-clic = 100 %) avec affichage intégral des coordonnées GPS/UTM/Altitude/Commune ; échelle graphique placée à gauche de l\'indication Leaflet ; Mode d\'Emploi Web et PDF (17 pages) mis à jour.'
     },
     {
       version: 'α3.9',

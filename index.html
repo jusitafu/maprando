@@ -2111,6 +2111,7 @@
                 <li><strong>Altitude temps réel (⛰️) issue d'IGN LiDAR HD :</strong> altitude de haute précision calculée par le modèle numérique de terrain 3D de l'IGN (résolution 50 cm).</li>
                 <li><strong>Commune au curseur (🏛️) :</strong> affiche en continu le nom de la ville ou commune survolée ainsi que son département (ex. <code>🏛️ Sanary-sur-Mer (83)</code>). Hors de France, l'indicateur d'altitude se masque automatiquement pour garantir une rigueur stricte.</li>
                 <li><strong>Coordonnées GPS WGS84 &amp; UTM :</strong> coordonnées en degrés décimaux et carroyage kilométrique UTM. Cliquez sur le bandeau pour tout copier dans le presse-papier.</li>
+                <li><strong>Agrandissement proportionnel des barres du bas (⇕ 100 % → 200 %) :</strong> survolez le bord supérieur de la barre noire ou des boutons blancs (Légende, Imprimer, Cap, Mesurer) pour faire apparaître la poignée <code>⇕ Agrandir</code>, puis tirez vers le haut ou le bas afin d'agrandir ou réduire proportionnellement l'ensemble des barres (y compris l'échelle graphique, l'indication Leaflet et le bouton Cadastre <em>Parcelles</em> au-dessus de <em>Mesurer</em>). Votre réglage est <strong>mémorisé automatiquement</strong> ; un <strong>double-clic</strong> sur la poignée rétablit instantanément la taille à <code>100 %</code>.</li>
                 <li><strong>Limites des coupures papier IGN TOP 25 :</strong> contours bleus avec numéro officiel (ex. <code>3245 ET</code>), titre et <strong>année de dernière édition</strong> (ex. <code>Éd. 2023</code>).</li>
                 <li><strong>Carroyage UTM kilométrique (1 km × 1 km) :</strong> grille universelle WGS84 avec coordonnées kilométriques en périphérie d'écran.</li>
                 <li><strong>Cadastre officiel (Parcellaire Express IGN France) :</strong> limites de parcelles, sections et numéros cadastraux en surimpression transparente activable sur n'importe quel fond de carte (IGN TOP 25, Satellite, etc.).</li>
@@ -8877,7 +8878,7 @@ CREATE POLICY "Public Read/Write" ON randonnees_sanaryens FOR ALL USING (true) W
   <script src="js/ffr-roadmap-manager.js?v=226"></script>
   <script src="js/floating-window-manager.js?v=225"></script>
 
-  <script src="js/versions-changelog.js?v=257"></script>
+  <script src="js/versions-changelog.js?v=258"></script>
 <script src="js/portal-router.js?v=257"></script>
     <script src="js/app.js?v=235"></script>
 

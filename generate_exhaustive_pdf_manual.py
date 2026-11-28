@@ -668,6 +668,7 @@ html_content = f"""<!DOCTYPE html>
         <li><strong>Commune au curseur (🏛️) :</strong> affiche en continu le nom de la ville ou commune survolée ainsi que son département (ex. <code>🏛️ Sanary-sur-Mer (83)</code>). Hors de France, l'indicateur se masque automatiquement pour éviter toute imprécision.</li>
         <li><strong>Altitude LiDAR HD (⛰️) :</strong> interroge le Modèle Numérique de Terrain haute définition pour fournir l'altitude réelle au mètre près sous votre curseur.</li>
         <li><strong>Coordonnées WGS84 &amp; Grille UTM :</strong> affichage simultané en degrés décimaux et en coordonnées métriques militaires UTM (fuseau, bande et coordonnées métriques Est/Nord).</li>
+        <li><strong>Agrandissement proportionnel des barres basses (⇕ 100 % → 200 %) :</strong> au survol du bord supérieur de la barre noire ou des boutons blancs, tirez la poignée <code>⇕</code> vers le haut ou le bas pour agrandir proportionnellement toutes les barres (échelle graphique, mention Leaflet et bouton Cadastre <em>Parcelles</em> compris) ; réglage mémorisé, double-clic pour revenir à <code>100 %</code>.</li>
       </ul>
     </div>
 
