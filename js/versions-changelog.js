@@ -3,10 +3,17 @@
  * JLDApps 2026 — Mis à jour systématiquement à chaque modification.
  */
 (function () {
-  window.MAPRANDO_CURRENT_VERSION = 'α3.8';
-  window.MAPRANDO_CURRENT_DATE = '27/11/2026';
+  window.MAPRANDO_CURRENT_VERSION = 'α3.9';
+  window.MAPRANDO_CURRENT_DATE = '28/11/2026';
 
   window.MAPRANDO_VERSION_HISTORY = [
+    {
+      version: 'α3.9',
+      date: '28/11/2026',
+      builds: 'v255',
+      title: 'Alignement des barres basses anti-chevauchement & nettoyage en-tête',
+      details: 'Barre noire (Échelle/GPS/UTM/Altitude) et boutons blancs (Légende, Imprimer, Cap, Mesurer) unifiés sur la même hauteur (44 px) sans chevauchement ; bouton Cadastre « Parcelles (0/50) » placé juste au-dessus de « Mesurer » ; échelle graphique et mention Leaflet alignées juste au-dessus de la barre noire ; suppression du badge v95 en haut à droite des cartes.'
+    },
     {
       version: 'α3.8',
       date: '27/11/2026',

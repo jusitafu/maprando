@@ -717,6 +717,9 @@ class MapManager {
     this.layerControl = L.control.layers(this.baseLayers, overlayLayers, { position: 'topright' }).addTo(this.map);
 
     L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(this.map);
+    if (this.map.attributionControl && typeof this.map.attributionControl.setPosition === 'function') {
+      this.map.attributionControl.setPosition('bottomleft');
+    }
     this.initTrueCmScaleControl();
 
 

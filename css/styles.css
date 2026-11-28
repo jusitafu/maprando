@@ -331,54 +331,49 @@ html, body {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
 }
 
-/* Conteneurs bas Leaflet positionnés rigoureusement au-dessus du HUD et des boutons */
+/* Conteneurs bas Leaflet : échelle graphique + attribution alignées juste au-dessus de la barre noire */
 .leaflet-bottom {
-  bottom: 74px !important;
+  bottom: 62px !important;
   pointer-events: none !important;
 }
 .leaflet-bottom .leaflet-control {
   pointer-events: auto !important;
 }
-@media (max-width: 1199px) {
-  .leaflet-bottom {
-    bottom: 130px !important;
-  }
+.leaflet-bottom.leaflet-left {
+  left: 12px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
 }
 
-/* Boite echelle Leaflet positionnee au-dessus du HUD noir pour eviter tout chevauchement */
+/* Boîte échelle Leaflet positionnée juste au-dessus de la barre noire */
 .leaflet-bottom.leaflet-left .leaflet-control-scale {
   float: none !important;
-  margin-bottom: 82px !important;
-  margin-left: 12px !important;
-  margin-right: 0 !important;
-  margin-top: 0 !important;
+  clear: none !important;
+  margin: 0 !important;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border-radius: 12px !important;
-  border: 1px solid rgba(226, 232, 240, 0.9) !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1) !important;
-  height: 38px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(203, 213, 225, 0.95) !important;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.14) !important;
+  height: 30px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 0 12px !important;
+  padding: 0 10px !important;
   box-sizing: border-box !important;
   pointer-events: auto !important;
   transition: all 0.2s ease !important;
   z-index: 25 !important;
 }
 
-@media (max-width: 1199px) {
-  .leaflet-bottom.leaflet-left .leaflet-control-scale {
-    margin-bottom: 136px !important;
-  }
-}
-
 .leaflet-bottom.leaflet-left .leaflet-control-scale:hover {
   background: #ffffff !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
-  border-color: #cbd5e1 !important;
+  box-shadow: 0 6px 14px -2px rgba(0, 0, 0, 0.18) !important;
+  border-color: #94a3b8 !important;
 }
 
 .leaflet-control-scale-line {
@@ -399,31 +394,37 @@ html, body {
   border-bottom-right-radius: 2px !important;
 }
 
-/* Attribution Leaflet / IGN protegee contre tout chevauchement */
-.leaflet-bottom.leaflet-right .leaflet-control-attribution {
-  margin: 0 12px 64px 0 !important;
+/* Attribution Leaflet / IGN positionnée juste à droite de l'échelle graphique, au-dessus de la barre noire */
+.leaflet-bottom .leaflet-control-attribution {
+  float: none !important;
+  clear: none !important;
+  margin: 0 !important;
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   color: #334155 !important;
-  font-size: 9px !important;
+  font-size: 10px !important;
   font-weight: 600 !important;
-  padding: 2px 7px !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-  border: 1px solid rgba(226, 232, 240, 0.9) !important;
-  line-height: 14px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 10px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.14) !important;
+  border: 1px solid rgba(203, 213, 225, 0.95) !important;
+  line-height: 1 !important;
   z-index: 25 !important;
   white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 
-.leaflet-bottom.leaflet-right .leaflet-control-attribution a {
+.leaflet-bottom .leaflet-control-attribution a {
   color: #0284c7 !important;
   text-decoration: none !important;
   font-weight: 700 !important;
 }
 
-.leaflet-bottom.leaflet-right .leaflet-control-attribution a:hover {
+.leaflet-bottom .leaflet-control-attribution a:hover {
   text-decoration: underline !important;
 }
 #ign-paper-date-badge {
