@@ -302,28 +302,11 @@ html, body {
 }
 
 #map-coords-hud {
-  max-width: calc(100% - 560px) !important;
-  overflow: hidden !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
   white-space: nowrap !important;
-  text-overflow: ellipsis !important;
-  bottom: 12px !important;
-  left: 12px !important;
   z-index: 20 !important;
-}
-
-@media (max-width: 1199px) {
-  #map-coords-hud {
-    bottom: 74px !important;
-    left: 12px !important;
-    max-width: calc(100% - 24px) !important;
-  }
-}
-
-@media (max-width: 639px) {
-  #map-coords-hud {
-    max-width: calc(100% - 16px) !important;
-    bottom: 70px !important;
-  }
 }
 
 #map-coords-hud:hover {
@@ -1182,31 +1165,50 @@ path.bearing-preview-line {
 }
 
 /* =========================================================================
- * STANDARDS ERGONOMIQUES POUR LES POLICES PÉRIPHÉRIQUES (WCAG / ERGONOMIE)
+ * STANDARDS ERGONOMIQUES & AGRANDISSEMENT PROPORTIONNEL DES BARRES BASSES (100% -> 200%)
  * ========================================================================= */
 #map-coords-hud {
-  font-size: 13px !important;
-  padding: 7px 14px !important;
-  border-radius: 16px !important;
-  max-width: calc(100% - 560px) !important;
+  height: calc(44px * var(--hud-scale)) !important;
+  font-size: calc(13px * var(--hud-scale)) !important;
+  padding: 0 calc(14px * var(--hud-scale)) !important;
+  gap: calc(10px * var(--hud-scale)) !important;
+  border-radius: calc(16px * var(--hud-scale)) !important;
+  max-width: 100% !important;
 }
 
 #map-coords-hud label,
-#map-coords-hud span,
-#map-coords-hud input {
-  font-size: 13px !important;
+#map-coords-hud span {
+  font-size: calc(13px * var(--hud-scale)) !important;
 }
 
 #map-hud-scale-input {
-  font-size: 13px !important;
+  font-size: calc(13px * var(--hud-scale)) !important;
   font-weight: 900 !important;
-  width: 78px !important;
-  padding: 2px 6px !important;
+  width: calc(80px * var(--hud-scale)) !important;
+  padding: calc(2px * var(--hud-scale)) calc(6px * var(--hud-scale)) !important;
 }
 
 #btn-open-screen-calib {
-  font-size: 13px !important;
-  padding: 4px 10px !important;
+  font-size: calc(12.5px * var(--hud-scale)) !important;
+  padding: calc(3px * var(--hud-scale)) calc(9px * var(--hud-scale)) !important;
+}
+
+#map-bottom-dock .map-floating-tool-btn {
+  height: calc(44px * var(--hud-scale)) !important;
+  font-size: calc(13.5px * var(--hud-scale)) !important;
+  padding-left: calc(14px * var(--hud-scale)) !important;
+  padding-right: calc(14px * var(--hud-scale)) !important;
+  border-radius: calc(16px * var(--hud-scale)) !important;
+}
+
+#map-bottom-dock .map-floating-tool-btn .tool-icon {
+  font-size: calc(17px * var(--hud-scale)) !important;
+}
+
+#map-bottom-dock #btn-cadastre-menu {
+  height: calc(40px * var(--hud-scale)) !important;
+  font-size: calc(13px * var(--hud-scale)) !important;
+  margin-bottom: calc(8px * var(--hud-scale)) !important;
 }
 
 .map-floating-tool-btn {

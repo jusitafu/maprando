@@ -2239,7 +2239,7 @@
   (function initBottomHudResizer() {
     const STORAGE_KEY = 'rf_bottom_hud_scale';
     const MIN_SCALE = 1.0;
-    const MAX_SCALE = 1.45;
+    const MAX_SCALE = 2.0;
 
     let currentScale = 1.0;
     try {
@@ -2276,15 +2276,8 @@
 
           const onMove = (ev) => {
             const y = ev.touches ? ev.touches[0].clientY : ev.clientY;
-            const deltaY = startY - y; // Tirer vers le haut => agrandir
-            let nextScale = startScale + (deltaY / 120);
-            nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, nextScale));
-
-            // Plafonnement anti-débordement si la barre noire commence à manquer de largeur
-            const hud = document.getElementById('map-coords-hud');
-            if (nextScale > currentScale && hud && hud.scrollWidth > hud.clientWidth + 4 && currentScale >= 1.05) {
-              return;
-            }
+            const deltaY = startY - y; // Tirer vers le haut => agrandir jusqu'à 200 %
+            const nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, startScale + (deltaY / 100)));
             applyScale(nextScale, true);
           };
 
